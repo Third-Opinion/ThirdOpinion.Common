@@ -1,0 +1,8 @@
+<context>
+# Overview  
+Add unit testing to the codebase to ensure reliability and maintainability. This will help catch bugs early and improve code quality. Use Xunit and Shouldy
+
+# Core Features  
+For each non trivial class or method, create unit tests that cover all typical scenarios, including edge cases. Use mocking frameworks to isolate dependencies and focus on the unit being tested. Try to get to 90% code coverage.
+
+</PRD>

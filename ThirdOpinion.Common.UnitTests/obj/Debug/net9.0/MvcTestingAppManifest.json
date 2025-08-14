@@ -1,0 +1,7 @@
+{
+  "ThirdOpinion.Common.Aws.Cognito, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/ken\/code\/ThirdOpinion\/ThirdOpinion.Common\/ThirdOpinion.Common.Aws.Cognito",
+  "ThirdOpinion.Common.Aws.DynamoDb, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/ken\/code\/ThirdOpinion\/ThirdOpinion.Common\/ThirdOpinion.Common.Aws.DynamoDb",
+  "ThirdOpinion.Common.Aws.S3, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/ken\/code\/ThirdOpinion\/ThirdOpinion.Common\/ThirdOpinion.Common.Aws.S3",
+  "ThirdOpinion.Common.Aws.SQS, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/ken\/code\/ThirdOpinion\/ThirdOpinion.Common\/ThirdOpinion.Common.Aws.SQS",
+  "ThirdOpinion.Common.Misc, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/ken\/code\/ThirdOpinion\/ThirdOpinion.Common\/ThirdOpinion.Common.Misc"
+}

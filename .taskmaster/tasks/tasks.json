@@ -1,0 +1,87 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Setup Unit Testing Infrastructure",
+        "description": "Configure the existing ThirdOpinion.Common.UnitTests project with xUnit testing framework and Shouldly assertion library, establish testing structure and conventions",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "details": "1. Add xUnit and Shouldly NuGet packages to the existing ThirdOpinion.Common.UnitTests project\n2. Verify test project references to all ThirdOpinion.Common.* projects are properly configured\n3. Setup test naming conventions (ClassName_MethodName_ExpectedBehavior) in the existing test project\n4. Create base test classes if needed for common setup within ThirdOpinion.Common.UnitTests\n5. Configure code coverage tools (coverlet or similar) for the existing test project\n6. Setup CI/CD pipeline integration for running tests in ThirdOpinion.Common.UnitTests\n7. Create test data builders/object mothers for common test scenarios within the existing test project structure",
+        "testStrategy": "Verify that ThirdOpinion.Common.UnitTests project can reference all main projects, xUnit test runner discovers tests correctly in the existing project, Shouldly assertions work as expected, and code coverage reports are generated successfully for the unified test project",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Test AWS Cognito Authentication Components",
+        "description": "Create comprehensive unit tests for all Cognito-related authentication classes including attributes, extensions, and options",
+        "details": "1. Test AuthorizePersonGuidAttribute:\n   - Valid GUID scenarios\n   - Invalid/missing GUID scenarios\n   - Authorization success/failure paths\n2. Test AuthorizeTenantGuidAttribute:\n   - Valid tenant GUID validation\n   - Multi-tenant scenarios\n   - Unauthorized access attempts\n3. Test ClaimsPrincipalExtensions:\n   - Claim extraction methods\n   - Null/empty claim handling\n   - Custom claim type scenarios\n4. Test GlobalAppSettingsOptions:\n   - Configuration binding\n   - Default value handling\n   - Validation of required settings\n5. Mock AWS Cognito services using Moq or NSubstitute",
+        "testStrategy": "Achieve 90% code coverage for ThirdOpinion.Common.Aws.Cognito namespace, test all public methods, verify authorization logic with mocked HttpContext, validate claim extraction accuracy",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Test DynamoDB Repository and Pagination",
+        "description": "Implement unit tests for DynamoDB repository pattern, pagination helpers, and type converters",
+        "details": "1. Test DynamoDbRepository:\n   - CRUD operations (Create, Read, Update, Delete)\n   - Query and scan operations\n   - Batch operations\n   - Error handling and retry logic\n2. Test Pagination components:\n   - PagedResponse serialization/deserialization\n   - PaginationHelper calculation logic\n   - PaginationMetadata accuracy\n   - PaginationPrevNextHelper navigation\n   - PaginationQuery parameter validation\n3. Test TypeConverters:\n   - EnumTypeConverter with various enum types\n   - DateTimeUtcConverter timezone handling\n   - GuidTypeConverter format validation\n4. Mock IAmazonDynamoDB client responses",
+        "testStrategy": "Cover all repository methods with positive and negative test cases, validate pagination edge cases (empty results, single page, multiple pages), ensure type converters handle null values and invalid formats correctly",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Test S3 Storage Implementation",
+        "description": "Create unit tests for S3 storage service, URL generation, and S3 reference handling",
+        "details": "1. Test S3Storage implementation:\n   - Upload file operations\n   - Download file operations\n   - Delete operations\n   - List objects functionality\n   - Stream handling\n2. Test S3UrlGenerator:\n   - Presigned URL generation\n   - URL expiration handling\n   - Different HTTP methods (GET, PUT, DELETE)\n   - Custom headers and metadata\n3. Test S3Ref:\n   - Reference parsing and validation\n   - Bucket/key extraction\n   - ToString formatting\n4. Mock IAmazonS3 client\n5. Test error scenarios (network failures, invalid buckets, access denied)",
+        "testStrategy": "Mock S3 client responses for all operations, validate URL format and expiration times, test file size limits and content type handling, verify exception handling for S3 service errors",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Test SQS Message Queue Components",
+        "description": "Implement unit tests for SQS message queue service and message handler patterns",
+        "details": "1. Test SqsMessageQueue:\n   - Send message operations\n   - Receive message operations\n   - Delete message operations\n   - Batch operations\n   - Message attributes handling\n2. Test SqsMessageHandler:\n   - Message processing logic\n   - Error handling and dead letter queue\n   - Message acknowledgment\n   - Retry policies\n   - Message deserialization\n3. Test ServiceCollectionExtensions:\n   - DI registration validation\n   - Configuration binding\n4. Mock IAmazonSQS client\n5. Test concurrent message processing scenarios",
+        "testStrategy": "Mock SQS client for all queue operations, validate message serialization/deserialization, test retry logic with transient failures, verify dead letter queue handling, ensure proper cleanup of processed messages",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Test Patient HUID Generation and Matching",
+        "description": "Create comprehensive unit tests for patient HUID generation, matching algorithms, and patient data handling",
+        "details": "1. Test HuidGenerator:\n   - HUID generation algorithm\n   - Uniqueness validation\n   - Format compliance\n   - Collision handling\n2. Test PatientMatcher:\n   - Exact matching scenarios\n   - Fuzzy matching with tolerance\n   - Name variations (nicknames, abbreviations)\n   - Date of birth matching\n   - Multiple criteria matching\n3. Test Patients model:\n   - Data validation\n   - Property constraints\n   - Serialization/deserialization\n4. Test edge cases:\n   - Null/empty patient data\n   - Special characters in names\n   - Invalid date formats\n   - Performance with large datasets",
+        "testStrategy": "Validate HUID uniqueness across large sample sets, test matching accuracy with known patient pairs, verify performance benchmarks for matching operations, ensure HIPAA compliance in test data handling",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-08-14T03:46:08.337Z",
+      "updated": "2025-08-14T14:22:12.522Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
