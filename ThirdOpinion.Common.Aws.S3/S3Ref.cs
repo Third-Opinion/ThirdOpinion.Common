@@ -41,10 +41,14 @@ public class S3Ref
         Key = key;
         Region = region;
         AccountId = accountId;
-        if (key.Contains('/'))
+        if (string.IsNullOrEmpty(key))
         {
-            string[] keyParts = key.Split('/');
-            FileName = keyParts.Length > 1 ? key.Split('/').Last() : null;
+            FileName = null;
+        }
+        else if (key.Contains('/'))
+        {
+            string lastPart = key.Split('/').Last();
+            FileName = string.IsNullOrEmpty(lastPart) ? null : lastPart;
         }
         else
         {

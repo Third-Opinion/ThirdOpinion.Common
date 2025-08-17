@@ -1,0 +1,13 @@
+{
+  "parallelizeAssembly": false,
+  "parallelizeTestCollections": true,
+  "maxParallelThreads": 4,
+  "methodDisplay": "classAndMethod",
+  "methodDisplayOptions": "replaceUnderscoreWithSpace",
+  "preEnumerateTheories": false,
+  "diagnosticMessages": true,
+  "internalDiagnosticMessages": false,
+  "stopOnFail": false,
+  "longRunningTestSeconds": 60,
+  "shadowCopy": false
+}

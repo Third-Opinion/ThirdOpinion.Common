@@ -22,8 +22,45 @@
         "dependencies": [
           1
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Test AuthorizePersonGuidAttribute",
+            "description": "Create unit tests for AuthorizePersonGuidAttribute covering valid GUID scenarios, invalid/missing GUID scenarios, and authorization success/failure paths",
+            "details": "- Test valid GUID format validation\\n- Test invalid GUID format handling\\n- Test missing GUID parameter scenarios\\n- Test authorization success paths\\n- Test authorization failure paths\\n- Mock HttpContext for testing",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 2
+          },
+          {
+            "id": 2,
+            "title": "Test AuthorizeTenantGuidAttribute",
+            "description": "Create unit tests for AuthorizeTenantGuidAttribute covering tenant GUID validation, multi-tenant scenarios, and unauthorized access attempts",
+            "details": "- Test valid tenant GUID validation\\n- Test multi-tenant authorization scenarios\\n- Test unauthorized access attempts\\n- Test tenant isolation enforcement\\n- Mock tenant context for testing",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 2
+          },
+          {
+            "id": 3,
+            "title": "Test ClaimsPrincipalExtensions",
+            "description": "Create unit tests for ClaimsPrincipalExtensions covering claim extraction methods, null/empty claim handling, and custom claim types",
+            "details": "- Test claim extraction methods\\n- Test null/empty claim handling\\n- Test custom claim type scenarios\\n- Test claims parsing and validation\\n- Mock ClaimsPrincipal for testing",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 2
+          },
+          {
+            "id": 4,
+            "title": "Test GlobalAppSettingsOptions",
+            "description": "Create unit tests for GlobalAppSettingsOptions covering configuration binding, default value handling, and validation",
+            "details": "- Test configuration binding from appsettings\\n- Test default value handling\\n- Test validation of required settings\\n- Test configuration parsing errors\\n- Mock IConfiguration for testing",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 2
+          }
+        ]
       },
       {
         "id": 3,
@@ -35,8 +72,36 @@
         "dependencies": [
           1
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Test DynamoDbRepository CRUD Operations",
+            "description": "Create unit tests for DynamoDbRepository CRUD operations including Create, Read, Update, Delete, Query, and Scan operations",
+            "details": "- Test Create operations with valid/invalid entities\\n- Test Read operations with existing/non-existing items\\n- Test Update operations with partial/full updates\\n- Test Delete operations with existing/non-existing items\\n- Test Query operations with various filters\\n- Test Scan operations with large datasets\\n- Test batch operations\\n- Mock IAmazonDynamoDB client responses",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 2,
+            "title": "Test Pagination Components",
+            "description": "Create unit tests for all pagination components including PagedResponse, PaginationHelper, PaginationMetadata, PaginationPrevNextHelper, and PaginationQuery",
+            "details": "- Test PagedResponse serialization/deserialization\\n- Test PaginationHelper calculation logic\\n- Test PaginationMetadata accuracy for various scenarios\\n- Test PaginationPrevNextHelper navigation logic\\n- Test PaginationQuery parameter validation\\n- Test edge cases (empty results, single page, multiple pages)\\n- Test QueryFilter functionality",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 3
+          },
+          {
+            "id": 3,
+            "title": "Test DynamoDB Type Converters",
+            "description": "Create unit tests for all DynamoDB type converters including EnumTypeConverter, DateTimeUtcConverter, and GuidTypeConverter",
+            "details": "- Test EnumTypeConverter with various enum types\\n- Test DateTimeUtcConverter timezone handling\\n- Test GuidTypeConverter format validation\\n- Test null value handling for all converters\\n- Test invalid format handling for all converters\\n- Test round-trip conversion accuracy\\n- Test edge cases and boundary conditions",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 3
+          }
+        ]
       },
       {
         "id": 4,
@@ -48,8 +113,36 @@
         "dependencies": [
           1
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Test S3Storage Core Operations",
+            "description": "Create unit tests for S3Storage implementation covering upload, download, delete, and list operations",
+            "details": "- Test upload file operations with various file types\\n- Test download file operations and stream handling\\n- Test delete operations for existing/non-existing objects\\n- Test list objects functionality with pagination\\n- Test stream handling and memory management\\n- Test file size limits and content type handling\\n- Mock IAmazonS3 client for all operations",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 4
+          },
+          {
+            "id": 2,
+            "title": "Test S3UrlGenerator",
+            "description": "Create unit tests for S3UrlGenerator covering presigned URL generation, expiration handling, and HTTP methods",
+            "details": "- Test presigned URL generation for various scenarios\\n- Test URL expiration handling and validation\\n- Test different HTTP methods (GET, PUT, DELETE)\\n- Test custom headers and metadata inclusion\\n- Test URL format validation\\n- Test security token handling\\n- Mock S3 client for URL generation",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 4
+          },
+          {
+            "id": 3,
+            "title": "Test S3Ref and Error Handling",
+            "description": "Create unit tests for S3Ref reference handling and comprehensive error scenario testing",
+            "details": "- Test S3Ref reference parsing and validation\\n- Test bucket/key extraction from references\\n- Test ToString formatting for S3Ref\\n- Test error scenarios (network failures, invalid buckets)\\n- Test access denied scenarios\\n- Test exception handling for S3 service errors\\n- Test malformed S3 reference handling",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 4
+          }
+        ]
       },
       {
         "id": 5,
@@ -61,8 +154,36 @@
         "dependencies": [
           1
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Test SqsMessageQueue Operations",
+            "description": "Create unit tests for SqsMessageQueue covering send, receive, delete, and batch operations",
+            "details": "- Test send message operations with various message types\\n- Test receive message operations and polling\\n- Test delete message operations after processing\\n- Test batch operations for efficiency\\n- Test message attributes handling\\n- Test queue URL validation\\n- Mock IAmazonSQS client for all operations",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 5
+          },
+          {
+            "id": 2,
+            "title": "Test SqsMessageHandler Processing",
+            "description": "Create unit tests for SqsMessageHandler covering message processing, error handling, and retry policies",
+            "details": "- Test message processing logic and workflows\\n- Test error handling and dead letter queue scenarios\\n- Test message acknowledgment patterns\\n- Test retry policies and exponential backoff\\n- Test message deserialization with various formats\\n- Test concurrent message processing scenarios\\n- Test timeout and cancellation handling",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 5
+          },
+          {
+            "id": 3,
+            "title": "Test SQS Service Registration",
+            "description": "Create unit tests for ServiceCollectionExtensions covering dependency injection registration and configuration",
+            "details": "- Test DI registration validation for SQS services\\n- Test configuration binding from appsettings\\n- Test service lifetime and scoping\\n- Test configuration validation and error handling\\n- Test service resolution and dependencies\\n- Test integration with other AWS services",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 5
+          }
+        ]
       },
       {
         "id": 6,
@@ -74,13 +195,76 @@
         "dependencies": [
           1
         ],
-        "status": "pending",
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Test HuidGenerator Algorithm",
+            "description": "Create unit tests for HuidGenerator covering HUID generation algorithm, uniqueness validation, and format compliance",
+            "details": "- Test HUID generation algorithm correctness\\n- Test uniqueness validation across large sample sets\\n- Test format compliance and structure\\n- Test collision handling and resolution\\n- Test performance with high-volume generation\\n- Test edge cases with minimal patient data\\n- Test deterministic generation from same input",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 6
+          },
+          {
+            "id": 2,
+            "title": "Test PatientMatcher Algorithms",
+            "description": "Create unit tests for PatientMatcher covering exact matching, fuzzy matching, and multi-criteria matching scenarios",
+            "details": "- Test exact matching scenarios with identical data\\n- Test fuzzy matching with configurable tolerance\\n- Test name variations (nicknames, abbreviations, misspellings)\\n- Test date of birth matching with various formats\\n- Test multiple criteria matching and scoring\\n- Test matching accuracy with known patient pairs\\n- Test performance benchmarks for matching operations",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 6
+          },
+          {
+            "id": 3,
+            "title": "Test Patient Model and Edge Cases",
+            "description": "Create unit tests for Patients model covering data validation, serialization, and comprehensive edge case handling",
+            "details": "- Test Patients model data validation rules\\n- Test property constraints and boundaries\\n- Test serialization/deserialization accuracy\\n- Test edge cases with null/empty patient data\\n- Test special characters in names and addresses\\n- Test invalid date formats and boundary dates\\n- Test performance with large patient datasets\\n- Test HIPAA compliance in test data handling",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 6
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Create ThirdOpinion.Common.FunctionalTests Project",
+        "description": "Establish a new functional testing project for integration testing of AWS services (Cognito, DynamoDB, S3, SQS) using xUnit and Shouldly for fluent assertions. These tests should only run in development environment as part of a separate GitHub Action workflow, not in the main CI/CD pipeline.",
+        "details": "1. Create new test project structure:\n   - Initialize ThirdOpinion.Common.FunctionalTests as .NET test project\n   - Add references to ThirdOpinion.Common and all AWS service namespaces\n   - Configure xUnit as test framework with Shouldly for fluent assertions\n   - Add TestContainers or LocalStack for local AWS service emulation\n\n2. Implement base test infrastructure:\n   - Create BaseIntegrationTest class with setup/teardown lifecycle\n   - Implement TestFixture for shared AWS client initialization\n   - Add ITestOutputHelper for detailed test logging\n   - Create test data builders and factories\n\n3. Configure multi-environment support:\n   - appsettings.Test.json for local testing\n   - appsettings.Integration.json for CI/CD pipeline\n   - appsettings.Staging.json for pre-production validation\n   - Environment variable overrides for sensitive configurations\n   - AWS credentials and region configuration\n\n4. Implement Cognito integration tests:\n   - User registration and confirmation flow\n   - Authentication with real token generation\n   - Token refresh and expiration scenarios\n   - Multi-tenant authorization validation\n   - User pool and identity pool interactions\n\n5. Implement DynamoDB integration tests:\n   - Table creation and deletion\n   - Complex query and scan operations\n   - Transaction and batch operations\n   - GSI and LSI query patterns\n   - Pagination with real data sets\n   - Concurrent access and optimistic locking\n\n6. Implement S3 integration tests:\n   - Large file upload/download (multipart)\n   - Presigned URL generation and validation\n   - Bucket lifecycle policies\n   - Cross-region replication scenarios\n   - Object versioning and deletion\n   - Stream processing for large objects\n\n7. Implement SQS integration tests:\n   - Message flow from producer to consumer\n   - FIFO queue ordering guarantees\n   - Dead letter queue processing\n   - Message visibility timeout handling\n   - Batch operations performance\n   - Long polling vs short polling\n\n8. Create cross-service integration tests:\n   - S3 event triggering SQS messages\n   - DynamoDB streams to SQS integration\n   - Cognito user data stored in DynamoDB\n   - End-to-end patient data flow\n\n9. Implement test utilities:\n   - AWS service health check helpers\n   - Test data cleanup utilities\n   - Performance benchmarking helpers\n   - Resource usage monitoring\n   - Test report generation\n\n10. Add CI/CD integration:\n   - Docker compose for local testing\n   - Separate GitHub Actions workflow for functional tests (development environment only)\n   - Configure tests to be excluded from main CI/CD pipeline\n   - Test result publishing for functional test workflow\n   - Code coverage reporting\n   - Performance regression detection",
+        "testStrategy": "1. Verify project setup by ensuring all AWS service clients can be instantiated and connected\n2. Run tests against LocalStack or test containers to validate offline testing capability\n3. Execute full test suite against AWS test environment with isolated resources\n4. Validate test isolation by running tests in parallel without interference\n5. Confirm proper cleanup by checking no orphaned AWS resources remain after test runs\n6. Measure test execution time and ensure functional tests complete within acceptable timeframe (< 5 minutes for full suite)\n7. Validate environment switching by running same tests against different configurations\n8. Test error scenarios including network failures, service throttling, and permission denied\n9. Verify test reports generate correctly with detailed failure information\n10. Ensure integration with CI/CD pipeline executes successfully on every commit",
+        "status": "done",
+        "dependencies": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          "8"
+        ],
+        "priority": "medium",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Convert Unit Tests to Shouldly Assertions",
+        "description": "Convert all unit tests across both test projects to use Shouldly fluent assertions instead of xUnit assertions for improved readability and maintainability",
+        "details": "Replace all xUnit Assert statements with Shouldly fluent assertions across ThirdOpinion.Common.UnitTests and ThirdOpinion.Common.Aws.UnitTests projects. This includes converting Assert.Equal, Assert.True, Assert.NotNull, Assert.Throws, etc. to their Shouldly equivalents like ShouldBe, ShouldBeTrue, ShouldNotBeNull, ShouldThrow, etc.",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "priority": "medium",
         "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-08-14T03:46:08.337Z",
-      "updated": "2025-08-14T14:22:12.522Z",
+      "updated": "2025-08-15T14:50:33.942Z",
       "description": "Tasks for master context"
     }
   }

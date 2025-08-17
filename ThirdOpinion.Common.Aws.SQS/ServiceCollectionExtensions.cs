@@ -2,7 +2,9 @@ using Amazon;
 using Amazon.SQS;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Linq;
 
 namespace ThirdOpinion.Common.Aws.SQS;
 
@@ -17,22 +19,42 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddSqsMessaging(this IServiceCollection services,
         IConfiguration configuration)
     {
+        if (configuration == null)
+            throw new ArgumentNullException(nameof(configuration));
+
         services.Configure<SqsOptions>(configuration.GetSection("SQS"));
 
-        services.AddSingleton<IAmazonSQS>(sp =>
+        // Only register if not already registered
+        if (!services.Any(x => x.ServiceType == typeof(IAmazonSQS)))
         {
-            SqsOptions options = sp.GetRequiredService<IOptions<SqsOptions>>().Value;
-            var config = new AmazonSQSConfig();
+            services.AddSingleton<IAmazonSQS>(sp =>
+            {
+                SqsOptions options = sp.GetRequiredService<IOptions<SqsOptions>>().Value;
+                var config = new AmazonSQSConfig();
 
-            if (!string.IsNullOrEmpty(options.ServiceUrl)) config.ServiceURL = options.ServiceUrl;
+                if (!string.IsNullOrEmpty(options.ServiceUrl))
+                {
+                    config.ServiceURL = options.ServiceUrl;
+                }
+                else if (!string.IsNullOrEmpty(options.Region))
+                {
+                    config.RegionEndpoint = RegionEndpoint.GetBySystemName(options.Region);
+                }
+                else
+                {
+                    // Default to us-east-1 if no configuration is provided
+                    config.RegionEndpoint = RegionEndpoint.USEast1;
+                }
 
-            if (!string.IsNullOrEmpty(options.Region))
-                config.RegionEndpoint = RegionEndpoint.GetBySystemName(options.Region);
+                return new AmazonSQSClient(config);
+            });
+        }
 
-            return new AmazonSQSClient(config);
-        });
-
-        services.AddSingleton<ISqsMessageQueue, SqsMessageQueue>();
+        // Only register if not already registered
+        if (!services.Any(x => x.ServiceType == typeof(ISqsMessageQueue)))
+        {
+            services.AddSingleton<ISqsMessageQueue, SqsMessageQueue>();
+        }
 
         return services;
     }
@@ -43,22 +65,42 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddSqsMessaging(this IServiceCollection services,
         Action<SqsOptions> configureOptions)
     {
+        if (configureOptions == null)
+            throw new ArgumentNullException(nameof(configureOptions));
+
         services.Configure(configureOptions);
 
-        services.AddSingleton<IAmazonSQS>(sp =>
+        // Only register if not already registered
+        if (!services.Any(x => x.ServiceType == typeof(IAmazonSQS)))
         {
-            SqsOptions options = sp.GetRequiredService<IOptions<SqsOptions>>().Value;
-            var config = new AmazonSQSConfig();
+            services.AddSingleton<IAmazonSQS>(sp =>
+            {
+                SqsOptions options = sp.GetRequiredService<IOptions<SqsOptions>>().Value;
+                var config = new AmazonSQSConfig();
 
-            if (!string.IsNullOrEmpty(options.ServiceUrl)) config.ServiceURL = options.ServiceUrl;
+                if (!string.IsNullOrEmpty(options.ServiceUrl))
+                {
+                    config.ServiceURL = options.ServiceUrl;
+                }
+                else if (!string.IsNullOrEmpty(options.Region))
+                {
+                    config.RegionEndpoint = RegionEndpoint.GetBySystemName(options.Region);
+                }
+                else
+                {
+                    // Default to us-east-1 if no configuration is provided
+                    config.RegionEndpoint = RegionEndpoint.USEast1;
+                }
 
-            if (!string.IsNullOrEmpty(options.Region))
-                config.RegionEndpoint = RegionEndpoint.GetBySystemName(options.Region);
+                return new AmazonSQSClient(config);
+            });
+        }
 
-            return new AmazonSQSClient(config);
-        });
-
-        services.AddSingleton<ISqsMessageQueue, SqsMessageQueue>();
+        // Only register if not already registered
+        if (!services.Any(x => x.ServiceType == typeof(ISqsMessageQueue)))
+        {
+            services.AddSingleton<ISqsMessageQueue, SqsMessageQueue>();
+        }
 
         return services;
     }

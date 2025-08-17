@@ -7,7 +7,7 @@ public static class PaginationHelper
     public static Uri GetPageUri(PaginationQuery parameters, string baseUri, string route)
     {
         var builder = new UriBuilder(baseUri);
-        builder.Path += route;
+        builder.Path = builder.Path.TrimEnd('/') + "/" + route.TrimStart('/');
 
         var query = new StringBuilder();
         query.Append($"pageNumber={parameters.PageNumber}&pageSize={parameters.PageSize}");

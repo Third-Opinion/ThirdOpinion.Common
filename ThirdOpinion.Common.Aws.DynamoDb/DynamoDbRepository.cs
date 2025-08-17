@@ -17,10 +17,10 @@ public class DynamoDbRepository : IDynamoDbRepository
     private readonly IAmazonDynamoDB _dynamoDbClient;
     private readonly ILogger<DynamoDbRepository> _logger;
 
-    public DynamoDbRepository(IAmazonDynamoDB dynamoDbClient, ILogger<DynamoDbRepository> logger)
+    public DynamoDbRepository(IDynamoDBContext context, IAmazonDynamoDB dynamoDbClient, ILogger<DynamoDbRepository> logger)
     {
+        _context = context;
         _dynamoDbClient = dynamoDbClient;
-        _context = new DynamoDBContext(dynamoDbClient);
         _logger = logger;
     }
 

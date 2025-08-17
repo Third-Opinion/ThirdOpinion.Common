@@ -1,0 +1,205 @@
+name: Functional Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'ThirdOpinion.Common.FunctionalTests/**'
+      - 'ThirdOpinion.Common.Aws.*/**'
+      - 'ThirdOpinion.Common.Misc/**'
+      - '.github/workflows/functional-tests.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'ThirdOpinion.Common.FunctionalTests/**'
+      - 'ThirdOpinion.Common.Aws.*/**'
+      - 'ThirdOpinion.Common.Misc/**'
+      - '.github/workflows/functional-tests.yml'
+  workflow_dispatch:
+    inputs:
+      test_environment:
+        description: 'Test environment to use'
+        required: true
+        default: 'Development'
+        type: choice
+        options:
+          - Development
+          - Staging
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_NOLOGO: true
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: '615299752206'
+
+jobs:
+  functional-tests:
+    name: Functional Tests (AWS Dev Account)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    
+    permissions:
+      id-token: write
+      contents: read
+    
+    strategy:
+      matrix:
+        test-suite: [Cognito, DynamoDB, S3, SQS, CrossService]
+      fail-fast: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/dev-cdk-role-ue2-github-actions
+          role-session-name: GitHubActions-FunctionalTests-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Cache .NET packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore ThirdOpinion.Common.sln
+
+      - name: Build solution
+        run: dotnet build ThirdOpinion.Common.sln --no-restore --configuration Release
+
+      - name: Validate AWS connectivity
+        run: |
+          aws sts get-caller-identity
+          echo "AWS Account: $(aws sts get-caller-identity --query Account --output text)"
+          echo "AWS Region: $AWS_REGION"
+
+      - name: Run functional tests - ${{ matrix.test-suite }}
+        run: |
+          dotnet test ThirdOpinion.Common.FunctionalTests \
+            --no-build \
+            --configuration Release \
+            --logger trx \
+            --logger "console;verbosity=normal" \
+            --results-directory ./test-results \
+            --filter "Category=${{ matrix.test-suite }}" \
+            --collect:"XPlat Code Coverage" \
+            -- RunConfiguration.TestSessionTimeout=2700000
+        env:
+          ASPNETCORE_ENVIRONMENT: Test
+          AWS__UseLocalStack: false
+          AWS__Region: ${{ env.AWS_REGION }}
+          AWS__AccountId: ${{ env.AWS_ACCOUNT_ID }}
+          TestSettings__TestResourcePrefix: ci-${{ github.run_number }}
+          TestSettings__TestTimeout: 00:15:00
+          TestSettings__CleanupResources: true
+          TestSettings__ParallelExecution: false
+          TestSettings__MaxRetryAttempts: 5
+          TestSettings__RetryDelay: 00:00:05
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.test-suite }}
+          path: |
+            ./test-results/**/*.trx
+            ./test-results/**/*.xml
+          retention-days: 7
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-${{ matrix.test-suite }}
+          path: ./test-results/**/coverage.cobertura.xml
+          retention-days: 7
+
+      - name: Cleanup test resources
+        if: always()
+        run: |
+          echo "Cleaning up any remaining test resources..."
+          # Clean up any remaining test resources with the ci- prefix
+          aws s3 ls | grep "ci-${{ github.run_number }}" | awk '{print $3}' | xargs -I {} aws s3 rb s3://{} --force || true
+          aws dynamodb list-tables --query "TableNames[?starts_with(@, 'ci-${{ github.run_number }}')]" --output text | xargs -I {} aws dynamodb delete-table --table-name {} || true
+          aws sqs list-queues --queue-name-prefix "ci-${{ github.run_number }}" --query "QueueUrls" --output text | xargs -I {} aws sqs delete-queue --queue-url {} || true
+          echo "Cleanup completed"
+
+
+  publish-results:
+    name: Publish Test Results
+    runs-on: ubuntu-latest
+    needs: [functional-tests]
+    if: always()
+
+    steps:
+      - name: Download all test artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./all-test-results
+
+      - name: Publish test results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Functional Test Results
+          path: './all-test-results/**/test-results/**/*.trx'
+          reporter: dotnet-trx
+          fail-on-error: false
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## Functional Test Results 🧪" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** AWS Dev Account (615299752206)" >> $GITHUB_STEP_SUMMARY
+          echo "**Region:** us-east-1" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          for suite in Cognito DynamoDB S3 SQS CrossService; do
+            if [[ -d "./all-test-results/test-results-$suite" ]]; then
+              echo "| $suite | ✅ Completed |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| $suite | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Test artifacts have been uploaded and are available for download." >> $GITHUB_STEP_SUMMARY
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run security scan
+        uses: securecodewarrior/github-action-add-sarif@v1
+        with:
+          sarif-file: 'security-scan-results.sarif'
+        continue-on-error: true
+
+      - name: Check for secrets
+        run: |
+          echo "Scanning for potential secrets in test files..."
+          if grep -r -i "password\|secret\|key\|token" ThirdOpinion.Common.FunctionalTests/ --include="*.cs" --include="*.json" | grep -v "// " | grep -v "/// " | grep -v "test\|fake\|mock\|example\|AccessKey\|SecretKey\|LocalStack"; then
+            echo "⚠️ Potential secrets found in test files"
+            exit 1
+          else
+            echo "✅ No secrets detected in test files"
+          fi

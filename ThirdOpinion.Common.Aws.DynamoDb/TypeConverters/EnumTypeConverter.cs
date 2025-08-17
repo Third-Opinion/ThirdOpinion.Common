@@ -78,7 +78,7 @@ public class NullableEnumConverter<T> : IPropertyConverter where T : struct, Enu
         if (result == null)
             return null;
 
-        // Convert to nullable enum
-        return Activator.CreateInstance(typeof(Nullable<>).MakeGenericType(typeof(T)), result);
+        // Convert to nullable enum by boxing the value as a nullable type
+        return (T?)(T)result;
     }
 }

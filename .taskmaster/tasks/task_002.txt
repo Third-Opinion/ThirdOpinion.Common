@@ -1,0 +1,53 @@
+# Task ID: 2
+# Title: Test AWS Cognito Authentication Components
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Create comprehensive unit tests for all Cognito-related authentication classes including attributes, extensions, and options
+# Details:
+1. Test AuthorizePersonGuidAttribute:
+   - Valid GUID scenarios
+   - Invalid/missing GUID scenarios
+   - Authorization success/failure paths
+2. Test AuthorizeTenantGuidAttribute:
+   - Valid tenant GUID validation
+   - Multi-tenant scenarios
+   - Unauthorized access attempts
+3. Test ClaimsPrincipalExtensions:
+   - Claim extraction methods
+   - Null/empty claim handling
+   - Custom claim type scenarios
+4. Test GlobalAppSettingsOptions:
+   - Configuration binding
+   - Default value handling
+   - Validation of required settings
+5. Mock AWS Cognito services using Moq or NSubstitute
+
+# Test Strategy:
+Achieve 90% code coverage for ThirdOpinion.Common.Aws.Cognito namespace, test all public methods, verify authorization logic with mocked HttpContext, validate claim extraction accuracy
+
+# Subtasks:
+## 1. Test AuthorizePersonGuidAttribute [done]
+### Dependencies: None
+### Description: Create unit tests for AuthorizePersonGuidAttribute covering valid GUID scenarios, invalid/missing GUID scenarios, and authorization success/failure paths
+### Details:
+- Test valid GUID format validation\n- Test invalid GUID format handling\n- Test missing GUID parameter scenarios\n- Test authorization success paths\n- Test authorization failure paths\n- Mock HttpContext for testing
+
+## 2. Test AuthorizeTenantGuidAttribute [done]
+### Dependencies: None
+### Description: Create unit tests for AuthorizeTenantGuidAttribute covering tenant GUID validation, multi-tenant scenarios, and unauthorized access attempts
+### Details:
+- Test valid tenant GUID validation\n- Test multi-tenant authorization scenarios\n- Test unauthorized access attempts\n- Test tenant isolation enforcement\n- Mock tenant context for testing
+
+## 3. Test ClaimsPrincipalExtensions [done]
+### Dependencies: None
+### Description: Create unit tests for ClaimsPrincipalExtensions covering claim extraction methods, null/empty claim handling, and custom claim types
+### Details:
+- Test claim extraction methods\n- Test null/empty claim handling\n- Test custom claim type scenarios\n- Test claims parsing and validation\n- Mock ClaimsPrincipal for testing
+
+## 4. Test GlobalAppSettingsOptions [done]
+### Dependencies: None
+### Description: Create unit tests for GlobalAppSettingsOptions covering configuration binding, default value handling, and validation
+### Details:
+- Test configuration binding from appsettings\n- Test default value handling\n- Test validation of required settings\n- Test configuration parsing errors\n- Mock IConfiguration for testing
+

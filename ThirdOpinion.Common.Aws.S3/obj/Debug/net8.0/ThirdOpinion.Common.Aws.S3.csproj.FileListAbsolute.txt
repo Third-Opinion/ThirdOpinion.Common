@@ -6,6 +6,7 @@
 /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.S3/obj/Debug/net8.0/ThirdOpinion.Common.Aws.S3.AssemblyInfoInputs.cache
 /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.S3/obj/Debug/net8.0/ThirdOpinion.Common.Aws.S3.AssemblyInfo.cs
 /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.S3/obj/Debug/net8.0/ThirdOpinion.Common.Aws.S3.csproj.CoreCompileInputs.cache
+/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.S3/obj/Debug/net8.0/ThirdOpinion.Common.Aws.S3.sourcelink.json
 /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.S3/obj/Debug/net8.0/ThirdOpinion.Common.Aws.S3.dll
 /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.S3/obj/Debug/net8.0/refint/ThirdOpinion.Common.Aws.S3.dll
 /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.S3/obj/Debug/net8.0/ThirdOpinion.Common.Aws.S3.pdb

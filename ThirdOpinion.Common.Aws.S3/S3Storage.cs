@@ -193,6 +193,8 @@ public class S3Storage : IS3Storage
     {
         try
         {
+            var allObjects = new List<S3Object>();
+            ListObjectsV2Response response;
             var request = new ListObjectsV2Request
             {
                 BucketName = bucketName,
@@ -200,11 +202,16 @@ public class S3Storage : IS3Storage
                 MaxKeys = maxKeys
             };
 
-            ListObjectsV2Response? response
-                = await _s3Client.ListObjectsV2Async(request, cancellationToken);
+            do
+            {
+                response = await _s3Client.ListObjectsV2Async(request, cancellationToken);
+                allObjects.AddRange(response.S3Objects);
+                request.ContinuationToken = response.NextContinuationToken;
+            } while (response.IsTruncated);
+
             _logger.LogDebug("Listed {Count} objects from S3 bucket {Bucket} with prefix {Prefix}",
-                response.S3Objects.Count, bucketName, prefix);
-            return response.S3Objects;
+                allObjects.Count, bucketName, prefix);
+            return allObjects;
         }
         catch (Exception ex)
         {

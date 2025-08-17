@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Misc.patients.PatientHuid;
 
-public class HuidGenerator
+public static class HuidGenerator
 {
     public const string HuidPattern
         = @"^P[2346789ADEHJKLMNPQRUVWXYZBCFGT]{3}-[2346789ADEHJKLMNPQRUVWXYZBCFGT]{3}-[2346789ADEHJKLMNPQRUVWXYZBCFGT]{4}$";

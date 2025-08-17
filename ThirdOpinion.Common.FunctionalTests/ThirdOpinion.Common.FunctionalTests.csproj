@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <RootNamespace>ThirdOpinion.Common.FunctionalTests</RootNamespace>
+        <OutputType>Library</OutputType>
+        <!-- Development-only functional tests - not run in CI/CD -->
+        <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AWSSDK.SSO" Version="4.0.0.19" />
+        <PackageReference Include="AWSSDK.SSOOIDC" Version="4.0.0.19" />
+        <PackageReference Include="coverlet.collector" Version="6.0.0"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0"/>
+        <PackageReference Include="xunit" Version="2.5.3"/>
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3"/>
+        <PackageReference Include="Shouldly" Version="4.2.1"/>
+        
+        <!-- AWS SDK packages -->
+        <PackageReference Include="AWSSDK.Core" Version="4.0.0.23"/>
+        <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="4.0.2.2"/>
+        <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.3.4"/>
+        <PackageReference Include="AWSSDK.S3" Version="4.0.4"/>
+        <PackageReference Include="AWSSDK.SQS" Version="4.0.0.21"/>
+        
+        <!-- Configuration and Dependency Injection -->
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="8.0.2"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1"/>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.1"/>
+        
+        
+        <!-- Additional utilities -->
+        <PackageReference Include="Bogus" Version="35.4.0"/>
+        <PackageReference Include="Polly" Version="8.2.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Xunit"/>
+        <Using Include="Shouldly"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.Cognito\ThirdOpinion.Common.Aws.Cognito.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.DynamoDb\ThirdOpinion.Common.Aws.DynamoDb.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.S3\ThirdOpinion.Common.Aws.S3.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.SQS\ThirdOpinion.Common.Aws.SQS.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Misc\ThirdOpinion.Common.Misc.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="appsettings.Test.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+</Project>

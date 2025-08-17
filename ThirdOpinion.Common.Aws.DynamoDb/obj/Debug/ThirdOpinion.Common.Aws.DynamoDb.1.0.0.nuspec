@@ -7,7 +7,7 @@
     <readme>README.md</readme>
     <description>Common DynamoDB repository and utilities for ThirdOpinion applications</description>
     <tags>aws dynamodb repository</tags>
-    <repository type="git" url="https://github.com/thirdopinion/common" />
+    <repository type="git" url="https://github.com/thirdopinion/common" commit="3f6e836f1f77a298ed0c9355df4fe66dcab84c31" />
     <dependencies>
       <group targetFramework="net8.0">
         <dependency id="AWSSDK.DynamoDBv2" version="3.7.401.7" exclude="Build,Analyzers" />

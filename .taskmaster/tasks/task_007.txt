@@ -1,0 +1,89 @@
+# Task ID: 7
+# Title: Create ThirdOpinion.Common.FunctionalTests Project
+# Status: pending
+# Dependencies: 2, 3, 4, 5, 6, 8
+# Priority: medium
+# Description: Establish a new functional testing project for integration testing of AWS services (Cognito, DynamoDB, S3, SQS) using xUnit and Shouldly for fluent assertions. These tests should only run in development environment as part of a separate GitHub Action workflow, not in the main CI/CD pipeline.
+# Details:
+1. Create new test project structure:
+   - Initialize ThirdOpinion.Common.FunctionalTests as .NET test project
+   - Add references to ThirdOpinion.Common and all AWS service namespaces
+   - Configure xUnit as test framework with Shouldly for fluent assertions
+   - Add TestContainers or LocalStack for local AWS service emulation
+
+2. Implement base test infrastructure:
+   - Create BaseIntegrationTest class with setup/teardown lifecycle
+   - Implement TestFixture for shared AWS client initialization
+   - Add ITestOutputHelper for detailed test logging
+   - Create test data builders and factories
+
+3. Configure multi-environment support:
+   - appsettings.Test.json for local testing
+   - appsettings.Integration.json for CI/CD pipeline
+   - appsettings.Staging.json for pre-production validation
+   - Environment variable overrides for sensitive configurations
+   - AWS credentials and region configuration
+
+4. Implement Cognito integration tests:
+   - User registration and confirmation flow
+   - Authentication with real token generation
+   - Token refresh and expiration scenarios
+   - Multi-tenant authorization validation
+   - User pool and identity pool interactions
+
+5. Implement DynamoDB integration tests:
+   - Table creation and deletion
+   - Complex query and scan operations
+   - Transaction and batch operations
+   - GSI and LSI query patterns
+   - Pagination with real data sets
+   - Concurrent access and optimistic locking
+
+6. Implement S3 integration tests:
+   - Large file upload/download (multipart)
+   - Presigned URL generation and validation
+   - Bucket lifecycle policies
+   - Cross-region replication scenarios
+   - Object versioning and deletion
+   - Stream processing for large objects
+
+7. Implement SQS integration tests:
+   - Message flow from producer to consumer
+   - FIFO queue ordering guarantees
+   - Dead letter queue processing
+   - Message visibility timeout handling
+   - Batch operations performance
+   - Long polling vs short polling
+
+8. Create cross-service integration tests:
+   - S3 event triggering SQS messages
+   - DynamoDB streams to SQS integration
+   - Cognito user data stored in DynamoDB
+   - End-to-end patient data flow
+
+9. Implement test utilities:
+   - AWS service health check helpers
+   - Test data cleanup utilities
+   - Performance benchmarking helpers
+   - Resource usage monitoring
+   - Test report generation
+
+10. Add CI/CD integration:
+   - Docker compose for local testing
+   - Separate GitHub Actions workflow for functional tests (development environment only)
+   - Configure tests to be excluded from main CI/CD pipeline
+   - Test result publishing for functional test workflow
+   - Code coverage reporting
+   - Performance regression detection
+
+# Test Strategy:
+1. Verify project setup by ensuring all AWS service clients can be instantiated and connected
+2. Run tests against LocalStack or test containers to validate offline testing capability
+3. Execute full test suite against AWS test environment with isolated resources
+4. Validate test isolation by running tests in parallel without interference
+5. Confirm proper cleanup by checking no orphaned AWS resources remain after test runs
+6. Measure test execution time and ensure functional tests complete within acceptable timeframe (< 5 minutes for full suite)
+7. Validate environment switching by running same tests against different configurations
+8. Test error scenarios including network failures, service throttling, and permission denied
+9. Verify test reports generate correctly with detailed failure information
+10. Ensure integration with CI/CD pipeline executes successfully on every commit

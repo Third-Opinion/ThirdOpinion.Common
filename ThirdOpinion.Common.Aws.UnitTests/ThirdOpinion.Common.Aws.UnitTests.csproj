@@ -7,7 +7,7 @@
         <IsTestProject>true</IsTestProject>
         <RootNamespace>ThirdOpinion.Common.Aws.Tests</RootNamespace>
         <OutputType>Library</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
@@ -19,6 +19,7 @@
         <PackageReference Include="Shouldly" Version="4.2.1"/>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1"/>
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1"/>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -29,6 +30,8 @@
     <ItemGroup>
         <ProjectReference Include="..\ThirdOpinion.Common.Aws.DynamoDb\ThirdOpinion.Common.Aws.DynamoDb.csproj"/>
         <ProjectReference Include="..\ThirdOpinion.Common.Aws.S3\ThirdOpinion.Common.Aws.S3.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.SQS\ThirdOpinion.Common.Aws.SQS.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.Cognito\ThirdOpinion.Common.Aws.Cognito.csproj"/>
     </ItemGroup>
 
 </Project>

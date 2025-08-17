@@ -470,6 +470,7 @@
 /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.UnitTests/obj/Debug/net8.0/ThirdOpinion.Common.UnitTests.AssemblyInfoInputs.cache
 /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.UnitTests/obj/Debug/net8.0/ThirdOpinion.Common.UnitTests.AssemblyInfo.cs
 /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.UnitTests/obj/Debug/net8.0/ThirdOpinion.Common.UnitTests.csproj.CoreCompileInputs.cache
+/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.UnitTests/obj/Debug/net8.0/ThirdOpinion.Common.UnitTests.sourcelink.json
 /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.UnitTests/obj/Debug/net8.0/ThirdOpi.E0CB579C.Up2Date
 /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.UnitTests/obj/Debug/net8.0/ThirdOpinion.Common.UnitTests.dll
 /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.UnitTests/obj/Debug/net8.0/refint/ThirdOpinion.Common.UnitTests.dll

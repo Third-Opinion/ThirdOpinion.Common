@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="a75c90aa-ee98-464e-a559-e5d9e798c626" name="@kens 2025-08-14 11:01:22" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2025-08-14T11:01:22.7952350-07:00" queuing="2025-08-14T11:01:22.7952350-07:00" start="2025-08-14T11:01:22.0150050-07:00" finish="2025-08-14T11:01:22.7982450-07:00" />
+  <TestSettings name="default" id="2fb0bfab-6198-400d-a549-23bb4ead32d9">
+    <Deployment runDeploymentRoot="_kens_2025-08-14_11_01_22" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="f87aff0e-c1c2-43ed-95a4-257358bc18ee" testId="04fe948b-5b24-cbf7-9485-0a1671e55124" testName="ThirdOpinion.Common.Aws.Tests.DynamoDb.TypeConvertersTests.NullableEnumConverter_FromEntry_ValidString_ReturnsNullableEnum" computerName="kens" duration="00:00:00.0085333" startTime="2025-08-14T11:01:22.7223020-07:00" endTime="2025-08-14T11:01:22.7223110-07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="f87aff0e-c1c2-43ed-95a4-257358bc18ee">
+      <Output>
+        <ErrorInfo>
+          <Message>Assert.IsType() Failure: Value is not the exact type
+Expected: typeof(TestEnum?)
+Actual:   typeof(ThirdOpinion.Common.Aws.Tests.DynamoDb.TypeConvertersTests+TestEnum)</Message>
+          <StackTrace>   at ThirdOpinion.Common.Aws.Tests.DynamoDb.TypeConvertersTests.NullableEnumConverter_FromEntry_ValidString_ReturnsNullableEnum() in /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.UnitTests/DynamoDb/TypeConvertersTests.cs:line 208
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="ThirdOpinion.Common.Aws.Tests.DynamoDb.TypeConvertersTests.NullableEnumConverter_FromEntry_ValidString_ReturnsNullableEnum" storage="/users/ken/code/thirdopinion/thirdopinion.common/thirdopinion.common.aws.unittests/bin/debug/net9.0/thirdopinion.common.aws.unittests.dll" id="04fe948b-5b24-cbf7-9485-0a1671e55124">
+      <Execution id="f87aff0e-c1c2-43ed-95a4-257358bc18ee" />
+      <TestMethod codeBase="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.UnitTests/bin/Debug/net9.0/ThirdOpinion.Common.Aws.UnitTests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="ThirdOpinion.Common.Aws.Tests.DynamoDb.TypeConvertersTests" name="NullableEnumConverter_FromEntry_ValidString_ReturnsNullableEnum" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="04fe948b-5b24-cbf7-9485-0a1671e55124" executionId="f87aff0e-c1c2-43ed-95a4-257358bc18ee" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="1" executed="1" passed="0" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.5.3.1+6b60a9e56a (64-bit .NET 9.0.3)
+[xUnit.net 00:00:00.08]   Discovering: ThirdOpinion.Common.Aws.UnitTests
+[xUnit.net 00:00:00.11]   Discovered:  ThirdOpinion.Common.Aws.UnitTests
+[xUnit.net 00:00:00.12]   Starting:    ThirdOpinion.Common.Aws.UnitTests
+[xUnit.net 00:00:00.16]       Assert.IsType() Failure: Value is not the exact type
+[xUnit.net 00:00:00.16]       Expected: typeof(TestEnum?)
+[xUnit.net 00:00:00.16]       Actual:   typeof(ThirdOpinion.Common.Aws.Tests.DynamoDb.TypeConvertersTests+TestEnum)
+[xUnit.net 00:00:00.16]       Stack Trace:
+[xUnit.net 00:00:00.16]         /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.UnitTests/DynamoDb/TypeConvertersTests.cs(208,0): at ThirdOpinion.Common.Aws.Tests.DynamoDb.TypeConvertersTests.NullableEnumConverter_FromEntry_ValidString_ReturnsNullableEnum()
+[xUnit.net 00:00:00.16]            at System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)
+[xUnit.net 00:00:00.16]            at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:00.17]   Finished:    ThirdOpinion.Common.Aws.UnitTests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="kens" outcome="Error" timestamp="2025-08-14T11:01:22.7182540-07:00">
+        <Text>[xUnit.net 00:00:00.16]     ThirdOpinion.Common.Aws.Tests.DynamoDb.TypeConvertersTests.NullableEnumConverter_FromEntry_ValidString_ReturnsNullableEnum [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

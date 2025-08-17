@@ -1,0 +1,46 @@
+# Task ID: 3
+# Title: Test DynamoDB Repository and Pagination
+# Status: pending
+# Dependencies: 1
+# Priority: high
+# Description: Implement unit tests for DynamoDB repository pattern, pagination helpers, and type converters
+# Details:
+1. Test DynamoDbRepository:
+   - CRUD operations (Create, Read, Update, Delete)
+   - Query and scan operations
+   - Batch operations
+   - Error handling and retry logic
+2. Test Pagination components:
+   - PagedResponse serialization/deserialization
+   - PaginationHelper calculation logic
+   - PaginationMetadata accuracy
+   - PaginationPrevNextHelper navigation
+   - PaginationQuery parameter validation
+3. Test TypeConverters:
+   - EnumTypeConverter with various enum types
+   - DateTimeUtcConverter timezone handling
+   - GuidTypeConverter format validation
+4. Mock IAmazonDynamoDB client responses
+
+# Test Strategy:
+Cover all repository methods with positive and negative test cases, validate pagination edge cases (empty results, single page, multiple pages), ensure type converters handle null values and invalid formats correctly
+
+# Subtasks:
+## 1. Test DynamoDbRepository CRUD Operations [done]
+### Dependencies: None
+### Description: Create unit tests for DynamoDbRepository CRUD operations including Create, Read, Update, Delete, Query, and Scan operations
+### Details:
+- Test Create operations with valid/invalid entities\n- Test Read operations with existing/non-existing items\n- Test Update operations with partial/full updates\n- Test Delete operations with existing/non-existing items\n- Test Query operations with various filters\n- Test Scan operations with large datasets\n- Test batch operations\n- Mock IAmazonDynamoDB client responses
+
+## 2. Test Pagination Components [done]
+### Dependencies: None
+### Description: Create unit tests for all pagination components including PagedResponse, PaginationHelper, PaginationMetadata, PaginationPrevNextHelper, and PaginationQuery
+### Details:
+- Test PagedResponse serialization/deserialization\n- Test PaginationHelper calculation logic\n- Test PaginationMetadata accuracy for various scenarios\n- Test PaginationPrevNextHelper navigation logic\n- Test PaginationQuery parameter validation\n- Test edge cases (empty results, single page, multiple pages)\n- Test QueryFilter functionality
+
+## 3. Test DynamoDB Type Converters [done]
+### Dependencies: None
+### Description: Create unit tests for all DynamoDB type converters including EnumTypeConverter, DateTimeUtcConverter, and GuidTypeConverter
+### Details:
+- Test EnumTypeConverter with various enum types\n- Test DateTimeUtcConverter timezone handling\n- Test GuidTypeConverter format validation\n- Test null value handling for all converters\n- Test invalid format handling for all converters\n- Test round-trip conversion accuracy\n- Test edge cases and boundary conditions
+

@@ -36,7 +36,7 @@ public class AuthorizeTenantGuidAttribute : ValidationAttribute
             return new ValidationResult($"TenantGuid {propertyGuid} not found in configuration");
 
 
-        if (tenantGroups == null || tenantGroups.Count == 0 || !tenantGroups.Union(groups).Any())
+        if (tenantGroups == null || tenantGroups.Count == 0 || !tenantGroups.Intersect(groups).Any())
             return new ValidationResult("TenantGuid does not match the authenticated user.");
 
         // Validation passed

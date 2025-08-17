@@ -21,8 +21,9 @@
   </ImportGroup>
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <Pkgxunit_analyzers Condition=" '$(Pkgxunit_analyzers)' == '' ">/Users/ken/.nuget/packages/xunit.analyzers/1.4.0</Pkgxunit_analyzers>
-    <PkgAWSSDK_Core Condition=" '$(PkgAWSSDK_Core)' == '' ">/Users/ken/.nuget/packages/awssdk.core/3.7.400.29</PkgAWSSDK_Core>
-    <PkgAWSSDK_S3 Condition=" '$(PkgAWSSDK_S3)' == '' ">/Users/ken/.nuget/packages/awssdk.s3/3.7.402</PkgAWSSDK_S3>
+    <PkgAWSSDK_Core Condition=" '$(PkgAWSSDK_Core)' == '' ">/Users/ken/.nuget/packages/awssdk.core/3.7.400.63</PkgAWSSDK_Core>
     <PkgAWSSDK_DynamoDBv2 Condition=" '$(PkgAWSSDK_DynamoDBv2)' == '' ">/Users/ken/.nuget/packages/awssdk.dynamodbv2/3.7.401.7</PkgAWSSDK_DynamoDBv2>
+    <PkgAWSSDK_SQS Condition=" '$(PkgAWSSDK_SQS)' == '' ">/Users/ken/.nuget/packages/awssdk.sqs/3.7.400.63</PkgAWSSDK_SQS>
+    <PkgAWSSDK_S3 Condition=" '$(PkgAWSSDK_S3)' == '' ">/Users/ken/.nuget/packages/awssdk.s3/3.7.402</PkgAWSSDK_S3>
   </PropertyGroup>
 </Project>

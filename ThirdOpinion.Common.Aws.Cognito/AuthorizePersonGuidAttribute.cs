@@ -85,7 +85,7 @@ public class AuthorizeTenantGuidPersonAttribute : ActionFilterAttribute
             }
 
             if (tenantGroups.Count == 0 ||
-                !tenantGroups.Union(groups, StringComparer.OrdinalIgnoreCase).Any())
+                !tenantGroups.Intersect(groups, StringComparer.OrdinalIgnoreCase).Any())
             {
                 logger.LogDebug("TenantGuid does not match the authenticated user group");
                 context.Result = new ForbidResult("Bearer");

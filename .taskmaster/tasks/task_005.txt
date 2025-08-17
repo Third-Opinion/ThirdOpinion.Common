@@ -1,0 +1,47 @@
+# Task ID: 5
+# Title: Test SQS Message Queue Components
+# Status: pending
+# Dependencies: 1
+# Priority: medium
+# Description: Implement unit tests for SQS message queue service and message handler patterns
+# Details:
+1. Test SqsMessageQueue:
+   - Send message operations
+   - Receive message operations
+   - Delete message operations
+   - Batch operations
+   - Message attributes handling
+2. Test SqsMessageHandler:
+   - Message processing logic
+   - Error handling and dead letter queue
+   - Message acknowledgment
+   - Retry policies
+   - Message deserialization
+3. Test ServiceCollectionExtensions:
+   - DI registration validation
+   - Configuration binding
+4. Mock IAmazonSQS client
+5. Test concurrent message processing scenarios
+
+# Test Strategy:
+Mock SQS client for all queue operations, validate message serialization/deserialization, test retry logic with transient failures, verify dead letter queue handling, ensure proper cleanup of processed messages
+
+# Subtasks:
+## 1. Test SqsMessageQueue Operations [done]
+### Dependencies: None
+### Description: Create unit tests for SqsMessageQueue covering send, receive, delete, and batch operations
+### Details:
+- Test send message operations with various message types\n- Test receive message operations and polling\n- Test delete message operations after processing\n- Test batch operations for efficiency\n- Test message attributes handling\n- Test queue URL validation\n- Mock IAmazonSQS client for all operations
+
+## 2. Test SqsMessageHandler Processing [done]
+### Dependencies: None
+### Description: Create unit tests for SqsMessageHandler covering message processing, error handling, and retry policies
+### Details:
+- Test message processing logic and workflows\n- Test error handling and dead letter queue scenarios\n- Test message acknowledgment patterns\n- Test retry policies and exponential backoff\n- Test message deserialization with various formats\n- Test concurrent message processing scenarios\n- Test timeout and cancellation handling
+
+## 3. Test SQS Service Registration [done]
+### Dependencies: None
+### Description: Create unit tests for ServiceCollectionExtensions covering dependency injection registration and configuration
+### Details:
+- Test DI registration validation for SQS services\n- Test configuration binding from appsettings\n- Test service lifetime and scoping\n- Test configuration validation and error handling\n- Test service resolution and dependencies\n- Test integration with other AWS services
+

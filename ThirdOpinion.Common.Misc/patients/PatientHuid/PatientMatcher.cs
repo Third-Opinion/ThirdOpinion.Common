@@ -63,7 +63,11 @@ public static class PatientMatcher
             nameFactors += 1.0f;
         }
 
-        // Middle name comparison
+        // Calculate normalized name score based on first and last names only
+        float normalizedNameScore = nameFactors > 0 ? nameScore / nameFactors : 0;
+        
+        // Middle name comparison - provide bonus on top of base score
+        float middleNameBonus = 0.0f;
         if (!string.IsNullOrEmpty(patientBase.Demographics.MiddleName) &&
             !string.IsNullOrEmpty(patientToCompare.Demographics.MiddleName))
         {
@@ -73,28 +77,26 @@ public static class PatientMatcher
                 patientBase.Demographics.MiddleName[0] ==
                 patientToCompare.Demographics.MiddleName[0])
             {
-                nameScore += 0.9f;
+                middleNameBonus = 0.2f; // 20% bonus for middle initial match
             }
             else
             {
                 float middleNameSimilarity = CalculateStringSimilarity(
                     patientBase.Demographics.MiddleName,
                     patientToCompare.Demographics.MiddleName);
-                nameScore += middleNameSimilarity;
+                middleNameBonus = middleNameSimilarity * 0.2f; // Up to 20% bonus for full middle name match
             }
-
-            nameFactors += 0.8f; // Middle name slightly less important than first name
         }
-
-        // Calculate normalized name score
-        float normalizedNameScore = nameFactors > 0 ? nameScore / nameFactors : 0;
-
+        
         // Apply extra weight for exceptionally good name matches
         if (normalizedNameScore > 0.9f && nameFactors >= 2.0f)
             normalizedNameScore
                 = Math.Min(1.0f, normalizedNameScore * 1.1f); // Boost very good matches
 
         totalScore += normalizedNameScore * nameWeight;
+        
+        // Apply middle name bonus directly to total score to ensure it's not lost to capping
+        totalScore += middleNameBonus * nameWeight;
         maxPossibleScore += nameWeight;
 
         // 2. BIRTH DATE COMPARISON
@@ -271,9 +273,24 @@ public static class PatientMatcher
         if (normalizedNameScore > 0.9 && birthDateScore > 0.9 && sexScore > 0.5)
             samePerson = Math.Max(samePerson, 0.95f);
 
-        // Different sex and birth date almost certainly means different people
-        if (sexScore == 0 && birthDateScore < 0.3 && patientBase.Demographics.Sex.HasValue &&
-            patientToCompare.Demographics.Sex.HasValue) samePerson = Math.Min(samePerson, 0.1f);
+        // Different sex should significantly reduce confidence, especially with other factors
+        if (sexScore == 0.0f && patientBase.Demographics.Sex.HasValue &&
+            patientToCompare.Demographics.Sex.HasValue)
+        {
+            // Apply sex difference penalty - more severe if birth dates don't match well too
+            if (birthDateScore < 0.3f)
+                samePerson = Math.Min(samePerson, 0.1f); // Very low score for sex + birth date mismatch
+            else
+                samePerson = Math.Min(samePerson, 0.3f); // Moderate penalty for sex difference only
+        }
+
+        // Death date mismatch is a strong indicator of different people
+        if (patientBase.Demographics.DeathDate.HasValue &&
+            patientToCompare.Demographics.DeathDate.HasValue &&
+            patientBase.Demographics.DeathDate.Value.Date != patientToCompare.Demographics.DeathDate.Value.Date)
+        {
+            samePerson = Math.Min(samePerson, 0.5f); // Cap at 50% for death date mismatch
+        }
 
         return Math.Min(1.0f, Math.Max(0.0f, samePerson)); // Ensure result is between 0 and 1
     }

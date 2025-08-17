@@ -1,0 +1,47 @@
+# Task ID: 4
+# Title: Test S3 Storage Implementation
+# Status: pending
+# Dependencies: 1
+# Priority: medium
+# Description: Create unit tests for S3 storage service, URL generation, and S3 reference handling
+# Details:
+1. Test S3Storage implementation:
+   - Upload file operations
+   - Download file operations
+   - Delete operations
+   - List objects functionality
+   - Stream handling
+2. Test S3UrlGenerator:
+   - Presigned URL generation
+   - URL expiration handling
+   - Different HTTP methods (GET, PUT, DELETE)
+   - Custom headers and metadata
+3. Test S3Ref:
+   - Reference parsing and validation
+   - Bucket/key extraction
+   - ToString formatting
+4. Mock IAmazonS3 client
+5. Test error scenarios (network failures, invalid buckets, access denied)
+
+# Test Strategy:
+Mock S3 client responses for all operations, validate URL format and expiration times, test file size limits and content type handling, verify exception handling for S3 service errors
+
+# Subtasks:
+## 1. Test S3Storage Core Operations [done]
+### Dependencies: None
+### Description: Create unit tests for S3Storage implementation covering upload, download, delete, and list operations
+### Details:
+- Test upload file operations with various file types\n- Test download file operations and stream handling\n- Test delete operations for existing/non-existing objects\n- Test list objects functionality with pagination\n- Test stream handling and memory management\n- Test file size limits and content type handling\n- Mock IAmazonS3 client for all operations
+
+## 2. Test S3UrlGenerator [done]
+### Dependencies: None
+### Description: Create unit tests for S3UrlGenerator covering presigned URL generation, expiration handling, and HTTP methods
+### Details:
+- Test presigned URL generation for various scenarios\n- Test URL expiration handling and validation\n- Test different HTTP methods (GET, PUT, DELETE)\n- Test custom headers and metadata inclusion\n- Test URL format validation\n- Test security token handling\n- Mock S3 client for URL generation
+
+## 3. Test S3Ref and Error Handling [done]
+### Dependencies: None
+### Description: Create unit tests for S3Ref reference handling and comprehensive error scenario testing
+### Details:
+- Test S3Ref reference parsing and validation\n- Test bucket/key extraction from references\n- Test ToString formatting for S3Ref\n- Test error scenarios (network failures, invalid buckets)\n- Test access denied scenarios\n- Test exception handling for S3 service errors\n- Test malformed S3 reference handling
+

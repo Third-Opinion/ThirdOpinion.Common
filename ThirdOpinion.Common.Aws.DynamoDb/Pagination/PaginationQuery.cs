@@ -5,26 +5,27 @@ namespace ThirdOpinion.Common.Aws.DynamoDb.Pagination;
 /// </summary>
 public class PaginationQuery
 {
-    private readonly int _pageSize = 10;
+    private int _pageSize = 10;
 
     public PaginationQuery(int pageNumber, int pageSize = 10, int maxPageSize = 100)
     {
         MaxPageSize = maxPageSize;
-        pageNumber = pageNumber;
+        PageNumber = pageNumber;
+        PageSize = pageSize;
     }
 
     public PaginationQuery()
     {
     }
 
-    public int MaxPageSize { get; } = 100;
+    public int MaxPageSize { get; init; } = 100;
 
     public int PageNumber { get; set; } = 1;
 
     public int PageSize
     {
         get => _pageSize;
-        init => _pageSize = Math.Min(value, MaxPageSize);
+        set => _pageSize = Math.Min(value, MaxPageSize);
     }
 }
 

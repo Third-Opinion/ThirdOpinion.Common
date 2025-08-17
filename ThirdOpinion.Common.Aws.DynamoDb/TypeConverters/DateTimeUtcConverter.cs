@@ -1,5 +1,6 @@
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
+using System.Globalization;
 
 namespace ThirdOpinion.Common.Aws.DynamoDb.TypeConverters;
 
@@ -27,8 +28,8 @@ public class DateTimeUtcConverter : IPropertyConverter
     public object FromEntry(DynamoDBEntry entry)
     {
         if (entry is Primitive { Value: string stringValue } &&
-            DateTime.TryParse(stringValue, out DateTime dateTime))
-            return DateTime.SpecifyKind(dateTime, DateTimeKind.Utc);
+            DateTime.TryParse(stringValue, null, DateTimeStyles.RoundtripKind, out DateTime dateTime))
+            return dateTime;
         throw new ArgumentException("Entry must be a string primitive containing a valid DateTime",
             nameof(entry));
     }
