@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace Misc.@string;
+namespace Misc.StringExtensions;
 
 public static class StringExtensions
 {

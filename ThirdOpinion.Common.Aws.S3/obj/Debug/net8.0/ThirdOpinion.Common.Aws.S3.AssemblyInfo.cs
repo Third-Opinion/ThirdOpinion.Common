@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Common S3 storage and utilities for ThirdOpinion applications")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3f6e836f1f77a298ed0c9355df4fe66dcab84c31")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+05602423d010ac4ac3e9f54822bd65c912896672")]
 [assembly: System.Reflection.AssemblyProductAttribute("ThirdOpinion.Common.Aws.S3")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ThirdOpinion.Common.Aws.S3")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

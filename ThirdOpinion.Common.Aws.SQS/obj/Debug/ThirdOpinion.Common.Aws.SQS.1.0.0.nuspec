@@ -7,7 +7,7 @@
     <readme>README.md</readme>
     <description>Common SQS messaging and utilities for ThirdOpinion applications</description>
     <tags>aws sqs messaging queue</tags>
-    <repository type="git" url="https://github.com/thirdopinion/common" commit="3f6e836f1f77a298ed0c9355df4fe66dcab84c31" />
+    <repository type="git" url="https://github.com/thirdopinion/common" commit="05602423d010ac4ac3e9f54822bd65c912896672" />
     <dependencies>
       <group targetFramework="net8.0">
         <dependency id="ThirdOpinion.Common.Aws.DynamoDb" version="1.0.0" exclude="Build,Analyzers" />
