@@ -44,7 +44,7 @@ public class DynamoDbRepository : IDynamoDbRepository
     {
         try
         {
-            BatchWrite<T>? batch = _context.CreateBatchWrite<T>();
+            var batch = _context.CreateBatchWrite<T>();
             foreach (T entity in entities) batch.AddPutItem(entity);
             await batch.ExecuteAsync(cancellationToken);
             _logger.LogDebug("Batch saved {Count} entities of type {EntityType} to DynamoDB",
@@ -105,7 +105,7 @@ public class DynamoDbRepository : IDynamoDbRepository
     {
         try
         {
-            AsyncSearch<T> query;
+            IAsyncSearch<T> query;
 
             if (filter != null)
             {
@@ -155,8 +155,8 @@ public class DynamoDbRepository : IDynamoDbRepository
             {
                 Items = items,
                 LastEvaluatedKey = response.LastEvaluatedKey,
-                Count = response.Count,
-                ScannedCount = response.ScannedCount
+                Count = response.Count ?? 0,
+                ScannedCount = response.ScannedCount ?? 0
             };
         }
         catch (Exception ex)
@@ -171,7 +171,7 @@ public class DynamoDbRepository : IDynamoDbRepository
     {
         try
         {
-            AsyncSearch<T> scan;
+            IAsyncSearch<T> scan;
 
             if (filter != null)
             {

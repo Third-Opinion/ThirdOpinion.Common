@@ -10,12 +10,12 @@ namespace ThirdOpinion.Common.Cognito;
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter)]
 public class AuthorizeTenantGuidAttribute : ValidationAttribute
 {
-    protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
-        var httpContextAccessor = (IHttpContextAccessor)validationContext
-            .GetService(typeof(IHttpContextAccessor));
-        var options = (IOptions<GlobalAppSettingsOptions>)validationContext
-            .GetService(typeof(IOptions<GlobalAppSettingsOptions>));
+        var httpContextAccessor = validationContext
+            .GetService(typeof(IHttpContextAccessor)) as IHttpContextAccessor;
+        var options = validationContext
+            .GetService(typeof(IOptions<GlobalAppSettingsOptions>)) as IOptions<GlobalAppSettingsOptions>;
 
         if (httpContextAccessor?.HttpContext?.User?.Identity?.IsAuthenticated != true)
             return new ValidationResult("User is not authenticated");
@@ -26,7 +26,8 @@ public class AuthorizeTenantGuidAttribute : ValidationAttribute
         if (groups == null) return new ValidationResult("User does not have a groups claim");
 
         // Get the value of the property being validated
-        var propertyGuid = (Guid)value;
+        if (value == null || !(value is Guid propertyGuid))
+            return new ValidationResult("Value must be a valid Guid");
 
         //look in config for the tenantGuid
         List<string>? tenantGroups = null;
