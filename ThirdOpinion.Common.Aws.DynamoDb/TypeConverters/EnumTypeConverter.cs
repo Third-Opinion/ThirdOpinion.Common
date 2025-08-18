@@ -23,7 +23,7 @@ public class EnumConverter<T> : IPropertyConverter where T : struct, Enum
         throw new ArgumentException("Value must be an enum or null");
     }
 
-    public object FromEntry(DynamoDBEntry entry)
+    public object? FromEntry(DynamoDBEntry entry)
     {
         var primitive = entry as Primitive;
 
@@ -59,20 +59,20 @@ public class NullableEnumConverter<T> : IPropertyConverter where T : struct, Enu
             var hasValueProperty = nullableType.GetProperty("HasValue");
             var valueProperty = nullableType.GetProperty("Value");
 
-            var hasValue = (bool)hasValueProperty.GetValue(value);
+            var hasValue = (bool)(hasValueProperty?.GetValue(value) ?? false);
             if (!hasValue)
                 return new Primitive { Value = null };
 
             // Get the actual enum value
-            var enumValue = valueProperty.GetValue(value);
-            return _enumConverter.ToEntry(enumValue);
+            var enumValue = valueProperty?.GetValue(value);
+            return enumValue != null ? _enumConverter.ToEntry(enumValue) : new Primitive { Value = null };
         }
 
         // Fall back to regular converter
         return _enumConverter.ToEntry(value);
     }
 
-    public object FromEntry(DynamoDBEntry entry)
+    public object? FromEntry(DynamoDBEntry entry)
     {
         var result = _enumConverter.FromEntry(entry);
         if (result == null)
