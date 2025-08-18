@@ -1,0 +1,6 @@
+@ThirdOpinion.Common.TestApi_HostAddress = http://localhost:5143
+
+GET {{ThirdOpinion.Common.TestApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
