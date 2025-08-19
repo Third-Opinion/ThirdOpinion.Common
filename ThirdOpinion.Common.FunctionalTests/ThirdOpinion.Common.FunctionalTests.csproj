@@ -39,7 +39,7 @@
         
         
         <!-- Additional utilities -->
-        <PackageReference Include="Bogus" Version="35.4.0"/>
+        <PackageReference Include="Bogus" Version="35.6.3"/>
         <PackageReference Include="Polly" Version="8.2.0"/>
     </ItemGroup>
 
