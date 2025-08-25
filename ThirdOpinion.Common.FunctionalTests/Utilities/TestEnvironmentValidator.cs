@@ -103,29 +103,68 @@ public class TestEnvironmentValidator
 
     private void ValidateAwsCredentials(ValidationResult result)
     {
-        _logger.LogDebug("Validating AWS credentials");
+        _logger.LogDebug("Validating AWS SSO credentials");
 
-        var hasEnvironmentCredentials = 
-            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID")) &&
-            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY"));
+        var awsProfile = Environment.GetEnvironmentVariable("AWS_PROFILE") ?? "to-dev-admin";
+        
+        // Reject AWS access key environment variables
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID")) ||
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY")))
+        {
+            result.Errors.Add(
+                "AWS access key environment variables detected but are not supported. " +
+                "This application requires SSO authentication only. " +
+                $"Please unset AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and use SSO profile '{awsProfile}' instead.");
+            return;
+        }
 
-        var hasProfileCredentials = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_PROFILE"));
-
-        var hasSharedCredentials = File.Exists(Path.Combine(
+        // Check for AWS config files
+        var configFile = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), 
             ".aws", 
-            "credentials"));
+            "config");
+        
+        var credentialsFile = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), 
+            ".aws", 
+            "credentials");
 
-        var hasInstanceProfile = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI")) ||
-                                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_EC2_METADATA_DISABLED"));
-
-        if (!hasEnvironmentCredentials && !hasProfileCredentials && !hasSharedCredentials && !hasInstanceProfile)
+        if (!File.Exists(configFile) && !File.Exists(credentialsFile))
         {
-            result.Errors.Add("No AWS credentials found. Configure AWS credentials using AWS CLI, environment variables, or IAM role.");
+            result.Errors.Add(
+                $"AWS configuration files not found. " +
+                $"Please configure SSO by running: aws configure sso --profile {awsProfile}");
+            return;
         }
-        else
+        
+        // Validate SSO profile exists and is configured
+        try
         {
-            _logger.LogInformation("AWS credentials found");
+            var chain = new Amazon.Runtime.CredentialManagement.CredentialProfileStoreChain();
+            if (!chain.TryGetProfile(awsProfile, out var profile))
+            {
+                result.Errors.Add(
+                    $"AWS SSO profile '{awsProfile}' not found. " +
+                    $"Please run: aws configure sso --profile {awsProfile}");
+                return;
+            }
+            
+            // Verify it's an SSO profile
+            if (profile.Options.SsoAccountId == null || profile.Options.SsoRoleName == null)
+            {
+                result.Errors.Add(
+                    $"Profile '{awsProfile}' exists but is not an SSO profile. " +
+                    $"Please configure SSO by running: aws configure sso --profile {awsProfile}");
+                return;
+            }
+            
+            _logger.LogInformation($"AWS SSO profile '{awsProfile}' validated successfully");
+            result.ServiceValidations["AWS SSO Profile"] = $"✓ {awsProfile} configured";
+        }
+        catch (Exception ex)
+        {
+            result.Errors.Add($"Failed to validate SSO profile: {ex.Message}");
+            _logger.LogError(ex, "Failed to validate SSO profile");
         }
     }
 
