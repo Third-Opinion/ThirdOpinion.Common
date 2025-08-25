@@ -58,30 +58,37 @@ ThirdOpinion.Common.FunctionalTests/
    dotnet build
    ```
 
-2. **Configure AWS credentials for local development:**
-   
-   **Option A: Use AWS Profile (Recommended)**
+2. **Configure AWS SSO credentials (required):**
    ```bash
-   # Configure AWS CLI with your development profile
-   aws configure --profile dev-account
+   # Configure SSO profile if not already done
+   aws configure sso --profile to-dev-admin
+   
+   # Login to AWS SSO
+   aws sso login --profile to-dev-admin
    
    # Set environment variable to use the profile
-   export AWS_PROFILE=dev-account
+   export AWS_PROFILE=to-dev-admin
    
-   # Verify access to dev account
+   # Verify access to dev account (should show account 615299752206)
    aws sts get-caller-identity
+   
+   # Alternative: Use the provided helper script
+   ./run-tests.sh
    ```
    
-   **Option B: Use Environment Variables**
-   ```bash
-   export AWS_ACCESS_KEY_ID=your_access_key
-   export AWS_SECRET_ACCESS_KEY=your_secret_key
-   export AWS_REGION=us-east-1
-   ```
+   **Note:** AWS access keys (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY) are not supported. This project requires SSO authentication only.
 
 3. **Run functional tests:**
    ```bash
-   # Run all tests against AWS Dev Account
+   # Using the helper script (automatically sets AWS_PROFILE)
+   ./run-tests.sh              # Run all tests
+   ./run-tests.sh s3           # Run S3 tests only
+   ./run-tests.sh cognito      # Run Cognito tests only
+   ./run-tests.sh dynamodb     # Run DynamoDB tests only
+   ./run-tests.sh sqs          # Run SQS tests only
+   
+   # Or manually with dotnet test (ensure AWS_PROFILE is set)
+   export AWS_PROFILE=to-dev-admin
    dotnet test ThirdOpinion.Common.FunctionalTests
    
    # Run specific test category
@@ -100,12 +107,13 @@ ThirdOpinion.Common.FunctionalTests/
 - **Cost Management**: Tests use minimal AWS resources to keep costs low
 - **Security**: Never commit AWS credentials - always use profiles or environment variables
 
-### Credential Priority
+### Authentication Requirements
 
-The tests will use credentials in this order:
-1. **AWS_PROFILE environment variable** (recommended for local development)
-2. **AWS environment variables** (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-3. **Default AWS credential chain** (for CI/CD environments using IAM roles)
+The tests require AWS SSO authentication:
+1. **AWS_PROFILE environment variable** (default: to-dev-admin)
+2. **SSO profile configured in ~/.aws/config**
+
+**Important:** AWS access keys (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) are explicitly rejected. Only SSO authentication is supported for enhanced security.
 
 ## Configuration
 
@@ -134,9 +142,10 @@ All tests now run against the AWS Dev Account with the following settings:
 ### Authentication Configuration
 
 #### Local Development
-- Uses AWS_PROFILE environment variable or AWS CLI default credentials
-- Automatic credential detection from ~/.aws/credentials
-- Supports multiple AWS profiles for different environments
+- Uses AWS_PROFILE environment variable (default: to-dev-admin)
+- Requires SSO profile configured in ~/.aws/config
+- Supports multiple SSO profiles for different environments
+- AWS access keys are not supported - SSO only
 
 #### CI/CD (GitHub Actions)
 - Uses IAM role assumption with OIDC tokens
@@ -235,13 +244,18 @@ The project includes a comprehensive GitHub Actions workflow:
     AWS__UseLocalStack: true
     AWS__LocalStackEndpoint: http://localhost:4566
 
-# Integration tests (Real AWS)
+# Integration tests (Real AWS with OIDC)
+- name: Configure AWS Credentials
+  uses: aws-actions/configure-aws-credentials@v1
+  with:
+    role-to-assume: arn:aws:iam::615299752206:role/dev-cdk-role-ue2-github-actions
+    role-session-name: GitHubActions
+    aws-region: us-east-1
+
 - name: Run integration tests
   run: dotnet test ThirdOpinion.Common.FunctionalTests
   env:
     AWS__UseLocalStack: false
-    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 ```
 
 ## Troubleshooting
@@ -259,11 +273,18 @@ The project includes a comprehensive GitHub Actions workflow:
 
 2. **AWS credential issues**
    ```bash
-   # Verify credentials
-   aws sts get-caller-identity
+   # Verify SSO login
+   aws sts get-caller-identity --profile to-dev-admin
    
-   # Check environment variables
-   env | grep AWS_
+   # Re-login if expired
+   aws sso login --profile to-dev-admin
+   
+   # Ensure AWS_PROFILE is set
+   export AWS_PROFILE=to-dev-admin
+   
+   # Check for rejected access keys
+   unset AWS_ACCESS_KEY_ID
+   unset AWS_SECRET_ACCESS_KEY
    ```
 
 3. **Test timeouts**

@@ -18,51 +18,68 @@ public static class TestCollectionSetupHelper
         var region = configuration.GetValue<string>("AWS:Region") ?? "us-east-1";
         var regionEndpoint = Amazon.RegionEndpoint.GetBySystemName(region);
         
-        // Check for AWS Profile for local development
-        var awsProfile = Environment.GetEnvironmentVariable("AWS_PROFILE");
+        // Require AWS Profile - no fallback to access keys
+        var awsProfile = Environment.GetEnvironmentVariable("AWS_PROFILE") ?? "to-dev-admin";
         
-        if (!string.IsNullOrEmpty(awsProfile))
+        // Validate SSO profile is configured
+        ValidateSSOProfile(awsProfile);
+        
+        // Use profile-based credentials only - SSO required
+        var sharedCredentialsFile = new Amazon.Runtime.CredentialManagement.SharedCredentialsFile();
+        if (!sharedCredentialsFile.TryGetProfile(awsProfile, out var profile))
         {
-            // Use profile-based credentials for local development
-            var sharedCredentialsFile = new Amazon.Runtime.CredentialManagement.SharedCredentialsFile();
-            if (sharedCredentialsFile.TryGetProfile(awsProfile, out var profile))
-            {
-                var credentials = profile.GetAWSCredentials(sharedCredentialsFile);
-                
-                var cognitoClient = new AmazonCognitoIdentityProviderClient(credentials, regionEndpoint);
-                services.AddSingleton(typeof(IAmazonCognitoIdentityProvider), cognitoClient);
-
-                var dynamoClient = new AmazonDynamoDBClient(credentials, regionEndpoint);
-                services.AddSingleton(typeof(IAmazonDynamoDB), dynamoClient);
-
-                var s3Client = new AmazonS3Client(credentials, regionEndpoint);
-                services.AddSingleton(typeof(IAmazonS3), s3Client);
-
-                var sqsClient = new AmazonSQSClient(credentials, regionEndpoint);
-                services.AddSingleton(typeof(IAmazonSQS), sqsClient);
-            }
-            else
-            {
-                throw new InvalidOperationException($"AWS Profile '{awsProfile}' not found in credentials file.");
-            }
+            throw new InvalidOperationException(
+                $"AWS SSO Profile '{awsProfile}' not found in credentials file. " +
+                $"Please configure SSO by running: aws configure sso --profile {awsProfile}");
         }
-        else
-        {
-            // Use default credential chain (environment variables, IAM roles, etc.)
-            var cognitoClient = new AmazonCognitoIdentityProviderClient(regionEndpoint);
-            services.AddSingleton(typeof(IAmazonCognitoIdentityProvider), cognitoClient);
+        
+        var credentials = profile.GetAWSCredentials(sharedCredentialsFile);
+        
+        // Configure all AWS service clients with SSO profile credentials
+        var cognitoClient = new AmazonCognitoIdentityProviderClient(credentials, regionEndpoint);
+        services.AddSingleton(typeof(IAmazonCognitoIdentityProvider), cognitoClient);
 
-            var dynamoClient = new AmazonDynamoDBClient(regionEndpoint);
-            services.AddSingleton(typeof(IAmazonDynamoDB), dynamoClient);
+        var dynamoClient = new AmazonDynamoDBClient(credentials, regionEndpoint);
+        services.AddSingleton(typeof(IAmazonDynamoDB), dynamoClient);
 
-            var s3Client = new AmazonS3Client(regionEndpoint);
-            services.AddSingleton(typeof(IAmazonS3), s3Client);
+        var s3Client = new AmazonS3Client(credentials, regionEndpoint);
+        services.AddSingleton(typeof(IAmazonS3), s3Client);
 
-            var sqsClient = new AmazonSQSClient(regionEndpoint);
-            services.AddSingleton(typeof(IAmazonSQS), sqsClient);
-        }
+        var sqsClient = new AmazonSQSClient(credentials, regionEndpoint);
+        services.AddSingleton(typeof(IAmazonSQS), sqsClient);
 
         return services;
+    }
+    
+    private static void ValidateSSOProfile(string profileName)
+    {
+        // Explicitly reject AWS access key environment variables
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID")) ||
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY")))
+        {
+            throw new InvalidOperationException(
+                "AWS access key environment variables detected but are not supported. " +
+                "This application requires SSO authentication only. " +
+                "Please unset AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables " +
+                $"and use SSO profile '{profileName}' instead.");
+        }
+        
+        // Check if profile exists
+        var chain = new Amazon.Runtime.CredentialManagement.CredentialProfileStoreChain();
+        if (!chain.TryGetProfile(profileName, out var profile))
+        {
+            throw new InvalidOperationException(
+                $"AWS SSO profile '{profileName}' not configured. " +
+                $"Please run: aws configure sso --profile {profileName}");
+        }
+        
+        // Verify it's an SSO profile
+        if (profile.Options.SsoAccountId == null || profile.Options.SsoRoleName == null)
+        {
+            throw new InvalidOperationException(
+                $"Profile '{profileName}' exists but is not an SSO profile. " +
+                $"Please configure SSO by running: aws configure sso --profile {profileName}");
+        }
     }
 
     public static IConfiguration BuildTestConfiguration(string? environment = null)
@@ -182,16 +199,28 @@ public static class TestCollectionSetupHelper
 
     public static void ValidateTestEnvironment(IConfiguration configuration)
     {
-        // Validate AWS credentials are available for real AWS testing
-        var hasAwsCredentials = 
-            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID")) ||
-            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_PROFILE")) ||
-            File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".aws", "credentials"));
-
-        if (!hasAwsCredentials)
+        // Validate SSO profile is configured (no access keys allowed)
+        var awsProfile = Environment.GetEnvironmentVariable("AWS_PROFILE") ?? "to-dev-admin";
+        
+        // Explicitly reject AWS access key environment variables
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID")) ||
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY")))
         {
             throw new InvalidOperationException(
-                "AWS credentials not found. Configure AWS credentials using AWS CLI, environment variables, or IAM role.");
+                "AWS access key environment variables detected but are not supported. " +
+                "This application requires SSO authentication only. " +
+                "Please unset AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables " +
+                $"and use SSO profile '{awsProfile}' instead.");
+        }
+        
+        // Check if credentials file exists
+        var credentialsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".aws", "credentials");
+        var configFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".aws", "config");
+        
+        if (!File.Exists(credentialsFile) && !File.Exists(configFile))
+        {
+            throw new InvalidOperationException(
+                $"AWS configuration files not found. Please configure SSO by running: aws configure sso --profile {awsProfile}");
         }
         
         // Validate required configuration sections exist

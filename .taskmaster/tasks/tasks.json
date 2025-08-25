@@ -260,11 +260,25 @@
         ],
         "priority": "medium",
         "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Remove AWS Access Key Support from Functional Tests",
+        "description": "Remove all support for AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables from functional tests, enforcing SSO profile authentication only (e.g., to-dev-admin) for all AWS service interactions",
+        "details": "1. Update AWS client initialization:\n   - Remove all references to AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables\n   - Remove any EnvironmentVariablesAWSCredentials or BasicAWSCredentials usage\n   - Update all AWS client constructors to use ProfileCredentialsProvider exclusively\n   - Ensure AWS_PROFILE environment variable or explicit profile name (to-dev-admin) is used\n\n2. Modify BaseIntegrationTest infrastructure:\n   - Remove any credential fallback mechanisms that check for access keys\n   - Update SetUp methods to validate SSO profile is configured before running tests\n   - Add validation to ensure tests fail fast if SSO profile is not available\n   - Create helper method ValidateSSOProfile() to check AWS STS GetCallerIdentity\n\n3. Update test configuration:\n   - Remove any appsettings or test configuration that references access keys\n   - Update README and documentation to specify SSO profile requirement\n   - Add clear error messages when SSO profile is not configured\n\n4. Update GitHub Actions workflow:\n   - Remove any secrets related to AWS access keys\n   - Update workflow to use AWS SSO login or OIDC authentication\n   - Ensure workflow documentation reflects SSO-only approach\n\n5. Code changes required:\n   - Search and remove all instances of: EnvironmentVariablesAWSCredentials, BasicAWSCredentials\n   - Update all AmazonCognitoIdentityProviderClient, AmazonDynamoDBClient, AmazonS3Client, AmazonSQSClient constructors\n   - Replace with: new AmazonServiceClient(new AmazonServiceConfig { Profile = \"to-dev-admin\" })\n   - Or use shared credentials file: new AmazonServiceClient(new StoredProfileAWSCredentials(\"to-dev-admin\"))\n\n6. Add profile validation:\n   ```csharp\n   private static void ValidateAWSProfile()\n   {\n       var profileName = Environment.GetEnvironmentVariable(\"AWS_PROFILE\") ?? \"to-dev-admin\";\n       var chain = new CredentialProfileStoreChain();\n       if (!chain.TryGetAWSCredentials(profileName, out var credentials))\n       {\n           throw new InvalidOperationException($\"AWS SSO profile '{profileName}' not configured. Please run 'aws sso login --profile {profileName}'\");\n       }\n   }\n   ```",
+        "testStrategy": "1. Verify SSO-only authentication:\n   - Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables to dummy values\n   - Run functional tests and confirm they ignore these variables and use SSO profile\n   - Unset AWS_PROFILE and verify tests fail with appropriate error message\n\n2. Test profile validation:\n   - Run tests with expired SSO session and verify clear error message\n   - Run tests with valid SSO session (to-dev-admin profile) and verify all pass\n   - Attempt to use non-existent profile and verify failure\n\n3. Validate AWS service connections:\n   - Run full functional test suite with SSO profile\n   - Verify Cognito, DynamoDB, S3, and SQS tests all authenticate correctly\n   - Check AWS CloudTrail to confirm all API calls use SSO session credentials\n\n4. GitHub Actions validation:\n   - Push changes and verify CI/CD pipeline uses SSO/OIDC authentication\n   - Confirm no AWS access key secrets are referenced in workflow\n   - Verify workflow fails appropriately if SSO is not configured",
+        "status": "in-progress",
+        "dependencies": [
+          7,
+          8
+        ],
+        "priority": "medium",
+        "subtasks": []
       }
     ],
     "metadata": {
       "created": "2025-08-14T03:46:08.337Z",
-      "updated": "2025-08-15T14:50:33.942Z",
+      "updated": "2025-08-20T18:54:20.828Z",
       "description": "Tasks for master context"
     }
   }

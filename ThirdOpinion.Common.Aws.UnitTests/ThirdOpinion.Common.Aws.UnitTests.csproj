@@ -7,7 +7,7 @@
         <IsTestProject>true</IsTestProject>
         <RootNamespace>ThirdOpinion.Common.Aws.Tests</RootNamespace>
         <OutputType>Library</OutputType>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
