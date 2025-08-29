@@ -207,7 +207,7 @@ public class S3Storage : IS3Storage
                 response = await _s3Client.ListObjectsV2Async(request, cancellationToken);
                 allObjects.AddRange(response.S3Objects);
                 request.ContinuationToken = response.NextContinuationToken;
-            } while (response.IsTruncated);
+            } while (response.IsTruncated == true);
 
             _logger.LogDebug("Listed {Count} objects from S3 bucket {Bucket} with prefix {Prefix}",
                 allObjects.Count, bucketName, prefix);

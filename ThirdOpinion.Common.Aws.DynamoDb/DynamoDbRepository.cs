@@ -44,7 +44,7 @@ public class DynamoDbRepository : IDynamoDbRepository
     {
         try
         {
-            BatchWrite<T>? batch = _context.CreateBatchWrite<T>();
+            var batch = _context.CreateBatchWrite<T>();
             foreach (T entity in entities) batch.AddPutItem(entity);
             await batch.ExecuteAsync(cancellationToken);
             _logger.LogDebug("Batch saved {Count} entities of type {EntityType} to DynamoDB",
@@ -112,11 +112,13 @@ public class DynamoDbRepository : IDynamoDbRepository
                 var conditions = new List<ScanCondition>();
                 foreach (ScanCondition condition in filter.ToConditions())
                     conditions.Add(condition);
-                query = _context.QueryAsync<T>(hashKey, QueryOperator.BeginsWith, conditions);
+                var q = _context.QueryAsync<T>(hashKey, QueryOperator.BeginsWith, conditions);
+                query = (AsyncSearch<T>)q;
             }
             else
             {
-                query = _context.QueryAsync<T>(hashKey);
+                var q = _context.QueryAsync<T>(hashKey);
+                query = (AsyncSearch<T>)q;
             }
 
             var results = new List<T>();
@@ -155,8 +157,8 @@ public class DynamoDbRepository : IDynamoDbRepository
             {
                 Items = items,
                 LastEvaluatedKey = response.LastEvaluatedKey,
-                Count = response.Count,
-                ScannedCount = response.ScannedCount
+                Count = response.Count ?? 0,
+                ScannedCount = response.ScannedCount ?? 0
             };
         }
         catch (Exception ex)
@@ -178,11 +180,13 @@ public class DynamoDbRepository : IDynamoDbRepository
                 var conditions = new List<ScanCondition>();
                 foreach (ScanCondition condition in filter.ToConditions())
                     conditions.Add(condition);
-                scan = _context.ScanAsync<T>(conditions);
+                var s = _context.ScanAsync<T>(conditions);
+                scan = (AsyncSearch<T>)s;
             }
             else
             {
-                scan = _context.ScanAsync<T>(new List<ScanCondition>());
+                var s = _context.ScanAsync<T>(new List<ScanCondition>());
+                scan = (AsyncSearch<T>)s;
             }
 
             var results = new List<T>();

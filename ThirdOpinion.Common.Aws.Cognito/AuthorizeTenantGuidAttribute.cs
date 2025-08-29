@@ -10,11 +10,11 @@ namespace ThirdOpinion.Common.Cognito;
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter)]
 public class AuthorizeTenantGuidAttribute : ValidationAttribute
 {
-    protected override ValidationResult IsValid(object value, ValidationContext validationContext)
+    protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
     {
-        var httpContextAccessor = (IHttpContextAccessor)validationContext
+        var httpContextAccessor = (IHttpContextAccessor?)validationContext
             .GetService(typeof(IHttpContextAccessor));
-        var options = (IOptions<GlobalAppSettingsOptions>)validationContext
+        var options = (IOptions<GlobalAppSettingsOptions>?)validationContext
             .GetService(typeof(IOptions<GlobalAppSettingsOptions>));
 
         if (httpContextAccessor?.HttpContext?.User?.Identity?.IsAuthenticated != true)
@@ -40,6 +40,6 @@ public class AuthorizeTenantGuidAttribute : ValidationAttribute
             return new ValidationResult("TenantGuid does not match the authenticated user.");
 
         // Validation passed
-        return ValidationResult.Success;
+        return ValidationResult.Success!;
     }
 }

@@ -30,7 +30,7 @@ public class EnumConverter<T> : IPropertyConverter where T : struct, Enum
         // Return null if primitive is null or its value is null/empty
         if (primitive == null || primitive.Value == null ||
             (primitive.Value is string strValue && string.IsNullOrEmpty(strValue)))
-            return null;
+            return null!;
 
         if (!(primitive.Value is string))
             throw new ArgumentException("Value must be a string");
@@ -59,13 +59,13 @@ public class NullableEnumConverter<T> : IPropertyConverter where T : struct, Enu
             var hasValueProperty = nullableType.GetProperty("HasValue");
             var valueProperty = nullableType.GetProperty("Value");
 
-            var hasValue = (bool)hasValueProperty.GetValue(value);
+            var hasValue = (bool)(hasValueProperty?.GetValue(value) ?? false);
             if (!hasValue)
                 return new Primitive { Value = null };
 
             // Get the actual enum value
-            var enumValue = valueProperty.GetValue(value);
-            return _enumConverter.ToEntry(enumValue);
+            var enumValue = valueProperty?.GetValue(value);
+            return _enumConverter.ToEntry(enumValue!);
         }
 
         // Fall back to regular converter
@@ -76,7 +76,7 @@ public class NullableEnumConverter<T> : IPropertyConverter where T : struct, Enu
     {
         var result = _enumConverter.FromEntry(entry);
         if (result == null)
-            return null;
+            return null!;
 
         // Convert to nullable enum by boxing the value as a nullable type
         return (T?)(T)result;
