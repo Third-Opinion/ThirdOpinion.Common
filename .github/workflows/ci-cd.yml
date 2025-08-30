@@ -1,10 +1,17 @@
 name: CI/CD Pipeline
 
+# Triggers:
+# - Push to main/master/develop: Full CI/CD (build, test, package, security scan)
+# - Push to feature branches: Build and test only
+# - Pull requests: Build, test, and security scan
+# - Releases: Full pipeline including NuGet.org publishing
+# - Manual dispatch: Optional functional tests and package publishing
+
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [ main, master, develop, 'feature/**' ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, develop ]
   release:
     types: [ published ]
   workflow_dispatch:
@@ -158,7 +165,10 @@ jobs:
     name: Create NuGet Packages
     runs-on: ubuntu-latest
     needs: build-and-test
-    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_packages == 'true')
+    if: |
+      github.event_name == 'release' || 
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_packages == 'true') ||
+      (github.ref_name == 'main' || github.ref_name == 'master' || github.ref_name == 'develop')
     
     steps:
     - name: Checkout code
