@@ -234,6 +234,9 @@ jobs:
         find . -name "*.csproj" -not -path "./ThirdOpinion.Common.*Tests/*" -exec sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" {} \;
         echo "Updated package versions to: $VERSION"
 
+    - name: Build solution for packaging
+      run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
+
     - name: Pack NuGet packages
       run: |
         dotnet pack ThirdOpinion.Common.Aws.Cognito/ThirdOpinion.Common.Aws.Cognito.csproj \
