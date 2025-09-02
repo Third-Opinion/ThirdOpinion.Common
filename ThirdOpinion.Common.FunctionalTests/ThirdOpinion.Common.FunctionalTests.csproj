@@ -22,8 +22,8 @@
         <PackageReference Include="Shouldly" Version="4.2.1"/>
         
         <!-- AWS SDK packages -->
-        <PackageReference Include="AWSSDK.Core" Version="4.0.0.23"/>
-        <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="4.0.2.2"/>
+        <PackageReference Include="AWSSDK.Core" Version="4.0.0.26"/>
+        <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="4.0.3.2"/>
         <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.3.4"/>
         <PackageReference Include="AWSSDK.S3" Version="4.0.4"/>
         <PackageReference Include="AWSSDK.SQS" Version="4.0.0.21"/>
