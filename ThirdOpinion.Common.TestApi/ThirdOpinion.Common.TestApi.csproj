@@ -19,10 +19,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ThirdOpinion.Common.Aws.Cognito\ThirdOpinion.Common.Aws.Cognito.csproj" />
-    <ProjectReference Include="..\ThirdOpinion.Common.Aws.DynamoDb\ThirdOpinion.Common.Aws.DynamoDb.csproj" />
-    <ProjectReference Include="..\ThirdOpinion.Common.Aws.S3\ThirdOpinion.Common.Aws.S3.csproj" />
-    <ProjectReference Include="..\ThirdOpinion.Common.Aws.SQS\ThirdOpinion.Common.Aws.SQS.csproj" />
+    <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.Cognito\ThirdOpinion.Common.Aws.Cognito.csproj" />
+    <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.DynamoDb\ThirdOpinion.Common.Aws.DynamoDb.csproj" />
+    <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.S3\ThirdOpinion.Common.Aws.S3.csproj" />
+    <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.SQS\ThirdOpinion.Common.Aws.SQS.csproj" />
   </ItemGroup>
 
 </Project>

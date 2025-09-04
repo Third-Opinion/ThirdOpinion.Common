@@ -274,11 +274,68 @@
         ],
         "priority": "medium",
         "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Reorganize solution for unified NuGet package",
+        "description": "Consolidate all NuGet package projects under a single folder and configure unified packaging",
+        "details": "Move ThirdOpinion.Common.Aws.* projects and ThirdOpinion.Common.Misc to a new 'src' folder, update solution file references, configure a single NuGet package generation, and update CI/CD pipeline accordingly",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create src folder structure for NuGet projects",
+            "description": "Create a 'src' folder at the solution root to house all projects that will be part of the NuGet package",
+            "details": "Create src/ folder in the solution root directory to organize all NuGet package projects",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 10
+          },
+          {
+            "id": 2,
+            "title": "Move AWS projects to src folder",
+            "description": "Move all ThirdOpinion.Common.Aws.* projects to the src folder",
+            "details": "Move ThirdOpinion.Common.Aws.Cognito, ThirdOpinion.Common.Aws.DynamoDb, ThirdOpinion.Common.Aws.S3, and ThirdOpinion.Common.Aws.SQS projects to src/ folder",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 10
+          },
+          {
+            "id": 3,
+            "title": "Move Misc project to src folder",
+            "description": "Move ThirdOpinion.Common.Misc project to the src folder",
+            "details": "Move the ThirdOpinion.Common.Misc project folder to src/ directory alongside AWS projects",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 10
+          },
+          {
+            "id": 4,
+            "title": "Update solution file references",
+            "description": "Update the .sln file to reflect new project locations in src folder",
+            "details": "Modify ThirdOpinion.Common.sln to update all project paths for the moved projects, ensuring the solution can still build correctly",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 10
+          },
+          {
+            "id": 5,
+            "title": "Create unified NuGet package configuration",
+            "description": "Configure a single NuGet package that includes all src projects",
+            "details": "Create a Directory.Build.props file in src/ folder with shared NuGet properties, and configure packaging to generate a single ThirdOpinion.Common NuGet package containing all AWS and Misc libraries",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 10
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-08-14T03:46:08.337Z",
-      "updated": "2025-08-20T18:54:20.828Z",
+      "updated": "2025-09-03T23:44:33.831Z",
       "description": "Tasks for master context"
     }
   }

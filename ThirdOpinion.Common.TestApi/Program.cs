@@ -20,15 +20,8 @@ builder.Services.AddSwaggerGen();
 // Configure AWS Options
 var awsOptions = builder.Configuration.GetAWSOptions();
 
-// Use AWS_PROFILE environment variable if set
-var awsProfile = Environment.GetEnvironmentVariable("AWS_PROFILE");
-if (!string.IsNullOrEmpty(awsProfile))
-{
-    awsOptions.Credentials = new Amazon.Runtime.CredentialManagement.CredentialProfileStoreChain()
-        .TryGetAWSCredentials(awsProfile, out var credentials) 
-        ? credentials 
-        : FallbackCredentialsFactory.GetCredentials();
-}
+// For testing without actual AWS credentials, use basic credentials
+awsOptions.Credentials = new Amazon.Runtime.BasicAWSCredentials("test", "test");
 
 // Set region from configuration or environment
 var region = builder.Configuration["AWS:Region"] ?? 

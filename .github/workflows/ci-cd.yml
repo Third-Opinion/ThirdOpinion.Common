@@ -4,7 +4,7 @@ name: CI/CD Pipeline
 # - Push to main/master/develop: Full CI/CD (build, test, package, security scan)
 # - Push to feature branches: Build and test only
 # - Pull requests: Build, test, and security scan
-# - Releases: Full pipeline including NuGet.org publishing
+# - Releases: Full pipeline with GitHub Packages publishing only
 # - Manual dispatch: Optional functional tests and package publishing
 
 on:
@@ -204,29 +204,9 @@ jobs:
         find . -name "*.csproj" -not -path "./ThirdOpinion.Common.*Tests/*" -exec sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" {} \;
         echo "Updated package versions to: $VERSION"
 
-    - name: Pack NuGet packages
+    - name: Pack NuGet package
       run: |
-        dotnet pack ThirdOpinion.Common.Aws.Cognito/ThirdOpinion.Common.Aws.Cognito.csproj \
-          --configuration Release \
-          --no-build \
-          --output ./packages/
-        
-        dotnet pack ThirdOpinion.Common.Aws.DynamoDb/ThirdOpinion.Common.Aws.DynamoDb.csproj \
-          --configuration Release \
-          --no-build \
-          --output ./packages/
-        
-        dotnet pack ThirdOpinion.Common.Aws.S3/ThirdOpinion.Common.Aws.S3.csproj \
-          --configuration Release \
-          --no-build \
-          --output ./packages/
-        
-        dotnet pack ThirdOpinion.Common.Aws.SQS/ThirdOpinion.Common.Aws.SQS.csproj \
-          --configuration Release \
-          --no-build \
-          --output ./packages/
-        
-        dotnet pack ThirdOpinion.Common.Misc/ThirdOpinion.Common.Misc.csproj \
+        dotnet pack src/ThirdOpinion.Common.csproj \
           --configuration Release \
           --no-build \
           --output ./packages/
@@ -271,16 +251,6 @@ jobs:
             --skip-duplicate
         done
 
-    - name: Publish to NuGet.org
-      if: github.event_name == 'release'
-      run: |
-        for package in ./packages/*.nupkg; do
-          echo "Publishing $package to NuGet.org..."
-          dotnet nuget push "$package" \
-            --source "https://api.nuget.org/v3/index.json" \
-            --api-key ${{ secrets.NUGET_API_KEY }} \
-            --skip-duplicate
-        done
 
   security-scan:
     name: Security Scan
