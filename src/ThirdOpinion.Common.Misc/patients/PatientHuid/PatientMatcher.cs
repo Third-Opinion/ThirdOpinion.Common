@@ -18,11 +18,11 @@ public static class PatientMatcher
         float nameFactors = 0;
 
         // Last name comparison (most important name factor)
-        if (!string.IsNullOrEmpty(patientBase.Demographics.LastName) &&
-            !string.IsNullOrEmpty(patientToCompare.Demographics.LastName))
+        if (!string.IsNullOrEmpty(patientBase.Demographics?.LastName) &&
+            !string.IsNullOrEmpty(patientToCompare.Demographics?.LastName))
         {
-            float lastNameSimilarity = CalculateStringSimilarity(patientBase.Demographics.LastName,
-                patientToCompare.Demographics.LastName);
+            float lastNameSimilarity = CalculateStringSimilarity(patientBase.Demographics!.LastName!,
+                patientToCompare.Demographics!.LastName!);
 
             // Consider common name variations and typos
             if (lastNameSimilarity >= 0.9f)
@@ -36,27 +36,27 @@ public static class PatientMatcher
         }
 
         // First name comparison
-        if (!string.IsNullOrEmpty(patientBase.Demographics.FirstName) &&
-            !string.IsNullOrEmpty(patientToCompare.Demographics.FirstName))
+        if (!string.IsNullOrEmpty(patientBase.Demographics?.FirstName) &&
+            !string.IsNullOrEmpty(patientToCompare.Demographics?.FirstName))
         {
             float firstNameSimilarity = CalculateStringSimilarity(
-                patientBase.Demographics.FirstName,
-                patientToCompare.Demographics.FirstName);
+                patientBase.Demographics!.FirstName!,
+                patientToCompare.Demographics!.FirstName!);
 
             // Check for nickname matches (e.g., Robert/Bob, William/Bill)
             if (firstNameSimilarity < 0.7f)
             {
-                string baseFirstName = patientBase.Demographics.FirstName.Trim().ToLower();
-                string compareFirstName = patientToCompare.Demographics.FirstName.Trim().ToLower();
+                string baseFirstName = patientBase.Demographics!.FirstName!.Trim().ToLower();
+                string compareFirstName = patientToCompare.Demographics!.FirstName!.Trim().ToLower();
 
                 if (AreCommonNicknames(baseFirstName, compareFirstName))
                     firstNameSimilarity = 0.9f; // High similarity for nickname matches
             }
 
             // Handle first initial only
-            if ((patientBase.Demographics.FirstName.Length == 1 ||
-                 patientToCompare.Demographics.FirstName.Length == 1) &&
-                patientBase.Demographics.FirstName[0] == patientToCompare.Demographics.FirstName[0])
+            if ((patientBase.Demographics!.FirstName!.Length == 1 ||
+                 patientToCompare.Demographics!.FirstName!.Length == 1) &&
+                patientBase.Demographics!.FirstName![0] == patientToCompare.Demographics!.FirstName![0])
                 firstNameSimilarity = 0.7f; // First initial matches
 
             nameScore += firstNameSimilarity;
@@ -68,22 +68,22 @@ public static class PatientMatcher
         
         // Middle name comparison - provide bonus on top of base score
         float middleNameBonus = 0.0f;
-        if (!string.IsNullOrEmpty(patientBase.Demographics.MiddleName) &&
-            !string.IsNullOrEmpty(patientToCompare.Demographics.MiddleName))
+        if (!string.IsNullOrEmpty(patientBase.Demographics?.MiddleName) &&
+            !string.IsNullOrEmpty(patientToCompare.Demographics?.MiddleName))
         {
             // For middle names, initial matches are common in records
-            if ((patientBase.Demographics.MiddleName.Length == 1 ||
-                 patientToCompare.Demographics.MiddleName.Length == 1) &&
-                patientBase.Demographics.MiddleName[0] ==
-                patientToCompare.Demographics.MiddleName[0])
+            if ((patientBase.Demographics!.MiddleName!.Length == 1 ||
+                 patientToCompare.Demographics!.MiddleName!.Length == 1) &&
+                patientBase.Demographics!.MiddleName![0] ==
+                patientToCompare.Demographics!.MiddleName![0])
             {
                 middleNameBonus = 0.2f; // 20% bonus for middle initial match
             }
             else
             {
                 float middleNameSimilarity = CalculateStringSimilarity(
-                    patientBase.Demographics.MiddleName,
-                    patientToCompare.Demographics.MiddleName);
+                    patientBase.Demographics!.MiddleName!,
+                    patientToCompare.Demographics!.MiddleName!);
                 middleNameBonus = middleNameSimilarity * 0.2f; // Up to 20% bonus for full middle name match
             }
         }
@@ -101,11 +101,11 @@ public static class PatientMatcher
 
         // 2. BIRTH DATE COMPARISON
         var birthDateScore = 0.0f;
-        if (patientBase.Demographics.BirthDate.HasValue &&
-            patientToCompare.Demographics.BirthDate.HasValue)
+        if (patientBase.Demographics?.BirthDate.HasValue == true &&
+            patientToCompare.Demographics?.BirthDate.HasValue == true)
         {
-            DateTime base_dob = patientBase.Demographics.BirthDate.Value.Date;
-            DateTime compare_dob = patientToCompare.Demographics.BirthDate.Value.Date;
+            DateTime base_dob = patientBase.Demographics!.BirthDate!.Value.Date;
+            DateTime compare_dob = patientToCompare.Demographics!.BirthDate!.Value.Date;
 
             // Exact match
             if (base_dob == compare_dob)
@@ -153,12 +153,12 @@ public static class PatientMatcher
 
         // 3. SEX COMPARISON
         var sexScore = 0.0f;
-        if (patientBase.Demographics.Sex.HasValue && patientToCompare.Demographics.Sex.HasValue)
+        if (patientBase.Demographics?.Sex.HasValue == true && patientToCompare.Demographics?.Sex.HasValue == true)
         {
-            if (patientBase.Demographics.Sex.Value == patientToCompare.Demographics.Sex.Value)
+            if (patientBase.Demographics!.Sex!.Value == patientToCompare.Demographics!.Sex!.Value)
                 sexScore = 1.0f;
-            else if (patientBase.Demographics.Sex.Value == Demographics.SexEnum.Unknown ||
-                     patientToCompare.Demographics.Sex.Value == Demographics.SexEnum.Unknown)
+            else if (patientBase.Demographics!.Sex!.Value == Demographics.SexEnum.Unknown ||
+                     patientToCompare.Demographics!.Sex!.Value == Demographics.SexEnum.Unknown)
                 sexScore = 0.5f; // Unknown sex should be neutral
             else
                 sexScore = 0.0f; // Different sex
@@ -177,13 +177,13 @@ public static class PatientMatcher
         float additionalFactors = 0;
 
         // Phone number match is a strong indicator
-        if (!string.IsNullOrEmpty(patientBase.Demographics.PhoneNumber) &&
-            !string.IsNullOrEmpty(patientToCompare.Demographics.PhoneNumber))
+        if (!string.IsNullOrEmpty(patientBase.Demographics?.PhoneNumber) &&
+            !string.IsNullOrEmpty(patientToCompare.Demographics?.PhoneNumber))
         {
             // Normalize phone numbers (remove non-digits)
             var basePhone
-                = new string(patientBase.Demographics.PhoneNumber.Where(char.IsDigit).ToArray());
-            var comparePhone = new string(patientToCompare.Demographics.PhoneNumber
+                = new string(patientBase.Demographics!.PhoneNumber!.Where(char.IsDigit).ToArray());
+            var comparePhone = new string(patientToCompare.Demographics!.PhoneNumber!
                 .Where(char.IsDigit).ToArray());
 
             // Compare the last 7 digits (local number without area code)
@@ -220,11 +220,11 @@ public static class PatientMatcher
         }
 
         // Death date - if both have death dates, they should match
-        if (patientBase.Demographics.DeathDate.HasValue &&
-            patientToCompare.Demographics.DeathDate.HasValue)
+        if (patientBase.Demographics?.DeathDate.HasValue == true &&
+            patientToCompare.Demographics?.DeathDate.HasValue == true)
         {
-            if (patientBase.Demographics.DeathDate.Value.Date ==
-                patientToCompare.Demographics.DeathDate.Value.Date)
+            if (patientBase.Demographics!.DeathDate!.Value.Date ==
+                patientToCompare.Demographics!.DeathDate!.Value.Date)
                 additionalScore += 1.0f;
             else
                 // Different death dates strongly indicates different people
@@ -233,26 +233,26 @@ public static class PatientMatcher
             additionalFactors += 1.0f;
         }
         // If one has death date and the other doesn't, likely different people or incomplete record
-        else if (patientBase.Demographics.DeathDate.HasValue ||
-                 patientToCompare.Demographics.DeathDate.HasValue)
+        else if (patientBase.Demographics?.DeathDate.HasValue == true ||
+                 patientToCompare.Demographics?.DeathDate.HasValue == true)
         {
             additionalScore += 0.0f; // Neutral factor
             additionalFactors += 0.5f; // Half weight for missing data
         }
 
         // Add prefix/suffix match as minor factor
-        if (!string.IsNullOrEmpty(patientBase.Demographics.Prefix) &&
-            !string.IsNullOrEmpty(patientToCompare.Demographics.Prefix) &&
-            string.Equals(patientBase.Demographics.Prefix, patientToCompare.Demographics.Prefix,
+        if (!string.IsNullOrEmpty(patientBase.Demographics?.Prefix) &&
+            !string.IsNullOrEmpty(patientToCompare.Demographics?.Prefix) &&
+            string.Equals(patientBase.Demographics!.Prefix, patientToCompare.Demographics!.Prefix,
                 StringComparison.OrdinalIgnoreCase))
         {
             additionalScore += 0.5f;
             additionalFactors += 0.5f;
         }
 
-        if (!string.IsNullOrEmpty(patientBase.Demographics.Suffix) &&
-            !string.IsNullOrEmpty(patientToCompare.Demographics.Suffix) &&
-            string.Equals(patientBase.Demographics.Suffix, patientToCompare.Demographics.Suffix,
+        if (!string.IsNullOrEmpty(patientBase.Demographics?.Suffix) &&
+            !string.IsNullOrEmpty(patientToCompare.Demographics?.Suffix) &&
+            string.Equals(patientBase.Demographics!.Suffix, patientToCompare.Demographics!.Suffix,
                 StringComparison.OrdinalIgnoreCase))
         {
             additionalScore += 0.5f;
@@ -274,8 +274,8 @@ public static class PatientMatcher
             samePerson = Math.Max(samePerson, 0.95f);
 
         // Different sex should significantly reduce confidence, especially with other factors
-        if (sexScore == 0.0f && patientBase.Demographics.Sex.HasValue &&
-            patientToCompare.Demographics.Sex.HasValue)
+        if (sexScore == 0.0f && patientBase.Demographics?.Sex.HasValue == true &&
+            patientToCompare.Demographics?.Sex.HasValue == true)
         {
             // Apply sex difference penalty - more severe if birth dates don't match well too
             if (birthDateScore < 0.3f)
@@ -285,9 +285,9 @@ public static class PatientMatcher
         }
 
         // Death date mismatch is a strong indicator of different people
-        if (patientBase.Demographics.DeathDate.HasValue &&
-            patientToCompare.Demographics.DeathDate.HasValue &&
-            patientBase.Demographics.DeathDate.Value.Date != patientToCompare.Demographics.DeathDate.Value.Date)
+        if (patientBase.Demographics?.DeathDate.HasValue == true &&
+            patientToCompare.Demographics?.DeathDate.HasValue == true &&
+            patientBase.Demographics!.DeathDate!.Value.Date != patientToCompare.Demographics!.DeathDate!.Value.Date)
         {
             samePerson = Math.Min(samePerson, 0.5f); // Cap at 50% for death date mismatch
         }

@@ -26,7 +26,8 @@ public class AuthorizeTenantGuidAttribute : ValidationAttribute
         if (groups == null) return new ValidationResult("User does not have a groups claim");
 
         // Get the value of the property being validated
-        var propertyGuid = (Guid)value;
+        if (value is not Guid propertyGuid)
+            return new ValidationResult("Value must be a valid Guid");
 
         //look in config for the tenantGuid
         List<string>? tenantGroups = null;

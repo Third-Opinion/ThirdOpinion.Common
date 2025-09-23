@@ -43,7 +43,11 @@ public class DynamoDbRepository : IDynamoDbRepository
     {
         try
         {
-            await _context.SaveAsync(entity, config, cancellationToken);
+            var saveConfig = new SaveConfig
+            {
+                OverrideTableName = config.OverrideTableName
+            };
+            await _context.SaveAsync(entity, saveConfig, cancellationToken);
             _logger.LogDebug("Saved entity of type {EntityType} to DynamoDB table {TableName}", typeof(T).Name, config.OverrideTableName ?? "default");
         }
         catch (Exception ex)
@@ -100,8 +104,13 @@ public class DynamoDbRepository : IDynamoDbRepository
     {
         try
         {
-            if (rangeKey == null) return await _context.LoadAsync<T>(hashKey, config, cancellationToken);
-            return await _context.LoadAsync<T>(hashKey, rangeKey, config, cancellationToken);
+            var loadConfig = new LoadConfig
+            {
+                OverrideTableName = config.OverrideTableName,
+                ConsistentRead = config.ConsistentRead
+            };
+            if (rangeKey == null) return await _context.LoadAsync<T>(hashKey, loadConfig, cancellationToken);
+            return await _context.LoadAsync<T>(hashKey, rangeKey, loadConfig, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -141,10 +150,14 @@ public class DynamoDbRepository : IDynamoDbRepository
     {
         try
         {
+            var deleteConfig = new DeleteConfig
+            {
+                OverrideTableName = config.OverrideTableName
+            };
             if (rangeKey == null)
-                await _context.DeleteAsync<T>(hashKey, config, cancellationToken);
+                await _context.DeleteAsync<T>(hashKey, deleteConfig, cancellationToken);
             else
-                await _context.DeleteAsync<T>(hashKey, rangeKey, config, cancellationToken);
+                await _context.DeleteAsync<T>(hashKey, rangeKey, deleteConfig, cancellationToken);
             _logger.LogDebug("Deleted entity of type {EntityType} with key {HashKey}/{RangeKey} from table {TableName}",
                 typeof(T).Name, hashKey, rangeKey, config.OverrideTableName ?? "default");
         }
