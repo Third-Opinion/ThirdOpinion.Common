@@ -211,9 +211,6 @@ public class S3RefTests
     [InlineData("arn:aws:s3:us-east-1::test-bucket/folder/file.json", "test-bucket",
         "folder/file.json", "us-east-1", null,
         "file.json")]
-    [InlineData("arn:aws:s3:us-east-1::test-bucket/folder/file.json", "test-bucket",
-        "folder/file.json", "us-east-1", null,
-        "file.json")]
     [InlineData("arn:aws:s3:us-east-1:358692710224:test-bucket/file.json", "test-bucket", "file.json",
         "us-east-1",
         "358692710224", "file.json")]
