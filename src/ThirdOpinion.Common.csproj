@@ -7,8 +7,25 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoBuild>true</NoBuild>
     <PackageId>ThirdOpinion.Common</PackageId>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
     <Description>Third Opinion Common Libraries - Complete package including AWS services integration (S3, DynamoDB, SQS, Cognito) and utility functions</Description>
+    <Authors>Third Opinion</Authors>
+    <Company>Third Opinion</Company>
+    <Copyright>Copyright © Third Opinion 2024</Copyright>
+    <PackageProjectUrl>https://github.com/ThirdOpinion/ThirdOpinion.Common</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ThirdOpinion/ThirdOpinion.Common</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>aws;s3;dynamodb;sqs;cognito;utilities</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <!-- Include README in package -->
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
 
   <!-- Include all sub-projects as dependencies -->
   <ItemGroup>

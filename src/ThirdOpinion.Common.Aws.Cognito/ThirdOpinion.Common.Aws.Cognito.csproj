@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <RootNamespace>ThirdOpinion.Common.Cognito</RootNamespace>
         <TargetFramework>net8.0</TargetFramework>
+        <IsPackable>false</IsPackable>
     </PropertyGroup>
 
     <ItemGroup>

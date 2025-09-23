@@ -192,8 +192,10 @@ jobs:
           # Remove 'v' prefix if present
           VERSION=${VERSION#v}
         else
-          # Use current date and commit hash for non-release builds
-          VERSION="1.0.0-dev.$(date +'%Y%m%d').$(git rev-parse --short HEAD)"
+          # Get the current run number from GitHub Actions
+          RUN_NUMBER=${{ github.run_number }}
+          # For development builds, use 1.0.{run_number} format
+          VERSION="1.0.${RUN_NUMBER}"
         fi
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "Package version will be: $VERSION"
@@ -201,15 +203,24 @@ jobs:
     - name: Update project versions
       run: |
         VERSION=${{ steps.version.outputs.version }}
-        find . -name "*.csproj" -not -path "./ThirdOpinion.Common.*Tests/*" -exec sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" {} \;
-        echo "Updated package versions to: $VERSION"
+        # Update only the main project version
+        sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" src/ThirdOpinion.Common.csproj
+        # Also update assembly versions to match
+        sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$VERSION.0<\/AssemblyVersion>/g" src/ThirdOpinion.Common.csproj
+        sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$VERSION.0<\/FileVersion>/g" src/ThirdOpinion.Common.csproj
+        echo "Updated ThirdOpinion.Common package version to: $VERSION"
+
+    - name: Build sub-projects first
+      run: |
+        dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
 
     - name: Pack NuGet package
       run: |
         dotnet pack src/ThirdOpinion.Common.csproj \
           --configuration Release \
-          --no-build \
-          --output ./packages/
+          --no-restore \
+          --output ./packages/ \
+          -p:Version=${{ steps.version.outputs.version }}
 
     - name: Upload packages as artifacts
       uses: actions/upload-artifact@v4
@@ -221,6 +232,7 @@ jobs:
       run: |
         echo "Generated packages:"
         ls -la ./packages/
+        echo "Expected package: ThirdOpinion.Common.${{ steps.version.outputs.version }}.nupkg"
 
   publish:
     name: Publish to NuGet
