@@ -39,6 +39,21 @@ public class DynamoDbRepository : IDynamoDbRepository
         }
     }
 
+    public async Task SaveAsync<T>(T entity, DynamoDBOperationConfig config, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _context.SaveAsync(entity, config, cancellationToken);
+            _logger.LogDebug("Saved entity of type {EntityType} to DynamoDB table {TableName}", typeof(T).Name, config.OverrideTableName ?? "default");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving entity of type {EntityType} to DynamoDB table {TableName}",
+                typeof(T).Name, config.OverrideTableName ?? "default");
+            throw;
+        }
+    }
+
     public async Task BatchSaveAsync<T>(IEnumerable<T> entities,
         CancellationToken cancellationToken = default)
     {
@@ -77,6 +92,26 @@ public class DynamoDbRepository : IDynamoDbRepository
         }
     }
 
+    public async Task<T?> LoadAsync<T>(object hashKey,
+        object? rangeKey,
+        DynamoDBOperationConfig config,
+        CancellationToken cancellationToken = default)
+        where T : class
+    {
+        try
+        {
+            if (rangeKey == null) return await _context.LoadAsync<T>(hashKey, config, cancellationToken);
+            return await _context.LoadAsync<T>(hashKey, rangeKey, config, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error loading entity of type {EntityType} with key {HashKey}/{RangeKey} from table {TableName}",
+                typeof(T).Name, hashKey, rangeKey, config.OverrideTableName ?? "default");
+            throw;
+        }
+    }
+
     public async Task DeleteAsync<T>(object hashKey,
         object? rangeKey = null,
         CancellationToken cancellationToken = default)
@@ -95,6 +130,29 @@ public class DynamoDbRepository : IDynamoDbRepository
             _logger.LogError(ex,
                 "Error deleting entity of type {EntityType} with key {HashKey}/{RangeKey}",
                 typeof(T).Name, hashKey, rangeKey);
+            throw;
+        }
+    }
+
+    public async Task DeleteAsync<T>(object hashKey,
+        object? rangeKey,
+        DynamoDBOperationConfig config,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (rangeKey == null)
+                await _context.DeleteAsync<T>(hashKey, config, cancellationToken);
+            else
+                await _context.DeleteAsync<T>(hashKey, rangeKey, config, cancellationToken);
+            _logger.LogDebug("Deleted entity of type {EntityType} with key {HashKey}/{RangeKey} from table {TableName}",
+                typeof(T).Name, hashKey, rangeKey, config.OverrideTableName ?? "default");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error deleting entity of type {EntityType} with key {HashKey}/{RangeKey} from table {TableName}",
+                typeof(T).Name, hashKey, rangeKey, config.OverrideTableName ?? "default");
             throw;
         }
     }

@@ -19,6 +19,17 @@
 				"AZURE_OPENAI_API_KEY": "YOUR_AZURE_KEY_HERE",
 				"OLLAMA_API_KEY": "YOUR_OLLAMA_API_KEY_HERE"
 			}
+		},
+		"awslabs.redshift-mcp-server": {
+			"command": "uvx awslabs.redshift-mcp-server@latest",
+			"env": {
+				"AWS_PROFILE": "to-prd-admin",
+				"AWS_REGION": "us-east-2",
+				"FASTMCP_LOG_LEVEL": "INFO"
+			},
+			"disabled": false,
+			"autoApprove": [],
+			"args": []
 		}
 	}
 }

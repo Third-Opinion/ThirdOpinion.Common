@@ -20,15 +20,6 @@ builder.Services.AddSwaggerGen();
 // Configure AWS Options
 var awsOptions = builder.Configuration.GetAWSOptions();
 
-// For testing without actual AWS credentials, use basic credentials
-awsOptions.Credentials = new Amazon.Runtime.BasicAWSCredentials("test", "test");
-
-// Set region from configuration or environment
-var region = builder.Configuration["AWS:Region"] ?? 
-             Environment.GetEnvironmentVariable("AWS_REGION") ?? 
-             "us-east-1";
-awsOptions.Region = RegionEndpoint.GetBySystemName(region);
-
 // Register AWS services
 builder.Services.AddDefaultAWSOptions(awsOptions);
 builder.Services.AddAWSService<IAmazonCognitoIdentityProvider>();

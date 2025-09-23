@@ -1,3 +1,4 @@
+using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.Model;
 using ThirdOpinion.Common.Aws.DynamoDb.Filters;
 
@@ -14,6 +15,11 @@ public interface IDynamoDbRepository
     Task SaveAsync<T>(T entity, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Save an entity to DynamoDB with save config
+    /// </summary>
+    Task SaveAsync<T>(T entity, DynamoDBOperationConfig config, CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Save multiple entities in a batch
     /// </summary>
     Task BatchSaveAsync<T>(IEnumerable<T> entities, CancellationToken cancellationToken = default);
@@ -26,10 +32,26 @@ public interface IDynamoDbRepository
         CancellationToken cancellationToken = default) where T : class;
 
     /// <summary>
+    ///     Load an entity by hash and range key with operation config
+    /// </summary>
+    Task<T?> LoadAsync<T>(object hashKey,
+        object? rangeKey,
+        DynamoDBOperationConfig config,
+        CancellationToken cancellationToken = default) where T : class;
+
+    /// <summary>
     ///     Delete an entity
     /// </summary>
     Task DeleteAsync<T>(object hashKey,
         object? rangeKey = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Delete an entity with operation config
+    /// </summary>
+    Task DeleteAsync<T>(object hashKey,
+        object? rangeKey,
+        DynamoDBOperationConfig config,
         CancellationToken cancellationToken = default);
 
     /// <summary>

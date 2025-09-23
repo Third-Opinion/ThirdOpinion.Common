@@ -177,7 +177,13 @@ public class S3Storage : IS3Storage
     {
         try
         {
-            await GetObjectMetadataAsync(bucketName, key, cancellationToken);
+            var request = new GetObjectMetadataRequest
+            {
+                BucketName = bucketName,
+                Key = key
+            };
+
+            await _s3Client.GetObjectMetadataAsync(request, cancellationToken);
             return true;
         }
         catch (AmazonS3Exception ex) when (ex.StatusCode == HttpStatusCode.NotFound)
