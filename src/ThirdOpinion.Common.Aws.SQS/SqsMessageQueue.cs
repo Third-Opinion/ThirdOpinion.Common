@@ -44,10 +44,13 @@ public class SqsMessageQueue : ISqsMessageQueue
     {
         try
         {
+            if (_sqsClient == null)
+                throw new InvalidOperationException("SQS client is not initialized");
+
             var request = new SendMessageRequest
             {
-                QueueUrl = queueUrl,
-                MessageBody = messageBody,
+                QueueUrl = queueUrl ?? throw new ArgumentNullException(nameof(queueUrl)),
+                MessageBody = messageBody ?? throw new ArgumentNullException(nameof(messageBody)),
                 MessageAttributes = new Dictionary<string, MessageAttributeValue>()
             };
 
