@@ -47,7 +47,8 @@ public class SqsMessageQueue : ISqsMessageQueue
             var request = new SendMessageRequest
             {
                 QueueUrl = queueUrl,
-                MessageBody = messageBody
+                MessageBody = messageBody,
+                MessageAttributes = new Dictionary<string, MessageAttributeValue>()
             };
 
             if (messageAttributes != null)
@@ -222,12 +223,12 @@ public class SqsMessageQueue : ISqsMessageQueue
             DeleteMessageBatchResponse? response
                 = await _sqsClient.DeleteMessageBatchAsync(request, cancellationToken);
 
-            if (response.Failed.Count > 0)
+            if (response.Failed?.Count > 0)
                 _logger.LogWarning("Failed to delete {Count} messages from queue {QueueUrl}",
                     response.Failed.Count, queueUrl);
 
             _logger.LogDebug("Deleted batch of {Count} messages from queue {QueueUrl}",
-                response.Successful.Count, queueUrl);
+                response.Successful?.Count ?? 0, queueUrl);
             return response;
         }
         catch (Exception ex)
@@ -290,7 +291,8 @@ public class SqsMessageQueue : ISqsMessageQueue
         {
             var request = new CreateQueueRequest
             {
-                QueueName = queueName
+                QueueName = queueName,
+                Attributes = new Dictionary<string, string>()
             };
 
             if (attributes != null)
