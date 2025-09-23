@@ -68,15 +68,13 @@ jobs:
           --no-build \
           --verbosity normal \
           --logger trx \
-          --collect:"XPlat Code Coverage" \
           --results-directory ./test-results/
-        
+
         dotnet test ThirdOpinion.Common.UnitTests/ThirdOpinion.Common.UnitTests.csproj \
           --configuration Release \
           --no-build \
           --verbosity normal \
           --logger trx \
-          --collect:"XPlat Code Coverage" \
           --results-directory ./test-results/
 
     - name: Upload test results
@@ -86,21 +84,6 @@ jobs:
         name: test-results
         path: ./test-results/
 
-    - name: Generate code coverage report
-      if: always()
-      run: |
-        dotnet tool install -g dotnet-reportgenerator-globaltool
-        reportgenerator \
-          -reports:./test-results/**/coverage.cobertura.xml \
-          -targetdir:./coverage-report \
-          -reporttypes:Html;Badges
-    
-    - name: Upload coverage report
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: coverage-report
-        path: ./coverage-report/
 
     - name: Comment PR with test results
       uses: dorny/test-reporter@v1
