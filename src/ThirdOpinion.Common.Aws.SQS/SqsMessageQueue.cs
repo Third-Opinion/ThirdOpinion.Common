@@ -47,12 +47,24 @@ public class SqsMessageQueue : ISqsMessageQueue
             if (_sqsClient == null)
                 throw new InvalidOperationException("SQS client is not initialized");
 
-            var request = new SendMessageRequest
+            if (string.IsNullOrEmpty(queueUrl))
+                throw new ArgumentException("Queue URL cannot be null or empty", nameof(queueUrl));
+
+            if (string.IsNullOrEmpty(messageBody))
+                throw new ArgumentException("Message body cannot be null or empty", nameof(messageBody));
+
+            SendMessageRequest request;
+            try
             {
-                QueueUrl = queueUrl ?? throw new ArgumentNullException(nameof(queueUrl)),
-                MessageBody = messageBody ?? throw new ArgumentNullException(nameof(messageBody)),
-                MessageAttributes = new Dictionary<string, MessageAttributeValue>()
-            };
+                request = new SendMessageRequest();
+                request.QueueUrl = queueUrl;
+                request.MessageBody = messageBody;
+                request.MessageAttributes = new Dictionary<string, MessageAttributeValue>();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to create SendMessageRequest: {ex.Message}", ex);
+            }
 
             if (messageAttributes != null)
                 foreach (KeyValuePair<string, MessageAttributeValue> attr in messageAttributes)
