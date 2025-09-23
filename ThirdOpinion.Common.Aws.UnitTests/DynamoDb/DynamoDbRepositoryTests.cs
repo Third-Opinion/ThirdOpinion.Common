@@ -161,14 +161,14 @@ public class DynamoDbRepositoryTests
         asyncSearchMock.Setup(x => x.GetRemainingAsync(It.IsAny<CancellationToken>()))
                       .ReturnsAsync(expectedEntities);
 
-        _contextMock.Setup(x => x.QueryAsync<TestEntity>(hashKey, It.IsAny<DynamoDBOperationConfig>()))
+        _contextMock.Setup(x => x.QueryAsync<TestEntity>(hashKey))
                    .Returns(asyncSearchMock.Object);
         
         // Act
         var results = await _repository.QueryAsync<TestEntity>(hashKey);
 
         // Assert
-        _contextMock.Verify(x => x.QueryAsync<TestEntity>(hashKey, It.IsAny<DynamoDBOperationConfig>()), Times.Once);
+        _contextMock.Verify(x => x.QueryAsync<TestEntity>(hashKey), Times.Once);
         results.ShouldNotBeNull();
         results.Count().ShouldBe(2);
         VerifyLoggerDebugWasCalled("Query returned 2 entities of type TestEntity");
@@ -188,7 +188,7 @@ public class DynamoDbRepositoryTests
         asyncSearchMock.Setup(x => x.GetRemainingAsync(It.IsAny<CancellationToken>()))
                       .ReturnsAsync(expectedEntities);
 
-        _contextMock.Setup(x => x.QueryAsync<TestEntity>(hashKey, QueryOperator.BeginsWith, It.IsAny<List<ScanCondition>>(), It.IsAny<DynamoDBOperationConfig>()))
+        _contextMock.Setup(x => x.QueryAsync<TestEntity>(hashKey, QueryOperator.BeginsWith, It.IsAny<List<ScanCondition>>()))
                    .Returns(asyncSearchMock.Object);
 
         var filter = new ThirdOpinion.Common.Aws.DynamoDb.Filters.QueryFilter();
@@ -197,7 +197,7 @@ public class DynamoDbRepositoryTests
         var results = await _repository.QueryAsync<TestEntity>(hashKey, filter);
 
         // Assert
-        _contextMock.Verify(x => x.QueryAsync<TestEntity>(hashKey, QueryOperator.BeginsWith, It.IsAny<List<ScanCondition>>(), It.IsAny<DynamoDBOperationConfig>()), Times.Once);
+        _contextMock.Verify(x => x.QueryAsync<TestEntity>(hashKey, QueryOperator.BeginsWith, It.IsAny<List<ScanCondition>>()), Times.Once);
         results.ShouldNotBeNull();
         results.Count().ShouldBe(1);
         VerifyLoggerDebugWasCalled("Query returned 1 entities of type TestEntity");
@@ -257,14 +257,14 @@ public class DynamoDbRepositoryTests
         asyncSearchMock.Setup(x => x.GetRemainingAsync(It.IsAny<CancellationToken>()))
                       .ReturnsAsync(expectedEntities);
 
-        _contextMock.Setup(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>(), It.IsAny<DynamoDBOperationConfig>()))
+        _contextMock.Setup(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>()))
                    .Returns(asyncSearchMock.Object);
 
         // Act
         var results = await _repository.ScanAsync<TestEntity>();
 
         // Assert
-        _contextMock.Verify(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>(), It.IsAny<DynamoDBOperationConfig>()), Times.Once);
+        _contextMock.Verify(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>()), Times.Once);
         results.ShouldNotBeNull();
         results.Count().ShouldBe(3);
         VerifyLoggerDebugWasCalled("Scan returned 3 entities of type TestEntity");
@@ -283,7 +283,7 @@ public class DynamoDbRepositoryTests
         asyncSearchMock.Setup(x => x.GetRemainingAsync(It.IsAny<CancellationToken>()))
                       .ReturnsAsync(expectedEntities);
 
-        _contextMock.Setup(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>(), It.IsAny<DynamoDBOperationConfig>()))
+        _contextMock.Setup(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>()))
                    .Returns(asyncSearchMock.Object);
 
         var filter = new ThirdOpinion.Common.Aws.DynamoDb.Filters.ScanFilter();
@@ -292,7 +292,7 @@ public class DynamoDbRepositoryTests
         var results = await _repository.ScanAsync<TestEntity>(filter);
 
         // Assert
-        _contextMock.Verify(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>(), It.IsAny<DynamoDBOperationConfig>()), Times.Once);
+        _contextMock.Verify(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>()), Times.Once);
         results.ShouldNotBeNull();
         results.Count().ShouldBe(1);
         VerifyLoggerDebugWasCalled("Scan returned 1 entities of type TestEntity");
