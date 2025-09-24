@@ -183,7 +183,7 @@ public static class TextractHelpers
                 }
 
                 listObjectsRequest.ContinuationToken = listObjectsResponse.NextContinuationToken;
-            } while (listObjectsResponse.IsTruncated);
+            } while (listObjectsResponse.IsTruncated ?? false);
         }
         catch (AmazonS3Exception ex)
         {
@@ -231,7 +231,7 @@ public static class TextractHelpers
                 }
 
                 listObjectsRequest.ContinuationToken = listObjectsResponse.NextContinuationToken;
-            } while (listObjectsResponse.IsTruncated);
+            } while (listObjectsResponse.IsTruncated ?? false);
         }
         catch (AmazonS3Exception ex)
         {

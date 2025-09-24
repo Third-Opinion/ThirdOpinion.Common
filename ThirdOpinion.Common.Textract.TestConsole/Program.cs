@@ -27,8 +27,14 @@ class Program
         {
             System.Console.WriteLine($"Using AWS profile: {awsProfile}");
         }
+        // Get region from AWS configuration or use default
+        var regionName = Environment.GetEnvironmentVariable("AWS_REGION") ??
+                        Environment.GetEnvironmentVariable("AWS_DEFAULT_REGION") ??
+                        "us-east-2";
+        var region = Amazon.RegionEndpoint.GetBySystemName(regionName);
+
         // Create AWS client - will automatically use AWS_PROFILE environment variable
-        var textractClient = new Amazon.Textract.AmazonTextractClient();
+        var textractClient = new Amazon.Textract.AmazonTextractClient(region);
         var textractService = new TextractTextDetectionService(textractClient);
 
         System.Console.WriteLine("TextractLib Console Demo");
