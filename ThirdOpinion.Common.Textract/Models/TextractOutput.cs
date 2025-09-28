@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -338,12 +339,11 @@ public static class TextractOutputExtensions
 
         //Get all the blocks that are direct children of the page blocks
         var childBlocks = blocksById.Values.Where(b => b.Relationships != null).ToList();
-
+        int rowIndex = 0;
         foreach (var pageBlock in pageBlocks)
         {
             var contentBlocks = new List<FilteredBlock>();
 
-            //
                 if (pageBlock.Relationships != null)
                 {
                     //assume the children are in reading order?
@@ -386,7 +386,7 @@ public static class TextractOutputExtensions
                     FilteredBlock block = contentBlocks[i];
 
                     // Regular text content
-                    result.AppendLine(GetBlockText(block, blocksById));
+                    result.AppendLine(GetBlockText(block, blocksById, ref rowIndex));
 
                     // Add paragraph breaks between distinct blocks of text
                     if (i < contentBlocks.Count - 1)
@@ -403,18 +403,19 @@ public static class TextractOutputExtensions
         }
     }
 
-    private static string ValuesWithMetaData(FilteredBlock block)
+    private static string ValuesWithMetaData(FilteredBlock block, ref int rowIndex)
     {
-        return $"{block.Text ?? string.Empty} [meta:id={block.Id}]";
+        rowIndex++;
+        return $"[{rowIndex}]{block.Text ?? string.Empty} [meta:id={block.Id}]";
     }
 
     // Helper method to extract text from a block
-    private static string GetBlockText(FilteredBlock block, Dictionary<string, FilteredBlock> blocksById)
+    private static string GetBlockText(FilteredBlock block, Dictionary<string, FilteredBlock> blocksById,ref int rowIndex)
     {
         // If the block has direct text, use it
         if (!string.IsNullOrEmpty(block.Text))
         {
-            return ValuesWithMetaData(block);
+            return ValuesWithMetaData(block, ref rowIndex);
         }
 
         // Otherwise, extract text from child blocks
@@ -434,7 +435,7 @@ public static class TextractOutputExtensions
                             {
                                 if (text.Length > 0)
                                     text.Append(" ");
-                                text.Append(ValuesWithMetaData(block));
+                                text.Append(ValuesWithMetaData(block,ref rowIndex));
                             }
                         }
                     }
@@ -510,102 +511,46 @@ public static class TextractOutputExtensions
             bool noGeo = false, bool noRelationships = false)
         {
             // Calculate page count from blocks since DocumentMetadata.Pages may not be available
-            var pageCount = 0;
-            if (response.Blocks != null)
+            var pageCount = response.Blocks?.Count(b => b.BlockType == "PAGE") ?? 0;
+
+            // Convert blocks using LINQ
+            List<Block>? blocks = response.Blocks?.Select(b => new Block
             {
-                foreach (var block in response.Blocks)
-                {
-                    if (block.BlockType == "PAGE")
+                BlockType = Enum.Parse<BlockTypeEnum>(b.BlockType),
+                Confidence = b.Confidence,
+                Text = b.Text,
+                TextType = b.TextType,
+                Geometry = noGeo || b.Geometry == null
+                    ? null
+                    : new Geometry
                     {
-                        pageCount++;
-                    }
-                }
-            }
-
-           // Convert blocks without LINQ
-            List<Block>? blocks = null;
-            if (response.Blocks != null)
-            {
-                blocks = new List<Block>();
-                foreach (Amazon.Textract.Model.Block? b in response.Blocks)
-                {
-                    // Convert polygon points without LINQ
-                    List<Point>? polygon = null;
-                    if (!noGeo && b.Geometry?.Polygon != null)
-                    {
-                        polygon = new List<Point>();
-                        foreach (Amazon.Textract.Model.Point? p in b.Geometry.Polygon)
-                        {
-                            polygon.Add(new Point(p.X, p.Y));
-                        }
-                    }
-
-                    // Convert relationships without LINQ
-                    List<Relationship>? relationships = null;
-                    if (!noRelationships && b.Relationships != null)
-                    {
-                        relationships = new List<Relationship>();
-                        foreach (Amazon.Textract.Model.Relationship? r in b.Relationships)
-                        {
-                            var ids = new List<string>();
-                            if (r.Ids != null)
+                        BoundingBox = b.Geometry.BoundingBox == null
+                            ? new BoundingBox { Height = 0f, Left = 0f, Top = 0f, Width = 0f }
+                            : new BoundingBox
                             {
-                                foreach (var id in r.Ids)
-                                {
-                                    ids.Add(id);
-                                }
-                            }
-
-                            relationships.Add(new Relationship
-                            {
-                                Type = r.Type,
-                                Ids = ids
-                            });
-                        }
-                    }
-
-                    // Convert entity types without LINQ
-                    List<string>? entityTypes = null;
-                    if (b.EntityTypes != null)
+                                Height = b.Geometry.BoundingBox.Height ?? 0f,
+                                Left = b.Geometry.BoundingBox.Left ?? 0f,
+                                Top = b.Geometry.BoundingBox.Top ?? 0f,
+                                Width = b.Geometry.BoundingBox.Width ?? 0f
+                            },
+                        Polygon = b.Geometry.Polygon?.Select(p => new Point(p.X ?? 0f, p.Y ?? 0f)).ToList() ?? new List<Point>()
+                    },
+                Id = b.Id,
+                Relationships = !noRelationships && b.Relationships != null
+                    ? b.Relationships.Select(r => new Relationship
                     {
-                        entityTypes = new List<string>();
-                        foreach (string? entityType in b.EntityTypes)
-                        {
-                            entityTypes.Add(entityType);
-                        }
-                    }
-
-                    // blocks.Add(new Block
-                    // {
-                    //     BlockType = Enum.Parse<BlockTypeEnum>(b.BlockType),
-                    //     Confidence = b.Confidence,
-                    //     Text = b.Text,
-                    //     TextType = b.TextType,
-                    //     Geometry = noGeo
-                    //         ? null
-                    //         : new Geometry
-                    //         {
-                    //             BoundingBox = new BoundingBox
-                    //             {
-                    //                 Height = b.Geometry.BoundingBox.Height,
-                    //                 Left = b.Geometry.BoundingBox.Left,
-                    //                 Top = b.Geometry.BoundingBox.Top,
-                    //                 Width = b.Geometry.BoundingBox.Width
-                    //             },
-                    //             Polygon = polygon
-                    //         },
-                    //     Id = b.Id,
-                    //     Relationships = relationships,
-                    //     Page = b.Page,
-                    //     RowIndex = b.RowIndex,
-                    //     ColumnIndex = b.ColumnIndex,
-                    //     RowSpan = b.RowSpan,
-                    //     ColumnSpan = b.ColumnSpan,
-                    //     SelectionStatus = b.SelectionStatus,
-                    //     EntityTypes = entityTypes
-                    // });
-                }
-            }
+                        Type = r.Type,
+                        Ids = r.Ids?.ToList() ?? new List<string>()
+                    }).ToList()
+                    : null,
+                Page = b.Page,
+                RowIndex = b.RowIndex,
+                ColumnIndex = b.ColumnIndex,
+                RowSpan = b.RowSpan,
+                ColumnSpan = b.ColumnSpan,
+                SelectionStatus = b.SelectionStatus,
+                EntityTypes = b.EntityTypes?.ToList()
+            }).ToList();
 
             var output = new TextractOutput
             {
@@ -618,7 +563,7 @@ public static class TextractOutputExtensions
                         Pages = pageCount
                     }
                     : null,
-                Blocks = new List<Block>() //blocks
+                Blocks = blocks
             };
 
             return output;
