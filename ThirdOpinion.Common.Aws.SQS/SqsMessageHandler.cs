@@ -24,10 +24,11 @@ public class SqsMessageHandler : BackgroundService
         IServiceProvider serviceProvider,
         IDynamoDbRepository dynamoRepository)
     {
-        _sqsClient = sqsClient;
-        _logger = logger;
-        _serviceProvider = serviceProvider;
-        _dynamoRepository = dynamoRepository;
+        _sqsClient = sqsClient ?? throw new ArgumentNullException(nameof(sqsClient));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _dynamoRepository = dynamoRepository ?? throw new ArgumentNullException(nameof(dynamoRepository));
+        ArgumentNullException.ThrowIfNull(configuration);
         _queueUrl = configuration["AWS:SQS:QueueUrl"]
                     ?? throw new ArgumentNullException("AWS:SQS:QueueUrl configuration is missing");
     }
@@ -66,7 +67,7 @@ public class SqsMessageHandler : BackgroundService
             }
     }
 
-    private async Task ProcessMessageAsync(Message message, CancellationToken cancellationToken)
+    protected virtual async Task ProcessMessageAsync(Message message, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Processing message {MessageId}", message.MessageId);
         // Use the DynamoDB repository to save the message
@@ -76,7 +77,7 @@ public class SqsMessageHandler : BackgroundService
         // You might want to deserialize the message body and handle different message types
     }
 
-    private async Task DeleteMessageAsync(string receiptHandle, CancellationToken cancellationToken)
+    protected async Task DeleteMessageAsync(string receiptHandle, CancellationToken cancellationToken)
     {
         try
         {

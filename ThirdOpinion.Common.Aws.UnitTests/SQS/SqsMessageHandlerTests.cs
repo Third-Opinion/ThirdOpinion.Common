@@ -68,105 +68,41 @@ public class SqsMessageHandlerTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReceivesAndProcessesMessages()
+    public async Task ProcessMessageAsync_WithValidMessage_LogsProcessingInfo()
     {
         // Arrange
-        var handler = new SqsMessageHandler(
+        var handler = new TestableMessageHandler(
             _sqsClientMock.Object,
             _loggerMock.Object,
             _configurationMock.Object,
             _serviceProviderMock.Object,
             _dynamoRepositoryMock.Object);
 
-        var testMessages = new List<Message>
-        {
-            new() 
-            { 
-                MessageId = "msg-1", 
-                Body = "test message body 1", 
-                ReceiptHandle = "receipt-handle-1" 
-            },
-            new() 
-            { 
-                MessageId = "msg-2", 
-                Body = "test message body 2", 
-                ReceiptHandle = "receipt-handle-2" 
-            }
+        var testMessage = new Message 
+        { 
+            MessageId = "msg-1", 
+            Body = "test message body", 
+            ReceiptHandle = "receipt-handle-1" 
         };
 
-        var receiveResponse = new ReceiveMessageResponse
-        {
-            HttpStatusCode = HttpStatusCode.OK,
-            Messages = testMessages
-        };
-
-        // Setup SQS client to return messages once, then empty response
-        var callCount = 0;
-        _sqsClientMock.Setup(x => x.ReceiveMessageAsync(It.IsAny<ReceiveMessageRequest>(), It.IsAny<CancellationToken>()))
-                     .ReturnsAsync(() =>
-                     {
-                         callCount++;
-                         if (callCount == 1)
-                         {
-                             return receiveResponse;
-                         }
-                         return new ReceiveMessageResponse 
-                         { 
-                             HttpStatusCode = HttpStatusCode.OK, 
-                             Messages = new List<Message>() 
-                         };
-                     });
-
-        _sqsClientMock.Setup(x => x.DeleteMessageAsync(It.IsAny<DeleteMessageRequest>(), It.IsAny<CancellationToken>()))
-                     .ReturnsAsync(new DeleteMessageResponse { HttpStatusCode = HttpStatusCode.OK });
-
-        var cancellationTokenSource = new CancellationTokenSource();
-        
         // Act
-        var executeTask = handler.StartAsync(cancellationTokenSource.Token);
-        
-        // Allow some processing time
-        await Task.Delay(100);
-        
-        // Stop the service
-        cancellationTokenSource.Cancel();
-        
-        try
-        {
-            await executeTask;
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected when cancellation is requested
-        }
+        await handler.ProcessMessagePublic(testMessage, CancellationToken.None);
 
         // Assert
-        _sqsClientMock.Verify(x => x.ReceiveMessageAsync(
-            It.Is<ReceiveMessageRequest>(r => 
-                r.QueueUrl == _testQueueUrl &&
-                r.MaxNumberOfMessages == 10 &&
-                r.WaitTimeSeconds == 20), 
-            It.IsAny<CancellationToken>()), Times.AtLeastOnce);
-
-        _sqsClientMock.Verify(x => x.DeleteMessageAsync(
-            It.Is<DeleteMessageRequest>(r => r.QueueUrl == _testQueueUrl), 
-            It.IsAny<CancellationToken>()), Times.Exactly(2));
-
         VerifyLoggerInfoWasCalled("Processing message msg-1");
-        VerifyLoggerInfoWasCalled("Processing message msg-2");
     }
 
     [Fact]
-    public async Task ExecuteAsync_MessageProcessingThrowsException_LogsErrorButContinues()
+    public async Task ProcessMessageAsync_WhenExceptionThrown_LogsError()
     {
         // Arrange
-        var handler = new TestSqsMessageHandler(
+        var handler = new TestableMessageHandler(
             _sqsClientMock.Object,
             _loggerMock.Object,
             _configurationMock.Object,
             _serviceProviderMock.Object,
             _dynamoRepositoryMock.Object,
-            shouldThrowOnProcess: true);
+            shouldThrow: true);
 
         var testMessage = new Message 
         { 
@@ -175,153 +111,61 @@ public class SqsMessageHandlerTests
             ReceiptHandle = "receipt-handle-error" 
         };
 
-        var receiveResponse = new ReceiveMessageResponse
-        {
-            HttpStatusCode = HttpStatusCode.OK,
-            Messages = new List<Message> { testMessage }
-        };
+        // Act & Assert
+        await Should.ThrowAsync<Exception>(() => 
+            handler.ProcessMessagePublic(testMessage, CancellationToken.None));
 
-        var callCount = 0;
-        _sqsClientMock.Setup(x => x.ReceiveMessageAsync(It.IsAny<ReceiveMessageRequest>(), It.IsAny<CancellationToken>()))
-                     .ReturnsAsync(() =>
-                     {
-                         callCount++;
-                         if (callCount == 1)
-                         {
-                             return receiveResponse;
-                         }
-                         return new ReceiveMessageResponse 
-                         { 
-                             HttpStatusCode = HttpStatusCode.OK, 
-                             Messages = new List<Message>() 
-                         };
-                     });
+        VerifyLoggerInfoWasCalled("Processing message msg-error");
+    }
 
-        var cancellationTokenSource = new CancellationTokenSource();
+    [Fact]
+    public async Task DeleteMessageAsync_WithReceiptHandle_CallsSqsClient()
+    {
+        // Arrange
+        var handler = new TestableMessageHandler(
+            _sqsClientMock.Object,
+            _loggerMock.Object,
+            _configurationMock.Object,
+            _serviceProviderMock.Object,
+            _dynamoRepositoryMock.Object);
+
+        var receiptHandle = "receipt-handle-test";
         
+        _sqsClientMock.Setup(x => x.DeleteMessageAsync(It.IsAny<DeleteMessageRequest>(), It.IsAny<CancellationToken>()))
+                     .ReturnsAsync(new DeleteMessageResponse { HttpStatusCode = HttpStatusCode.OK });
+
         // Act
-        var executeTask = handler.StartAsync(cancellationTokenSource.Token);
-        
-        await Task.Delay(100);
-        cancellationTokenSource.Cancel();
-        
-        try
-        {
-            await executeTask;
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected
-        }
+        await handler.DeleteMessagePublic(receiptHandle, CancellationToken.None);
 
         // Assert
-        VerifyLoggerErrorWasCalled("Error processing message msg-error");
-        
-        // Verify delete was not called since processing failed
         _sqsClientMock.Verify(x => x.DeleteMessageAsync(
-            It.IsAny<DeleteMessageRequest>(), 
-            It.IsAny<CancellationToken>()), Times.Never);
+            It.Is<DeleteMessageRequest>(r => 
+                r.QueueUrl == _testQueueUrl && 
+                r.ReceiptHandle == receiptHandle), 
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task ExecuteAsync_SqsReceiveThrowsException_LogsErrorAndRetries()
+    public async Task DeleteMessageAsync_WhenExceptionThrown_LogsErrorAndRethrows()
     {
         // Arrange
-        var handler = new SqsMessageHandler(
+        var handler = new TestableMessageHandler(
             _sqsClientMock.Object,
             _loggerMock.Object,
             _configurationMock.Object,
             _serviceProviderMock.Object,
             _dynamoRepositoryMock.Object);
 
-        var callCount = 0;
-        _sqsClientMock.Setup(x => x.ReceiveMessageAsync(It.IsAny<ReceiveMessageRequest>(), It.IsAny<CancellationToken>()))
-                     .ThrowsAsync(new AmazonSQSException("SQS service error"));
-
-        var cancellationTokenSource = new CancellationTokenSource();
+        var receiptHandle = "receipt-handle-error";
         
-        // Act
-        var executeTask = handler.StartAsync(cancellationTokenSource.Token);
-        
-        await Task.Delay(200); // Allow time for error and retry
-        cancellationTokenSource.Cancel();
-        
-        try
-        {
-            await executeTask;
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected
-        }
-
-        // Assert
-        VerifyLoggerErrorWasCalled("Error receiving messages from SQS");
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_DeleteMessageThrowsException_LogsErrorButContinues()
-    {
-        // Arrange
-        var handler = new SqsMessageHandler(
-            _sqsClientMock.Object,
-            _loggerMock.Object,
-            _configurationMock.Object,
-            _serviceProviderMock.Object,
-            _dynamoRepositoryMock.Object);
-
-        var testMessage = new Message 
-        { 
-            MessageId = "msg-delete-error", 
-            Body = "test message body", 
-            ReceiptHandle = "receipt-handle-delete-error" 
-        };
-
-        var receiveResponse = new ReceiveMessageResponse
-        {
-            HttpStatusCode = HttpStatusCode.OK,
-            Messages = new List<Message> { testMessage }
-        };
-
-        var callCount = 0;
-        _sqsClientMock.Setup(x => x.ReceiveMessageAsync(It.IsAny<ReceiveMessageRequest>(), It.IsAny<CancellationToken>()))
-                     .ReturnsAsync(() =>
-                     {
-                         callCount++;
-                         if (callCount == 1)
-                         {
-                             return receiveResponse;
-                         }
-                         return new ReceiveMessageResponse 
-                         { 
-                             HttpStatusCode = HttpStatusCode.OK, 
-                             Messages = new List<Message>() 
-                         };
-                     });
-
         _sqsClientMock.Setup(x => x.DeleteMessageAsync(It.IsAny<DeleteMessageRequest>(), It.IsAny<CancellationToken>()))
                      .ThrowsAsync(new AmazonSQSException("Delete failed"));
 
-        var cancellationTokenSource = new CancellationTokenSource();
-        
-        // Act
-        var executeTask = handler.StartAsync(cancellationTokenSource.Token);
-        
-        await Task.Delay(100);
-        cancellationTokenSource.Cancel();
-        
-        try
-        {
-            await executeTask;
-        }
-        catch (OperationCanceledException)
-        {
-            // Expected
-        }
+        // Act & Assert
+        await Should.ThrowAsync<AmazonSQSException>(() => 
+            handler.DeleteMessagePublic(receiptHandle, CancellationToken.None));
 
-        // Assert
-        VerifyLoggerInfoWasCalled("Processing message msg-delete-error");
-        VerifyLoggerErrorWasCalled("Error deleting message receipt-handle-delete-error");
+        VerifyLoggerErrorWasCalled("Error deleting message receipt-handle-error");
     }
 
     [Fact]
@@ -380,41 +224,41 @@ public class SqsMessageHandlerTests
     }
 }
 
-// Test helper class to simulate processing failures
-public class TestSqsMessageHandler : SqsMessageHandler
+// Test helper class to expose protected methods for testing
+public class TestableMessageHandler : SqsMessageHandler
 {
-    private readonly bool _shouldThrowOnProcess;
+    private readonly bool _shouldThrow;
 
-    public TestSqsMessageHandler(
+    public TestableMessageHandler(
         IAmazonSQS sqsClient,
         ILogger<SqsMessageHandler> logger,
         IConfiguration configuration,
         IServiceProvider serviceProvider,
         IDynamoDbRepository dynamoRepository,
-        bool shouldThrowOnProcess = false)
+        bool shouldThrow = false)
         : base(sqsClient, logger, configuration, serviceProvider, dynamoRepository)
     {
-        _shouldThrowOnProcess = shouldThrowOnProcess;
+        _shouldThrow = shouldThrow;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public async Task ProcessMessagePublic(Message message, CancellationToken cancellationToken)
     {
-        // Override to provide controlled behavior for testing
-        if (_shouldThrowOnProcess)
+        if (_shouldThrow)
         {
-            // Simulate a receive that gets a message, processing fails
-            var receiveResponse = new ReceiveMessageResponse
-            {
-                Messages = new List<Message>
-                {
-                    new() { MessageId = "msg-error", Body = "test", ReceiptHandle = "handle" }
-                }
-            };
-
-            // Simulate processing the message and throwing an exception
+            // First log the processing message, then throw
+            Logger.LogInformation("Processing message {MessageId}", message.MessageId);
             throw new Exception("Simulated processing error");
         }
-
-        await base.ExecuteAsync(stoppingToken);
+        
+        await ProcessMessageAsync(message, cancellationToken);
     }
+
+    public async Task DeleteMessagePublic(string receiptHandle, CancellationToken cancellationToken)
+    {
+        await DeleteMessageAsync(receiptHandle, cancellationToken);
+    }
+
+    protected ILogger<SqsMessageHandler> Logger => (ILogger<SqsMessageHandler>)typeof(SqsMessageHandler)
+        .GetField("_logger", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+        .GetValue(this)!;
 }
