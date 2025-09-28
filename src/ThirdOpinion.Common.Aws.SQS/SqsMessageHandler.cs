@@ -1,9 +1,12 @@
+using System.Runtime.CompilerServices;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ThirdOpinion.Common.Aws.DynamoDb;
+
+[assembly: InternalsVisibleTo("ThirdOpinion.Common.Aws.UnitTests")]
 
 //using DocNlpService.Repositories;
 
@@ -24,10 +27,11 @@ public class SqsMessageHandler : BackgroundService
         IServiceProvider serviceProvider,
         IDynamoDbRepository dynamoRepository)
     {
-        _sqsClient = sqsClient;
-        _logger = logger;
-        _serviceProvider = serviceProvider;
-        _dynamoRepository = dynamoRepository;
+        _sqsClient = sqsClient ?? throw new ArgumentNullException(nameof(sqsClient));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _dynamoRepository = dynamoRepository ?? throw new ArgumentNullException(nameof(dynamoRepository));
+        ArgumentNullException.ThrowIfNull(configuration);
         _queueUrl = configuration["AWS:SQS:QueueUrl"]
                     ?? throw new ArgumentNullException("AWS:SQS:QueueUrl configuration is missing");
     }
@@ -66,18 +70,24 @@ public class SqsMessageHandler : BackgroundService
             }
     }
 
-    private async Task ProcessMessageAsync(Message message, CancellationToken cancellationToken)
+    internal Task ProcessMessageAsync(Message message, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(message);
+
         _logger.LogInformation("Processing message {MessageId}", message.MessageId);
         // Use the DynamoDB repository to save the message
         //  await _dynamoRepository.SaveMessageAsync(message.MessageId, message.Body);
 
         // Add your message processing logic here
         // You might want to deserialize the message body and handle different message types
+
+        return Task.CompletedTask;
     }
 
-    private async Task DeleteMessageAsync(string receiptHandle, CancellationToken cancellationToken)
+    internal async Task DeleteMessageAsync(string receiptHandle, CancellationToken cancellationToken)
     {
+        ArgumentException.ThrowIfNullOrEmpty(receiptHandle);
+
         try
         {
             var deleteRequest = new DeleteMessageRequest
