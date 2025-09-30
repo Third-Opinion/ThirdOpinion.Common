@@ -17,7 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdOpinion.Common.Aws.Cog
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdOpinion.Common.Misc", "src\ThirdOpinion.Common.Misc\ThirdOpinion.Common.Misc.csproj", "{5D1B7C8C-14A5-48F5-85CD-F3B708A96382}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdOpinion.Common.UnitTests", "ThirdOpinion.Common.UnitTests\ThirdOpinion.Common.UnitTests.csproj", "{96F4676C-613B-41BF-B442-6B1B6C044D81}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdOpinion.Common.Misc.UnitTests", "ThirdOpinion.Common.Misc.UnitTests\ThirdOpinion.Common.Misc.UnitTests.csproj", "{96F4676C-613B-41BF-B442-6B1B6C044D81}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThirdOpinion.Common.FunctionalTests", "ThirdOpinion.Common.FunctionalTests\ThirdOpinion.Common.FunctionalTests.csproj", "{B9A4B802-FC87-46B4-8DFD-80CA41BA89E0}"
 EndProject

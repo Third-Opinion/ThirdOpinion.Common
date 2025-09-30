@@ -1,6 +1,6 @@
 using ThirdOpinion.Common.Aws.S3;
-namespace ThirdOpinion.Common.UnitTests.Helpers;
 
+namespace ThirdOpinion.Common.UnitTests.Helpers;
 
 public class HelpersTest
 {

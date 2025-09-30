@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Misc.patients.PatientHuid;
-using Xunit;
 
 namespace ThirdOpinion.Common.UnitTests.PatientHuid;
 
@@ -113,7 +112,7 @@ public class PatientModelTests
         };
 
         // Act
-        var json = JsonSerializer.Serialize(demographics);
+        string json = JsonSerializer.Serialize(demographics);
         var deserialized = JsonSerializer.Deserialize<Demographics>(json);
 
         // Assert
@@ -177,7 +176,7 @@ public class PatientModelTests
             Provenance = "test",
             Demographics = new Demographics()
         };
-        
+
         var postPatient2 = new PostPatient
         {
             TenantGuid = Guid.NewGuid(),
@@ -393,7 +392,8 @@ public class PatientModelTests
 
         validMatchPatient.FirstName.ShouldNotBeNull();
         validMatchPatient.LastName.ShouldNotBeNull();
-        (validMatchPatient.Sex != 0 || validMatchPatient.Sex == Demographics.SexEnum.Unknown).ShouldBeTrue();
+        (validMatchPatient.Sex != 0 || validMatchPatient.Sex == Demographics.SexEnum.Unknown)
+            .ShouldBeTrue();
     }
 
     [Fact]

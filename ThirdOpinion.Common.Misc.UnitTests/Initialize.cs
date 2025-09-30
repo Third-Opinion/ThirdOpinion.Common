@@ -6,10 +6,6 @@ namespace ThirdOpinion.Common.UnitTests;
 
 public class Initialize : IDisposable
 {
-    public static IConfiguration Configuration { get; private set; }
-
-    public static IServiceProvider ServiceProvider { get; private set; }
-
     static Initialize()
     {
         Configuration = new ConfigurationBuilder()
@@ -21,6 +17,10 @@ public class Initialize : IDisposable
 
         ServiceProvider = collection.BuildServiceProvider();
     }
+
+    public static IConfiguration Configuration { get; }
+
+    public static IServiceProvider ServiceProvider { get; }
 
     public void Dispose()
     {

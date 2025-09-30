@@ -1,4 +1,3 @@
-
 using System.Text.RegularExpressions;
 using Misc.patients.PatientHuid;
 
@@ -61,7 +60,8 @@ public class HuidGeneratorTests
         huid.ShouldNotBeNullOrEmpty();
         huid.Length.ShouldBe(ExpectedHuidLength);
         Regex.IsMatch(huid, HuidPattern)
-            .ShouldBeTrue($"HUID '{huid}' did not match pattern '{HuidPattern}' for Guid {guidString}");
+            .ShouldBeTrue(
+                $"HUID '{huid}' did not match pattern '{HuidPattern}' for Guid {guidString}");
     }
 
     [Theory]

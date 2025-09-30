@@ -1,6 +1,4 @@
 using Misc.StringExtensions;
-using Shouldly;
-using Xunit;
 
 namespace ThirdOpinion.Common.UnitTests.Misc.StringExtensions;
 
@@ -16,7 +14,7 @@ public class StringExtensionsTests
         var expected = "SGVsbG8gV29ybGQ=";
 
         // Act
-        var result = input.ToBase64();
+        string result = input.ToBase64();
 
         // Assert
         result.ShouldBe(expected);
@@ -30,7 +28,7 @@ public class StringExtensionsTests
         var expected = "";
 
         // Act
-        var result = input.ToBase64();
+        string result = input.ToBase64();
 
         // Assert
         result.ShouldBe(expected);
@@ -44,7 +42,7 @@ public class StringExtensionsTests
         var expected = "VGVzdEAxMjMh";
 
         // Act
-        var result = input.ToBase64();
+        string result = input.ToBase64();
 
         // Assert
         result.ShouldBe(expected);
@@ -58,7 +56,7 @@ public class StringExtensionsTests
         var expected = "SGVsbG8g5LiW55WM";
 
         // Act
-        var result = input.ToBase64();
+        string result = input.ToBase64();
 
         // Assert
         result.ShouldBe(expected);
@@ -76,7 +74,7 @@ public class StringExtensionsTests
         var expected = "Hello World";
 
         // Act
-        var result = input.FromBase64();
+        string result = input.FromBase64();
 
         // Assert
         result.ShouldBe(expected);
@@ -90,7 +88,7 @@ public class StringExtensionsTests
         var expected = "";
 
         // Act
-        var result = input.FromBase64();
+        string result = input.FromBase64();
 
         // Assert
         result.ShouldBe(expected);
@@ -104,7 +102,7 @@ public class StringExtensionsTests
         var expected = "Hello 世界";
 
         // Act
-        var result = input.FromBase64();
+        string result = input.FromBase64();
 
         // Assert
         result.ShouldBe(expected);
@@ -117,8 +115,8 @@ public class StringExtensionsTests
         var original = "This is a test string with special chars: !@#$%^&*()";
 
         // Act
-        var encoded = original.ToBase64();
-        var decoded = encoded.FromBase64();
+        string encoded = original.ToBase64();
+        string decoded = encoded.FromBase64();
 
         // Assert
         decoded.ShouldBe(original);
@@ -133,9 +131,9 @@ public class StringExtensionsTests
     {
         // Arrange
         var input = "Hello World!";
-        
+
         // Act
-        var result = input.ToBase64UrlSafe();
+        string? result = input.ToBase64UrlSafe();
 
         // Assert
         result.ShouldNotBeNull();
@@ -151,8 +149,8 @@ public class StringExtensionsTests
         var input = "Test string with characters that create + and / in base64";
 
         // Act
-        var regularBase64 = input.ToBase64();
-        var urlSafeBase64 = input.ToBase64UrlSafe();
+        string regularBase64 = input.ToBase64();
+        string? urlSafeBase64 = input.ToBase64UrlSafe();
 
         // Assert
         if (regularBase64.Contains('+'))
@@ -160,11 +158,13 @@ public class StringExtensionsTests
             urlSafeBase64.ShouldContain('-');
             urlSafeBase64.ShouldNotContain('+');
         }
+
         if (regularBase64.Contains('/'))
         {
             urlSafeBase64.ShouldContain('_');
             urlSafeBase64.ShouldNotContain('/');
         }
+
         urlSafeBase64.ShouldNotContain('=');
     }
 
@@ -175,7 +175,7 @@ public class StringExtensionsTests
         var input = "";
 
         // Act
-        var result = input.ToBase64UrlSafe();
+        string? result = input.ToBase64UrlSafe();
 
         // Assert
         result.ShouldBe("");
@@ -190,10 +190,10 @@ public class StringExtensionsTests
     {
         // Arrange
         var original = "Hello World!";
-        var urlSafeBase64 = original.ToBase64UrlSafe();
+        string? urlSafeBase64 = original.ToBase64UrlSafe();
 
         // Act
-        var result = urlSafeBase64.FromBase64UrlSafe();
+        string result = urlSafeBase64.FromBase64UrlSafe();
 
         // Assert
         result.ShouldBe(original);
@@ -204,10 +204,10 @@ public class StringExtensionsTests
     {
         // Arrange
         var original = "Test";
-        var urlSafeBase64 = original.ToBase64UrlSafe();
+        string? urlSafeBase64 = original.ToBase64UrlSafe();
 
         // Act
-        var result = urlSafeBase64.FromBase64UrlSafe();
+        string result = urlSafeBase64.FromBase64UrlSafe();
 
         // Assert
         result.ShouldBe(original);
@@ -220,8 +220,8 @@ public class StringExtensionsTests
         var original = "This is a test with special characters: !@#$%^&*()_+-=[]{}|;':\",./<>?";
 
         // Act
-        var encoded = original.ToBase64UrlSafe();
-        var decoded = encoded.FromBase64UrlSafe();
+        string? encoded = original.ToBase64UrlSafe();
+        string decoded = encoded.FromBase64UrlSafe();
 
         // Assert
         decoded.ShouldBe(original);
@@ -240,7 +240,7 @@ public class StringExtensionsTests
         var expected = "Hello";
 
         // Act
-        var result = input.Take(length);
+        string result = input.Take(length);
 
         // Assert
         result.ShouldBe(expected);
@@ -254,7 +254,7 @@ public class StringExtensionsTests
         var length = 10;
 
         // Act
-        var result = input.Take(length);
+        string result = input.Take(length);
 
         // Assert
         result.ShouldBe(input);
@@ -268,7 +268,7 @@ public class StringExtensionsTests
         var length = 5;
 
         // Act
-        var result = input.Take(length);
+        string result = input.Take(length);
 
         // Assert
         result.ShouldBe(input);
@@ -282,7 +282,7 @@ public class StringExtensionsTests
         var length = 5;
 
         // Act
-        var result = input.Take(length);
+        string result = input.Take(length);
 
         // Assert
         result.ShouldBe("");
@@ -296,7 +296,7 @@ public class StringExtensionsTests
         var length = 5;
 
         // Act
-        var result = input.Take(length);
+        string result = input.Take(length);
 
         // Assert
         result.ShouldBeNull();
@@ -310,7 +310,7 @@ public class StringExtensionsTests
         var length = 0;
 
         // Act
-        var result = input.Take(length);
+        string result = input.Take(length);
 
         // Assert
         result.ShouldBe("");
@@ -327,7 +327,7 @@ public class StringExtensionsTests
         var input = "";
 
         // Act
-        var result = input.ToNullIfEmpty();
+        string? result = input.ToNullIfEmpty();
 
         // Assert
         result.ShouldBeNull();
@@ -340,7 +340,7 @@ public class StringExtensionsTests
         string input = null;
 
         // Act
-        var result = input.ToNullIfEmpty();
+        string? result = input.ToNullIfEmpty();
 
         // Assert
         result.ShouldBeNull();
@@ -353,7 +353,7 @@ public class StringExtensionsTests
         var input = "Hello";
 
         // Act
-        var result = input.ToNullIfEmpty();
+        string? result = input.ToNullIfEmpty();
 
         // Assert
         result.ShouldBe(input);
@@ -366,7 +366,7 @@ public class StringExtensionsTests
         var input = "   ";
 
         // Act
-        var result = input.ToNullIfEmpty();
+        string? result = input.ToNullIfEmpty();
 
         // Assert
         result.ShouldBe(input);
@@ -383,7 +383,7 @@ public class StringExtensionsTests
         var input = "";
 
         // Act
-        var result = input.ToNullIfWhiteSpace();
+        string? result = input.ToNullIfWhiteSpace();
 
         // Assert
         result.ShouldBeNull();
@@ -396,7 +396,7 @@ public class StringExtensionsTests
         var input = "   ";
 
         // Act
-        var result = input.ToNullIfWhiteSpace();
+        string? result = input.ToNullIfWhiteSpace();
 
         // Assert
         result.ShouldBeNull();
@@ -409,7 +409,7 @@ public class StringExtensionsTests
         var input = "\t\n\r  ";
 
         // Act
-        var result = input.ToNullIfWhiteSpace();
+        string? result = input.ToNullIfWhiteSpace();
 
         // Assert
         result.ShouldBeNull();
@@ -422,7 +422,7 @@ public class StringExtensionsTests
         string input = null;
 
         // Act
-        var result = input.ToNullIfWhiteSpace();
+        string? result = input.ToNullIfWhiteSpace();
 
         // Assert
         result.ShouldBeNull();
@@ -435,7 +435,7 @@ public class StringExtensionsTests
         var input = "Hello";
 
         // Act
-        var result = input.ToNullIfWhiteSpace();
+        string? result = input.ToNullIfWhiteSpace();
 
         // Assert
         result.ShouldBe(input);
@@ -448,7 +448,7 @@ public class StringExtensionsTests
         var input = " Hello World ";
 
         // Act
-        var result = input.ToNullIfWhiteSpace();
+        string? result = input.ToNullIfWhiteSpace();
 
         // Assert
         result.ShouldBe(input);
@@ -465,7 +465,7 @@ public class StringExtensionsTests
         string input = null;
 
         // Act
-        var result = input.ToNullIfWhiteSpaceOrNull();
+        string? result = input.ToNullIfWhiteSpaceOrNull();
 
         // Assert
         result.ShouldBeNull();
@@ -478,7 +478,7 @@ public class StringExtensionsTests
         var input = "";
 
         // Act
-        var result = input.ToNullIfWhiteSpaceOrNull();
+        string? result = input.ToNullIfWhiteSpaceOrNull();
 
         // Assert
         result.ShouldBeNull();
@@ -491,7 +491,7 @@ public class StringExtensionsTests
         var input = "   ";
 
         // Act
-        var result = input.ToNullIfWhiteSpaceOrNull();
+        string? result = input.ToNullIfWhiteSpaceOrNull();
 
         // Assert
         result.ShouldBeNull();
@@ -504,7 +504,7 @@ public class StringExtensionsTests
         var input = "Hello";
 
         // Act
-        var result = input.ToNullIfWhiteSpaceOrNull();
+        string? result = input.ToNullIfWhiteSpaceOrNull();
 
         // Assert
         result.ShouldBe(input);
@@ -522,7 +522,7 @@ public class StringExtensionsTests
         var expected = "hELLO WORLD";
 
         // Act
-        var result = input.CapitalizeFirstLetter();
+        string result = input.CapitalizeFirstLetter();
 
         // Assert
         result.ShouldBe(expected);
@@ -536,7 +536,7 @@ public class StringExtensionsTests
         var expected = "hello world";
 
         // Act
-        var result = input.CapitalizeFirstLetter();
+        string result = input.CapitalizeFirstLetter();
 
         // Assert
         result.ShouldBe(expected);
@@ -550,7 +550,7 @@ public class StringExtensionsTests
         var expected = "hELLO WORLD";
 
         // Act
-        var result = input.CapitalizeFirstLetter();
+        string result = input.CapitalizeFirstLetter();
 
         // Assert
         result.ShouldBe(expected);
@@ -563,7 +563,7 @@ public class StringExtensionsTests
         var input = "";
 
         // Act
-        var result = input.CapitalizeFirstLetter();
+        string result = input.CapitalizeFirstLetter();
 
         // Assert
         result.ShouldBe("");
@@ -576,7 +576,7 @@ public class StringExtensionsTests
         string input = null;
 
         // Act
-        var result = input.CapitalizeFirstLetter();
+        string result = input.CapitalizeFirstLetter();
 
         // Assert
         result.ShouldBeNull();
@@ -589,7 +589,7 @@ public class StringExtensionsTests
         var input = "   ";
 
         // Act
-        var result = input.CapitalizeFirstLetter();
+        string result = input.CapitalizeFirstLetter();
 
         // Assert
         result.ShouldBe("");
@@ -603,7 +603,7 @@ public class StringExtensionsTests
         var expected = "a";
 
         // Act
-        var result = input.CapitalizeFirstLetter();
+        string result = input.CapitalizeFirstLetter();
 
         // Assert
         result.ShouldBe(expected);
@@ -621,7 +621,7 @@ public class StringExtensionsTests
         var expected = "Hello World";
 
         // Act
-        var result = input.ToTitleCase();
+        string result = input.ToTitleCase();
 
         // Assert
         result.ShouldBe(expected);
@@ -635,7 +635,7 @@ public class StringExtensionsTests
         var expected = "Hello World";
 
         // Act
-        var result = input.ToTitleCase();
+        string result = input.ToTitleCase();
 
         // Assert
         result.ShouldBe(expected);
@@ -649,7 +649,7 @@ public class StringExtensionsTests
         var expected = "Hello World";
 
         // Act
-        var result = input.ToTitleCase();
+        string result = input.ToTitleCase();
 
         // Assert
         result.ShouldBe(expected);
@@ -665,7 +665,7 @@ public class StringExtensionsTests
         var expected = "Hello,  Worl,d  Test";
 
         // Act
-        var result = input.ToTitleCase();
+        string result = input.ToTitleCase();
 
         // Assert
         result.ShouldBe(expected);
@@ -679,7 +679,7 @@ public class StringExtensionsTests
         var expected = "Hello";
 
         // Act
-        var result = input.ToTitleCase();
+        string result = input.ToTitleCase();
 
         // Assert
         result.ShouldBe(expected);
@@ -692,7 +692,7 @@ public class StringExtensionsTests
         var input = "";
 
         // Act
-        var result = input.ToTitleCase();
+        string result = input.ToTitleCase();
 
         // Assert
         result.ShouldBe("");
@@ -705,7 +705,7 @@ public class StringExtensionsTests
         string input = null;
 
         // Act
-        var result = input.ToTitleCase();
+        string result = input.ToTitleCase();
 
         // Assert
         result.ShouldBeNull();
@@ -721,7 +721,7 @@ public class StringExtensionsTests
         var expected = "Hello  World   Test";
 
         // Act
-        var result = input.ToTitleCase();
+        string result = input.ToTitleCase();
 
         // Assert
         result.ShouldBe(expected);
@@ -739,7 +739,7 @@ public class StringExtensionsTests
         var expected = "Hello world";
 
         // Act
-        var result = input.FirstCharToUpper();
+        string result = input.FirstCharToUpper();
 
         // Assert
         result.ShouldBe(expected);
@@ -753,7 +753,7 @@ public class StringExtensionsTests
         var expected = "Hello world";
 
         // Act
-        var result = input.FirstCharToUpper();
+        string result = input.FirstCharToUpper();
 
         // Assert
         result.ShouldBe(expected);
@@ -766,7 +766,7 @@ public class StringExtensionsTests
         var input = "";
 
         // Act
-        var result = input.FirstCharToUpper();
+        string result = input.FirstCharToUpper();
 
         // Assert
         result.ShouldBe("");
@@ -779,7 +779,7 @@ public class StringExtensionsTests
         string input = null;
 
         // Act
-        var result = input.FirstCharToUpper();
+        string result = input.FirstCharToUpper();
 
         // Assert
         result.ShouldBeNull();
@@ -793,7 +793,7 @@ public class StringExtensionsTests
         var expected = "H";
 
         // Act
-        var result = input.FirstCharToUpper();
+        string result = input.FirstCharToUpper();
 
         // Assert
         result.ShouldBe(expected);
@@ -807,7 +807,7 @@ public class StringExtensionsTests
         var expected = "123 test";
 
         // Act
-        var result = input.FirstCharToUpper();
+        string result = input.FirstCharToUpper();
 
         // Assert
         result.ShouldBe(expected);
@@ -825,7 +825,7 @@ public class StringExtensionsTests
         var expected = "hello World";
 
         // Act
-        var result = input.FirstCharToLower();
+        string result = input.FirstCharToLower();
 
         // Assert
         result.ShouldBe(expected);
@@ -839,7 +839,7 @@ public class StringExtensionsTests
         var expected = "hello World";
 
         // Act
-        var result = input.FirstCharToLower();
+        string result = input.FirstCharToLower();
 
         // Assert
         result.ShouldBe(expected);
@@ -852,7 +852,7 @@ public class StringExtensionsTests
         var input = "";
 
         // Act
-        var result = input.FirstCharToLower();
+        string result = input.FirstCharToLower();
 
         // Assert
         result.ShouldBe("");
@@ -865,7 +865,7 @@ public class StringExtensionsTests
         string input = null;
 
         // Act
-        var result = input.FirstCharToLower();
+        string result = input.FirstCharToLower();
 
         // Assert
         result.ShouldBeNull();
@@ -879,7 +879,7 @@ public class StringExtensionsTests
         var expected = "h";
 
         // Act
-        var result = input.FirstCharToLower();
+        string result = input.FirstCharToLower();
 
         // Assert
         result.ShouldBe(expected);
@@ -893,7 +893,7 @@ public class StringExtensionsTests
         var expected = "123 Test";
 
         // Act
-        var result = input.FirstCharToLower();
+        string result = input.FirstCharToLower();
 
         // Assert
         result.ShouldBe(expected);

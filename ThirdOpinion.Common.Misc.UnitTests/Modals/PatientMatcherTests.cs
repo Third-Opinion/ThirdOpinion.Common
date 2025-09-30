@@ -45,7 +45,7 @@ public class PatientMatcherTests
         };
 
         // Act
-        var similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
+        float similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
 
         // Output patient data
         Console.WriteLine("Patient 1:");
@@ -85,7 +85,7 @@ public class PatientMatcherTests
         };
 
         // Act
-        var similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
+        float similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
 
         // Output patient data
         Console.WriteLine("Patient 1:");
@@ -125,7 +125,7 @@ public class PatientMatcherTests
         };
 
         // Act
-        var similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
+        float similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
 
         // Output patient data
         Console.WriteLine("Patient 1:");
@@ -165,7 +165,7 @@ public class PatientMatcherTests
         };
 
         // Act
-        var similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
+        float similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
 
         // Output patient data
         Console.WriteLine("Patient 1:");
@@ -205,7 +205,7 @@ public class PatientMatcherTests
         };
 
         // Act
-        var similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
+        float similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
 
         // Output patient data
         Console.WriteLine("Patient 1:");
@@ -243,7 +243,7 @@ public class PatientMatcherTests
         };
 
         // Act
-        var similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
+        float similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
 
         // Output patient data
         Console.WriteLine("Patient 1:");
@@ -284,7 +284,7 @@ public class PatientMatcherTests
         };
 
         // Act
-        var similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
+        float similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
 
         // Output patient data
         Console.WriteLine("Patient 1:");
@@ -330,7 +330,7 @@ public class PatientMatcherTests
         };
 
         // Act
-        var similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
+        float similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
 
         // Output patient data
         Console.WriteLine("Patient 1:");
@@ -376,7 +376,7 @@ public class PatientMatcherTests
         };
 
         // Act
-        var similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
+        float similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
 
         // Output patient data
         Console.WriteLine("Patient 1:");
@@ -422,7 +422,7 @@ public class PatientMatcherTests
         };
 
         // Act
-        var similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
+        float similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
 
         // Output patient data
         Console.WriteLine("Patient 1:");
@@ -468,7 +468,7 @@ public class PatientMatcherTests
         };
 
         // Act
-        var similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
+        float similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
 
         // Output patient data
         Console.WriteLine("Patient 1:");
@@ -515,7 +515,7 @@ public class PatientMatcherTests
         };
 
         // Act
-        var similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
+        float similarity = PatientMatcher.CalculateSamePerson(patient1, patient2);
 
         // Output patient data
         Console.WriteLine("Patient 1:");

@@ -1,6 +1,6 @@
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Misc.patients.PatientHuid;
-using Xunit;
 
 namespace ThirdOpinion.Common.UnitTests.PatientHuid;
 
@@ -13,7 +13,7 @@ public class HuidGeneratorTests
         var validHuid = "P234-ADH-KLMN";
 
         // Act
-        var result = HuidGenerator.IsValidHuid(validHuid);
+        bool result = HuidGenerator.IsValidHuid(validHuid);
 
         // Assert
         result.ShouldBeTrue();
@@ -25,23 +25,23 @@ public class HuidGeneratorTests
         // Test various invalid formats
         var invalidHuids = new[]
         {
-            "P23-ADH-KLMN",     // Too short
-            "P234-ADH-KLMNP",   // Too long
-            "234-ADH-KLMN",     // Missing prefix
-            "Q234-ADH-KLMN",    // Wrong prefix
-            "P234-ADH_KLMN",    // Wrong separator
-            "P234ADH-KLMN",     // Missing dash
-            "P234-ADHKLMN",     // Missing dash
-            "P234-ADH-KLM1",    // Invalid character (1 not in alphabet)
-            "P234-ADH-KLMI",    // Invalid character (I not in alphabet)
-            "",                 // Empty string
-            "P234-ADH-KLM"      // Too short
+            "P23-ADH-KLMN", // Too short
+            "P234-ADH-KLMNP", // Too long
+            "234-ADH-KLMN", // Missing prefix
+            "Q234-ADH-KLMN", // Wrong prefix
+            "P234-ADH_KLMN", // Wrong separator
+            "P234ADH-KLMN", // Missing dash
+            "P234-ADHKLMN", // Missing dash
+            "P234-ADH-KLM1", // Invalid character (1 not in alphabet)
+            "P234-ADH-KLMI", // Invalid character (I not in alphabet)
+            "", // Empty string
+            "P234-ADH-KLM" // Too short
         };
 
-        foreach (var invalidHuid in invalidHuids)
+        foreach (string invalidHuid in invalidHuids)
         {
             // Act
-            var result = HuidGenerator.IsValidHuid(invalidHuid);
+            bool result = HuidGenerator.IsValidHuid(invalidHuid);
 
             // Assert
             result.ShouldBeFalse($"HUID '{invalidHuid}' should be invalid");
@@ -52,11 +52,12 @@ public class HuidGeneratorTests
     public void IsValidHuid_ValidCharactersOnly_ReturnsTrue()
     {
         // Arrange - using only valid characters from the alphabet
-        var validHuid = "P234-679A-DEHJKLMNPQRUVWXYZBCFGT"[..13]; // Take first 13 chars in correct format
+        string validHuid
+            = "P234-679A-DEHJKLMNPQRUVWXYZBCFGT"[..13]; // Take first 13 chars in correct format
         validHuid = "P234-679-ADEH"; // Properly formatted
 
         // Act
-        var result = HuidGenerator.IsValidHuid(validHuid);
+        bool result = HuidGenerator.IsValidHuid(validHuid);
 
         // Assert
         result.ShouldBeTrue();
@@ -69,7 +70,7 @@ public class HuidGeneratorTests
         var patientId = 12345L;
 
         // Act
-        var huid = HuidGenerator.GeneratePatientHuid(patientId);
+        string huid = HuidGenerator.GeneratePatientHuid(patientId);
 
         // Assert
         huid.ShouldNotBeNull();
@@ -86,15 +87,12 @@ public class HuidGeneratorTests
         var patientIds = new long[] { 1, 2, 100, 1000, 999999 };
 
         // Act
-        var huids = patientIds.Select(HuidGenerator.GeneratePatientHuid).ToList();
+        List<string> huids = patientIds.Select(HuidGenerator.GeneratePatientHuid).ToList();
 
         // Assert
         huids.Distinct().Count().ShouldBe(patientIds.Length); // All HUIDs should be unique
-        
-        foreach (var huid in huids)
-        {
-            HuidGenerator.IsValidHuid(huid).ShouldBeTrue();
-        }
+
+        foreach (string huid in huids) HuidGenerator.IsValidHuid(huid).ShouldBeTrue();
     }
 
     [Fact]
@@ -104,8 +102,8 @@ public class HuidGeneratorTests
         var patientId = 54321L;
 
         // Act
-        var huid1 = HuidGenerator.GeneratePatientHuid(patientId);
-        var huid2 = HuidGenerator.GeneratePatientHuid(patientId);
+        string huid1 = HuidGenerator.GeneratePatientHuid(patientId);
+        string huid2 = HuidGenerator.GeneratePatientHuid(patientId);
 
         // Assert
         huid1.ShouldBe(huid2);
@@ -118,7 +116,7 @@ public class HuidGeneratorTests
         var patientId = 0L;
 
         // Act
-        var huid = HuidGenerator.GeneratePatientHuid(patientId);
+        string huid = HuidGenerator.GeneratePatientHuid(patientId);
 
         // Assert
         HuidGenerator.IsValidHuid(huid).ShouldBeTrue();
@@ -131,7 +129,7 @@ public class HuidGeneratorTests
         var patientId = long.MaxValue;
 
         // Act
-        var huid = HuidGenerator.GeneratePatientHuid(patientId);
+        string huid = HuidGenerator.GeneratePatientHuid(patientId);
 
         // Assert
         HuidGenerator.IsValidHuid(huid).ShouldBeTrue();
@@ -144,7 +142,7 @@ public class HuidGeneratorTests
         var patientGuid = Guid.NewGuid();
 
         // Act
-        var huid = HuidGenerator.GeneratePatientHuidFromGuid(patientGuid);
+        string huid = HuidGenerator.GeneratePatientHuidFromGuid(patientGuid);
 
         // Assert
         HuidGenerator.IsValidHuid(huid).ShouldBeTrue();
@@ -159,8 +157,8 @@ public class HuidGeneratorTests
         var patientGuid = Guid.NewGuid();
 
         // Act
-        var huid1 = HuidGenerator.GeneratePatientHuidFromGuid(patientGuid);
-        var huid2 = HuidGenerator.GeneratePatientHuidFromGuid(patientGuid);
+        string huid1 = HuidGenerator.GeneratePatientHuidFromGuid(patientGuid);
+        string huid2 = HuidGenerator.GeneratePatientHuidFromGuid(patientGuid);
 
         // Assert
         huid2.ShouldBe(huid1);
@@ -170,18 +168,16 @@ public class HuidGeneratorTests
     public void GeneratePatientHuidFromGuid_DifferentGuids_GeneratesDifferentHuids()
     {
         // Arrange
-        var guids = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
+        var guids = new[]
+            { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
 
         // Act
-        var huids = guids.Select(HuidGenerator.GeneratePatientHuidFromGuid).ToList();
+        List<string> huids = guids.Select(HuidGenerator.GeneratePatientHuidFromGuid).ToList();
 
         // Assert
         huids.Distinct().Count().ShouldBe(guids.Length); // All HUIDs should be unique
-        
-        foreach (var huid in huids)
-        {
-            HuidGenerator.IsValidHuid(huid).ShouldBeTrue();
-        }
+
+        foreach (string huid in huids) HuidGenerator.IsValidHuid(huid).ShouldBeTrue();
     }
 
     [Fact]
@@ -191,7 +187,7 @@ public class HuidGeneratorTests
         var emptyGuid = Guid.Empty;
 
         // Act
-        var huid = HuidGenerator.GeneratePatientHuidFromGuid(emptyGuid);
+        string huid = HuidGenerator.GeneratePatientHuidFromGuid(emptyGuid);
 
         // Assert
         HuidGenerator.IsValidHuid(huid).ShouldBeTrue();
@@ -202,15 +198,15 @@ public class HuidGeneratorTests
     {
         // Arrange
         var regex = new Regex(HuidGenerator.HuidPattern);
-        var testIds = new long[] { 1, 100, 12345, 999999, long.MaxValue / 2 };
+        var testIds = new[] { 1, 100, 12345, 999999, long.MaxValue / 2 };
 
-        foreach (var id in testIds)
+        foreach (long id in testIds)
         {
             // Act
-            var huid = HuidGenerator.GeneratePatientHuid(id);
+            string huid = HuidGenerator.GeneratePatientHuid(id);
 
             // Assert
-            (regex.IsMatch(huid)).ShouldBeTrue($"Generated HUID '{huid}' doesn't match pattern");
+            regex.IsMatch(huid).ShouldBeTrue($"Generated HUID '{huid}' doesn't match pattern");
         }
     }
 
@@ -221,7 +217,7 @@ public class HuidGeneratorTests
         HuidGenerator.HuidLength.ShouldBe(13);
         HuidGenerator.HuidPattern.ShouldNotBeNull();
         HuidGenerator.HuidRegex.ShouldNotBeNull();
-        
+
         // Test that the regex compiles correctly
         HuidGenerator.HuidRegex.IsMatch("P234-ADH-KLMN").ShouldBeTrue();
     }
@@ -236,7 +232,7 @@ public class HuidGeneratorTests
         // Act
         for (long i = 0; i < count; i++)
         {
-            var huid = HuidGenerator.GeneratePatientHuid(i);
+            string huid = HuidGenerator.GeneratePatientHuid(i);
             huids.Add(huid);
         }
 
@@ -248,38 +244,37 @@ public class HuidGeneratorTests
     public void GeneratePatientHuid_Performance_CompletesWithinReasonableTime()
     {
         // Arrange
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var stopwatch = Stopwatch.StartNew();
         var iterations = 1000;
 
         // Act
-        for (var i = 0; i < iterations; i++)
-        {
-            HuidGenerator.GeneratePatientHuid(i);
-        }
-        
+        for (var i = 0; i < iterations; i++) HuidGenerator.GeneratePatientHuid(i);
+
         stopwatch.Stop();
 
         // Assert - Should complete within 1 second for 1000 iterations
-        (stopwatch.ElapsedMilliseconds < 1000).ShouldBeTrue($"HUID generation took {stopwatch.ElapsedMilliseconds}ms for {iterations} iterations");
+        (stopwatch.ElapsedMilliseconds < 1000).ShouldBeTrue(
+            $"HUID generation took {stopwatch.ElapsedMilliseconds}ms for {iterations} iterations");
     }
 
     [Fact]
     public void GeneratePatientHuid_ContainsOnlyValidCharacters()
     {
         // Arrange
-        const string validChars = "2346789ADEHJKLMNPQRUVWXYZBCFGTP-"; // Including P for prefix and - for separator
+        const string
+            validChars
+                = "2346789ADEHJKLMNPQRUVWXYZBCFGTP-"; // Including P for prefix and - for separator
         var testIds = new long[] { 1, 100, 12345, 999999 };
 
-        foreach (var id in testIds)
+        foreach (long id in testIds)
         {
             // Act
-            var huid = HuidGenerator.GeneratePatientHuid(id);
+            string huid = HuidGenerator.GeneratePatientHuid(id);
 
             // Assert
-            foreach (var c in huid)
-            {
-                (validChars.Contains(c)).ShouldBeTrue($"HUID '{huid}' contains invalid character '{c}'");
-            }
+            foreach (char c in huid)
+                validChars.Contains(c)
+                    .ShouldBeTrue($"HUID '{huid}' contains invalid character '{c}'");
         }
     }
 
@@ -289,10 +284,10 @@ public class HuidGeneratorTests
         // Arrange
         var testIds = new long[] { 1, 100, 12345 };
 
-        foreach (var id in testIds)
+        foreach (long id in testIds)
         {
             // Act
-            var huid = HuidGenerator.GeneratePatientHuid(id);
+            string huid = HuidGenerator.GeneratePatientHuid(id);
 
             // Assert
             huid[0].ShouldBe('P'); // Starts with P
@@ -301,7 +296,7 @@ public class HuidGeneratorTests
             huid.Length.ShouldBe(13); // Total length is 13
 
             // Check segment lengths
-            var parts = huid.Split('-');
+            string[] parts = huid.Split('-');
             parts.Length.ShouldBe(3);
             parts[0].Length.ShouldBe(4); // P + 3 chars
             parts[1].Length.ShouldBe(3); // 3 chars
@@ -318,9 +313,9 @@ public class HuidGeneratorTests
     public void GeneratePatientHuid_Deterministic_SameInputProducesSameOutput(long patientId)
     {
         // Act
-        var huid1 = HuidGenerator.GeneratePatientHuid(patientId);
-        var huid2 = HuidGenerator.GeneratePatientHuid(patientId);
-        var huid3 = HuidGenerator.GeneratePatientHuid(patientId);
+        string huid1 = HuidGenerator.GeneratePatientHuid(patientId);
+        string huid2 = HuidGenerator.GeneratePatientHuid(patientId);
+        string huid3 = HuidGenerator.GeneratePatientHuid(patientId);
 
         // Assert
         huid2.ShouldBe(huid1);
@@ -335,8 +330,8 @@ public class HuidGeneratorTests
         var knownGuid = new Guid("12345678-1234-5678-9ABC-123456789012");
 
         // Act
-        var huid1 = HuidGenerator.GeneratePatientHuidFromGuid(knownGuid);
-        var huid2 = HuidGenerator.GeneratePatientHuidFromGuid(knownGuid);
+        string huid1 = HuidGenerator.GeneratePatientHuidFromGuid(knownGuid);
+        string huid2 = HuidGenerator.GeneratePatientHuidFromGuid(knownGuid);
 
         // Assert
         huid2.ShouldBe(huid1); // Should be deterministic
