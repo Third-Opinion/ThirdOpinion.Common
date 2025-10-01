@@ -12,8 +12,11 @@ namespace ThirdOpinion.Common.Aws.DynamoDb;
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    ///     Add DynamoDB repository to the service collection
+    ///     Add DynamoDB repository to the service collection using configuration
     /// </summary>
+    /// <param name="services">The service collection to add services to</param>
+    /// <param name="configuration">Configuration containing DynamoDB settings</param>
+    /// <returns>The service collection for chaining</returns>
     public static IServiceCollection AddDynamoDbRepository(this IServiceCollection services,
         IConfiguration configuration)
     {
@@ -38,8 +41,11 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    ///     Add DynamoDB repository with custom configuration
+    ///     Add DynamoDB repository with custom configuration action
     /// </summary>
+    /// <param name="services">The service collection to add services to</param>
+    /// <param name="configureOptions">Action to configure DynamoDB options</param>
+    /// <returns>The service collection for chaining</returns>
     public static IServiceCollection AddDynamoDbRepository(this IServiceCollection services,
         Action<DynamoDbOptions> configureOptions)
     {

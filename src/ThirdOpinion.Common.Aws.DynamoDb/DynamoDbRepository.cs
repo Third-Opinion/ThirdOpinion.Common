@@ -17,6 +17,12 @@ public class DynamoDbRepository : IDynamoDbRepository
     private readonly IAmazonDynamoDB _dynamoDbClient;
     private readonly ILogger<DynamoDbRepository> _logger;
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="DynamoDbRepository"/> class
+    /// </summary>
+    /// <param name="context">The DynamoDB context for data operations</param>
+    /// <param name="dynamoDbClient">The low-level DynamoDB client</param>
+    /// <param name="logger">The logger instance for this repository</param>
     public DynamoDbRepository(IDynamoDBContext context, IAmazonDynamoDB dynamoDbClient, ILogger<DynamoDbRepository> logger)
     {
         _context = context;
@@ -24,6 +30,14 @@ public class DynamoDbRepository : IDynamoDbRepository
         _logger = logger;
     }
 
+    /// <summary>
+    ///     Saves an entity to DynamoDB
+    /// </summary>
+    /// <typeparam name="T">The type of entity to save</typeparam>
+    /// <param name="entity">The entity to save</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
+    /// <returns>A task representing the asynchronous save operation</returns>
+    /// <exception cref="Exception">Thrown when an error occurs during the save operation</exception>
     public async Task SaveAsync<T>(T entity, CancellationToken cancellationToken = default)
     {
         try
@@ -39,6 +53,15 @@ public class DynamoDbRepository : IDynamoDbRepository
         }
     }
 
+    /// <summary>
+    ///     Saves an entity to DynamoDB with specific operation configuration
+    /// </summary>
+    /// <typeparam name="T">The type of entity to save</typeparam>
+    /// <param name="entity">The entity to save</param>
+    /// <param name="config">Configuration options for the save operation</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
+    /// <returns>A task representing the asynchronous save operation</returns>
+    /// <exception cref="Exception">Thrown when an error occurs during the save operation</exception>
     public async Task SaveAsync<T>(T entity, DynamoDBOperationConfig config, CancellationToken cancellationToken = default)
     {
         try
@@ -58,6 +81,14 @@ public class DynamoDbRepository : IDynamoDbRepository
         }
     }
 
+    /// <summary>
+    ///     Saves multiple entities to DynamoDB in a batch operation
+    /// </summary>
+    /// <typeparam name="T">The type of entities to save</typeparam>
+    /// <param name="entities">The collection of entities to save</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
+    /// <returns>A task representing the asynchronous batch save operation</returns>
+    /// <exception cref="Exception">Thrown when an error occurs during the batch save operation</exception>
     public async Task BatchSaveAsync<T>(IEnumerable<T> entities,
         CancellationToken cancellationToken = default)
     {
@@ -77,6 +108,15 @@ public class DynamoDbRepository : IDynamoDbRepository
         }
     }
 
+    /// <summary>
+    ///     Loads an entity from DynamoDB by its hash key and optional range key
+    /// </summary>
+    /// <typeparam name="T">The type of entity to load</typeparam>
+    /// <param name="hashKey">The hash key of the entity</param>
+    /// <param name="rangeKey">The optional range key of the entity</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
+    /// <returns>A task representing the asynchronous load operation, returning the entity or null if not found</returns>
+    /// <exception cref="Exception">Thrown when an error occurs during the load operation</exception>
     public async Task<T?> LoadAsync<T>(object hashKey,
         object? rangeKey = null,
         CancellationToken cancellationToken = default)
@@ -96,6 +136,16 @@ public class DynamoDbRepository : IDynamoDbRepository
         }
     }
 
+    /// <summary>
+    ///     Loads an entity from DynamoDB by its hash key and optional range key with specific operation configuration
+    /// </summary>
+    /// <typeparam name="T">The type of entity to load</typeparam>
+    /// <param name="hashKey">The hash key of the entity</param>
+    /// <param name="rangeKey">The optional range key of the entity</param>
+    /// <param name="config">Configuration options for the load operation</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
+    /// <returns>A task representing the asynchronous load operation, returning the entity or null if not found</returns>
+    /// <exception cref="Exception">Thrown when an error occurs during the load operation</exception>
     public async Task<T?> LoadAsync<T>(object hashKey,
         object? rangeKey,
         DynamoDBOperationConfig config,
@@ -121,6 +171,15 @@ public class DynamoDbRepository : IDynamoDbRepository
         }
     }
 
+    /// <summary>
+    ///     Deletes an entity from DynamoDB by its hash key and optional range key
+    /// </summary>
+    /// <typeparam name="T">The type of entity to delete</typeparam>
+    /// <param name="hashKey">The hash key of the entity to delete</param>
+    /// <param name="rangeKey">The optional range key of the entity to delete</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
+    /// <returns>A task representing the asynchronous delete operation</returns>
+    /// <exception cref="Exception">Thrown when an error occurs during the delete operation</exception>
     public async Task DeleteAsync<T>(object hashKey,
         object? rangeKey = null,
         CancellationToken cancellationToken = default)
@@ -143,6 +202,16 @@ public class DynamoDbRepository : IDynamoDbRepository
         }
     }
 
+    /// <summary>
+    ///     Deletes an entity from DynamoDB by its hash key and optional range key with specific operation configuration
+    /// </summary>
+    /// <typeparam name="T">The type of entity to delete</typeparam>
+    /// <param name="hashKey">The hash key of the entity to delete</param>
+    /// <param name="rangeKey">The optional range key of the entity to delete</param>
+    /// <param name="config">Configuration options for the delete operation</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
+    /// <returns>A task representing the asynchronous delete operation</returns>
+    /// <exception cref="Exception">Thrown when an error occurs during the delete operation</exception>
     public async Task DeleteAsync<T>(object hashKey,
         object? rangeKey,
         DynamoDBOperationConfig config,
@@ -170,6 +239,15 @@ public class DynamoDbRepository : IDynamoDbRepository
         }
     }
 
+    /// <summary>
+    ///     Queries DynamoDB for entities with the specified hash key and optional filter conditions
+    /// </summary>
+    /// <typeparam name="T">The type of entities to query</typeparam>
+    /// <param name="hashKey">The hash key to query for</param>
+    /// <param name="filter">Optional filter conditions to apply to the query</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
+    /// <returns>A task representing the asynchronous query operation, returning a collection of entities</returns>
+    /// <exception cref="Exception">Thrown when an error occurs during the query operation</exception>
     public async Task<IEnumerable<T>> QueryAsync<T>(object hashKey,
         QueryFilter? filter = null,
         CancellationToken cancellationToken = default)
@@ -209,6 +287,14 @@ public class DynamoDbRepository : IDynamoDbRepository
         }
     }
 
+    /// <summary>
+    ///     Executes a query using a low-level QueryRequest with detailed result information
+    /// </summary>
+    /// <typeparam name="T">The type of entities to query</typeparam>
+    /// <param name="request">The QueryRequest containing query parameters</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
+    /// <returns>A task representing the asynchronous query operation, returning detailed query results</returns>
+    /// <exception cref="Exception">Thrown when an error occurs during the query operation</exception>
     public async Task<QueryResult<T>> QueryAsync<T>(QueryRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -239,6 +325,14 @@ public class DynamoDbRepository : IDynamoDbRepository
         }
     }
 
+    /// <summary>
+    ///     Scans a DynamoDB table for entities with optional filter conditions
+    /// </summary>
+    /// <typeparam name="T">The type of entities to scan</typeparam>
+    /// <param name="filter">Optional filter conditions to apply to the scan</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
+    /// <returns>A task representing the asynchronous scan operation, returning a collection of entities</returns>
+    /// <exception cref="Exception">Thrown when an error occurs during the scan operation</exception>
     public async Task<IEnumerable<T>> ScanAsync<T>(ScanFilter? filter = null,
         CancellationToken cancellationToken = default)
     {
@@ -275,6 +369,15 @@ public class DynamoDbRepository : IDynamoDbRepository
         }
     }
 
+    /// <summary>
+    ///     Updates specific attributes of an item in DynamoDB
+    /// </summary>
+    /// <param name="tableName">The name of the table containing the item to update</param>
+    /// <param name="key">The primary key of the item to update</param>
+    /// <param name="updates">The attribute updates to apply to the item</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
+    /// <returns>A task representing the asynchronous update operation</returns>
+    /// <exception cref="Exception">Thrown when an error occurs during the update operation</exception>
     public async Task UpdateItemAsync(string tableName,
         Dictionary<string, AttributeValue> key,
         Dictionary<string, AttributeValueUpdate> updates,
@@ -299,6 +402,13 @@ public class DynamoDbRepository : IDynamoDbRepository
         }
     }
 
+    /// <summary>
+    ///     Executes a transactional write operation containing multiple write actions
+    /// </summary>
+    /// <param name="request">The TransactWriteItemsRequest containing the transaction items</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
+    /// <returns>A task representing the asynchronous transactional write operation</returns>
+    /// <exception cref="Exception">Thrown when an error occurs during the transactional write operation</exception>
     public async Task TransactWriteAsync(TransactWriteItemsRequest request,
         CancellationToken cancellationToken = default)
     {

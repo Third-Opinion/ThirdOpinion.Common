@@ -93,8 +93,23 @@ public interface IDynamoDbRepository
 /// </summary>
 public class QueryResult<T>
 {
+    /// <summary>
+    ///     Gets or sets the list of items returned by the query
+    /// </summary>
     public List<T> Items { get; set; } = new();
+
+    /// <summary>
+    ///     Gets or sets the primary key of the item where the operation stopped for pagination
+    /// </summary>
     public Dictionary<string, AttributeValue>? LastEvaluatedKey { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the number of items in the response
+    /// </summary>
     public int Count { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the number of items evaluated during the query before applying any filter expression
+    /// </summary>
     public int ScannedCount { get; set; }
 }

@@ -1,13 +1,20 @@
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.DocumentModel;
 
-// Converts Enum to string and vice-versa.
 namespace ThirdOpinion.Common.Aws.DynamoDb.TypeConverters;
 
-// Converts Enum to string and vice-versa.
-// Assume the value is never null e.g. it is always an Enum string and set 
+/// <summary>
+///     Converts enum values to string representation for DynamoDB storage and vice versa
+/// </summary>
+/// <typeparam name="T">The enum type to convert</typeparam>
 public class EnumConverter<T> : IPropertyConverter where T : struct, Enum
 {
+    /// <summary>
+    ///     Converts an enum value to a DynamoDB entry
+    /// </summary>
+    /// <param name="value">The enum value to convert</param>
+    /// <returns>A DynamoDB primitive entry containing the string representation of the enum</returns>
+    /// <exception cref="ArgumentException">Thrown when the value is not a valid enum type</exception>
     public DynamoDBEntry ToEntry(object value)
     {
         // If value is null, return null primitive
@@ -23,6 +30,13 @@ public class EnumConverter<T> : IPropertyConverter where T : struct, Enum
         throw new ArgumentException("Value must be an enum or null");
     }
 
+    /// <summary>
+    ///     Converts a DynamoDB entry back to an enum value
+    /// </summary>
+    /// <param name="entry">The DynamoDB entry to convert</param>
+    /// <returns>The enum value parsed from the entry</returns>
+    /// <exception cref="ArgumentException">Thrown when the entry is not a valid string</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the string value is not a valid enum value</exception>
     public object FromEntry(DynamoDBEntry entry)
     {
         var primitive = entry as Primitive;
@@ -42,10 +56,19 @@ public class EnumConverter<T> : IPropertyConverter where T : struct, Enum
     }
 }
 
+/// <summary>
+///     Converts nullable enum values to string representation for DynamoDB storage and vice versa
+/// </summary>
+/// <typeparam name="T">The enum type to convert</typeparam>
 public class NullableEnumConverter<T> : IPropertyConverter where T : struct, Enum
 {
     private readonly EnumConverter<T> _enumConverter = new();
 
+    /// <summary>
+    ///     Converts a nullable enum value to a DynamoDB entry
+    /// </summary>
+    /// <param name="value">The nullable enum value to convert</param>
+    /// <returns>A DynamoDB primitive entry containing the string representation of the enum or null</returns>
     public DynamoDBEntry ToEntry(object value)
     {
         // Check if it's a nullable enum and handle appropriately
@@ -72,6 +95,11 @@ public class NullableEnumConverter<T> : IPropertyConverter where T : struct, Enu
         return _enumConverter.ToEntry(value);
     }
 
+    /// <summary>
+    ///     Converts a DynamoDB entry back to a nullable enum value
+    /// </summary>
+    /// <param name="entry">The DynamoDB entry to convert</param>
+    /// <returns>The nullable enum value parsed from the entry</returns>
     public object FromEntry(DynamoDBEntry entry)
     {
         var result = _enumConverter.FromEntry(entry);

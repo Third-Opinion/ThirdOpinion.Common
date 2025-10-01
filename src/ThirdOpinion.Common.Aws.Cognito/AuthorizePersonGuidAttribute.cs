@@ -7,8 +7,14 @@ using Microsoft.Extensions.Options;
 
 namespace ThirdOpinion.Common.Cognito;
 
+/// <summary>
+///     Authorization attribute that validates tenant GUID access based on user groups
+/// </summary>
 public class AuthTenantGuid : TypeFilterAttribute
 {
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="AuthTenantGuid"/> class
+    /// </summary>
     public AuthTenantGuid() : base(typeof(AuthorizeTenantGuidPersonAttribute))
     {
     }
@@ -21,13 +27,24 @@ public class AuthTenantGuid : TypeFilterAttribute
 [AttributeUsage(AttributeTargets.Method)]
 public class AuthorizeTenantGuidPersonAttribute : ActionFilterAttribute
 {
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="AuthorizeTenantGuidPersonAttribute"/> class
+    /// </summary>
+    /// <param name="parameterName">The name of the route parameter containing the tenant GUID</param>
     public AuthorizeTenantGuidPersonAttribute(string parameterName = "tenantGuid")
     {
         ParameterName = parameterName;
     }
 
+    /// <summary>
+    ///     Gets the name of the route parameter containing the tenant GUID
+    /// </summary>
     public string ParameterName { get; }
 
+    /// <summary>
+    ///     Called before the action method is invoked to perform tenant authorization
+    /// </summary>
+    /// <param name="context">The action executing context</param>
     public override void OnActionExecuting(ActionExecutingContext context)
     {
         var logger = context.HttpContext.RequestServices

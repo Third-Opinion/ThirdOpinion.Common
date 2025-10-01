@@ -2,8 +2,18 @@ using System.Text;
 
 namespace ThirdOpinion.Common.Aws.DynamoDb.Pagination;
 
+/// <summary>
+///     Provides helper methods for creating paginated responses and navigation URIs
+/// </summary>
 public static class PaginationHelper
 {
+    /// <summary>
+    ///     Creates a URI for a specific page using the provided parameters
+    /// </summary>
+    /// <param name="parameters">The pagination parameters</param>
+    /// <param name="baseUri">The base URI for the API</param>
+    /// <param name="route">The route path for the endpoint</param>
+    /// <returns>A URI pointing to the specified page</returns>
     public static Uri GetPageUri(PaginationQuery parameters, string baseUri, string route)
     {
         var builder = new UriBuilder(baseUri);
@@ -16,6 +26,16 @@ public static class PaginationHelper
         return builder.Uri;
     }
 
+    /// <summary>
+    ///     Creates a paginated response with navigation links and metadata
+    /// </summary>
+    /// <typeparam name="T">The type of items in the paginated response</typeparam>
+    /// <param name="data">The data items for the current page</param>
+    /// <param name="parameters">The pagination parameters</param>
+    /// <param name="baseUri">The base URI for the API</param>
+    /// <param name="route">The route path for the endpoint</param>
+    /// <param name="totalRecords">The total number of records (optional)</param>
+    /// <returns>A paginated response with navigation links and metadata</returns>
     public static PagedResponse<T> CreatePagedResponse<T>(
         List<T> data,
         PaginationQuery parameters,

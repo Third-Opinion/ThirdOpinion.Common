@@ -3,11 +3,20 @@ using System.Text.RegularExpressions;
 
 namespace Misc.patients.PatientHuid;
 
+/// <summary>
+///     Generates Human Unique Identifiers (HUIDs) for patients using a custom encoding algorithm
+/// </summary>
 public static class HuidGenerator
 {
+    /// <summary>
+    ///     Regular expression pattern for validating patient HUID format
+    /// </summary>
     public const string HuidPattern
         = @"^P[2346789ADEHJKLMNPQRUVWXYZBCFGT]{3}-[2346789ADEHJKLMNPQRUVWXYZBCFGT]{3}-[2346789ADEHJKLMNPQRUVWXYZBCFGT]{4}$";
 
+    /// <summary>
+    ///     Expected length of a properly formatted HUID including dashes
+    /// </summary>
     public const int HuidLength = 13;
 
     // Constants
@@ -16,14 +25,26 @@ public static class HuidGenerator
     private const string Guards = "BCFGT";
     private const string PatientPrefix = "P";
 
+    /// <summary>
+    ///     Compiled regular expression for efficient HUID validation
+    /// </summary>
     public static readonly Regex HuidRegex = new(HuidPattern, RegexOptions.Compiled);
 
+    /// <summary>
+    ///     Validates whether a string matches the expected HUID format
+    /// </summary>
+    /// <param name="huid">The string to validate</param>
+    /// <returns>True if the string is a valid HUID format, false otherwise</returns>
     public static bool IsValidHuid(string huid)
     {
         return Regex.IsMatch(huid, HuidPattern) && huid.Length == HuidLength;
     }
 
-    // Generate a Patient HUID from a patient ID
+    /// <summary>
+    ///     Generates a Patient HUID from a numeric patient ID
+    /// </summary>
+    /// <param name="patientId">The numeric patient identifier</param>
+    /// <returns>A formatted HUID in the pattern P???-???-????</returns>
     public static string GeneratePatientHuid(long patientId)
     {
         string result = EncodeHuid(patientId, 9, true, PatientPrefix);
@@ -193,6 +214,11 @@ public static class HuidGenerator
         return alphabet[checkCodePoint];
     }
 
+    /// <summary>
+    ///     Generates a Patient HUID from a GUID patient identifier
+    /// </summary>
+    /// <param name="patientGuid">The GUID patient identifier</param>
+    /// <returns>A formatted HUID in the pattern P???-???-????</returns>
     public static string GeneratePatientHuidFromGuid(Guid patientGuid)
     {
         // Convert GUID to a numeric value first

@@ -10,6 +10,12 @@ namespace ThirdOpinion.Common.Aws.DynamoDb.TypeConverters;
 /// </summary>
 public class DateTimeUtcConverter : IPropertyConverter
 {
+    /// <summary>
+    ///     Converts a DateTime object to a DynamoDB entry in ISO 8601 UTC format
+    /// </summary>
+    /// <param name="value">The DateTime value to convert</param>
+    /// <returns>A DynamoDB primitive entry containing the ISO 8601 UTC string</returns>
+    /// <exception cref="ArgumentException">Thrown when the value is not a DateTime</exception>
     public DynamoDBEntry ToEntry(object value)
     {
         if (value is DateTime dateTime)
@@ -25,6 +31,12 @@ public class DateTimeUtcConverter : IPropertyConverter
         throw new ArgumentException("Value must be a DateTime", nameof(value));
     }
 
+    /// <summary>
+    ///     Converts a DynamoDB entry back to a DateTime object
+    /// </summary>
+    /// <param name="entry">The DynamoDB entry to convert</param>
+    /// <returns>A DateTime object parsed from the entry value</returns>
+    /// <exception cref="ArgumentException">Thrown when the entry is not a valid DateTime string</exception>
     public object FromEntry(DynamoDBEntry entry)
     {
         if (entry is Primitive { Value: string stringValue } &&

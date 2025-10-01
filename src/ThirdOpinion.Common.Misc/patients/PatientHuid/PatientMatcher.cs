@@ -1,7 +1,16 @@
 namespace Misc.patients.PatientHuid;
 
+/// <summary>
+///     Provides algorithms for matching and determining if two patient records represent the same person
+/// </summary>
 public static class PatientMatcher
 {
+    /// <summary>
+    ///     Calculates the probability that two patient records represent the same person
+    /// </summary>
+    /// <param name="patientBase">The base patient record for comparison</param>
+    /// <param name="patientToCompare">The patient record to compare against the base</param>
+    /// <returns>A float value between 0.0 and 1.0 representing the probability that the patients are the same person</returns>
     public static float CalculateSamePerson(Patient patientBase, Patient patientToCompare)
     {
         // Define weights based on identifying importance

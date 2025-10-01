@@ -10,6 +10,12 @@ namespace ThirdOpinion.Common.Cognito;
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Parameter)]
 public class AuthorizeTenantGuidAttribute : ValidationAttribute
 {
+    /// <summary>
+    ///     Validates that the provided tenant GUID matches the authenticated user's authorized tenants
+    /// </summary>
+    /// <param name="value">The tenant GUID value to validate</param>
+    /// <param name="validationContext">The validation context</param>
+    /// <returns>A ValidationResult indicating success or failure with error message</returns>
     protected override ValidationResult IsValid(object? value, ValidationContext validationContext)
     {
         var httpContextAccessor = (IHttpContextAccessor?)validationContext
