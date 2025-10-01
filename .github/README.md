@@ -124,13 +124,6 @@ dotnet test ThirdOpinion.Common.FunctionalTests/ \
 
 ## Monitoring and Maintenance
 
-### Dependabot
-
-The repository includes Dependabot configuration to:
-- Update NuGet packages weekly
-- Update GitHub Actions weekly
-- Create PRs with proper labeling and assignment
-
 ### Code Quality
 
 - All PRs require passing tests
