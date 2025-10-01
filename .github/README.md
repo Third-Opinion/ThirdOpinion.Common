@@ -39,17 +39,6 @@ The main CI/CD workflow that handles:
    - Publishes to NuGet.org (releases only)
    - Requires `NUGET_API_KEY` secret for NuGet.org
 
-5. **Security Scanning**
-   - Runs vulnerability scanning on dependencies
-   - Performs CodeQL static analysis
-
-### 2. Security Analysis (`codeql.yml`)
-
-Dedicated security workflow that:
-- Runs CodeQL analysis on pushes and PRs
-- Performs weekly scheduled scans
-- Uses extended security and quality queries
-
 ## Setup Requirements
 
 ### Repository Secrets
@@ -146,8 +135,6 @@ The repository includes Dependabot configuration to:
 
 - All PRs require passing tests
 - Code coverage reports are generated for each build
-- Security scanning runs on all code changes
-- CodeQL analysis runs weekly and on significant changes
 
 ## Troubleshooting
 
@@ -162,4 +149,3 @@ The repository includes Dependabot configuration to:
 
 - Check the **Actions** tab for detailed logs
 - Download test results and coverage artifacts
-- Review CodeQL results in the **Security** tab
