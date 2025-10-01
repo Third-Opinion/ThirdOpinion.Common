@@ -63,8 +63,16 @@ jobs:
 
     - name: Run unit tests
       run: |
-        # Run main unit tests (these work)
-        dotnet test ThirdOpinion.Common.UnitTests/ThirdOpinion.Common.UnitTests.csproj \
+        # Run miscellaneous unit tests
+        dotnet test ThirdOpinion.Common.Misc.UnitTests/ThirdOpinion.Common.Misc.UnitTests.csproj \
+          --configuration Release \
+          --no-build \
+          --verbosity normal \
+          --logger trx \
+          --results-directory ./test-results/
+
+        # Run FHIR unit tests
+        dotnet test ThirdOpinion.Common.Fhir.UnitTests/ThirdOpinion.Common.Fhir.UnitTests.csproj \
           --configuration Release \
           --no-build \
           --verbosity normal \
