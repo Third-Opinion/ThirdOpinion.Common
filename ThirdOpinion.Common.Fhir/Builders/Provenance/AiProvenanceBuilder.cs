@@ -26,7 +26,8 @@ public class AiProvenanceBuilder : AiResourceBuilderBase<Hl7.Fhir.Model.Provenan
 
     public AiProvenanceBuilder WithProvenanceId(string provenanceId)
     {
-        ArgumentException.ThrowIfNullOrEmpty(provenanceId);
+        if (string.IsNullOrWhiteSpace(provenanceId))
+            throw new ArgumentException("Provenance ID cannot be null, empty, or whitespace", nameof(provenanceId));
         _provenanceId = provenanceId;
         return this;
     }

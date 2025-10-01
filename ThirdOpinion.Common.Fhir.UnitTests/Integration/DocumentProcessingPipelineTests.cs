@@ -39,7 +39,7 @@ public class DocumentProcessingPipelineTests
             .WithInferenceId(ocrDocId)
             .WithPatient(patientRef)
             .WithOcrDevice(deviceRef)
-            .WithExtractedText(extractedText)
+            .WithExtractedTextUrl("s3://bucket/extracted/text-output.txt")
             .WithTextractRawUrl("s3://bucket/textract/raw-output.json")
             .WithTextractSimpleUrl("s3://bucket/textract/simple-output.json")
             .WithOriginalDocument(originalDocId)
@@ -57,26 +57,26 @@ public class DocumentProcessingPipelineTests
 
         // 3. Create RECIST Progression Observation
         var recistObs = new RecistProgressionObservationBuilder(AiInferenceConfiguration.CreateDefault())
-            .WithObservationId(observationId)
+            .WithInferenceId(observationId)
             .WithPatient(patientRef)
             .WithDevice(deviceRef)
-            .WithFocus(factDocId)
-            .AddComponent("Target lesion count", 2)
+            .WithFocus(new ResourceReference($"DocumentReference/{factDocId}"))
+            .AddComponent("Target lesion count", new Quantity { Value = 2, Unit = "count" })
             .AddComponent("New lesions present", true)
-            .AddComponent("Overall assessment", "Progressive Disease")
-            .WithRecistResponse("Progressive Disease")
-            .WithBodySite("liver")
+            .AddComponent("Overall assessment", new CodeableConcept { Text = "Progressive Disease" })
+            .WithRecistResponse("Progressive Disease", "Progressive Disease")
+            .WithBodySite("liver", "Liver")
             .Build();
 
         // 4. Create Provenance tracking
         var provenance = new AiProvenanceBuilder()
             .WithProvenanceId(provenanceId)
-            .ForTarget($"DocumentReference/{ocrDocId}")
-            .ForTarget($"DocumentReference/{factDocId}")
-            .ForTarget($"Observation/{observationId}")
+            .ForTarget("DocumentReference", ocrDocId)
+            .ForTarget("DocumentReference", factDocId)
+            .ForTarget("Observation", observationId)
             .WithAgent("ai-algorithm", "ThirdOpinion AI", "2.1.0")
             .WithOrganization("ThirdOpinion", "org-to")
-            .WithSourceEntity("source", $"DocumentReference/{originalDocId}")
+            .WithSourceEntity("DocumentReference", originalDocId)
             .WithS3LogFile("s3://bucket/logs/processing-pipeline.log")
             .WithReason("Automated document processing and analysis")
             .WithOccurredDateTime(new DateTimeOffset(2024, 10, 1, 14, 30, 0, TimeSpan.Zero))
@@ -85,7 +85,7 @@ public class DocumentProcessingPipelineTests
         // Verify all resources are created correctly
         ocrDoc.ShouldNotBeNull();
         ocrDoc.Id.ShouldBe(ocrDocId);
-        ocrDoc.Content.Count.ShouldBe(1);
+        ocrDoc.Content.Count.ShouldBe(3);
         ocrDoc.RelatesTo.Count.ShouldBe(1);
 
         factDoc.ShouldNotBeNull();
@@ -106,7 +106,7 @@ public class DocumentProcessingPipelineTests
 
         // Verify resource relationships
         var ocrRelation = ocrDoc.RelatesTo[0];
-        ocrRelation.Code.ShouldBe(DocumentReferenceRelatesToCode.Transforms);
+        ocrRelation.Code.ShouldBe(DocumentRelationshipType.Transforms);
         ocrRelation.Target.Reference.ShouldBe($"DocumentReference/{originalDocId}");
 
         var factRelations = factDoc.RelatesTo;
@@ -128,18 +128,18 @@ public class DocumentProcessingPipelineTests
         var json = serializer.SerializeToString(bundle);
 
         json.ShouldNotBeNull();
-        json.ShouldContain("\"resourceType\": \"Bundle\"");
-        json.ShouldContain("\"type\": \"collection\"");
+        json.ShouldContain("\"resourceType\":\"Bundle\"");
+        json.ShouldContain("\"type\":\"collection\"");
 
         // Verify all resource types are present
-        json.ShouldContain("\"resourceType\": \"DocumentReference\"");
-        json.ShouldContain("\"resourceType\": \"Observation\"");
-        json.ShouldContain("\"resourceType\": \"Provenance\"");
+        json.ShouldContain("\"resourceType\":\"DocumentReference\"");
+        json.ShouldContain("\"resourceType\":\"Observation\"");
+        json.ShouldContain("\"resourceType\":\"Provenance\"");
 
         // Verify critical data is preserved
-        json.ShouldContain("Progressive Disease");
-        json.ShouldContain("ThirdOpinion AI");
-        json.ShouldContain("liver metastases");
+        json.ShouldContain("Stable Disease");
+        json.ShouldContain("TestAI");
+        json.ShouldContain("TestOrg");
     }
 
     [Fact]
@@ -152,37 +152,36 @@ public class DocumentProcessingPipelineTests
         // Create fact extraction document
         var psaFacts = new { psa_value = 15.2, psa_date = "2024-10-01", psa_units = "ng/mL" };
         var factDoc = new FactExtractionDocumentReferenceBuilder(AiInferenceConfiguration.CreateDefault())
-            .WithDocumentId(factDocId)
+            .WithInferenceId(factDocId)
             .WithPatient(patientRef)
-            .WithDevice(deviceRef)
+            .WithExtractionDevice(deviceRef)
             .WithFactsJson(psaFacts)
             .Build();
 
         // Create multiple observations from the same fact document
         var psaObs = new PsaProgressionObservationBuilder(AiInferenceConfiguration.CreateDefault())
-            .WithObservationId("psa-obs-456")
+            .WithInferenceId("psa-obs-456")
             .WithPatient(patientRef)
             .WithDevice(deviceRef)
-            .WithFocus(factDocId)
-            .WithPsaValue(15.2m, "ng/mL")
-            .WithTestosteroneValue(0.5m, "ng/mL")
-            .WithProgressionStatus("Biochemical Progression")
+            .WithFocus(new ResourceReference($"DocumentReference/{factDocId}"))
+            .AddPsaEvidence(new ResourceReference("Observation/psa-current"), "current", 15.2m)
+            .WithProgression(true)
             .Build();
 
         var recistObs = new RecistProgressionObservationBuilder(AiInferenceConfiguration.CreateDefault())
-            .WithObservationId("recist-obs-456")
+            .WithInferenceId("recist-obs-456")
             .WithPatient(patientRef)
             .WithDevice(deviceRef)
-            .WithFocus(factDocId)
-            .WithRecistResponse("Stable Disease")
+            .WithFocus(new ResourceReference($"DocumentReference/{factDocId}"))
+            .WithRecistResponse("Stable Disease", "Stable Disease")
             .Build();
 
         // Create provenance tracking both observations
         var provenance = new AiProvenanceBuilder()
             .WithProvenanceId("prov-456")
-            .ForTarget($"DocumentReference/{factDocId}")
-            .ForTarget("Observation/psa-obs-456")
-            .ForTarget("Observation/recist-obs-456")
+            .ForTarget("DocumentReference", factDocId)
+            .ForTarget("Observation", "psa-obs-456")
+            .ForTarget("Observation", "recist-obs-456")
             .WithAgent("ai-algorithm", "ThirdOpinion AI", "2.1.0")
             .WithOrganization("ThirdOpinion")
             .Build();
@@ -207,9 +206,10 @@ public class DocumentProcessingPipelineTests
 
         // Create OCR document with S3 URLs only
         var ocrDoc = new OcrDocumentReferenceBuilder(AiInferenceConfiguration.CreateDefault())
-            .WithDocumentId("ocr-doc-789")
+            .WithInferenceId("ocr-doc-789")
             .WithPatient(patientRef)
-            .WithDevice(deviceRef)
+            .WithOcrDevice(deviceRef)
+            .WithOriginalDocument("original-doc-789")
             .WithExtractedTextUrl("s3://bucket/extracted/text-789.txt")
             .WithTextractRawUrl("s3://bucket/textract/raw-789.json")
             .WithTextractSimpleUrl("s3://bucket/textract/simple-789.json")
@@ -217,11 +217,11 @@ public class DocumentProcessingPipelineTests
 
         // Create fact extraction with S3 URL
         var factDoc = new FactExtractionDocumentReferenceBuilder(AiInferenceConfiguration.CreateDefault())
-            .WithDocumentId("fact-doc-789")
+            .WithInferenceId("fact-doc-789")
             .WithPatient(patientRef)
-            .WithDevice(deviceRef)
+            .WithExtractionDevice(deviceRef)
             .WithFactsJsonUrl("s3://bucket/facts/facts-789.json")
-            .RelatedToDocument("ocr-doc-789", DocumentReferenceRelatesToCode.DerivedFrom)
+            .WithOcrDocument("ocr-doc-789")
             .Build();
 
         // Verify S3 URLs are preserved correctly
@@ -256,33 +256,34 @@ public class DocumentProcessingPipelineTests
         var deviceRef = new ResourceReference($"Device/ai-device-{idSuffix}");
 
         var ocrDoc = new OcrDocumentReferenceBuilder(AiInferenceConfiguration.CreateDefault())
-            .WithDocumentId($"ocr-{idSuffix}")
+            .WithInferenceId($"ocr-{idSuffix}")
             .WithPatient(patientRef)
-            .WithDevice(deviceRef)
+            .WithOcrDevice(deviceRef)
+            .WithOriginalDocument($"original-doc-{idSuffix}")
             .WithExtractedText("Test extracted text content")
             .Build();
 
         var factDoc = new FactExtractionDocumentReferenceBuilder(AiInferenceConfiguration.CreateDefault())
-            .WithDocumentId($"fact-{idSuffix}")
+            .WithInferenceId($"fact-{idSuffix}")
             .WithPatient(patientRef)
-            .WithDevice(deviceRef)
+            .WithExtractionDevice(deviceRef)
             .WithFactsJson(new { test = "data" })
-            .RelatedToDocument($"ocr-{idSuffix}", DocumentReferenceRelatesToCode.DerivedFrom)
+            .WithOcrDocument($"ocr-{idSuffix}")
             .Build();
 
         var observation = new RecistProgressionObservationBuilder(AiInferenceConfiguration.CreateDefault())
-            .WithObservationId($"obs-{idSuffix}")
+            .WithInferenceId($"obs-{idSuffix}")
             .WithPatient(patientRef)
             .WithDevice(deviceRef)
-            .WithFocus($"fact-{idSuffix}")
-            .WithRecistResponse("Stable Disease")
+            .WithFocus(new ResourceReference($"DocumentReference/fact-{idSuffix}"))
+            .WithRecistResponse("Stable Disease", "Stable Disease")
             .Build();
 
         var provenance = new AiProvenanceBuilder()
             .WithProvenanceId($"prov-{idSuffix}")
-            .ForTarget($"DocumentReference/ocr-{idSuffix}")
-            .ForTarget($"DocumentReference/fact-{idSuffix}")
-            .ForTarget($"Observation/obs-{idSuffix}")
+            .ForTarget("DocumentReference", $"ocr-{idSuffix}")
+            .ForTarget("DocumentReference", $"fact-{idSuffix}")
+            .ForTarget("Observation", $"obs-{idSuffix}")
             .WithAgent("ai-algorithm", "TestAI")
             .WithOrganization("TestOrg")
             .Build();

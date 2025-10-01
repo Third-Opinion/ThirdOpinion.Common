@@ -19,7 +19,7 @@ public class AiProvenanceBuilderTests
             .WithOccurredDateTime(new DateTimeOffset(2024, 10, 1, 10, 0, 0, TimeSpan.Zero))
             .WithRecordedDateTime(new DateTimeOffset(2024, 10, 1, 10, 5, 0, TimeSpan.Zero))
             .WithReason("AI-assisted analysis")
-            .WithSourceEntity("source", "Document/source-doc-123")
+            .WithSourceEntity("Document", "source-doc-123")
             .WithS3LogFile("s3://bucket/logs/process.log");
 
         var provenance = builder.Build();
@@ -48,7 +48,7 @@ public class AiProvenanceBuilderTests
     public void Build_WithoutAgents_ThrowsInvalidOperationException()
     {
         var builder = new AiProvenanceBuilder()
-            .ForTarget("DocumentReference/test-doc");
+            .ForTarget("DocumentReference", "test-doc");
 
         var exception = Should.Throw<InvalidOperationException>(() => builder.Build());
         exception.Message.ShouldContain("At least one agent must be specified");
@@ -107,7 +107,7 @@ public class AiProvenanceBuilderTests
     public void WithAgent_WithValidData_AddsAiAgent()
     {
         var builder = new AiProvenanceBuilder()
-            .ForTarget("DocumentReference/test")
+            .ForTarget("DocumentReference", "test")
             .WithAgent("ai-algorithm", "TestAI", "1.0.0");
 
         var provenance = builder.Build();
@@ -124,19 +124,19 @@ public class AiProvenanceBuilderTests
     public void WithAgent_WithoutVersion_AddsAgentWithoutExtension()
     {
         var builder = new AiProvenanceBuilder()
-            .ForTarget("DocumentReference/test")
+            .ForTarget("DocumentReference", "test")
             .WithAgent("ai-algorithm", "TestAI");
 
         var provenance = builder.Build();
         var agent = provenance.Agent[0];
-        agent.Who.Extension.ShouldBeNull();
+        (agent.Who.Extension?.Count ?? 0).ShouldBe(0);
     }
 
     [Fact]
     public void WithOrganization_WithValidData_AddsOrganizationAgent()
     {
         var builder = new AiProvenanceBuilder()
-            .ForTarget("DocumentReference/test")
+            .ForTarget("DocumentReference", "test")
             .WithOrganization("ThirdOpinion", "org-123");
 
         var provenance = builder.Build();
@@ -152,7 +152,7 @@ public class AiProvenanceBuilderTests
     public void WithOrganization_WithoutId_AddsOrganizationWithoutReference()
     {
         var builder = new AiProvenanceBuilder()
-            .ForTarget("DocumentReference/test")
+            .ForTarget("DocumentReference", "test")
             .WithOrganization("ThirdOpinion");
 
         var provenance = builder.Build();
@@ -166,9 +166,9 @@ public class AiProvenanceBuilderTests
     {
         var sourceRef = new ResourceReference("Document/source-123");
         var builder = new AiProvenanceBuilder()
-            .ForTarget("DocumentReference/test")
+            .ForTarget("DocumentReference", "test")
             .WithAgent("ai-algorithm", "TestAI")
-            .WithSourceEntity("source", sourceRef);
+            .WithSourceEntity(sourceRef);
 
         var provenance = builder.Build();
         provenance.Entity.Count.ShouldBe(1);
@@ -182,9 +182,9 @@ public class AiProvenanceBuilderTests
     public void WithSourceEntity_WithResourceTypeAndId_AddsEntity()
     {
         var builder = new AiProvenanceBuilder()
-            .ForTarget("DocumentReference/test")
+            .ForTarget("DocumentReference", "test")
             .WithAgent("ai-algorithm", "TestAI")
-            .WithSourceEntity("source", "Document", "source-123");
+            .WithSourceEntity("Document", "source-123");
 
         var provenance = builder.Build();
         var entity = provenance.Entity[0];
@@ -195,7 +195,7 @@ public class AiProvenanceBuilderTests
     public void WithS3LogFile_WithValidS3Url_AddsExtension()
     {
         var builder = new AiProvenanceBuilder()
-            .ForTarget("DocumentReference/test")
+            .ForTarget("DocumentReference", "test")
             .WithAgent("ai-algorithm", "TestAI")
             .WithS3LogFile("s3://bucket/logs/process.log");
 
@@ -209,7 +209,7 @@ public class AiProvenanceBuilderTests
     public void WithS3LogFile_WithHttpsUrl_AddsExtension()
     {
         var builder = new AiProvenanceBuilder()
-            .ForTarget("DocumentReference/test")
+            .ForTarget("DocumentReference", "test")
             .WithAgent("ai-algorithm", "TestAI")
             .WithS3LogFile("https://bucket.s3.amazonaws.com/logs/process.log");
 
@@ -232,13 +232,13 @@ public class AiProvenanceBuilderTests
     {
         var occurredTime = new DateTimeOffset(2024, 10, 1, 10, 0, 0, TimeSpan.Zero);
         var builder = new AiProvenanceBuilder()
-            .ForTarget("DocumentReference/test")
+            .ForTarget("DocumentReference", "test")
             .WithAgent("ai-algorithm", "TestAI")
             .WithOccurredDateTime(occurredTime);
 
         var provenance = builder.Build();
         provenance.Occurred.ShouldNotBeNull();
-        ((FhirDateTime)provenance.Occurred).ToDateTimeOffset().ShouldBe(occurredTime);
+        ((FhirDateTime)provenance.Occurred).ToDateTimeOffset(TimeSpan.Zero).ShouldBe(occurredTime);
     }
 
     [Fact]
@@ -246,7 +246,7 @@ public class AiProvenanceBuilderTests
     {
         var recordedTime = new DateTimeOffset(2024, 10, 1, 10, 5, 0, TimeSpan.Zero);
         var builder = new AiProvenanceBuilder()
-            .ForTarget("DocumentReference/test")
+            .ForTarget("DocumentReference", "test")
             .WithAgent("ai-algorithm", "TestAI")
             .WithRecordedDateTime(recordedTime);
 
@@ -258,7 +258,7 @@ public class AiProvenanceBuilderTests
     public void WithReason_AddsReasonToConcepts()
     {
         var builder = new AiProvenanceBuilder()
-            .ForTarget("DocumentReference/test")
+            .ForTarget("DocumentReference", "test")
             .WithAgent("ai-algorithm", "TestAI")
             .WithReason("AI analysis");
 
@@ -273,14 +273,14 @@ public class AiProvenanceBuilderTests
         var beforeBuild = DateTimeOffset.Now;
 
         var builder = new AiProvenanceBuilder()
-            .ForTarget("DocumentReference/test")
+            .ForTarget("DocumentReference", "test")
             .WithAgent("ai-algorithm", "TestAI");
 
         var provenance = builder.Build();
         var afterBuild = DateTimeOffset.Now;
 
-        provenance.Recorded.ShouldBeGreaterThanOrEqualTo(beforeBuild);
-        provenance.Recorded.ShouldBeLessThanOrEqualTo(afterBuild);
+        provenance.Recorded.Value.ShouldBeGreaterThanOrEqualTo(beforeBuild);
+        provenance.Recorded.Value.ShouldBeLessThanOrEqualTo(afterBuild);
     }
 
     [Fact]
@@ -288,10 +288,10 @@ public class AiProvenanceBuilderTests
     {
         var builder = new AiProvenanceBuilder()
             .WithProvenanceId("prov-123")
-            .ForTarget("DocumentReference/test-doc")
+            .ForTarget("DocumentReference", "test-doc")
             .WithAgent("ai-algorithm", "TestAI", "1.0.0")
             .WithOrganization("ThirdOpinion")
-            .WithSourceEntity("source", "Document/original")
+            .WithSourceEntity("Document", "original")
             .WithS3LogFile("s3://bucket/logs/process.log")
             .WithReason("AI-assisted analysis");
 
@@ -300,8 +300,8 @@ public class AiProvenanceBuilderTests
         var json = serializer.SerializeToString(provenance);
 
         json.ShouldNotBeNull();
-        json.ShouldContain("\"resourceType\": \"Provenance\"");
-        json.ShouldContain("\"id\": \"prov-123\"");
+        json.ShouldContain("\"resourceType\":\"Provenance\"");
+        json.ShouldContain("\"id\":\"prov-123\"");
         json.ShouldContain("TestAI");
         json.ShouldContain("ThirdOpinion");
     }
@@ -311,10 +311,10 @@ public class AiProvenanceBuilderTests
     {
         var result = new AiProvenanceBuilder()
             .WithProvenanceId("test")
-            .ForTarget("DocumentReference/test")
+            .ForTarget("DocumentReference", "test")
             .WithAgent("ai", "TestAI")
             .WithOrganization("TestOrg")
-            .WithSourceEntity("source", "Document/test")
+            .WithSourceEntity("Document", "test")
             .WithS3LogFile("s3://test/log")
             .WithReason("test")
             .WithOccurredDateTime(DateTimeOffset.Now)
