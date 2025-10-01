@@ -424,3 +424,4 @@ TestResults/
 # Task files
 # tasks.json
 # tasks/ 
+.xml

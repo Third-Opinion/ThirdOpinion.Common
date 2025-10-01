@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <IsPackable>false</IsPackable>
+        <PackageId>ThirdOpinion.Common.Fhir</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>ThirdOpinion</Authors>
+        <Company>ThirdOpinion</Company>
+        <Description>FHIR R4 integration library for ThirdOpinion applications</Description>
+        <PackageTags>fhir;hl7;healthcare</PackageTags>
+        <RepositoryUrl>https://github.com/thirdopinion/common</RepositoryUrl>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- Firely SDK packages will be added here -->
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AWSSDK.S3" Version="4.0.7.6" />
+      <PackageReference Include="Hl7.Fhir.R4" Version="5.12.2" />
+    </ItemGroup>
+
+</Project>
