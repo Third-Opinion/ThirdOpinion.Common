@@ -197,7 +197,7 @@ jobs:
     - name: Update project versions
       run: |
         VERSION=${{ steps.version.outputs.version }}
-        # Update only the main project version
+        # Update the main project version
         sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" src/ThirdOpinion.Common.csproj
         # Also update assembly versions to match
         sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$VERSION.0<\/AssemblyVersion>/g" src/ThirdOpinion.Common.csproj

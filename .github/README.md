@@ -59,13 +59,9 @@ The workflow uses a `production` environment for publishing. Configure this in y
 
 ## Package Structure
 
-The workflow will publish these NuGet packages:
+The workflow will publish this NuGet package:
 
-- `ThirdOpinion.Common.Aws.Cognito` - AWS Cognito utilities and authorization attributes
-- `ThirdOpinion.Common.Aws.DynamoDb` - DynamoDB repository and pagination helpers
-- `ThirdOpinion.Common.Aws.S3` - S3 storage abstractions and utilities
-- `ThirdOpinion.Common.Aws.SQS` - SQS message queue implementations
-- `ThirdOpinion.Common.Misc` - Miscellaneous utilities (Patient HUID, etc.)
+- `ThirdOpinion.Common` - Complete package including AWS services integration (S3, DynamoDB, SQS, Cognito), FHIR R4 healthcare integration, and utility functions
 
 ## Usage Examples
 

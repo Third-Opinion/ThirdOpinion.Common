@@ -11,14 +11,14 @@
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
-    <Description>Third Opinion Common Libraries - Complete package including AWS services integration (S3, DynamoDB, SQS, Cognito) and utility functions</Description>
+    <Description>Third Opinion Common Libraries - Complete package including AWS services integration (S3, DynamoDB, SQS, Cognito), FHIR R4 healthcare integration, and utility functions</Description>
     <Authors>Third Opinion</Authors>
     <Company>Third Opinion</Company>
     <Copyright>Copyright © Third Opinion 2024</Copyright>
     <PackageProjectUrl>https://github.com/ThirdOpinion/ThirdOpinion.Common</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ThirdOpinion/ThirdOpinion.Common</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>aws;s3;dynamodb;sqs;cognito;utilities</PackageTags>
+    <PackageTags>aws;s3;dynamodb;sqs;cognito;fhir;healthcare;utilities</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
@@ -35,6 +35,7 @@
     <ProjectReference Include="ThirdOpinion.Common.Aws.S3\ThirdOpinion.Common.Aws.S3.csproj" PrivateAssets="All" />
     <ProjectReference Include="ThirdOpinion.Common.Aws.SQS\ThirdOpinion.Common.Aws.SQS.csproj" PrivateAssets="All" />
     <ProjectReference Include="ThirdOpinion.Common.Misc\ThirdOpinion.Common.Misc.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\ThirdOpinion.Common.Fhir\ThirdOpinion.Common.Fhir.csproj" PrivateAssets="All" />
   </ItemGroup>
 
   <!-- Include the built assemblies in the NuGet package -->
@@ -44,6 +45,7 @@
     <None Include="ThirdOpinion.Common.Aws.S3\bin\$(Configuration)\$(TargetFramework)\ThirdOpinion.Common.Aws.S3.dll" Pack="true" PackagePath="lib\$(TargetFramework)" />
     <None Include="ThirdOpinion.Common.Aws.SQS\bin\$(Configuration)\$(TargetFramework)\ThirdOpinion.Common.Aws.SQS.dll" Pack="true" PackagePath="lib\$(TargetFramework)" />
     <None Include="ThirdOpinion.Common.Misc\bin\$(Configuration)\$(TargetFramework)\ThirdOpinion.Common.Misc.dll" Pack="true" PackagePath="lib\$(TargetFramework)" />
+    <None Include="..\ThirdOpinion.Common.Fhir\bin\$(Configuration)\$(TargetFramework)\ThirdOpinion.Common.Fhir.dll" Pack="true" PackagePath="lib\$(TargetFramework)" />
   </ItemGroup>
 
   <!-- Dependencies that consumers will need -->
@@ -51,7 +53,7 @@
     <PackageReference Include="AWSSDK.Core" Version="4.0.0.26" />
     <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="4.0.2.2" />
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.3.4" />
-    <PackageReference Include="AWSSDK.S3" Version="4.0.4" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.7.6" />
     <PackageReference Include="AWSSDK.SQS" Version="4.0.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
@@ -59,6 +61,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.2.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Hl7.Fhir.R4" Version="5.12.2" />
   </ItemGroup>
 
 </Project>

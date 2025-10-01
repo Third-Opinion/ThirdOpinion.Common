@@ -35,19 +35,15 @@ ThirdOpinion.Common/
 - **Environment Protection**: Production environment with approval gates
 
 ### 📦 Package Management
-- **Multiple Packages**: 5 separate NuGet packages
+- **Single Package**: One unified NuGet package
 - **Versioning**: Semantic versioning with development builds
 - **Distribution**: GitHub Packages + NuGet.org
 
-## Packages Published
+## Package Published
 
 | Package | Description | Dependencies |
 |---------|-------------|--------------|
-| `ThirdOpinion.Common.Aws.Cognito` | AWS Cognito utilities and authorization | AWS Cognito SDK |
-| `ThirdOpinion.Common.Aws.DynamoDb` | DynamoDB repository and pagination | AWS DynamoDB SDK |
-| `ThirdOpinion.Common.Aws.S3` | S3 storage abstractions | AWS S3 SDK |
-| `ThirdOpinion.Common.Aws.SQS` | SQS message queue implementations | AWS SQS SDK |
-| `ThirdOpinion.Common.Misc` | Miscellaneous utilities (Patient HUID, etc.) | .NET 8.0 |
+| `ThirdOpinion.Common` | Complete package including AWS services integration (S3, DynamoDB, SQS, Cognito), FHIR R4 healthcare integration, and utility functions | .NET 8.0, AWS SDKs, Hl7.Fhir.R4 |
 
 ## Getting Started
 
