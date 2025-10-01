@@ -212,7 +212,6 @@ jobs:
       run: |
         dotnet pack src/ThirdOpinion.Common.csproj \
           --configuration Release \
-          --no-restore \
           --output ./packages/ \
           -p:Version=${{ steps.version.outputs.version }}
 
