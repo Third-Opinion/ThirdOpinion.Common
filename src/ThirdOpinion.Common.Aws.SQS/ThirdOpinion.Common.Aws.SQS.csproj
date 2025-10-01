@@ -15,6 +15,7 @@
         <PackageTags>aws;sqs;messaging;queue</PackageTags>
         <RepositoryUrl>https://github.com/thirdopinion/common</RepositoryUrl>
         <PackageReadmeFile>README.md</PackageReadmeFile>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>

@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <RootNamespace>Misc</RootNamespace>
         <IsPackable>false</IsPackable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>
