@@ -3,8 +3,18 @@ using Amazon.S3.Model;
 
 namespace ThirdOpinion.Common.Aws.S3;
 
+/// <summary>
+/// Generates presigned URLs for S3 objects using ARN references
+/// </summary>
+/// <param name="s3Client">The Amazon S3 client</param>
 public class S3UrlGenerator(IAmazonS3 s3Client)
 {
+    /// <summary>
+    /// Generates a presigned URL for an S3 object specified by ARN
+    /// </summary>
+    /// <param name="s3Arn">The S3 ARN of the object</param>
+    /// <param name="expiration">How long the URL should be valid</param>
+    /// <returns>A presigned URL for accessing the S3 object</returns>
     public async Task<string> GeneratePreSignedUrl(string s3Arn, TimeSpan expiration)
     {
         S3Ref s3Ref = S3Ref.ParseArn(s3Arn); //Let this throw

@@ -15,12 +15,27 @@ public class S3Storage : IS3Storage
     private readonly ILogger<S3Storage> _logger;
     private readonly IAmazonS3 _s3Client;
 
+    /// <summary>
+    /// Initializes a new instance of the S3Storage class
+    /// </summary>
+    /// <param name="s3Client">The Amazon S3 client</param>
+    /// <param name="logger">The logger instance</param>
     public S3Storage(IAmazonS3 s3Client, ILogger<S3Storage> logger)
     {
         _s3Client = s3Client;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Uploads an object to S3 from a stream
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name</param>
+    /// <param name="key">The object key (path)</param>
+    /// <param name="content">The content stream to upload</param>
+    /// <param name="contentType">Optional content type (defaults to application/octet-stream)</param>
+    /// <param name="metadata">Optional metadata key-value pairs</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The S3 put object response</returns>
     public async Task<PutObjectResponse> PutObjectAsync(string bucketName,
         string key,
         Stream content,
@@ -54,6 +69,16 @@ public class S3Storage : IS3Storage
         }
     }
 
+    /// <summary>
+    /// Uploads an object to S3 from a string
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name</param>
+    /// <param name="key">The object key (path)</param>
+    /// <param name="content">The string content to upload</param>
+    /// <param name="contentType">Optional content type (defaults to application/octet-stream)</param>
+    /// <param name="metadata">Optional metadata key-value pairs</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The S3 put object response</returns>
     public async Task<PutObjectResponse> PutObjectAsync(string bucketName,
         string key,
         string content,
@@ -66,6 +91,13 @@ public class S3Storage : IS3Storage
             cancellationToken);
     }
 
+    /// <summary>
+    /// Downloads an object from S3 as a stream
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name</param>
+    /// <param name="key">The object key (path)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A stream containing the object content</returns>
     public async Task<Stream> GetObjectAsync(string bucketName,
         string key,
         CancellationToken cancellationToken = default)
@@ -91,6 +123,13 @@ public class S3Storage : IS3Storage
         }
     }
 
+    /// <summary>
+    /// Downloads an object from S3 as a string
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name</param>
+    /// <param name="key">The object key (path)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The object content as a string</returns>
     public async Task<string> GetObjectAsStringAsync(string bucketName,
         string key,
         CancellationToken cancellationToken = default)
@@ -100,6 +139,13 @@ public class S3Storage : IS3Storage
         return await reader.ReadToEndAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Gets metadata for an object in S3
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name</param>
+    /// <param name="key">The object key (path)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The object metadata response</returns>
     public async Task<GetObjectMetadataResponse> GetObjectMetadataAsync(string bucketName,
         string key,
         CancellationToken cancellationToken = default)
@@ -122,6 +168,13 @@ public class S3Storage : IS3Storage
         }
     }
 
+    /// <summary>
+    /// Deletes a single object from S3
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name</param>
+    /// <param name="key">The object key (path) to delete</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The delete object response</returns>
     public async Task<DeleteObjectResponse> DeleteObjectAsync(string bucketName,
         string key,
         CancellationToken cancellationToken = default)
@@ -146,6 +199,13 @@ public class S3Storage : IS3Storage
         }
     }
 
+    /// <summary>
+    /// Deletes multiple objects from S3 in a batch operation
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name</param>
+    /// <param name="keys">The object keys (paths) to delete</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The delete objects response</returns>
     public async Task<DeleteObjectsResponse> DeleteObjectsAsync(string bucketName,
         IEnumerable<string> keys,
         CancellationToken cancellationToken = default)
@@ -171,6 +231,13 @@ public class S3Storage : IS3Storage
         }
     }
 
+    /// <summary>
+    /// Checks if an object exists in S3
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name</param>
+    /// <param name="key">The object key (path) to check</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>True if the object exists, false otherwise</returns>
     public async Task<bool> ObjectExistsAsync(string bucketName,
         string key,
         CancellationToken cancellationToken = default)
@@ -192,6 +259,14 @@ public class S3Storage : IS3Storage
         }
     }
 
+    /// <summary>
+    /// Lists objects in an S3 bucket with optional prefix filtering
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name</param>
+    /// <param name="prefix">Optional prefix to filter objects</param>
+    /// <param name="maxKeys">Maximum number of keys to return per request (default 1000)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>An enumerable of S3Object instances</returns>
     public async Task<IEnumerable<S3Object>> ListObjectsAsync(string bucketName,
         string? prefix = null,
         int maxKeys = 1000,
@@ -227,6 +302,15 @@ public class S3Storage : IS3Storage
         }
     }
 
+    /// <summary>
+    /// Copies an object from one S3 location to another
+    /// </summary>
+    /// <param name="sourceBucket">The source bucket name</param>
+    /// <param name="sourceKey">The source object key (path)</param>
+    /// <param name="destinationBucket">The destination bucket name</param>
+    /// <param name="destinationKey">The destination object key (path)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The copy object response</returns>
     public async Task<CopyObjectResponse> CopyObjectAsync(string sourceBucket,
         string sourceKey,
         string destinationBucket,
@@ -259,6 +343,14 @@ public class S3Storage : IS3Storage
         }
     }
 
+    /// <summary>
+    /// Generates a presigned URL for downloading an object from S3
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name</param>
+    /// <param name="key">The object key (path)</param>
+    /// <param name="expiration">How long the URL should be valid</param>
+    /// <param name="headers">Optional headers to include in the request</param>
+    /// <returns>A presigned URL for downloading the object</returns>
     public async Task<string> GeneratePresignedUrlAsync(string bucketName,
         string key,
         TimeSpan expiration,
@@ -289,6 +381,15 @@ public class S3Storage : IS3Storage
         }
     }
 
+    /// <summary>
+    /// Generates a presigned URL for uploading an object to S3
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name</param>
+    /// <param name="key">The object key (path)</param>
+    /// <param name="expiration">How long the URL should be valid</param>
+    /// <param name="contentType">Optional content type for the upload</param>
+    /// <param name="metadata">Optional metadata key-value pairs</param>
+    /// <returns>A presigned URL for uploading the object</returns>
     public async Task<string> GeneratePresignedPutUrlAsync(string bucketName,
         string key,
         TimeSpan expiration,
@@ -322,6 +423,12 @@ public class S3Storage : IS3Storage
         }
     }
 
+    /// <summary>
+    /// Creates an S3 bucket if it doesn't already exist
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name to create</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>True if the bucket was created, false if it already existed</returns>
     public async Task<bool> CreateBucketIfNotExistsAsync(string bucketName,
         CancellationToken cancellationToken = default)
     {
@@ -347,6 +454,15 @@ public class S3Storage : IS3Storage
         }
     }
 
+    /// <summary>
+    /// Initiates a multipart upload for large objects
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name</param>
+    /// <param name="key">The object key (path)</param>
+    /// <param name="contentType">Optional content type (defaults to application/octet-stream)</param>
+    /// <param name="metadata">Optional metadata key-value pairs</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The initiate multipart upload response containing the upload ID</returns>
     public async Task<InitiateMultipartUploadResponse> InitiateMultipartUploadAsync(
         string bucketName,
         string key,
@@ -381,6 +497,16 @@ public class S3Storage : IS3Storage
         }
     }
 
+    /// <summary>
+    /// Uploads a part of a multipart upload
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name</param>
+    /// <param name="key">The object key (path)</param>
+    /// <param name="uploadId">The upload ID from InitiateMultipartUpload</param>
+    /// <param name="partNumber">The part number (1-based)</param>
+    /// <param name="content">The content stream for this part</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The upload part response containing the ETag</returns>
     public async Task<UploadPartResponse> UploadPartAsync(string bucketName,
         string key,
         string uploadId,
@@ -414,6 +540,15 @@ public class S3Storage : IS3Storage
         }
     }
 
+    /// <summary>
+    /// Completes a multipart upload by combining all uploaded parts
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name</param>
+    /// <param name="key">The object key (path)</param>
+    /// <param name="uploadId">The upload ID from InitiateMultipartUpload</param>
+    /// <param name="parts">List of PartETag objects from each uploaded part</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The complete multipart upload response</returns>
     public async Task<CompleteMultipartUploadResponse> CompleteMultipartUploadAsync(
         string bucketName,
         string key,
@@ -446,6 +581,13 @@ public class S3Storage : IS3Storage
         }
     }
 
+    /// <summary>
+    /// Aborts a multipart upload and cleans up any uploaded parts
+    /// </summary>
+    /// <param name="bucketName">The S3 bucket name</param>
+    /// <param name="key">The object key (path)</param>
+    /// <param name="uploadId">The upload ID from InitiateMultipartUpload</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     public async Task AbortMultipartUploadAsync(string bucketName,
         string key,
         string uploadId,
