@@ -7,6 +7,7 @@
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
         <RootNamespace>ThirdOpinion.Common.UnitTests</RootNamespace>
+        <NoWarn>$(NoWarn);CS8600;CS8602;CS8620;CS1998;CS8625;CS8604</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

@@ -10,6 +10,7 @@
         <OutputType>Library</OutputType>
         <!-- Development-only functional tests - not run in CI/CD -->
         <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+        <NoWarn>$(NoWarn);CS8600;CS8602;CS8620;CS1998;CS8625;CS8604</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

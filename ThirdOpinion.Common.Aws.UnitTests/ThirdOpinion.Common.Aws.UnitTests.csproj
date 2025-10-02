@@ -8,6 +8,7 @@
         <RootNamespace>ThirdOpinion.Common.Aws.Tests</RootNamespace>
         <OutputType>Library</OutputType>
         <TargetFramework>net8.0</TargetFramework>
+        <NoWarn>$(NoWarn);CS8600;CS8602;CS8620;CS1998;CS8625;CS8604</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
