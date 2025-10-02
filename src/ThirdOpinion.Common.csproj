@@ -8,9 +8,21 @@
     <NoBuild>true</NoBuild>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <PackageId>ThirdOpinion.Common</PackageId>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+
+    <!--
+    Version Configuration:
+    - This is the base version used for releases
+    - CI/CD will automatically append suffixes for pre-releases:
+      * develop branch: {Version}-beta.{build}
+      * feature branches: {Version}-alpha.{build}.{branch}
+      * main/master: Uses this version as-is for manual releases
+    - For manual version updates, update this value and create a release
+    -->
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
+
+    <!-- Package Metadata -->
     <Description>Third Opinion Common Libraries - Complete package including AWS services integration (S3, DynamoDB, SQS, Cognito), FHIR R4 healthcare integration, and utility functions</Description>
     <Authors>Third Opinion</Authors>
     <Company>Third Opinion</Company>
@@ -21,6 +33,15 @@
     <PackageTags>aws;s3;dynamodb;sqs;cognito;fhir;healthcare;utilities</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- Release Notes -->
+    <PackageReleaseNotes>
+      Version 2.0.0:
+      - Enhanced versioning system with semantic versioning support
+      - Comprehensive XML documentation for all public APIs
+      - Improved CI/CD pipeline with flexible version management
+      - Support for manual version control and automatic pre-release versioning
+    </PackageReleaseNotes>
   </PropertyGroup>
 
   <!-- Include README in package -->

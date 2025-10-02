@@ -182,34 +182,87 @@ jobs:
     - name: Determine version
       id: version
       run: |
+        # Read base version from project file
+        BASE_VERSION=$(grep -oP '<Version>\K[^<]+' src/ThirdOpinion.Common.csproj || echo "1.0.0")
+        RUN_NUMBER=${{ github.run_number }}
+
+        echo "Base version from project file: $BASE_VERSION"
+
+        # Determine final version based on trigger and branch
         if [ "${{ github.event_name }}" == "release" ]; then
+          # For releases, use the git tag version
           VERSION=${{ github.event.release.tag_name }}
           # Remove 'v' prefix if present
           VERSION=${VERSION#v}
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          echo "version_source=release_tag" >> $GITHUB_OUTPUT
         elif [ "${{ github.ref_name }}" == "develop" ]; then
-          # For develop branch, use pre-release versioning: 1.0.{run_number}-beta
-          RUN_NUMBER=${{ github.run_number }}
-          VERSION="1.0.${RUN_NUMBER}-beta"
+          # For develop branch, use base version with beta suffix
+          VERSION="${BASE_VERSION}-beta.${RUN_NUMBER}"
           echo "is_prerelease=true" >> $GITHUB_OUTPUT
-        else
-          # For other branches (main/master), use regular versioning
-          RUN_NUMBER=${{ github.run_number }}
-          VERSION="1.0.${RUN_NUMBER}"
+          echo "version_source=auto_develop" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.ref_name }}" == feature/* ]]; then
+          # For feature branches, use base version with alpha suffix
+          BRANCH_SAFE=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9]/-/g' | cut -c1-20)
+          VERSION="${BASE_VERSION}-alpha.${RUN_NUMBER}.${BRANCH_SAFE}"
+          echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          echo "version_source=auto_feature" >> $GITHUB_OUTPUT
+        elif [ "${{ github.ref_name }}" == "main" ] || [ "${{ github.ref_name }}" == "master" ]; then
+          # For main/master, check if base version should be incremented
+          if [ "$BASE_VERSION" == "1.0.0" ]; then
+            # Use auto-increment for main if still on default version
+            VERSION="1.0.${RUN_NUMBER}"
+            echo "version_source=auto_main" >> $GITHUB_OUTPUT
+          else
+            # Use base version from project file for manual releases
+            VERSION="$BASE_VERSION"
+            echo "version_source=manual_main" >> $GITHUB_OUTPUT
+          fi
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
+        else
+          # For other branches, use base version with branch suffix
+          BRANCH_SAFE=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9]/-/g' | cut -c1-20)
+          VERSION="${BASE_VERSION}-${BRANCH_SAFE}.${RUN_NUMBER}"
+          echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          echo "version_source=auto_other" >> $GITHUB_OUTPUT
         fi
+
+        # Validate semantic versioning format (basic check)
+        if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\-[a-zA-Z0-9\.\-]+)?$ ]]; then
+          echo "Warning: Version '$VERSION' may not follow semantic versioning"
+        fi
+
         echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
         echo "Package version will be: $VERSION"
+        echo "Version source: $(cat $GITHUB_OUTPUT | grep version_source | cut -d'=' -f2)"
 
     - name: Update project versions
       run: |
         VERSION=${{ steps.version.outputs.version }}
+        BASE_VERSION=${{ steps.version.outputs.base_version }}
+        VERSION_SOURCE=${{ steps.version.outputs.version_source }}
+
+        echo "Updating project version:"
+        echo "  Base version: $BASE_VERSION"
+        echo "  Final version: $VERSION"
+        echo "  Version source: $VERSION_SOURCE"
+
         # Update the main project version
         sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" src/ThirdOpinion.Common.csproj
-        # Also update assembly versions to match
-        sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$VERSION.0<\/AssemblyVersion>/g" src/ThirdOpinion.Common.csproj
-        sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$VERSION.0<\/FileVersion>/g" src/ThirdOpinion.Common.csproj
+
+        # For assembly versions, use the base version (without pre-release suffixes)
+        # Extract major.minor.patch from version (remove pre-release suffix)
+        ASSEMBLY_VERSION=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' || echo "$BASE_VERSION")
+        sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$ASSEMBLY_VERSION.0<\/AssemblyVersion>/g" src/ThirdOpinion.Common.csproj
+        sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$ASSEMBLY_VERSION.0<\/FileVersion>/g" src/ThirdOpinion.Common.csproj
+
         echo "Updated ThirdOpinion.Common package version to: $VERSION"
+        echo "Updated assembly versions to: $ASSEMBLY_VERSION.0"
+
+        # Show the updated project file version section for verification
+        echo "Updated project file version section:"
+        grep -A2 -B2 "<Version>" src/ThirdOpinion.Common.csproj || echo "Could not find version in project file"
 
     - name: Build sub-projects first
       run: |

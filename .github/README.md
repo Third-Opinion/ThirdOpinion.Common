@@ -104,19 +104,6 @@ dotnet test ThirdOpinion.Common.UnitTests/
 dotnet pack --configuration Release --output ./packages/
 ```
 
-### Functional Tests Setup
-
-To run functional tests locally, you'll need LocalStack:
-
-```bash
-# Using Docker
-docker run --rm -it -p 4566:4566 -e SERVICES=cognito-idp,dynamodb,s3,sqs localstack/localstack
-
-# Run functional tests
-dotnet test ThirdOpinion.Common.FunctionalTests/ \
-  -e AWS__UseLocalStack=true \
-  -e AWS__LocalStackEndpoint=http://localhost:4566
-```
 
 ## Monitoring and Maintenance
 
