@@ -287,14 +287,94 @@ jobs:
         ls -la ./packages/
         echo "Expected package: ThirdOpinion.Common.${{ steps.version.outputs.version }}.nupkg"
 
-  publish:
-    name: Publish to AWS CodeArtifact
+  publish-dev:
+    name: Publish Development Packages
+    runs-on: ubuntu-latest
+    needs: [build-and-test, package]
+    if: |
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_packages == 'true') ||
+      github.ref_name == 'develop'
+    environment: development
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+    - name: Download packages
+      uses: actions/download-artifact@v4
+      with:
+        name: nuget-packages
+        path: ./packages/
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ vars.AWS_CODEARTIFACT_ROLE_ARN }}
+        role-session-name: GitHubActions-Development
+        aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Configure CodeArtifact
+      id: codeartifact
+      run: |
+        # Get domain and repository from environment variables
+        DOMAIN="${{ vars.AWS_CODEARTIFACT_DOMAIN }}"
+        DOMAIN_OWNER="${{ vars.AWS_CODEARTIFACT_DOMAIN_OWNER }}"
+        REPOSITORY="${{ vars.AWS_CODEARTIFACT_REPOSITORY_DEV || vars.AWS_CODEARTIFACT_REPOSITORY }}"
+
+        echo "Domain: $DOMAIN"
+        echo "Domain Owner: $DOMAIN_OWNER"
+        echo "Repository: $REPOSITORY"
+
+        # Get authorization token
+        AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+          --domain "$DOMAIN" \
+          --domain-owner "$DOMAIN_OWNER" \
+          --query authorizationToken \
+          --output text)
+
+        # Get repository endpoint
+        REPO_URL=$(aws codeartifact get-repository-endpoint \
+          --domain "$DOMAIN" \
+          --domain-owner "$DOMAIN_OWNER" \
+          --repository "$REPOSITORY" \
+          --format nuget \
+          --query repositoryEndpoint \
+          --output text)
+
+        echo "Repository URL: $REPO_URL"
+        echo "repo_url=$REPO_URL" >> $GITHUB_OUTPUT
+
+        # Configure NuGet source
+        dotnet nuget add source "$REPO_URL" \
+          --name "codeartifact-dev" \
+          --username aws \
+          --password "$AUTH_TOKEN" \
+          --store-password-in-clear-text
+
+    - name: Publish to CodeArtifact (Development)
+      run: |
+        echo "Publishing development packages..."
+        for package in ./packages/*.nupkg; do
+          echo "Publishing: $(basename "$package")"
+          dotnet nuget push "$package" \
+            --source "codeartifact-dev" \
+            --skip-duplicate \
+            --timeout 300
+        done
+        echo "✅ Development packages published successfully"
+
+  publish-release:
+    name: Publish Release Packages
     runs-on: ubuntu-latest
     needs: [build-and-test, package]
     if: |
       github.event_name == 'release' ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_packages == 'true') ||
-      github.ref_name == 'develop' ||
       github.ref_name == 'main' ||
       github.ref_name == 'master'
     environment: production
@@ -314,59 +394,118 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: ${{ secrets.AWS_CODEARTIFACT_ROLE_ARN }}
-        role-session-name: GitHubActions-CodeArtifact
-        aws-region: us-east-1
+        role-session-name: GitHubActions-Production
+        aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    - name: Get version info from package
+    - name: Get package information
       id: package-info
       run: |
         PACKAGE_FILE=$(ls ./packages/*.nupkg | head -n 1)
-        if [[ $PACKAGE_FILE == *"-beta"* ]]; then
+        PACKAGE_NAME=$(basename "$PACKAGE_FILE" .nupkg)
+        VERSION=$(echo "$PACKAGE_NAME" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9\.\-]+)?$')
+
+        echo "Package: $PACKAGE_NAME"
+        echo "Version: $VERSION"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+
+        if [[ $VERSION == *"-"* ]]; then
           echo "is_prerelease=true" >> $GITHUB_OUTPUT
         else
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
         fi
-        echo "package_file=$PACKAGE_FILE" >> $GITHUB_OUTPUT
 
-    - name: Configure CodeArtifact authentication
+    - name: Configure CodeArtifact
+      id: codeartifact
       run: |
-        # Get CodeArtifact authorization token
-        CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
-          --domain ${{ secrets.AWS_CODEARTIFACT_DOMAIN }} \
-          --domain-owner ${{ secrets.AWS_CODEARTIFACT_DOMAIN_OWNER }} \
+        # Use production repository for releases
+        DOMAIN="${{ secrets.AWS_CODEARTIFACT_DOMAIN }}"
+        DOMAIN_OWNER="${{ secrets.AWS_CODEARTIFACT_DOMAIN_OWNER }}"
+        REPOSITORY="${{ secrets.AWS_CODEARTIFACT_REPOSITORY_PROD || secrets.AWS_CODEARTIFACT_REPOSITORY }}"
+
+        echo "Domain: $DOMAIN"
+        echo "Domain Owner: $DOMAIN_OWNER"
+        echo "Repository: $REPOSITORY"
+
+        # Get authorization token
+        AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+          --domain "$DOMAIN" \
+          --domain-owner "$DOMAIN_OWNER" \
           --query authorizationToken \
           --output text)
 
-        # Configure NuGet source for CodeArtifact
-        CODEARTIFACT_REPOSITORY_URL=$(aws codeartifact get-repository-endpoint \
-          --domain ${{ secrets.AWS_CODEARTIFACT_DOMAIN }} \
-          --domain-owner ${{ secrets.AWS_CODEARTIFACT_DOMAIN_OWNER }} \
-          --repository ${{ secrets.AWS_CODEARTIFACT_REPOSITORY }} \
+        # Get repository endpoint
+        REPO_URL=$(aws codeartifact get-repository-endpoint \
+          --domain "$DOMAIN" \
+          --domain-owner "$DOMAIN_OWNER" \
+          --repository "$REPOSITORY" \
           --format nuget \
           --query repositoryEndpoint \
           --output text)
 
-        echo "CodeArtifact repository URL: $CODEARTIFACT_REPOSITORY_URL"
+        echo "Repository URL: $REPO_URL"
+        echo "repo_url=$REPO_URL" >> $GITHUB_OUTPUT
 
-        # Add CodeArtifact as NuGet source
-        dotnet nuget add source "$CODEARTIFACT_REPOSITORY_URL" \
-          --name "aws-codeartifact" \
+        # Configure NuGet source
+        dotnet nuget add source "$REPO_URL" \
+          --name "codeartifact-prod" \
           --username aws \
-          --password "$CODEARTIFACT_AUTH_TOKEN" \
+          --password "$AUTH_TOKEN" \
           --store-password-in-clear-text
 
-    - name: Publish to AWS CodeArtifact
+    - name: Validate package before publishing
       run: |
+        echo "Validating packages before publication..."
         for package in ./packages/*.nupkg; do
-          echo "Publishing $package to AWS CodeArtifact..."
-          dotnet nuget push "$package" \
-            --source "aws-codeartifact" \
-            --skip-duplicate
+          echo "Validating: $(basename "$package")"
+          # Check if package is not empty
+          if [[ ! -s "$package" ]]; then
+            echo "❌ Package is empty: $package"
+            exit 1
+          fi
+          # Check package size (should be > 1KB)
+          size=$(stat -f%z "$package" 2>/dev/null || stat -c%s "$package" 2>/dev/null || echo 0)
+          if [[ $size -lt 1024 ]]; then
+            echo "❌ Package too small: $package ($size bytes)"
+            exit 1
+          fi
+          echo "✅ Package validation passed: $package ($size bytes)"
         done
+
+    - name: Publish to CodeArtifact (Production)
+      run: |
+        echo "Publishing release packages..."
+        echo "Version: ${{ steps.package-info.outputs.version }}"
+        echo "Is Pre-release: ${{ steps.package-info.outputs.is_prerelease }}"
+
+        for package in ./packages/*.nupkg; do
+          echo "Publishing: $(basename "$package")"
+          dotnet nuget push "$package" \
+            --source "codeartifact-prod" \
+            --skip-duplicate \
+            --timeout 300
+        done
+        echo "✅ Release packages published successfully"
+
+    - name: Create release summary
+      if: github.event_name == 'release'
+      run: |
+        echo "## 📦 Package Published Successfully" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Version:** ${{ steps.package-info.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Package:** ${{ steps.package-info.outputs.package_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Repository:** ${{ steps.codeartifact.outputs.repo_url }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Pre-release:** ${{ steps.package-info.outputs.is_prerelease }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Installation" >> $GITHUB_STEP_SUMMARY
+        echo '```bash' >> $GITHUB_STEP_SUMMARY
+        echo "aws codeartifact login --tool dotnet --domain ${{ secrets.AWS_CODEARTIFACT_DOMAIN }} --repository ${{ secrets.AWS_CODEARTIFACT_REPOSITORY_PROD || secrets.AWS_CODEARTIFACT_REPOSITORY }}" >> $GITHUB_STEP_SUMMARY
+        echo "dotnet add package ThirdOpinion.Common --version ${{ steps.package-info.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
 
 
