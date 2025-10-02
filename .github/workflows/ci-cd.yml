@@ -1,11 +1,11 @@
 name: CI/CD Pipeline
 
 # Triggers:
-# - Push to main/master: Full CI/CD (build, test, package, publish stable to NuGet.org + GitHub Packages)
-# - Push to develop: Full CI/CD (build, test, package, publish pre-release to NuGet.org + GitHub Packages)
+# - Push to main/master: Full CI/CD (build, test, package, publish stable to GitHub Packages)
+# - Push to develop: Full CI/CD (build, test, package, publish pre-release to GitHub Packages)
 # - Push to feature branches: Build and test only
 # - Pull requests: Build and test
-# - Releases: Full pipeline with stable release publishing to NuGet.org + GitHub Packages
+# - Releases: Full pipeline with stable release publishing to GitHub Packages
 # - Manual dispatch: Optional functional tests and package publishing
 
 on:
@@ -235,7 +235,7 @@ jobs:
         echo "Expected package: ThirdOpinion.Common.${{ steps.version.outputs.version }}.nupkg"
 
   publish:
-    name: Publish to NuGet
+    name: Publish to GitHub Packages
     runs-on: ubuntu-latest
     needs: [build-and-test, package]
     if: |
@@ -268,18 +268,6 @@ jobs:
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
         fi
         echo "package_file=$PACKAGE_FILE" >> $GITHUB_OUTPUT
-
-    - name: Publish to NuGet.org
-      env:
-        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-      run: |
-        for package in ./packages/*.nupkg; do
-          echo "Publishing $package to NuGet.org..."
-          dotnet nuget push "$package" \
-            --source https://api.nuget.org/v3/index.json \
-            --api-key $NUGET_API_KEY \
-            --skip-duplicate
-        done
 
     - name: Publish to GitHub Packages
       run: |
