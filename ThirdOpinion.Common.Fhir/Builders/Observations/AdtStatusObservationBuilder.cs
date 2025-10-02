@@ -16,6 +16,7 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     private FhirDateTime? _effectiveDate;
     private readonly List<(ResourceReference reference, string? display)> _evidenceReferences;
     private readonly List<string> _notes;
+    private float? _confidence;
 
     /// <summary>
     /// Creates a new ADT Status Observation builder
@@ -218,6 +219,20 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     }
 
     /// <summary>
+    /// Sets the AI confidence score for this observation
+    /// </summary>
+    /// <param name="confidence">The confidence score (0.0 to 1.0)</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public AdtStatusObservationBuilder WithConfidence(float confidence)
+    {
+        if (confidence < 0.0f || confidence > 1.0f)
+            throw new ArgumentOutOfRangeException(nameof(confidence), "Confidence must be between 0.0 and 1.0");
+
+        _confidence = confidence;
+        return this;
+    }
+
+    /// <summary>
     /// Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
@@ -320,6 +335,39 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
 
             // Add any additional derived from references from base class
             observation.DerivedFrom.AddRange(DerivedFromReferences);
+        }
+
+        // Add confidence component if specified
+        if (_confidence.HasValue)
+        {
+            if (observation.Component == null)
+                observation.Component = new List<Observation.ComponentComponent>();
+
+            var confidenceComponent = new Observation.ComponentComponent
+            {
+                Code = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new Coding
+                        {
+                            System = "http://loinc.org",
+                            Code = "LA11892-6",
+                            Display = "Probability"
+                        }
+                    },
+                    Text = "AI Confidence Score"
+                },
+                Value = new Quantity
+                {
+                    Value = (decimal)_confidence.Value,
+                    Unit = "probability",
+                    System = "http://unitsofmeasure.org",
+                    Code = "1"
+                }
+            };
+
+            observation.Component.Add(confidenceComponent);
         }
 
         // Add notes

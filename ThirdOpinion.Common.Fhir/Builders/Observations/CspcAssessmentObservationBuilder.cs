@@ -18,6 +18,7 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
     private readonly List<ResourceReference> _evidenceReferences;
     private readonly List<string> _notes;
     private string? _interpretation;
+    private float? _confidence;
 
     /// <summary>
     /// Creates a new CSPC Assessment Observation builder
@@ -280,6 +281,20 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
+    /// Sets the AI confidence score for this observation
+    /// </summary>
+    /// <param name="confidence">The confidence score (0.0 to 1.0)</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public CspcAssessmentObservationBuilder WithConfidence(float confidence)
+    {
+        if (confidence < 0.0f || confidence > 1.0f)
+            throw new ArgumentOutOfRangeException(nameof(confidence), "Confidence must be between 0.0 and 1.0");
+
+        _confidence = confidence;
+        return this;
+    }
+
+    /// <summary>
     /// Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
@@ -402,6 +417,39 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
             observation.DerivedFrom.Clear();
             observation.DerivedFrom.AddRange(_evidenceReferences);
             observation.DerivedFrom.AddRange(DerivedFromReferences);
+        }
+
+        // Add confidence component if specified
+        if (_confidence.HasValue)
+        {
+            if (observation.Component == null)
+                observation.Component = new List<Observation.ComponentComponent>();
+
+            var confidenceComponent = new Observation.ComponentComponent
+            {
+                Code = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new Coding
+                        {
+                            System = "http://loinc.org",
+                            Code = "LA11892-6",
+                            Display = "Probability"
+                        }
+                    },
+                    Text = "AI Confidence Score"
+                },
+                Value = new Quantity
+                {
+                    Value = (decimal)_confidence.Value,
+                    Unit = "probability",
+                    System = "http://unitsofmeasure.org",
+                    Code = "1"
+                }
+            };
+
+            observation.Component.Add(confidenceComponent);
         }
 
         // Add notes

@@ -36,6 +36,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     private readonly List<(ResourceReference reference, string role, decimal? value)> _psaEvidence;
     private readonly List<Observation.ComponentComponent> _components;
     private readonly List<string> _notes;
+    private float? _confidence;
 
     // Calculated values from PSA evidence
     private decimal? _baselinePsa;
@@ -356,6 +357,20 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
+    /// Sets the AI confidence score for this observation
+    /// </summary>
+    /// <param name="confidence">The confidence score (0.0 to 1.0)</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public PsaProgressionObservationBuilder WithConfidence(float confidence)
+    {
+        if (confidence < 0.0f || confidence > 1.0f)
+            throw new ArgumentOutOfRangeException(nameof(confidence), "Confidence must be between 0.0 and 1.0");
+
+        _confidence = confidence;
+        return this;
+    }
+
+    /// <summary>
     /// Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
@@ -613,6 +628,34 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
             // PCWG3 uses 25% increase from nadir as threshold
             bool meetsThreshold = _percentageChange.Value >= 25;
             AddThresholdMetComponent(meetsThreshold);
+        }
+
+        // Add confidence component if specified
+        if (_confidence.HasValue)
+        {
+            _components.Add(new Observation.ComponentComponent
+            {
+                Code = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new Coding
+                        {
+                            System = "http://loinc.org",
+                            Code = "LA11892-6",
+                            Display = "Probability"
+                        }
+                    },
+                    Text = "AI Confidence Score"
+                },
+                Value = new Quantity
+                {
+                    Value = (decimal)_confidence.Value,
+                    Unit = "probability",
+                    System = "http://unitsofmeasure.org",
+                    Code = "1"
+                }
+            });
         }
     }
 }

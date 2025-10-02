@@ -12,9 +12,16 @@ public static class FhirCodingHelper
     /// </summary>
     public static class Systems
     {
+        /// <summary>SNOMED CT (Systematized Nomenclature of Medicine Clinical Terms) system URI</summary>
         public const string SNOMED_SYSTEM = "http://snomed.info/sct";
+
+        /// <summary>ICD-10 (International Classification of Diseases, 10th Revision) system URI</summary>
         public const string ICD10_SYSTEM = "http://hl7.org/fhir/sid/icd-10";
+
+        /// <summary>LOINC (Logical Observation Identifiers Names and Codes) system URI</summary>
         public const string LOINC_SYSTEM = "http://loinc.org";
+
+        /// <summary>NCI Thesaurus (National Cancer Institute Thesaurus) system URI</summary>
         public const string NCI_SYSTEM = "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl";
     }
 
