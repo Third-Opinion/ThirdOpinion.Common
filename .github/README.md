@@ -35,9 +35,8 @@ The main CI/CD workflow that handles:
    - Uploads packages as artifacts
 
 4. **Publishing**
-   - Publishes to GitHub Packages (always)
-   - Publishes to NuGet.org (releases only)
-   - Requires `NUGET_API_KEY` secret for NuGet.org
+   - Publishes to AWS CodeArtifact for all builds (main, develop, releases)
+   - Requires AWS CodeArtifact configuration secrets
 
 ## Setup Requirements
 
@@ -46,7 +45,14 @@ The main CI/CD workflow that handles:
 Add these secrets to your GitHub repository:
 
 ```
-NUGET_API_KEY          # API key for publishing to NuGet.org
+# AWS CodeArtifact Configuration
+AWS_CODEARTIFACT_ROLE_ARN           # IAM role ARN for CodeArtifact access
+AWS_CODEARTIFACT_DOMAIN             # CodeArtifact domain name
+AWS_CODEARTIFACT_DOMAIN_OWNER       # AWS account ID that owns the domain
+AWS_CODEARTIFACT_REPOSITORY         # CodeArtifact repository name
+
+# Functional Tests (optional)
+AWS_FUNCTIONAL_TEST_ROLE_ARN        # IAM role ARN for running functional tests
 ```
 
 ### Environment Protection
@@ -59,9 +65,23 @@ The workflow uses a `production` environment for publishing. Configure this in y
 
 ## Package Structure
 
-The workflow will publish this NuGet package:
+The workflow will publish this NuGet package to AWS CodeArtifact:
 
 - `ThirdOpinion.Common` - Complete package including AWS services integration (S3, DynamoDB, SQS, Cognito), FHIR R4 healthcare integration, and utility functions
+
+### Installing from CodeArtifact
+
+To consume the package from AWS CodeArtifact:
+
+1. Configure AWS CLI with appropriate credentials
+2. Add CodeArtifact as a NuGet source:
+   ```bash
+   aws codeartifact login --tool dotnet --domain YOUR_DOMAIN --repository YOUR_REPOSITORY
+   ```
+3. Install the package:
+   ```bash
+   dotnet add package ThirdOpinion.Common
+   ```
 
 ## Usage Examples
 
@@ -81,15 +101,15 @@ The workflow will publish this NuGet package:
 4. Check **Publish NuGet packages**
 5. Click **Run workflow**
 
-Development packages will be versioned as: `1.0.0-dev.YYYYMMDD.{commit-hash}`
+Development packages will be versioned as: `2.0.0-beta.{build-number}` for develop branch
 
 ### Publishing Release Packages
 
-1. Create a GitHub release with a tag (e.g., `v1.2.3`)
+1. Create a GitHub release with a tag (e.g., `v2.1.0`)
 2. The workflow will automatically:
    - Build and test the code
    - Create packages with the release version
-   - Publish to both GitHub Packages and NuGet.org
+   - Publish to AWS CodeArtifact
 
 ## Local Development
 

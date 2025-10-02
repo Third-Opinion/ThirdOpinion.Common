@@ -288,7 +288,7 @@ jobs:
         echo "Expected package: ThirdOpinion.Common.${{ steps.version.outputs.version }}.nupkg"
 
   publish:
-    name: Publish to GitHub Packages
+    name: Publish to AWS CodeArtifact
     runs-on: ubuntu-latest
     needs: [build-and-test, package]
     if: |
@@ -299,12 +299,23 @@ jobs:
       github.ref_name == 'master'
     environment: production
 
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
     - name: Download packages
       uses: actions/download-artifact@v4
       with:
         name: nuget-packages
         path: ./packages/
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.AWS_CODEARTIFACT_ROLE_ARN }}
+        role-session-name: GitHubActions-CodeArtifact
+        aws-region: us-east-1
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -322,13 +333,39 @@ jobs:
         fi
         echo "package_file=$PACKAGE_FILE" >> $GITHUB_OUTPUT
 
-    - name: Publish to GitHub Packages
+    - name: Configure CodeArtifact authentication
+      run: |
+        # Get CodeArtifact authorization token
+        CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+          --domain ${{ secrets.AWS_CODEARTIFACT_DOMAIN }} \
+          --domain-owner ${{ secrets.AWS_CODEARTIFACT_DOMAIN_OWNER }} \
+          --query authorizationToken \
+          --output text)
+
+        # Configure NuGet source for CodeArtifact
+        CODEARTIFACT_REPOSITORY_URL=$(aws codeartifact get-repository-endpoint \
+          --domain ${{ secrets.AWS_CODEARTIFACT_DOMAIN }} \
+          --domain-owner ${{ secrets.AWS_CODEARTIFACT_DOMAIN_OWNER }} \
+          --repository ${{ secrets.AWS_CODEARTIFACT_REPOSITORY }} \
+          --format nuget \
+          --query repositoryEndpoint \
+          --output text)
+
+        echo "CodeArtifact repository URL: $CODEARTIFACT_REPOSITORY_URL"
+
+        # Add CodeArtifact as NuGet source
+        dotnet nuget add source "$CODEARTIFACT_REPOSITORY_URL" \
+          --name "aws-codeartifact" \
+          --username aws \
+          --password "$CODEARTIFACT_AUTH_TOKEN" \
+          --store-password-in-clear-text
+
+    - name: Publish to AWS CodeArtifact
       run: |
         for package in ./packages/*.nupkg; do
-          echo "Publishing $package to GitHub Packages..."
+          echo "Publishing $package to AWS CodeArtifact..."
           dotnet nuget push "$package" \
-            --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
-            --api-key ${{ secrets.GITHUB_TOKEN }} \
+            --source "aws-codeartifact" \
             --skip-duplicate
         done
 
