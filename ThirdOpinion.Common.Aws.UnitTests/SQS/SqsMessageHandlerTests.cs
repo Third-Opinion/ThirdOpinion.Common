@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Shouldly;
 using ThirdOpinion.Common.Aws.DynamoDb;
 using ThirdOpinion.Common.Aws.SQS;
 using Xunit;
@@ -68,88 +69,83 @@ public class SqsMessageHandlerTests
     }
 
     [Fact]
-    public async Task ProcessMessageAsync_WithValidMessage_LogsProcessingInfo()
+    public async Task ProcessMessageAsync_ValidMessage_LogsProcessingInfo()
     {
         // Arrange
-        var handler = new TestableMessageHandler(
+        var handler = new SqsMessageHandler(
             _sqsClientMock.Object,
             _loggerMock.Object,
             _configurationMock.Object,
             _serviceProviderMock.Object,
             _dynamoRepositoryMock.Object);
 
-        var testMessage = new Message 
-        { 
-            MessageId = "msg-1", 
-            Body = "test message body", 
-            ReceiptHandle = "receipt-handle-1" 
+        var testMessage = new Message
+        {
+            MessageId = "msg-1",
+            Body = "test message body",
+            ReceiptHandle = "receipt-handle-1"
         };
 
+        var cancellationToken = CancellationToken.None;
+
         // Act
-        await handler.ProcessMessagePublic(testMessage, CancellationToken.None);
+        await handler.ProcessMessageAsync(testMessage, cancellationToken);
 
         // Assert
         VerifyLoggerInfoWasCalled("Processing message msg-1");
     }
 
     [Fact]
-    public async Task ProcessMessageAsync_WhenExceptionThrown_LogsError()
+    public async Task DeleteMessageAsync_ValidReceiptHandle_CallsSqsDelete()
     {
         // Arrange
-        var handler = new TestableMessageHandler(
-            _sqsClientMock.Object,
-            _loggerMock.Object,
-            _configurationMock.Object,
-            _serviceProviderMock.Object,
-            _dynamoRepositoryMock.Object,
-            shouldThrow: true);
-
-        var testMessage = new Message 
-        { 
-            MessageId = "msg-error", 
-            Body = "test message body", 
-            ReceiptHandle = "receipt-handle-error" 
-        };
-
-        // Act & Assert
-        await Should.ThrowAsync<Exception>(() => 
-            handler.ProcessMessagePublic(testMessage, CancellationToken.None));
-
-        VerifyLoggerInfoWasCalled("Processing message msg-error");
-    }
-
-    [Fact]
-    public async Task DeleteMessageAsync_WithReceiptHandle_CallsSqsClient()
-    {
-        // Arrange
-        var handler = new TestableMessageHandler(
+        var handler = new SqsMessageHandler(
             _sqsClientMock.Object,
             _loggerMock.Object,
             _configurationMock.Object,
             _serviceProviderMock.Object,
             _dynamoRepositoryMock.Object);
 
-        var receiptHandle = "receipt-handle-test";
-        
+        var receiptHandle = "receipt-handle-1";
+        var cancellationToken = CancellationToken.None;
+
         _sqsClientMock.Setup(x => x.DeleteMessageAsync(It.IsAny<DeleteMessageRequest>(), It.IsAny<CancellationToken>()))
                      .ReturnsAsync(new DeleteMessageResponse { HttpStatusCode = HttpStatusCode.OK });
 
         // Act
-        await handler.DeleteMessagePublic(receiptHandle, CancellationToken.None);
+        await handler.DeleteMessageAsync(receiptHandle, cancellationToken);
 
         // Assert
         _sqsClientMock.Verify(x => x.DeleteMessageAsync(
-            It.Is<DeleteMessageRequest>(r => 
-                r.QueueUrl == _testQueueUrl && 
-                r.ReceiptHandle == receiptHandle), 
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.Is<DeleteMessageRequest>(r =>
+                r.QueueUrl == _testQueueUrl &&
+                r.ReceiptHandle == receiptHandle),
+            cancellationToken), Times.Once);
     }
 
     [Fact]
-    public async Task DeleteMessageAsync_WhenExceptionThrown_LogsErrorAndRethrows()
+    public async Task ProcessMessageAsync_WithNullMessage_ThrowsArgumentNullException()
     {
         // Arrange
-        var handler = new TestableMessageHandler(
+        var handler = new SqsMessageHandler(
+            _sqsClientMock.Object,
+            _loggerMock.Object,
+            _configurationMock.Object,
+            _serviceProviderMock.Object,
+            _dynamoRepositoryMock.Object);
+
+        var cancellationToken = CancellationToken.None;
+
+        // Act & Assert
+        await Should.ThrowAsync<ArgumentNullException>(() =>
+            handler.ProcessMessageAsync(null!, cancellationToken));
+    }
+
+    [Fact]
+    public async Task DeleteMessageAsync_SqsThrowsException_LogsErrorAndRethrows()
+    {
+        // Arrange
+        var handler = new SqsMessageHandler(
             _sqsClientMock.Object,
             _loggerMock.Object,
             _configurationMock.Object,
@@ -157,15 +153,40 @@ public class SqsMessageHandlerTests
             _dynamoRepositoryMock.Object);
 
         var receiptHandle = "receipt-handle-error";
-        
+        var cancellationToken = CancellationToken.None;
+        var sqsException = new AmazonSQSException("Delete failed");
+
         _sqsClientMock.Setup(x => x.DeleteMessageAsync(It.IsAny<DeleteMessageRequest>(), It.IsAny<CancellationToken>()))
-                     .ThrowsAsync(new AmazonSQSException("Delete failed"));
+                     .ThrowsAsync(sqsException);
 
         // Act & Assert
-        await Should.ThrowAsync<AmazonSQSException>(() => 
-            handler.DeleteMessagePublic(receiptHandle, CancellationToken.None));
+        var exception = await Should.ThrowAsync<AmazonSQSException>(() =>
+            handler.DeleteMessageAsync(receiptHandle, cancellationToken));
 
-        VerifyLoggerErrorWasCalled("Error deleting message receipt-handle-error");
+        exception.ShouldBe(sqsException);
+        VerifyLoggerErrorWasCalled($"Error deleting message {receiptHandle}");
+    }
+
+    [Fact]
+    public async Task DeleteMessageAsync_WithNullOrEmptyReceiptHandle_ThrowsArgumentException()
+    {
+        // Arrange
+        var handler = new SqsMessageHandler(
+            _sqsClientMock.Object,
+            _loggerMock.Object,
+            _configurationMock.Object,
+            _serviceProviderMock.Object,
+            _dynamoRepositoryMock.Object);
+
+        var cancellationToken = CancellationToken.None;
+
+        // Act & Assert - null receipt handle
+        await Should.ThrowAsync<ArgumentException>(() =>
+            handler.DeleteMessageAsync(null!, cancellationToken));
+
+        // Act & Assert - empty receipt handle
+        await Should.ThrowAsync<ArgumentException>(() =>
+            handler.DeleteMessageAsync(string.Empty, cancellationToken));
     }
 
     [Fact]
@@ -224,41 +245,3 @@ public class SqsMessageHandlerTests
     }
 }
 
-// Test helper class to expose protected methods for testing
-public class TestableMessageHandler : SqsMessageHandler
-{
-    private readonly bool _shouldThrow;
-
-    public TestableMessageHandler(
-        IAmazonSQS sqsClient,
-        ILogger<SqsMessageHandler> logger,
-        IConfiguration configuration,
-        IServiceProvider serviceProvider,
-        IDynamoDbRepository dynamoRepository,
-        bool shouldThrow = false)
-        : base(sqsClient, logger, configuration, serviceProvider, dynamoRepository)
-    {
-        _shouldThrow = shouldThrow;
-    }
-
-    public async Task ProcessMessagePublic(Message message, CancellationToken cancellationToken)
-    {
-        if (_shouldThrow)
-        {
-            // First log the processing message, then throw
-            Logger.LogInformation("Processing message {MessageId}", message.MessageId);
-            throw new Exception("Simulated processing error");
-        }
-        
-        await ProcessMessageAsync(message, cancellationToken);
-    }
-
-    public async Task DeleteMessagePublic(string receiptHandle, CancellationToken cancellationToken)
-    {
-        await DeleteMessageAsync(receiptHandle, cancellationToken);
-    }
-
-    protected ILogger<SqsMessageHandler> Logger => (ILogger<SqsMessageHandler>)typeof(SqsMessageHandler)
-        .GetField("_logger", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
-        .GetValue(this)!;
-}

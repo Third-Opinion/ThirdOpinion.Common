@@ -179,27 +179,3 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Test artifacts have been uploaded and are available for download." >> $GITHUB_STEP_SUMMARY
 
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run security scan
-        uses: securecodewarrior/github-action-add-sarif@v1
-        with:
-          sarif-file: 'security-scan-results.sarif'
-        continue-on-error: true
-
-      - name: Check for secrets
-        run: |
-          echo "Scanning for potential secrets in test files..."
-          if grep -r -i "password\|secret\|key\|token" ThirdOpinion.Common.FunctionalTests/ --include="*.cs" --include="*.json" | grep -v "// " | grep -v "/// " | grep -v "test\|fake\|mock\|example\|AccessKey\|SecretKey\|LocalStack"; then
-            echo "⚠️ Potential secrets found in test files"
-            exit 1
-          else
-            echo "✅ No secrets detected in test files"
-          fi

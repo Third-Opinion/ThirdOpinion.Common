@@ -4,6 +4,7 @@ using Amazon.SQS;
 using Amazon.SQS.Model;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Shouldly;
 using ThirdOpinion.Common.Aws.SQS;
 using Xunit;
 

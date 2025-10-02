@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>Misc</RootNamespace>
+        <IsPackable>false</IsPackable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn></NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Folder Include="patients\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.6.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\ThirdOpinion.Common.Aws.DynamoDb\ThirdOpinion.Common.Aws.DynamoDb.csproj" />
+    </ItemGroup>
+
+</Project>

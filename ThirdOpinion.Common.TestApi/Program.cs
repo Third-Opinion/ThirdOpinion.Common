@@ -20,22 +20,6 @@ builder.Services.AddSwaggerGen();
 // Configure AWS Options
 var awsOptions = builder.Configuration.GetAWSOptions();
 
-// Use AWS_PROFILE environment variable if set
-var awsProfile = Environment.GetEnvironmentVariable("AWS_PROFILE");
-if (!string.IsNullOrEmpty(awsProfile))
-{
-    awsOptions.Credentials = new Amazon.Runtime.CredentialManagement.CredentialProfileStoreChain()
-        .TryGetAWSCredentials(awsProfile, out var credentials) 
-        ? credentials 
-        : FallbackCredentialsFactory.GetCredentials();
-}
-
-// Set region from configuration or environment
-var region = builder.Configuration["AWS:Region"] ?? 
-             Environment.GetEnvironmentVariable("AWS_REGION") ?? 
-             "us-east-1";
-awsOptions.Region = RegionEndpoint.GetBySystemName(region);
-
 // Register AWS services
 builder.Services.AddDefaultAWSOptions(awsOptions);
 builder.Services.AddAWSService<IAmazonCognitoIdentityProvider>();

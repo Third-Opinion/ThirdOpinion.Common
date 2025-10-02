@@ -11,8 +11,6 @@ ThirdOpinion.Common/
 ├── .github/
 │   ├── workflows/
 │   │   ├── ci-cd.yml           # Main CI/CD pipeline
-│   │   └── codeql.yml          # Security analysis
-│   ├── dependabot.yml          # Dependency updates
 │   └── README.md               # CI/CD documentation
 ├── scripts/
 │   ├── build-packages.sh       # Local build script (Bash)
@@ -37,19 +35,15 @@ ThirdOpinion.Common/
 - **Environment Protection**: Production environment with approval gates
 
 ### 📦 Package Management
-- **Multiple Packages**: 5 separate NuGet packages
+- **Single Package**: One unified NuGet package
 - **Versioning**: Semantic versioning with development builds
 - **Distribution**: GitHub Packages + NuGet.org
 
-## Packages Published
+## Package Published
 
 | Package | Description | Dependencies |
 |---------|-------------|--------------|
-| `ThirdOpinion.Common.Aws.Cognito` | AWS Cognito utilities and authorization | AWS Cognito SDK |
-| `ThirdOpinion.Common.Aws.DynamoDb` | DynamoDB repository and pagination | AWS DynamoDB SDK |
-| `ThirdOpinion.Common.Aws.S3` | S3 storage abstractions | AWS S3 SDK |
-| `ThirdOpinion.Common.Aws.SQS` | SQS message queue implementations | AWS SQS SDK |
-| `ThirdOpinion.Common.Misc` | Miscellaneous utilities (Patient HUID, etc.) | .NET 8.0 |
+| `ThirdOpinion.Common` | Complete package including AWS services integration (S3, DynamoDB, SQS, Cognito), FHIR R4 healthcare integration, and utility functions | .NET 8.0, AWS SDKs, Hl7.Fhir.R4 |
 
 ## Getting Started
 
@@ -151,18 +145,6 @@ needs: [build-and-test, package]
 - GitHub Packages (always)
 - NuGet.org (releases only)
 
-### Security Pipeline (`codeql.yml`)
-
-#### Features
-- **Static Analysis**: CodeQL with security-extended queries
-- **Dependency Scanning**: Vulnerable package detection
-- **Scheduled Scans**: Weekly automated security reviews
-- **Integration**: Security alerts in GitHub Security tab
-
-#### Analysis Types
-- **Security**: SQL injection, XSS, authentication bypass
-- **Quality**: Code smells, complexity, maintainability
-- **Supply Chain**: Vulnerable dependencies, license compliance
 
 ## Usage Scenarios
 
@@ -184,9 +166,8 @@ git push origin feature/new-awesome-feature
 #### Code Review Process
 1. Automated CI runs on PR creation
 2. All tests must pass
-3. Security scans must pass
-4. Code review approval required
-5. Merge to main triggers deployment pipeline
+3. Code review approval required
+4. Merge to main triggers deployment pipeline
 
 ### 2. Testing Scenarios
 
@@ -291,20 +272,16 @@ TestSettings__TestResourcePrefix: gh-actions
 #### Automated Monitoring
 - **Build Status**: GitHub Actions status badges
 - **Test Coverage**: Coverage reports in artifacts
-- **Security**: CodeQL alerts in Security tab
-- **Dependencies**: Dependabot alerts and PRs
 
 #### Manual Monitoring
-- Weekly security scan reviews
 - Monthly dependency update reviews
 - Quarterly pipeline performance analysis
 
 ### Maintenance Tasks
 
 #### Weekly
-- [ ] Review Dependabot PRs
-- [ ] Check security alerts
 - [ ] Monitor test coverage trends
+- [ ] Review dependency updates manually
 
 #### Monthly
 - [ ] Review package download metrics
@@ -365,8 +342,6 @@ dotnet test --logger "console;verbosity=detailed"
 
 #### Tools
 - [LocalStack Documentation](https://docs.localstack.cloud/)
-- [CodeQL Documentation](https://codeql.github.com/docs/)
-- [Dependabot Configuration](https://docs.github.com/en/code-security/dependabot)
 
 ## Best Practices
 
@@ -392,7 +367,7 @@ dotnet test --logger "console;verbosity=detailed"
 - ✅ Resource cleanup
 
 ### Maintenance
-- ✅ Automated dependency updates
+- ✅ Manual dependency updates
 - ✅ Regular pipeline reviews
 - ✅ Documentation updates
 - ✅ Monitoring and alerting

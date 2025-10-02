@@ -1,0 +1,68 @@
+# Task ID: 9
+# Title: Remove AWS Access Key Support from Functional Tests
+# Status: in-progress
+# Dependencies: 7, 8
+# Priority: medium
+# Description: Remove all support for AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables from functional tests, enforcing SSO profile authentication only (e.g., to-dev-admin) for all AWS service interactions
+# Details:
+1. Update AWS client initialization:
+   - Remove all references to AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables
+   - Remove any EnvironmentVariablesAWSCredentials or BasicAWSCredentials usage
+   - Update all AWS client constructors to use ProfileCredentialsProvider exclusively
+   - Ensure AWS_PROFILE environment variable or explicit profile name (to-dev-admin) is used
+
+2. Modify BaseIntegrationTest infrastructure:
+   - Remove any credential fallback mechanisms that check for access keys
+   - Update SetUp methods to validate SSO profile is configured before running tests
+   - Add validation to ensure tests fail fast if SSO profile is not available
+   - Create helper method ValidateSSOProfile() to check AWS STS GetCallerIdentity
+
+3. Update test configuration:
+   - Remove any appsettings or test configuration that references access keys
+   - Update README and documentation to specify SSO profile requirement
+   - Add clear error messages when SSO profile is not configured
+
+4. Update GitHub Actions workflow:
+   - Remove any secrets related to AWS access keys
+   - Update workflow to use AWS SSO login or OIDC authentication
+   - Ensure workflow documentation reflects SSO-only approach
+
+5. Code changes required:
+   - Search and remove all instances of: EnvironmentVariablesAWSCredentials, BasicAWSCredentials
+   - Update all AmazonCognitoIdentityProviderClient, AmazonDynamoDBClient, AmazonS3Client, AmazonSQSClient constructors
+   - Replace with: new AmazonServiceClient(new AmazonServiceConfig { Profile = "to-dev-admin" })
+   - Or use shared credentials file: new AmazonServiceClient(new StoredProfileAWSCredentials("to-dev-admin"))
+
+6. Add profile validation:
+   ```csharp
+   private static void ValidateAWSProfile()
+   {
+       var profileName = Environment.GetEnvironmentVariable("AWS_PROFILE") ?? "to-dev-admin";
+       var chain = new CredentialProfileStoreChain();
+       if (!chain.TryGetAWSCredentials(profileName, out var credentials))
+       {
+           throw new InvalidOperationException($"AWS SSO profile '{profileName}' not configured. Please run 'aws sso login --profile {profileName}'");
+       }
+   }
+   ```
+
+# Test Strategy:
+1. Verify SSO-only authentication:
+   - Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables to dummy values
+   - Run functional tests and confirm they ignore these variables and use SSO profile
+   - Unset AWS_PROFILE and verify tests fail with appropriate error message
+
+2. Test profile validation:
+   - Run tests with expired SSO session and verify clear error message
+   - Run tests with valid SSO session (to-dev-admin profile) and verify all pass
+   - Attempt to use non-existent profile and verify failure
+
+3. Validate AWS service connections:
+   - Run full functional test suite with SSO profile
+   - Verify Cognito, DynamoDB, S3, and SQS tests all authenticate correctly
+   - Check AWS CloudTrail to confirm all API calls use SSO session credentials
+
+4. GitHub Actions validation:
+   - Push changes and verify CI/CD pipeline uses SSO/OIDC authentication
+   - Confirm no AWS access key secrets are referenced in workflow
+   - Verify workflow fails appropriately if SSO is not configured

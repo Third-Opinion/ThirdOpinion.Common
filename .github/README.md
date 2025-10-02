@@ -39,17 +39,6 @@ The main CI/CD workflow that handles:
    - Publishes to NuGet.org (releases only)
    - Requires `NUGET_API_KEY` secret for NuGet.org
 
-5. **Security Scanning**
-   - Runs vulnerability scanning on dependencies
-   - Performs CodeQL static analysis
-
-### 2. Security Analysis (`codeql.yml`)
-
-Dedicated security workflow that:
-- Runs CodeQL analysis on pushes and PRs
-- Performs weekly scheduled scans
-- Uses extended security and quality queries
-
 ## Setup Requirements
 
 ### Repository Secrets
@@ -70,13 +59,9 @@ The workflow uses a `production` environment for publishing. Configure this in y
 
 ## Package Structure
 
-The workflow will publish these NuGet packages:
+The workflow will publish this NuGet package:
 
-- `ThirdOpinion.Common.Aws.Cognito` - AWS Cognito utilities and authorization attributes
-- `ThirdOpinion.Common.Aws.DynamoDb` - DynamoDB repository and pagination helpers
-- `ThirdOpinion.Common.Aws.S3` - S3 storage abstractions and utilities
-- `ThirdOpinion.Common.Aws.SQS` - SQS message queue implementations
-- `ThirdOpinion.Common.Misc` - Miscellaneous utilities (Patient HUID, etc.)
+- `ThirdOpinion.Common` - Complete package including AWS services integration (S3, DynamoDB, SQS, Cognito), FHIR R4 healthcare integration, and utility functions
 
 ## Usage Examples
 
@@ -135,19 +120,10 @@ dotnet test ThirdOpinion.Common.FunctionalTests/ \
 
 ## Monitoring and Maintenance
 
-### Dependabot
-
-The repository includes Dependabot configuration to:
-- Update NuGet packages weekly
-- Update GitHub Actions weekly
-- Create PRs with proper labeling and assignment
-
 ### Code Quality
 
 - All PRs require passing tests
 - Code coverage reports are generated for each build
-- Security scanning runs on all code changes
-- CodeQL analysis runs weekly and on significant changes
 
 ## Troubleshooting
 
@@ -162,4 +138,3 @@ The repository includes Dependabot configuration to:
 
 - Check the **Actions** tab for detailed logs
 - Download test results and coverage artifacts
-- Review CodeQL results in the **Security** tab

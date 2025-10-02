@@ -1,6 +1,6 @@
 # Task ID: 8
 # Title: Convert Unit Tests to Shouldly Assertions
-# Status: pending
+# Status: done
 # Dependencies: 2, 3, 4, 5, 6
 # Priority: medium
 # Description: Convert all unit tests across both test projects to use Shouldly fluent assertions instead of xUnit assertions for improved readability and maintainability

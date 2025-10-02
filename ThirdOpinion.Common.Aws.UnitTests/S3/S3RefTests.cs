@@ -2,7 +2,7 @@ using ThirdOpinion.Common.Aws.S3;
 
 namespace ThirdOpinion.Common.Aws.Tests.S3;
 
-public class S3RefTests
+public class tS3RefTests
 {
     [Fact]
     public void Constructor_WithValidParameters_SetsPropertiesCorrectly()

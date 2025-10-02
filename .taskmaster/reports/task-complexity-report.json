@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2025-09-30T21:47:16.571Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 11,
+			"taskTitle": "Setup FHIR Library Projects and Dependencies",
+			"complexityScore": 4,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Create detailed implementation steps for setting up ThirdOpinion.Common.Fhir library and test projects, including solution integration, NuGet package configuration, and folder structure creation with smoke tests",
+			"reasoning": "Based on codebase analysis, this follows established patterns for new library creation in the solution. The solution already has similar library structures (AWS services) with consistent project configuration. Complexity is moderate - mostly straightforward project setup with Firely SDK integration requiring careful version management."
+		},
+		{
+			"taskId": 12,
+			"taskTitle": "Implement Core Helper Classes",
+			"complexityScore": 5,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down the implementation of FhirIdGenerator and FhirCodingHelper classes into focused steps covering GUID generation, sequential IDs, medical code constants organization, and CodeableConcept factory methods",
+			"reasoning": "Requires implementing two utility classes with multiple responsibilities. The codebase shows no existing FHIR helpers to leverage. Medical code constants need careful organization across multiple systems (SNOMED, ICD-10, LOINC, NCI). Thread safety for ID generation adds complexity."
+		},
+		{
+			"taskId": 13,
+			"taskTitle": "Build Base Infrastructure and Configuration",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Define steps for creating generic base builder class with template pattern, fluent interface methods, thread-safe ID generation, configuration management, and AIAST security label application",
+			"reasoning": "This is foundational infrastructure that all other builders depend on. The existing TestDataBuilder pattern in the codebase provides some guidance, but this requires more complex generic constraints, thread safety considerations, and FHIR-specific template methods. Critical dependency for all subsequent tasks."
+		},
+		{
+			"taskId": 14,
+			"taskTitle": "Implement AI Device Builder",
+			"complexityScore": 4,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Create implementation steps for AiDeviceBuilder including class structure, model/manufacturer configuration, version handling with identifiers, flexible property additions, and Build method with FHIR validation",
+			"reasoning": "Relatively straightforward builder implementation once base infrastructure exists. The Device resource is simpler than Observation resources. Main complexity is in property array handling and version/identifier generation."
+		},
+		{
+			"taskId": 15,
+			"taskTitle": "Implement ADT Status Observation Builder",
+			"complexityScore": 5,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Design implementation steps for ADT therapy observation builder including base setup, patient/device/status methods, evidence tracking, Build validation with auto-ID generation, and comprehensive unit tests",
+			"reasoning": "Medium complexity observation builder with evidence tracking requirements. Must handle multiple evidence references, auto-generated vs explicit IDs, and proper SNOMED coding. Pattern can be reused for other observation builders."
+		},
+		{
+			"taskId": 16,
+			"taskTitle": "Implement CSPC Assessment Observation Builder",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Structure implementation for castration sensitivity assessment builder with mandatory focus validation, dual coding systems (SNOMED and ICD-10), evidence management, and strict Build validation requirements",
+			"reasoning": "Higher complexity due to mandatory focus field validation requiring custom exception handling. Dual coding system requirement (both SNOMED and ICD-10) adds complexity. Critical validation logic in Build method."
+		},
+		{
+			"taskId": 17,
+			"taskTitle": "Implement PSA Progression Observation Builder",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Plan implementation for PSA progression builder supporting dual criteria systems, PSA evidence management with calculations, component array building, threshold detection logic, and automatic percentage/absolute change calculations",
+			"reasoning": "Most complex observation builder with dual criteria support (ThirdOpinion.io and PCWG3), automatic PSA calculations, multiple component types, and threshold detection logic. Requires careful handling of PSA value extraction and calculation logic."
+		},
+		{
+			"taskId": 18,
+			"taskTitle": "Implement RECIST Progression and Clinical Builders",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Design RECIST 1.1 observation builder with imaging category setup, multiple component value types, imaging study references, body site management, and NCI response classification",
+			"reasoning": "Complex due to multiple component types (Quantity, boolean, CodeableConcept), multiple body sites support, and dual coding systems (LOINC and NCI). Imaging study reference management adds complexity."
+		},
+		{
+			"taskId": 19,
+			"taskTitle": "Implement Document Processing Builders",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Implement OCR and fact extraction document builders with Base64 encoding, S3 URL support, relatesTo chains, JSON serialization, and mutual exclusivity validation between inline and URL storage",
+			"reasoning": "High complexity due to dual storage modes (inline Base64 vs S3 URLs), mutual exclusivity validation, JSON serialization requirements, and maintaining proper document transformation chains. The existing S3Storage infrastructure can be leveraged."
+		},
+		{
+			"taskId": 20,
+			"taskTitle": "Implement Provenance Builder and Complete Integration Testing",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Create provenance builder with agent management, entity tracking, S3 log support, plus comprehensive integration tests for complete workflows, document pipelines, query patterns, and Lambda performance validation",
+			"reasoning": "Most complex task combining provenance builder implementation with comprehensive integration testing across all builders. Must validate complete workflows, performance constraints for Lambda, and cross-resource references. Integration testing requires all previous tasks to be complete."
+		}
+	]
+}

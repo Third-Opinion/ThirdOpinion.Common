@@ -1,0 +1,34 @@
+<Project>
+  <PropertyGroup>
+    <!-- Common NuGet Package Properties -->
+    <Authors>Third Opinion</Authors>
+    <Company>Third Opinion</Company>
+    <Product>ThirdOpinion.Common</Product>
+    <Version>1.0.0</Version>
+    <PackageVersion>1.0.0</PackageVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Description>Third Opinion Common Libraries - AWS services integration (S3, DynamoDB, SQS, Cognito) and utility functions</Description>
+    <Copyright>Copyright © Third Opinion 2025</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/thirdopinion/ThirdOpinion.Common</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/thirdopinion/ThirdOpinion.Common</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>AWS;S3;DynamoDB;SQS;Cognito;Cloud;Utilities</PackageTags>
+    
+    <!-- Build Configuration -->
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IsPackable>true</IsPackable>
+    
+    <!-- Documentation -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    
+    <!-- Output Configuration -->
+    <PackageOutputPath>$(MSBuildThisFileDirectory)..\packages</PackageOutputPath>
+  </PropertyGroup>
+</Project>

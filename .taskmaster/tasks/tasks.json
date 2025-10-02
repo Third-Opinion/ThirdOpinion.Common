@@ -2,283 +2,694 @@
   "master": {
     "tasks": [
       {
-        "id": 1,
-        "title": "Setup Unit Testing Infrastructure",
-        "description": "Configure the existing ThirdOpinion.Common.UnitTests project with xUnit testing framework and Shouldly assertion library, establish testing structure and conventions",
-        "status": "done",
+        "id": 11,
+        "title": "Setup FHIR Library Projects and Dependencies",
+        "description": "Create ThirdOpinion.Common.Fhir library project and ThirdOpinion.Common.Fhir.UnitTests test project with Firely SDK integration",
+        "details": "Create new C# library project ThirdOpinion.Common.Fhir targeting .NET 6+. Install NuGet packages: Hl7.Fhir.R4 (latest stable), Hl7.Fhir.Serialization (for JSON/XML support). Create test project ThirdOpinion.Common.Fhir.UnitTests with xUnit and Shouldly. Set up project structure with folders: Builders/Base, Builders/Observations, Builders/Documents, Configuration, Helpers, Enums. Add project references to ThirdOpinion.Common solution. Configure AWS SDK dependencies if needed for S3 integration.",
+        "testStrategy": "Verify project builds successfully, all NuGet packages restore correctly, and basic Firely SDK resource creation works (create simple Patient resource as smoke test). Ensure test project can reference main library.",
+        "priority": "high",
         "dependencies": [],
-        "priority": "high",
-        "details": "1. Add xUnit and Shouldly NuGet packages to the existing ThirdOpinion.Common.UnitTests project\n2. Verify test project references to all ThirdOpinion.Common.* projects are properly configured\n3. Setup test naming conventions (ClassName_MethodName_ExpectedBehavior) in the existing test project\n4. Create base test classes if needed for common setup within ThirdOpinion.Common.UnitTests\n5. Configure code coverage tools (coverlet or similar) for the existing test project\n6. Setup CI/CD pipeline integration for running tests in ThirdOpinion.Common.UnitTests\n7. Create test data builders/object mothers for common test scenarios within the existing test project structure",
-        "testStrategy": "Verify that ThirdOpinion.Common.UnitTests project can reference all main projects, xUnit test runner discovers tests correctly in the existing project, Shouldly assertions work as expected, and code coverage reports are generated successfully for the unified test project",
-        "subtasks": []
-      },
-      {
-        "id": 2,
-        "title": "Test AWS Cognito Authentication Components",
-        "description": "Create comprehensive unit tests for all Cognito-related authentication classes including attributes, extensions, and options",
-        "details": "1. Test AuthorizePersonGuidAttribute:\n   - Valid GUID scenarios\n   - Invalid/missing GUID scenarios\n   - Authorization success/failure paths\n2. Test AuthorizeTenantGuidAttribute:\n   - Valid tenant GUID validation\n   - Multi-tenant scenarios\n   - Unauthorized access attempts\n3. Test ClaimsPrincipalExtensions:\n   - Claim extraction methods\n   - Null/empty claim handling\n   - Custom claim type scenarios\n4. Test GlobalAppSettingsOptions:\n   - Configuration binding\n   - Default value handling\n   - Validation of required settings\n5. Mock AWS Cognito services using Moq or NSubstitute",
-        "testStrategy": "Achieve 90% code coverage for ThirdOpinion.Common.Aws.Cognito namespace, test all public methods, verify authorization logic with mocked HttpContext, validate claim extraction accuracy",
-        "priority": "high",
-        "dependencies": [
-          1
-        ],
         "status": "done",
         "subtasks": [
           {
             "id": 1,
-            "title": "Test AuthorizePersonGuidAttribute",
-            "description": "Create unit tests for AuthorizePersonGuidAttribute covering valid GUID scenarios, invalid/missing GUID scenarios, and authorization success/failure paths",
-            "details": "- Test valid GUID format validation\\n- Test invalid GUID format handling\\n- Test missing GUID parameter scenarios\\n- Test authorization success paths\\n- Test authorization failure paths\\n- Mock HttpContext for testing",
-            "status": "done",
+            "title": "Create ThirdOpinion.Common.Fhir library project",
+            "description": "Set up the main FHIR library project with proper .NET configuration and solution integration",
             "dependencies": [],
-            "parentTaskId": 2
+            "details": "Create new C# class library project named 'ThirdOpinion.Common.Fhir' targeting .NET 6.0. Add the project to the ThirdOpinion.Common solution file. Configure the .csproj file with appropriate PropertyGroup settings including <TargetFramework>net6.0</TargetFramework>, <Nullable>enable</Nullable>, and <LangVersion>latest</LangVersion>. Ensure the project follows the same conventions as other ThirdOpinion.Common libraries in the solution.",
+            "status": "done",
+            "testStrategy": "Verify the project builds successfully with dotnet build command and appears correctly in the solution structure"
           },
           {
             "id": 2,
-            "title": "Test AuthorizeTenantGuidAttribute",
-            "description": "Create unit tests for AuthorizeTenantGuidAttribute covering tenant GUID validation, multi-tenant scenarios, and unauthorized access attempts",
-            "details": "- Test valid tenant GUID validation\\n- Test multi-tenant authorization scenarios\\n- Test unauthorized access attempts\\n- Test tenant isolation enforcement\\n- Mock tenant context for testing",
+            "title": "Install and configure Firely SDK NuGet packages",
+            "description": "Add required FHIR R4 packages and configure AWS SDK dependencies for the library project",
+            "dependencies": [
+              "11.1"
+            ],
+            "details": "Install NuGet packages to ThirdOpinion.Common.Fhir project: Hl7.Fhir.R4 (latest stable version), Hl7.Fhir.Serialization for JSON/XML support, and Hl7.Fhir.Support.Poco for POCO support. Add AWS SDK packages if needed: AWSSDK.S3 for potential S3 integration. Use PackageReference format in the .csproj file. Verify all packages restore correctly and check for any version conflicts with existing solution packages.",
             "status": "done",
-            "dependencies": [],
-            "parentTaskId": 2
+            "testStrategy": "Create a simple smoke test that instantiates a Patient resource using Firely SDK to verify packages are working correctly"
           },
           {
             "id": 3,
-            "title": "Test ClaimsPrincipalExtensions",
-            "description": "Create unit tests for ClaimsPrincipalExtensions covering claim extraction methods, null/empty claim handling, and custom claim types",
-            "details": "- Test claim extraction methods\\n- Test null/empty claim handling\\n- Test custom claim type scenarios\\n- Test claims parsing and validation\\n- Mock ClaimsPrincipal for testing",
+            "title": "Create project folder structure and base namespaces",
+            "description": "Establish the organized folder hierarchy for builders, helpers, and configuration classes",
+            "dependencies": [
+              "11.1"
+            ],
+            "details": "Create the following folder structure in ThirdOpinion.Common.Fhir project: Builders/Base (for base builder classes), Builders/Observations (for observation builders), Builders/Documents (for document reference builders), Configuration (for FHIR configuration classes), Helpers (for utility classes), Enums (for FHIR-related enumerations). Create placeholder .gitkeep files in empty folders to maintain structure in version control. Set up appropriate namespace declarations following the pattern ThirdOpinion.Common.Fhir.{FolderName}.",
             "status": "done",
-            "dependencies": [],
-            "parentTaskId": 2
+            "testStrategy": "Verify folder structure is created correctly and namespaces compile without errors"
           },
           {
             "id": 4,
-            "title": "Test GlobalAppSettingsOptions",
-            "description": "Create unit tests for GlobalAppSettingsOptions covering configuration binding, default value handling, and validation",
-            "details": "- Test configuration binding from appsettings\\n- Test default value handling\\n- Test validation of required settings\\n- Test configuration parsing errors\\n- Mock IConfiguration for testing",
+            "title": "Create ThirdOpinion.Common.Fhir.UnitTests test project",
+            "description": "Set up the unit test project with xUnit and Shouldly frameworks",
+            "dependencies": [
+              "11.1"
+            ],
+            "details": "Create new xUnit test project named 'ThirdOpinion.Common.Fhir.UnitTests' targeting .NET 6.0. Add project reference to ThirdOpinion.Common.Fhir. Install test packages: xunit (latest), xunit.runner.visualstudio (latest), Microsoft.NET.Test.Sdk (latest), Shouldly (latest for fluent assertions), coverlet.collector (for code coverage). Copy .runsettings file from existing test projects if available for consistent test configuration. Create matching folder structure for test organization mirroring the main project.",
             "status": "done",
-            "dependencies": [],
-            "parentTaskId": 2
+            "testStrategy": "Create and run a simple test that verifies the test project can reference the main library and that xUnit/Shouldly are working"
+          },
+          {
+            "id": 5,
+            "title": "Implement initial FHIR resource validation test",
+            "description": "Create a basic integration test to validate the complete setup works end-to-end",
+            "dependencies": [
+              "11.2",
+              "11.3",
+              "11.4"
+            ],
+            "details": "In the test project, create a FhirSetupTests class in the root namespace. Implement a test method that: creates a simple Patient resource using Firely SDK, sets basic properties (name, birthDate, identifier), serializes the resource to JSON using FhirJsonSerializer, deserializes it back to verify round-trip works, validates the resource against FHIR R4 schema if validator is available. This serves as a smoke test to ensure all components (project, packages, references) are correctly configured.",
+            "status": "done",
+            "testStrategy": "Run the test using dotnet test command, verify it passes and produces expected Patient resource JSON output"
           }
         ]
       },
       {
-        "id": 3,
-        "title": "Test DynamoDB Repository and Pagination",
-        "description": "Implement unit tests for DynamoDB repository pattern, pagination helpers, and type converters",
-        "details": "1. Test DynamoDbRepository:\n   - CRUD operations (Create, Read, Update, Delete)\n   - Query and scan operations\n   - Batch operations\n   - Error handling and retry logic\n2. Test Pagination components:\n   - PagedResponse serialization/deserialization\n   - PaginationHelper calculation logic\n   - PaginationMetadata accuracy\n   - PaginationPrevNextHelper navigation\n   - PaginationQuery parameter validation\n3. Test TypeConverters:\n   - EnumTypeConverter with various enum types\n   - DateTimeUtcConverter timezone handling\n   - GuidTypeConverter format validation\n4. Mock IAmazonDynamoDB client responses",
-        "testStrategy": "Cover all repository methods with positive and negative test cases, validate pagination edge cases (empty results, single page, multiple pages), ensure type converters handle null values and invalid formats correctly",
+        "id": 12,
+        "title": "Implement Core Helper Classes",
+        "description": "Create FhirIdGenerator and FhirCodingHelper static classes with FHIR code constants and ID generation utilities",
+        "details": "Implement FhirIdGenerator with methods: GenerateInferenceId() for auto-generating 'to.ai-inference-{GUID}' format, GenerateInferenceId(int) for sequential IDs, GenerateProvenanceId(), GenerateDocumentId(string type), GenerateResourceId(string prefix, string guid). Implement FhirCodingHelper with constants for SNOMED codes (ADT_THERAPY=413712001, CASTRATION_SENSITIVE=1197209002, etc.), ICD-10 codes (PROSTATE_CANCER=C61, HORMONE_SENSITIVE=Z19.1, etc.), LOINC codes (CANCER_DISEASE_STATUS=21889-1, PSA_TOTAL=2857-1, etc.), NCI Thesaurus codes. Add factory methods for creating CodeableConcept objects from codes.",
+        "testStrategy": "Unit test all ID generation methods for correct format and uniqueness. Verify GUID generation produces valid GUIDs. Test sequential ID generation maintains sequence. Validate all code constants against FHIR terminology servers. Test CodeableConcept factory methods produce valid FHIR objects.",
         "priority": "high",
         "dependencies": [
-          1
+          11
         ],
         "status": "done",
         "subtasks": [
           {
             "id": 1,
-            "title": "Test DynamoDbRepository CRUD Operations",
-            "description": "Create unit tests for DynamoDbRepository CRUD operations including Create, Read, Update, Delete, Query, and Scan operations",
-            "details": "- Test Create operations with valid/invalid entities\\n- Test Read operations with existing/non-existing items\\n- Test Update operations with partial/full updates\\n- Test Delete operations with existing/non-existing items\\n- Test Query operations with various filters\\n- Test Scan operations with large datasets\\n- Test batch operations\\n- Mock IAmazonDynamoDB client responses",
-            "status": "done",
+            "title": "Create FhirIdGenerator class with GUID-based ID generation methods",
+            "description": "Implement the FhirIdGenerator static class with core GUID-based ID generation methods for various FHIR resource types",
             "dependencies": [],
-            "parentTaskId": 3
+            "details": "Create a new static class FhirIdGenerator in ThirdOpinion.Common.Fhir/Helpers/. Implement GenerateInferenceId() method that returns 'to.ai-inference-{GUID}' format using Guid.NewGuid(). Implement GenerateProvenanceId() returning 'to.ai-provenance-{GUID}'. Implement GenerateDocumentId(string type) returning 'to.ai-document-{type}-{GUID}'. Implement GenerateResourceId(string prefix, string guid = null) that uses provided GUID or generates new one. All methods should return lowercase GUIDs for consistency.",
+            "status": "done",
+            "testStrategy": "Unit test each ID generation method for correct format using regex patterns. Verify GUID uniqueness by generating 1000 IDs and checking for duplicates. Test that custom GUID parameter works in GenerateResourceId."
           },
           {
             "id": 2,
-            "title": "Test Pagination Components",
-            "description": "Create unit tests for all pagination components including PagedResponse, PaginationHelper, PaginationMetadata, PaginationPrevNextHelper, and PaginationQuery",
-            "details": "- Test PagedResponse serialization/deserialization\\n- Test PaginationHelper calculation logic\\n- Test PaginationMetadata accuracy for various scenarios\\n- Test PaginationPrevNextHelper navigation logic\\n- Test PaginationQuery parameter validation\\n- Test edge cases (empty results, single page, multiple pages)\\n- Test QueryFilter functionality",
+            "title": "Add sequential ID generation to FhirIdGenerator",
+            "description": "Extend FhirIdGenerator with sequential ID generation capabilities for ordered inference IDs",
+            "dependencies": [
+              "12.1"
+            ],
+            "details": "Add GenerateInferenceId(int sequenceNumber) overload that returns 'to.ai-inference-{sequenceNumber:D6}' format (6-digit zero-padded). Implement thread-safe internal counter using Interlocked.Increment for auto-incrementing IDs. Add GenerateSequentialId(string prefix, int? sequence = null) for flexible sequential ID generation. Consider adding configuration for sequence number format and padding.",
             "status": "done",
-            "dependencies": [],
-            "parentTaskId": 3
+            "testStrategy": "Test sequential ID formatting with various numbers (1, 999, 100000). Verify thread safety by spawning multiple threads generating IDs simultaneously. Test that sequential IDs maintain order and uniqueness."
           },
           {
             "id": 3,
-            "title": "Test DynamoDB Type Converters",
-            "description": "Create unit tests for all DynamoDB type converters including EnumTypeConverter, DateTimeUtcConverter, and GuidTypeConverter",
-            "details": "- Test EnumTypeConverter with various enum types\\n- Test DateTimeUtcConverter timezone handling\\n- Test GuidTypeConverter format validation\\n- Test null value handling for all converters\\n- Test invalid format handling for all converters\\n- Test round-trip conversion accuracy\\n- Test edge cases and boundary conditions",
-            "status": "done",
+            "title": "Create FhirCodingHelper class with SNOMED and ICD-10 code constants",
+            "description": "Implement FhirCodingHelper static class with comprehensive medical coding system constants for SNOMED-CT and ICD-10",
             "dependencies": [],
-            "parentTaskId": 3
+            "details": "Create FhirCodingHelper static class with nested classes for organization: SnomedCodes class with constants ADT_THERAPY = \"413712001\", CASTRATION_SENSITIVE = \"1197209002\", CASTRATION_RESISTANT = \"1197210007\", AI_ALGORITHM = \"706689003\", ACTIVE_STATUS = \"385654001\". IcdCodes class with PROSTATE_CANCER = \"C61\", HORMONE_SENSITIVE = \"Z19.1\", HORMONE_RESISTANT = \"Z19.2\". Add System URIs as constants: SNOMED_SYSTEM = \"http://snomed.info/sct\", ICD10_SYSTEM = \"http://hl7.org/fhir/sid/icd-10\".",
+            "status": "done",
+            "testStrategy": "Verify all code constants are accessible and have correct values. Test that system URIs match FHIR specifications. Validate codes against known medical terminology standards."
+          },
+          {
+            "id": 4,
+            "title": "Add LOINC and NCI Thesaurus codes to FhirCodingHelper",
+            "description": "Extend FhirCodingHelper with LOINC laboratory codes and NCI Thesaurus oncology terminology",
+            "dependencies": [
+              "12.3"
+            ],
+            "details": "Add LoincCodes nested class with CANCER_DISEASE_STATUS = \"21889-1\", PSA_TOTAL = \"2857-1\", PSA_FREE = \"19201-3\", TESTOSTERONE = \"2986-8\", GLEASON_SCORE = \"35266-6\". Add NciCodes class with relevant prostate cancer codes. Include system URIs: LOINC_SYSTEM = \"http://loinc.org\", NCI_SYSTEM = \"http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl\". Consider adding display names as optional constants for commonly used codes.",
+            "status": "done",
+            "testStrategy": "Test all LOINC codes match official LOINC database values. Verify NCI Thesaurus codes are valid. Ensure system URIs are correctly formatted for FHIR usage."
+          },
+          {
+            "id": 5,
+            "title": "Implement CodeableConcept factory methods in FhirCodingHelper",
+            "description": "Add factory methods to FhirCodingHelper for creating FHIR CodeableConcept objects from the defined code constants",
+            "dependencies": [
+              "12.3",
+              "12.4"
+            ],
+            "details": "Implement CreateCodeableConcept(string system, string code, string display = null) that returns a new CodeableConcept with single Coding. Add specific factory methods: CreateSnomedConcept(string code, string display = null), CreateIcd10Concept(string code, string display = null), CreateLoincConcept(string code, string display = null). Add CreateConceptFromConstant(string constantName) using reflection to lookup constants. Include optional text parameter for CodeableConcept.Text field. Ensure all methods handle null/empty validation.",
+            "status": "done",
+            "testStrategy": "Test factory methods produce valid CodeableConcept objects with correct system URIs. Verify reflection-based lookup works for all defined constants. Test that generated CodeableConcepts serialize correctly to JSON/XML. Validate against FHIR R4 schema."
           }
         ]
       },
       {
-        "id": 4,
-        "title": "Test S3 Storage Implementation",
-        "description": "Create unit tests for S3 storage service, URL generation, and S3 reference handling",
-        "details": "1. Test S3Storage implementation:\n   - Upload file operations\n   - Download file operations\n   - Delete operations\n   - List objects functionality\n   - Stream handling\n2. Test S3UrlGenerator:\n   - Presigned URL generation\n   - URL expiration handling\n   - Different HTTP methods (GET, PUT, DELETE)\n   - Custom headers and metadata\n3. Test S3Ref:\n   - Reference parsing and validation\n   - Bucket/key extraction\n   - ToString formatting\n4. Mock IAmazonS3 client\n5. Test error scenarios (network failures, invalid buckets, access denied)",
-        "testStrategy": "Mock S3 client responses for all operations, validate URL format and expiration times, test file size limits and content type handling, verify exception handling for S3 service errors",
-        "priority": "medium",
-        "dependencies": [
-          1
-        ],
-        "status": "done",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Test S3Storage Core Operations",
-            "description": "Create unit tests for S3Storage implementation covering upload, download, delete, and list operations",
-            "details": "- Test upload file operations with various file types\\n- Test download file operations and stream handling\\n- Test delete operations for existing/non-existing objects\\n- Test list objects functionality with pagination\\n- Test stream handling and memory management\\n- Test file size limits and content type handling\\n- Mock IAmazonS3 client for all operations",
-            "status": "done",
-            "dependencies": [],
-            "parentTaskId": 4
-          },
-          {
-            "id": 2,
-            "title": "Test S3UrlGenerator",
-            "description": "Create unit tests for S3UrlGenerator covering presigned URL generation, expiration handling, and HTTP methods",
-            "details": "- Test presigned URL generation for various scenarios\\n- Test URL expiration handling and validation\\n- Test different HTTP methods (GET, PUT, DELETE)\\n- Test custom headers and metadata inclusion\\n- Test URL format validation\\n- Test security token handling\\n- Mock S3 client for URL generation",
-            "status": "done",
-            "dependencies": [],
-            "parentTaskId": 4
-          },
-          {
-            "id": 3,
-            "title": "Test S3Ref and Error Handling",
-            "description": "Create unit tests for S3Ref reference handling and comprehensive error scenario testing",
-            "details": "- Test S3Ref reference parsing and validation\\n- Test bucket/key extraction from references\\n- Test ToString formatting for S3Ref\\n- Test error scenarios (network failures, invalid buckets)\\n- Test access denied scenarios\\n- Test exception handling for S3 service errors\\n- Test malformed S3 reference handling",
-            "status": "done",
-            "dependencies": [],
-            "parentTaskId": 4
-          }
-        ]
-      },
-      {
-        "id": 5,
-        "title": "Test SQS Message Queue Components",
-        "description": "Implement unit tests for SQS message queue service and message handler patterns",
-        "details": "1. Test SqsMessageQueue:\n   - Send message operations\n   - Receive message operations\n   - Delete message operations\n   - Batch operations\n   - Message attributes handling\n2. Test SqsMessageHandler:\n   - Message processing logic\n   - Error handling and dead letter queue\n   - Message acknowledgment\n   - Retry policies\n   - Message deserialization\n3. Test ServiceCollectionExtensions:\n   - DI registration validation\n   - Configuration binding\n4. Mock IAmazonSQS client\n5. Test concurrent message processing scenarios",
-        "testStrategy": "Mock SQS client for all queue operations, validate message serialization/deserialization, test retry logic with transient failures, verify dead letter queue handling, ensure proper cleanup of processed messages",
-        "priority": "medium",
-        "dependencies": [
-          1
-        ],
-        "status": "done",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Test SqsMessageQueue Operations",
-            "description": "Create unit tests for SqsMessageQueue covering send, receive, delete, and batch operations",
-            "details": "- Test send message operations with various message types\\n- Test receive message operations and polling\\n- Test delete message operations after processing\\n- Test batch operations for efficiency\\n- Test message attributes handling\\n- Test queue URL validation\\n- Mock IAmazonSQS client for all operations",
-            "status": "done",
-            "dependencies": [],
-            "parentTaskId": 5
-          },
-          {
-            "id": 2,
-            "title": "Test SqsMessageHandler Processing",
-            "description": "Create unit tests for SqsMessageHandler covering message processing, error handling, and retry policies",
-            "details": "- Test message processing logic and workflows\\n- Test error handling and dead letter queue scenarios\\n- Test message acknowledgment patterns\\n- Test retry policies and exponential backoff\\n- Test message deserialization with various formats\\n- Test concurrent message processing scenarios\\n- Test timeout and cancellation handling",
-            "status": "done",
-            "dependencies": [],
-            "parentTaskId": 5
-          },
-          {
-            "id": 3,
-            "title": "Test SQS Service Registration",
-            "description": "Create unit tests for ServiceCollectionExtensions covering dependency injection registration and configuration",
-            "details": "- Test DI registration validation for SQS services\\n- Test configuration binding from appsettings\\n- Test service lifetime and scoping\\n- Test configuration validation and error handling\\n- Test service resolution and dependencies\\n- Test integration with other AWS services",
-            "status": "done",
-            "dependencies": [],
-            "parentTaskId": 5
-          }
-        ]
-      },
-      {
-        "id": 6,
-        "title": "Test Patient HUID Generation and Matching",
-        "description": "Create comprehensive unit tests for patient HUID generation, matching algorithms, and patient data handling",
-        "details": "1. Test HuidGenerator:\n   - HUID generation algorithm\n   - Uniqueness validation\n   - Format compliance\n   - Collision handling\n2. Test PatientMatcher:\n   - Exact matching scenarios\n   - Fuzzy matching with tolerance\n   - Name variations (nicknames, abbreviations)\n   - Date of birth matching\n   - Multiple criteria matching\n3. Test Patients model:\n   - Data validation\n   - Property constraints\n   - Serialization/deserialization\n4. Test edge cases:\n   - Null/empty patient data\n   - Special characters in names\n   - Invalid date formats\n   - Performance with large datasets",
-        "testStrategy": "Validate HUID uniqueness across large sample sets, test matching accuracy with known patient pairs, verify performance benchmarks for matching operations, ensure HIPAA compliance in test data handling",
+        "id": 13,
+        "title": "Build Base Infrastructure and Configuration",
+        "description": "Implement AiResourceBuilderBase<T> abstract class and AiInferenceConfiguration for common builder functionality",
+        "details": "Create generic AiResourceBuilderBase<T> where T : Resource with properties: InferenceId (auto-generated if not set), CriteriaId, CriteriaDisplay, DerivedFromReferences list. Implement methods: WithInferenceId(string), WithCriteria(string, string, string), EnsureInferenceId() for auto-generation, abstract Build(). Add automatic AIAST security label application in base Build logic. Implement AiInferenceConfiguration class with properties: InferenceSystem, CriteriaSystem, ModelSystem, DocumentTrackingSystem, ProvenanceSystem, DefaultModelVersion, OrganizationReference. Ensure thread-safe ID generation using lock or Interlocked operations.",
+        "testStrategy": "Test auto-generation of inference IDs when not explicitly set. Verify AIAST security label is always applied. Test thread safety with parallel Build() calls. Validate configuration injection works correctly. Test that Build() throws InvalidOperationException for missing required fields.",
         "priority": "high",
         "dependencies": [
-          1
+          12
         ],
         "status": "done",
         "subtasks": [
           {
             "id": 1,
-            "title": "Test HuidGenerator Algorithm",
-            "description": "Create unit tests for HuidGenerator covering HUID generation algorithm, uniqueness validation, and format compliance",
-            "details": "- Test HUID generation algorithm correctness\\n- Test uniqueness validation across large sample sets\\n- Test format compliance and structure\\n- Test collision handling and resolution\\n- Test performance with high-volume generation\\n- Test edge cases with minimal patient data\\n- Test deterministic generation from same input",
-            "status": "done",
+            "title": "Create AiResourceBuilderBase<T> Abstract Class Structure",
+            "description": "Define the generic abstract base class AiResourceBuilderBase<T> with all core properties and abstract methods",
             "dependencies": [],
-            "parentTaskId": 6
+            "details": "Create abstract class AiResourceBuilderBase<T> where T : Resource. Define properties: protected string InferenceId, protected string CriteriaId, protected string CriteriaDisplay, protected List<ResourceReference> DerivedFromReferences (initialize as empty list). Define abstract method: public abstract T Build(). Add protected AiInferenceConfiguration Configuration property for dependency injection. Create constructor that accepts AiInferenceConfiguration parameter.",
+            "status": "done",
+            "testStrategy": "Create mock concrete implementation to verify abstract class can be inherited correctly. Test that properties can be set and retrieved. Verify constructor properly accepts configuration."
           },
           {
             "id": 2,
-            "title": "Test PatientMatcher Algorithms",
-            "description": "Create unit tests for PatientMatcher covering exact matching, fuzzy matching, and multi-criteria matching scenarios",
-            "details": "- Test exact matching scenarios with identical data\\n- Test fuzzy matching with configurable tolerance\\n- Test name variations (nicknames, abbreviations, misspellings)\\n- Test date of birth matching with various formats\\n- Test multiple criteria matching and scoring\\n- Test matching accuracy with known patient pairs\\n- Test performance benchmarks for matching operations",
+            "title": "Implement Fluent Builder Methods in Base Class",
+            "description": "Add fluent interface methods for setting inference ID, criteria, and derived from references",
+            "dependencies": [
+              "13.1"
+            ],
+            "details": "Implement public methods in AiResourceBuilderBase: WithInferenceId(string id) that sets InferenceId and returns this, WithCriteria(string id, string display, string system = null) that sets CriteriaId and CriteriaDisplay, AddDerivedFrom(ResourceReference reference) that adds to DerivedFromReferences list, AddDerivedFrom(string reference, string display = null) that creates ResourceReference and adds to list. All methods should return 'this' for method chaining.",
             "status": "done",
-            "dependencies": [],
-            "parentTaskId": 6
+            "testStrategy": "Test fluent interface chaining works correctly. Verify WithInferenceId sets the ID properly. Test WithCriteria sets both ID and display. Verify AddDerivedFrom correctly adds references to the list."
           },
           {
             "id": 3,
-            "title": "Test Patient Model and Edge Cases",
-            "description": "Create unit tests for Patients model covering data validation, serialization, and comprehensive edge case handling",
-            "details": "- Test Patients model data validation rules\\n- Test property constraints and boundaries\\n- Test serialization/deserialization accuracy\\n- Test edge cases with null/empty patient data\\n- Test special characters in names and addresses\\n- Test invalid date formats and boundary dates\\n- Test performance with large patient datasets\\n- Test HIPAA compliance in test data handling",
+            "title": "Implement Thread-Safe Inference ID Generation",
+            "description": "Create EnsureInferenceId method with thread-safe auto-generation of inference IDs when not explicitly set",
+            "dependencies": [
+              "13.2"
+            ],
+            "details": "Implement protected method EnsureInferenceId() that checks if InferenceId is null/empty. If empty, generate ID using format 'to.ai-inference-{GUID}' where GUID is generated using Guid.NewGuid().ToString('D'). Use lock statement or Interlocked operations to ensure thread safety. Consider using static readonly object _idGenerationLock = new object() for synchronization. Method should be called at the beginning of Build() implementation in derived classes.",
             "status": "done",
+            "testStrategy": "Test parallel calls to EnsureInferenceId generate unique IDs. Verify format matches 'to.ai-inference-{GUID}' pattern. Test that explicitly set IDs are not overwritten. Use Task.WhenAll with multiple parallel tasks to verify thread safety."
+          },
+          {
+            "id": 4,
+            "title": "Create AiInferenceConfiguration Class",
+            "description": "Implement configuration class to hold system references and default settings for AI inference operations",
             "dependencies": [],
-            "parentTaskId": 6
+            "details": "Create class AiInferenceConfiguration with properties: string InferenceSystem (URI for inference code system), string CriteriaSystem (URI for criteria code system), string ModelSystem (URI for model code system), string DocumentTrackingSystem (URI for document tracking), string ProvenanceSystem (URI for provenance system), string DefaultModelVersion (e.g., 'v1.0'), ResourceReference OrganizationReference (reference to organization performing inference). Add constructor to initialize with required values. Consider adding validation in setters to ensure URIs are valid.",
+            "status": "done",
+            "testStrategy": "Test configuration object creation with valid values. Verify all properties can be set and retrieved. Test validation rejects invalid URIs if implemented. Test configuration can be injected into builder base class."
+          },
+          {
+            "id": 5,
+            "title": "Implement AIAST Security Label Application",
+            "description": "Add automatic AIAST security label application logic to the base Build method template",
+            "dependencies": [
+              "13.1",
+              "13.2",
+              "13.3",
+              "13.4"
+            ],
+            "details": "Create protected method ApplyAiastSecurityLabel(T resource) that adds Meta.Security with AIAST label: system='http://terminology.hl7.org/CodeSystem/v3-ActCode', code='AIAST', display='AI Assisted'. Create protected virtual method BuildCore() that derived classes override for their specific build logic. Implement template pattern in Build(): call EnsureInferenceId(), call BuildCore() to get resource from derived class, call ApplyAiastSecurityLabel(resource), return resource. Ensure Meta object is created if null.",
+            "status": "done",
+            "testStrategy": "Verify AIAST label is always applied to built resources. Test that Meta.Security collection is properly initialized if null. Test Build() throws InvalidOperationException if required fields are missing. Verify template pattern calls methods in correct order."
           }
         ]
       },
       {
-        "id": 7,
-        "title": "Create ThirdOpinion.Common.FunctionalTests Project",
-        "description": "Establish a new functional testing project for integration testing of AWS services (Cognito, DynamoDB, S3, SQS) using xUnit and Shouldly for fluent assertions. These tests should only run in development environment as part of a separate GitHub Action workflow, not in the main CI/CD pipeline.",
-        "details": "1. Create new test project structure:\n   - Initialize ThirdOpinion.Common.FunctionalTests as .NET test project\n   - Add references to ThirdOpinion.Common and all AWS service namespaces\n   - Configure xUnit as test framework with Shouldly for fluent assertions\n   - Add TestContainers or LocalStack for local AWS service emulation\n\n2. Implement base test infrastructure:\n   - Create BaseIntegrationTest class with setup/teardown lifecycle\n   - Implement TestFixture for shared AWS client initialization\n   - Add ITestOutputHelper for detailed test logging\n   - Create test data builders and factories\n\n3. Configure multi-environment support:\n   - appsettings.Test.json for local testing\n   - appsettings.Integration.json for CI/CD pipeline\n   - appsettings.Staging.json for pre-production validation\n   - Environment variable overrides for sensitive configurations\n   - AWS credentials and region configuration\n\n4. Implement Cognito integration tests:\n   - User registration and confirmation flow\n   - Authentication with real token generation\n   - Token refresh and expiration scenarios\n   - Multi-tenant authorization validation\n   - User pool and identity pool interactions\n\n5. Implement DynamoDB integration tests:\n   - Table creation and deletion\n   - Complex query and scan operations\n   - Transaction and batch operations\n   - GSI and LSI query patterns\n   - Pagination with real data sets\n   - Concurrent access and optimistic locking\n\n6. Implement S3 integration tests:\n   - Large file upload/download (multipart)\n   - Presigned URL generation and validation\n   - Bucket lifecycle policies\n   - Cross-region replication scenarios\n   - Object versioning and deletion\n   - Stream processing for large objects\n\n7. Implement SQS integration tests:\n   - Message flow from producer to consumer\n   - FIFO queue ordering guarantees\n   - Dead letter queue processing\n   - Message visibility timeout handling\n   - Batch operations performance\n   - Long polling vs short polling\n\n8. Create cross-service integration tests:\n   - S3 event triggering SQS messages\n   - DynamoDB streams to SQS integration\n   - Cognito user data stored in DynamoDB\n   - End-to-end patient data flow\n\n9. Implement test utilities:\n   - AWS service health check helpers\n   - Test data cleanup utilities\n   - Performance benchmarking helpers\n   - Resource usage monitoring\n   - Test report generation\n\n10. Add CI/CD integration:\n   - Docker compose for local testing\n   - Separate GitHub Actions workflow for functional tests (development environment only)\n   - Configure tests to be excluded from main CI/CD pipeline\n   - Test result publishing for functional test workflow\n   - Code coverage reporting\n   - Performance regression detection",
-        "testStrategy": "1. Verify project setup by ensuring all AWS service clients can be instantiated and connected\n2. Run tests against LocalStack or test containers to validate offline testing capability\n3. Execute full test suite against AWS test environment with isolated resources\n4. Validate test isolation by running tests in parallel without interference\n5. Confirm proper cleanup by checking no orphaned AWS resources remain after test runs\n6. Measure test execution time and ensure functional tests complete within acceptable timeframe (< 5 minutes for full suite)\n7. Validate environment switching by running same tests against different configurations\n8. Test error scenarios including network failures, service throttling, and permission denied\n9. Verify test reports generate correctly with detailed failure information\n10. Ensure integration with CI/CD pipeline executes successfully on every commit",
-        "status": "done",
-        "dependencies": [
-          2,
-          3,
-          4,
-          5,
-          6,
-          "8"
-        ],
+        "id": 14,
+        "title": "Implement AI Device Builder",
+        "description": "Create AiDeviceBuilder class for constructing Device resources representing AI inference engines",
+        "details": "Inherit from AiResourceBuilderBase<Device>. Implement methods: WithModelName(string name, string typeCode), WithManufacturer(string), WithVersion(string), AddProperty(string name, Quantity value), AddProperty(string name, decimal value, string unit). Set Device.status to 'active', add SNOMED code 706689003 for AI algorithm. Support flexible property additions using Device.property array. Add identifier with model version from configuration. Implement proper DeviceName with type code. Handle version array population.",
+        "testStrategy": "Test Device resource creation with all required fields. Verify property additions work for various data types. Test SNOMED AI algorithm code is applied. Validate Device validates against FHIR R4 schema. Test serialization/deserialization with Firely SDK.",
         "priority": "medium",
-        "subtasks": []
+        "dependencies": [
+          13
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create AiDeviceBuilder class structure and base implementation",
+            "description": "Set up the AiDeviceBuilder class that inherits from AiResourceBuilderBase<Device> and implement core infrastructure",
+            "dependencies": [],
+            "details": "Create AiDeviceBuilder.cs in the appropriate namespace. Inherit from AiResourceBuilderBase<Device>. Initialize the Device resource in constructor with status='active'. Add SNOMED code 706689003 (AI algorithm) to Device.type. Set up private fields for storing builder state (model name, manufacturer, version, properties list). Implement the base constructor that calls the parent class constructor.",
+            "status": "done",
+            "testStrategy": "Unit test class instantiation and verify Device resource is created with status='active' and correct SNOMED code"
+          },
+          {
+            "id": 2,
+            "title": "Implement model and manufacturer configuration methods",
+            "description": "Add methods for configuring the AI model name with type code and manufacturer details",
+            "dependencies": [
+              "14.1"
+            ],
+            "details": "Implement WithModelName(string name, string typeCode) method that sets Device.deviceName with both name and type code. Implement WithManufacturer(string manufacturer) method that sets Device.manufacturer. Ensure both methods return 'this' for fluent interface pattern. Store model name in Device.deviceName collection with appropriate DeviceDeviceName structure including name and type properties.",
+            "status": "done",
+            "testStrategy": "Test WithModelName sets deviceName correctly with type code. Test WithManufacturer sets manufacturer field. Verify fluent interface chaining works"
+          },
+          {
+            "id": 3,
+            "title": "Implement version handling and identifier generation",
+            "description": "Add version configuration and automatic identifier generation with model version from configuration",
+            "dependencies": [
+              "14.2"
+            ],
+            "details": "Implement WithVersion(string version) method that populates Device.version array. Add logic to automatically generate an identifier containing the model version retrieved from configuration. Use FhirIdGenerator (from task 12) if available or implement temporary ID generation. Set identifier system to appropriate namespace (e.g., 'https://thirdopinion.ai/device-model-version'). Store version in both Device.version collection and as part of the identifier value.",
+            "status": "done",
+            "testStrategy": "Test version array population with single and multiple versions. Verify identifier is generated with correct system and version value. Test configuration retrieval for model version"
+          },
+          {
+            "id": 4,
+            "title": "Implement property addition methods for flexible data types",
+            "description": "Create methods to add custom properties with Quantity and decimal/unit value support",
+            "dependencies": [
+              "14.3"
+            ],
+            "details": "Implement AddProperty(string name, Quantity value) method that adds a DeviceProperty with valueQuantity. Implement AddProperty(string name, decimal value, string unit) method that creates a Quantity and adds as DeviceProperty. Initialize Device.property list if null. Each property should have a type (CodeableConcept) with the property name as display text. Support multiple property additions by maintaining an internal collection. Ensure proper FHIR Quantity structure with value, unit, system (UCUM), and code.",
+            "status": "done",
+            "testStrategy": "Test adding multiple properties with Quantity objects. Test decimal/unit overload creates correct Quantity. Verify property array contains all added properties with correct types and values"
+          },
+          {
+            "id": 5,
+            "title": "Implement Build method and complete validation",
+            "description": "Override or implement the Build method to finalize Device resource construction with full validation",
+            "dependencies": [
+              "14.4"
+            ],
+            "details": "Override Build() method from AiResourceBuilderBase if needed. Perform validation to ensure required fields are set (deviceName, status, type with SNOMED code). Apply any remaining AIAST labels and inference GUID if not already set by base class. Ensure all collected properties are properly added to Device.property array. Validate the complete Device resource against FHIR R4 schema using Firely SDK validation. Return the fully constructed and validated Device resource.",
+            "status": "done",
+            "testStrategy": "Integration test building complete Device with all fields populated. Test validation catches missing required fields. Verify FHIR R4 compliance with Firely SDK validation. Test serialization/deserialization preserves all data"
+          }
+        ]
       },
       {
-        "id": 8,
-        "title": "Convert Unit Tests to Shouldly Assertions",
-        "description": "Convert all unit tests across both test projects to use Shouldly fluent assertions instead of xUnit assertions for improved readability and maintainability",
-        "details": "Replace all xUnit Assert statements with Shouldly fluent assertions across ThirdOpinion.Common.UnitTests and ThirdOpinion.Common.Aws.UnitTests projects. This includes converting Assert.Equal, Assert.True, Assert.NotNull, Assert.Throws, etc. to their Shouldly equivalents like ShouldBe, ShouldBeTrue, ShouldNotBeNull, ShouldThrow, etc.",
-        "testStrategy": "",
-        "status": "done",
+        "id": 15,
+        "title": "Implement ADT Status Observation Builder",
+        "description": "Create AdtStatusObservationBuilder for ADT therapy detection observations with evidence tracking",
+        "details": "Inherit from AiResourceBuilderBase<Observation>. Set status='final', category='therapy', SNOMED code 413712001. Implement methods: WithPatient(ResourceReference), WithDevice(ResourceReference), WithStatus(bool isReceivingAdt), AddEvidence(ResourceReference, string display), WithEffectiveDate(DateTime), AddNote(string). Use valueCodeableConcept with SNOMED 385654001 for 'Active' status. Populate derivedFrom array with evidence references. Apply method coding with criteria details. Support auto-generation of inference ID if WithInferenceId() not called. Add validation that patient and device references are set before Build().",
+        "testStrategy": "Test observation creation with active/inactive ADT status. Verify multiple evidence references are correctly added to derivedFrom. Test auto-generated vs explicit inference IDs. Validate required field validation throws appropriate exceptions. Test FHIR compliance with R4 schema validation.",
+        "priority": "high",
         "dependencies": [
-          2,
-          3,
-          4,
-          5,
-          6
+          13
         ],
-        "priority": "medium",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create AdtStatusObservationBuilder class structure and base implementation",
+            "description": "Set up the AdtStatusObservationBuilder class inheriting from AiResourceBuilderBase<Observation> with core properties and constructor",
+            "dependencies": [],
+            "details": "Create AdtStatusObservationBuilder.cs in the appropriate namespace. Inherit from AiResourceBuilderBase<Observation>. In constructor, initialize the Observation resource with: status='final', category with coding system='http://terminology.hl7.org/CodeSystem/observation-category' and code='therapy', code with SNOMED system and code 413712001 (display='Androgen deprivation therapy'). Initialize empty lists for evidence references and notes. Set up private fields for patient reference, device reference, ADT status boolean, and effective date.",
+            "status": "done",
+            "testStrategy": "Unit test constructor initialization verifies status='final', category='therapy', and SNOMED code 413712001 are set correctly"
+          },
+          {
+            "id": 2,
+            "title": "Implement core builder methods for patient, device, and status",
+            "description": "Add WithPatient, WithDevice, and WithStatus methods to set the primary observation properties",
+            "dependencies": [
+              "15.1"
+            ],
+            "details": "Implement WithPatient(ResourceReference patient) to set subject reference. Implement WithDevice(ResourceReference device) to set device reference. Implement WithStatus(bool isReceivingAdt) to set valueCodeableConcept - if true, use SNOMED code 385654001 (display='Active'), if false use appropriate inactive/not-receiving code. Store the status internally for Build() validation. Ensure all methods return 'this' for fluent chaining. Add null checks and throw ArgumentNullException for null references.",
+            "status": "done",
+            "testStrategy": "Test WithPatient and WithDevice properly set references. Verify WithStatus(true) sets SNOMED 385654001 for active status. Verify WithStatus(false) sets appropriate inactive code. Test null parameter handling throws exceptions"
+          },
+          {
+            "id": 3,
+            "title": "Implement evidence tracking and note methods",
+            "description": "Add AddEvidence and AddNote methods for capturing supporting evidence and clinical notes",
+            "dependencies": [
+              "15.2"
+            ],
+            "details": "Implement AddEvidence(ResourceReference reference, string display) to add evidence references to internal collection. Each evidence will be added to derivedFrom array during Build(). Implement AddNote(string noteText) to add Annotation objects to observation.note array with time stamp and text. Implement WithEffectiveDate(DateTime effectiveDate) to set observation.effective[x] as FhirDateTime. Ensure evidence references include proper display text for clarity. Support multiple calls to AddEvidence and AddNote for accumulating data.",
+            "status": "done",
+            "testStrategy": "Test multiple AddEvidence calls accumulate in derivedFrom array. Verify AddNote creates proper Annotation objects with timestamps. Test WithEffectiveDate sets effective[x] correctly. Validate evidence display text is preserved"
+          },
+          {
+            "id": 4,
+            "title": "Implement Build method with validation and auto-generation logic",
+            "description": "Create the Build() method that validates required fields, applies evidence, and handles auto-generation of inference ID",
+            "dependencies": [
+              "15.3"
+            ],
+            "details": "Override Build() method from base class. Validate patient and device references are set, throw InvalidOperationException with descriptive message if missing. Apply all accumulated evidence references to observation.derivedFrom array. Apply method coding with details about ADT detection criteria. If WithInferenceId() was not called, auto-generate inference ID using FhirIdGenerator.GenerateInferenceId() format. Set observation.id if not already set. Apply any accumulated notes to observation.note. Ensure all AIAST labeling from base class is applied.",
+            "status": "done",
+            "testStrategy": "Test Build() throws exception when patient or device missing. Verify auto-generated inference ID follows 'to.ai-inference-{GUID}' format. Test explicit WithInferenceId() overrides auto-generation. Validate all evidence appears in derivedFrom"
+          },
+          {
+            "id": 5,
+            "title": "Add comprehensive unit tests and FHIR compliance validation",
+            "description": "Create complete unit test suite covering all builder scenarios and FHIR R4 compliance",
+            "dependencies": [
+              "15.4"
+            ],
+            "details": "Create AdtStatusObservationBuilderTests.cs with test methods for: complete observation with active ADT status, inactive ADT status observation, multiple evidence references, auto-generated vs explicit inference IDs, required field validation exceptions, method chaining fluent interface, FHIR R4 schema validation using Firely SDK validator. Test edge cases: empty evidence list, very long note text, future/past effective dates. Verify serialization/deserialization maintains all properties. Test that AIAST labels are properly applied from base class.",
+            "status": "done",
+            "testStrategy": "Run all unit tests with code coverage >95%. Validate all generated observations against FHIR R4 schema. Test memory usage stays within Lambda constraints. Performance test Build() completes in <100ms"
+          }
+        ]
       },
       {
-        "id": 9,
-        "title": "Remove AWS Access Key Support from Functional Tests",
-        "description": "Remove all support for AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables from functional tests, enforcing SSO profile authentication only (e.g., to-dev-admin) for all AWS service interactions",
-        "details": "1. Update AWS client initialization:\n   - Remove all references to AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables\n   - Remove any EnvironmentVariablesAWSCredentials or BasicAWSCredentials usage\n   - Update all AWS client constructors to use ProfileCredentialsProvider exclusively\n   - Ensure AWS_PROFILE environment variable or explicit profile name (to-dev-admin) is used\n\n2. Modify BaseIntegrationTest infrastructure:\n   - Remove any credential fallback mechanisms that check for access keys\n   - Update SetUp methods to validate SSO profile is configured before running tests\n   - Add validation to ensure tests fail fast if SSO profile is not available\n   - Create helper method ValidateSSOProfile() to check AWS STS GetCallerIdentity\n\n3. Update test configuration:\n   - Remove any appsettings or test configuration that references access keys\n   - Update README and documentation to specify SSO profile requirement\n   - Add clear error messages when SSO profile is not configured\n\n4. Update GitHub Actions workflow:\n   - Remove any secrets related to AWS access keys\n   - Update workflow to use AWS SSO login or OIDC authentication\n   - Ensure workflow documentation reflects SSO-only approach\n\n5. Code changes required:\n   - Search and remove all instances of: EnvironmentVariablesAWSCredentials, BasicAWSCredentials\n   - Update all AmazonCognitoIdentityProviderClient, AmazonDynamoDBClient, AmazonS3Client, AmazonSQSClient constructors\n   - Replace with: new AmazonServiceClient(new AmazonServiceConfig { Profile = \"to-dev-admin\" })\n   - Or use shared credentials file: new AmazonServiceClient(new StoredProfileAWSCredentials(\"to-dev-admin\"))\n\n6. Add profile validation:\n   ```csharp\n   private static void ValidateAWSProfile()\n   {\n       var profileName = Environment.GetEnvironmentVariable(\"AWS_PROFILE\") ?? \"to-dev-admin\";\n       var chain = new CredentialProfileStoreChain();\n       if (!chain.TryGetAWSCredentials(profileName, out var credentials))\n       {\n           throw new InvalidOperationException($\"AWS SSO profile '{profileName}' not configured. Please run 'aws sso login --profile {profileName}'\");\n       }\n   }\n   ```",
-        "testStrategy": "1. Verify SSO-only authentication:\n   - Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables to dummy values\n   - Run functional tests and confirm they ignore these variables and use SSO profile\n   - Unset AWS_PROFILE and verify tests fail with appropriate error message\n\n2. Test profile validation:\n   - Run tests with expired SSO session and verify clear error message\n   - Run tests with valid SSO session (to-dev-admin profile) and verify all pass\n   - Attempt to use non-existent profile and verify failure\n\n3. Validate AWS service connections:\n   - Run full functional test suite with SSO profile\n   - Verify Cognito, DynamoDB, S3, and SQS tests all authenticate correctly\n   - Check AWS CloudTrail to confirm all API calls use SSO session credentials\n\n4. GitHub Actions validation:\n   - Push changes and verify CI/CD pipeline uses SSO/OIDC authentication\n   - Confirm no AWS access key secrets are referenced in workflow\n   - Verify workflow fails appropriately if SSO is not configured",
-        "status": "in-progress",
+        "id": 16,
+        "title": "Implement CSPC Assessment Observation Builder",
+        "description": "Create CspcAssessmentObservationBuilder for castration sensitivity assessment with mandatory focus field validation",
+        "details": "Inherit from AiResourceBuilderBase<Observation>. CRITICAL: Implement WithFocus(ResourceReference) as REQUIRED method that sets focus field referencing existing Condition. Set status='final', category='exam', LOINC code 21889-1. Implement methods: WithPatient, WithDevice, WithCastrationSensitive(bool), AddEvidence, WithInterpretation(string), WithEffectiveDate, AddNote. Apply BOTH SNOMED 1197209002 AND ICD-10 Z19.1 codes in valueCodeableConcept for castration-sensitive status. Add Build() validation that throws InvalidOperationException if focus is not set with message 'CSPC assessment requires focus reference to existing Condition. Call WithFocus() before Build()'. Validate focus reference points to Condition resource type.",
+        "testStrategy": "Test Build() fails without focus reference. Verify both SNOMED and ICD-10 codes are applied. Test interpretation field population. Validate focus must reference Condition resource. Test complete observation validates against R4 schema.",
+        "priority": "high",
         "dependencies": [
-          7,
-          8
+          13
         ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create CspcAssessmentObservationBuilder Class Structure",
+            "description": "Set up the basic class structure inheriting from AiResourceBuilderBase<Observation> with required fields and initialization",
+            "dependencies": [],
+            "details": "Create CspcAssessmentObservationBuilder.cs in the Builders folder. Inherit from AiResourceBuilderBase<Observation>. Add private fields for _focus (ResourceReference), _patient (ResourceReference), _device (ResourceReference), _isCastrationSensitive (bool?), _evidence (List<ResourceReference>), _interpretation (string), _effectiveDate (DateTime?), and _notes (List<string>). In constructor, initialize the Observation with status='final', category with coding system='http://terminology.hl7.org/CodeSystem/observation-category' code='exam', and code with LOINC system='http://loinc.org' code='21889-1' display='Cancer disease status'.",
+            "status": "done",
+            "testStrategy": "Unit test class instantiation and verify default status, category, and LOINC code are set correctly"
+          },
+          {
+            "id": 2,
+            "title": "Implement Required WithFocus Method and Focus Validation",
+            "description": "Implement the mandatory WithFocus method that sets the focus field and validates it references a Condition resource",
+            "dependencies": [
+              "16.1"
+            ],
+            "details": "Implement WithFocus(ResourceReference focus) method that validates the reference is not null and references a Condition resource type (check reference.Reference starts with 'Condition/'). Store the reference in _focus field. This method must return 'this' for fluent chaining. Add validation logic to ensure the reference format is correct and throw ArgumentException with descriptive message if validation fails.",
+            "status": "done",
+            "testStrategy": "Test WithFocus accepts valid Condition references, rejects null references, rejects non-Condition resource types, and properly sets the focus field"
+          },
+          {
+            "id": 3,
+            "title": "Implement Core Builder Methods",
+            "description": "Add WithPatient, WithDevice, WithEffectiveDate, and AddNote methods for setting basic observation properties",
+            "dependencies": [
+              "16.1"
+            ],
+            "details": "Implement WithPatient(ResourceReference patient) to set Subject field. Implement WithDevice(ResourceReference device) to set Device field. Implement WithEffectiveDate(DateTime date) to set EffectiveDateTimeElement. Implement AddNote(string note) to append to Notes collection with new Annotation { Text = new Markdown(note), Time = DateTimeOffset.Now.ToString() }. All methods should validate inputs and return 'this' for method chaining.",
+            "status": "done",
+            "testStrategy": "Test each method sets appropriate fields, validates null inputs appropriately, and supports method chaining"
+          },
+          {
+            "id": 4,
+            "title": "Implement Castration Sensitivity and Evidence Methods",
+            "description": "Add WithCastrationSensitive, AddEvidence, and WithInterpretation methods with proper SNOMED and ICD-10 coding",
+            "dependencies": [
+              "16.1"
+            ],
+            "details": "Implement WithCastrationSensitive(bool isSensitive) that sets _isCastrationSensitive and creates ValueCodeableConcept with TWO codings: SNOMED system='http://snomed.info/sct' code='1197209002' display='Castration sensitive prostate cancer' AND ICD-10 system='http://hl7.org/fhir/sid/icd-10-cm' code='Z19.1' display='Hormone sensitive status'. Implement AddEvidence(ResourceReference evidence, string display = null) to append to DerivedFrom list. Implement WithInterpretation(string interpretation) to set Interpretation with new CodeableConcept { Text = interpretation }.",
+            "status": "done",
+            "testStrategy": "Verify both SNOMED and ICD-10 codes are present in valueCodeableConcept, test evidence references are added to derivedFrom array, validate interpretation text is set correctly"
+          },
+          {
+            "id": 5,
+            "title": "Implement Build Method with Focus Validation",
+            "description": "Create Build method that validates focus field is set and constructs the final Observation resource",
+            "dependencies": [
+              "16.1",
+              "16.2",
+              "16.3",
+              "16.4"
+            ],
+            "details": "Override Build() method to first check if _focus is null. If null, throw InvalidOperationException with message 'CSPC assessment requires focus reference to existing Condition. Call WithFocus() before Build()'. Set Resource.Focus = _focus, Resource.Subject = _patient, Resource.Device = _device. If _isCastrationSensitive.HasValue, set ValueCodeableConcept with both SNOMED and ICD-10 codes. Set EffectiveDateTimeElement if _effectiveDate has value. Add all notes to Notes collection. Copy all evidence references to DerivedFrom. Set Interpretation if provided. Call base.Build() and return the configured Observation.",
+            "status": "done",
+            "testStrategy": "Test Build() throws InvalidOperationException when focus is not set, verify exception message is exact, test successful build with all fields populated, validate complete observation against FHIR R4 schema"
+          }
+        ]
+      },
+      {
+        "id": 17,
+        "title": "Implement PSA Progression Observation Builder",
+        "description": "Create PsaProgressionObservationBuilder supporting ThirdOpinion.io and PCWG3 criteria with component calculations",
+        "details": "Inherit from AiResourceBuilderBase<Observation>. Set category='laboratory', LOINC code 97509-4. Implement methods: WithPatient, WithDevice, WithFocus, WithCriteria (supporting both ThirdOpinion.io and PCWG3), AddPsaEvidence(ResourceReference, string), WithProgression(bool), AddValidUntilComponent(DateTime), AddThresholdMetComponent(bool), AddDetailedAnalysisNote(string). Use SNOMED 277022003 for progressive disease in valueCodeableConcept. Create component array with valid until period, threshold met boolean. Support different criteria codes: 'psa-progression-{id}-v{version}' for ThirdOpinion.io, 'psa-progression-pcwg3-{id}-v{version}' for PCWG3. Auto-calculate percentage and absolute changes if PSA values provided.",
+        "testStrategy": "Test both ThirdOpinion.io and PCWG3 criteria implementations. Verify component calculations for PSA changes. Test multiple PSA evidence references. Validate progression boolean sets correct value coding. Test detailed analysis notes are properly formatted.",
+        "priority": "high",
+        "dependencies": [
+          13
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create PsaProgressionObservationBuilder base class structure",
+            "description": "Set up the PsaProgressionObservationBuilder class inheriting from AiResourceBuilderBase<Observation> with core properties and constructor",
+            "dependencies": [],
+            "details": "Create PsaProgressionObservationBuilder.cs in the appropriate namespace. Inherit from AiResourceBuilderBase<Observation>. In constructor, initialize the Observation with category='laboratory' using new CodeableConcept with system='http://terminology.hl7.org/CodeSystem/observation-category' and code='laboratory'. Set the main LOINC code using Code = new CodeableConcept with system='http://loinc.org', code='97509-4', display='PSA progression'. Initialize empty lists for PSA evidence references and components. Set up private fields for criteria type (ThirdOpinion.io vs PCWG3), patient reference, device reference, and focus reference.",
+            "status": "done",
+            "testStrategy": "Unit test constructor initialization verifies category and LOINC code are set correctly. Test inheritance from AiResourceBuilderBase works properly."
+          },
+          {
+            "id": 2,
+            "title": "Implement core builder methods for patient, device, focus and criteria",
+            "description": "Add WithPatient, WithDevice, WithFocus, and WithCriteria methods to set core observation properties",
+            "dependencies": [
+              "17.1"
+            ],
+            "details": "Implement WithPatient(ResourceReference patient) to set Subject property. Implement WithDevice(ResourceReference device) to set Device property. Implement WithFocus(List<ResourceReference> focus) to set Focus array. Implement WithCriteria(string criteriaType, string version) to handle both 'ThirdOpinion.io' and 'PCWG3' types, generating appropriate method codes like 'psa-progression-{id}-v{version}' for ThirdOpinion.io or 'psa-progression-pcwg3-{id}-v{version}' for PCWG3. Store criteria type internally for later calculations. Set Method property with CodeableConcept containing the generated code.",
+            "status": "done",
+            "testStrategy": "Test WithPatient sets correct subject reference. Test WithDevice sets device reference. Test WithFocus handles multiple references. Test WithCriteria generates correct codes for both ThirdOpinion.io and PCWG3 formats."
+          },
+          {
+            "id": 3,
+            "title": "Implement PSA evidence and progression value methods",
+            "description": "Add methods for managing PSA evidence references and setting progression status",
+            "dependencies": [
+              "17.2"
+            ],
+            "details": "Implement AddPsaEvidence(ResourceReference psaObservation, string role) to add PSA observation references to DerivedFrom array. Store PSA values internally for calculation. Implement WithProgression(bool hasProgression) to set ValueCodeableConcept - if true, use SNOMED code 277022003 for 'progressive disease', if false use appropriate SNOMED code for 'stable disease' or custom code. Extract PSA values from referenced observations if available for automatic percentage and absolute change calculations based on criteria type (ThirdOpinion.io vs PCWG3 thresholds).",
+            "status": "done",
+            "testStrategy": "Test AddPsaEvidence adds references to DerivedFrom array. Test WithProgression sets correct SNOMED codes for true/false values. Verify PSA value extraction works when references are provided."
+          },
+          {
+            "id": 4,
+            "title": "Implement component addition methods for detailed analysis",
+            "description": "Add methods for creating observation components with valid until dates, threshold met flags, and analysis notes",
+            "dependencies": [
+              "17.3"
+            ],
+            "details": "Implement AddValidUntilComponent(DateTime validUntil) to add component with code='valid-until' and valuePeriod ending at specified date. Implement AddThresholdMetComponent(bool thresholdMet) to add component with code='threshold-met' and valueBoolean. Implement AddDetailedAnalysisNote(string note) to add component with code='analysis-note' and valueString. Auto-calculate and add components for percentage change and absolute change if PSA values were provided via AddPsaEvidence. For PCWG3 criteria, check 25% increase threshold; for ThirdOpinion.io use configured thresholds. Ensure all components have proper LOINC or custom coding systems.",
+            "status": "done",
+            "testStrategy": "Test AddValidUntilComponent creates proper period component. Test AddThresholdMetComponent creates boolean component. Test AddDetailedAnalysisNote creates string component. Verify auto-calculation components are added when PSA values available."
+          },
+          {
+            "id": 5,
+            "title": "Implement Build method with validation and PSA calculations",
+            "description": "Override Build method to perform final calculations, validation, and return completed Observation",
+            "dependencies": [
+              "17.4"
+            ],
+            "details": "Override Build() method to finalize the Observation. If PSA evidence was added, calculate percentage change: ((current - baseline) / baseline) * 100, and absolute change: (current - baseline). Based on criteria type, determine if thresholds are met (PCWG3: 25% increase from nadir, ThirdOpinion.io: configurable thresholds). Auto-add calculated components if not already present. Set Status = ObservationStatus.Final. Set EffectiveDateTime to current time if not set. Validate required fields: Subject (patient), Code (LOINC), and at least one PSA evidence reference. Add AIAST label and inference GUID as per base class. Return completed Observation resource.",
+            "status": "done",
+            "testStrategy": "Integration test with multiple PSA values verifies calculations. Test PCWG3 25% threshold detection. Test ThirdOpinion.io configurable thresholds. Validate all required FHIR fields are present. Test Build produces valid FHIR R4 Observation."
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "title": "Implement RECIST Progression and Clinical Builders",
+        "description": "Create RecistProgressionObservationBuilder for RECIST 1.1 radiographic progression with imaging references",
+        "details": "Inherit from AiResourceBuilderBase<Observation>. Set category='imaging', LOINC 21976-6, NCI C111544 for RECIST 1.1. Implement methods: WithPatient, WithDevice, WithFocus, WithCriteria, AddComponent(string, Quantity), AddComponent(string, bool), AddComponent(string, CodeableConcept), AddImagingStudy(ResourceReference), AddRadiologyReport(ResourceReference), WithRecistResponse(string nciCode, string display), AddBodySite(string snomedCode, string display). Use NCI codes for response (C35571 for Progressive Disease). Create component array for SLD, nadir SLD, percent change, absolute change, new lesions boolean. Support multiple body sites. Add derivedFrom references to imaging studies and reports.",
+        "testStrategy": "Test RECIST response codes application. Verify component array handles different value types (Quantity, boolean, CodeableConcept). Test multiple body site additions. Validate imaging study and report references. Test complete resource against R4 schema.",
         "priority": "medium",
-        "subtasks": []
+        "dependencies": [
+          13
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create RecistProgressionObservationBuilder base class structure",
+            "description": "Set up the RecistProgressionObservationBuilder class inheriting from AiResourceBuilderBase<Observation> with core RECIST 1.1 configuration",
+            "dependencies": [],
+            "details": "Create RecistProgressionObservationBuilder.cs in the Builders directory. Inherit from AiResourceBuilderBase<Observation>. In constructor, set observation category to 'imaging' using FHIR CodeableConcept. Add LOINC code 21976-6 (Cancer disease status) as primary code. Add NCI code C111544 (RECIST 1.1) as secondary code in the code array. Initialize empty component list for measurements. Set observation status to 'final'. Ensure base constructor properly initializes the Observation resource.",
+            "status": "done",
+            "testStrategy": "Unit test constructor properly sets category, LOINC code, NCI code, and status. Verify inheritance chain works correctly."
+          },
+          {
+            "id": 2,
+            "title": "Implement patient, device, and focus configuration methods",
+            "description": "Add methods to configure patient reference, AI device reference, and tumor focus for the RECIST observation",
+            "dependencies": [
+              "18.1"
+            ],
+            "details": "Implement WithPatient(ResourceReference patient) to set Observation.subject. Implement WithDevice(ResourceReference device) to set Observation.device for AI inference tracking. Implement WithFocus(params ResourceReference[] focuses) to set Observation.focus array for tumor/lesion references. Implement WithCriteria(string criteria) to add RECIST criteria version as an extension or component. Each method should return 'this' for fluent chaining. Add null checks and validation.",
+            "status": "done",
+            "testStrategy": "Test each method sets correct resource references. Verify fluent interface chaining works. Test null reference handling."
+          },
+          {
+            "id": 3,
+            "title": "Implement component addition methods for measurements",
+            "description": "Create overloaded AddComponent methods to handle different RECIST measurement types (Quantity, boolean, CodeableConcept)",
+            "dependencies": [
+              "18.2"
+            ],
+            "details": "Implement AddComponent(string code, Quantity value) for numeric measurements like SLD, nadir SLD. Implement AddComponent(string code, bool value) for new lesions indicator. Implement AddComponent(string code, CodeableConcept value) for coded responses. Each method creates Observation.ObservationComponentComponent with appropriate LOINC/SNOMED codes. Support percent change (LOINC 33359-2), absolute change, sum of longest diameters (LOINC 33728-8), new lesions (LOINC 44666-9). Store components in Observation.component array.",
+            "status": "done",
+            "testStrategy": "Test each AddComponent overload with valid inputs. Verify component array builds correctly with mixed types. Test LOINC code mappings."
+          },
+          {
+            "id": 4,
+            "title": "Implement imaging reference and body site methods",
+            "description": "Add methods to link imaging studies, radiology reports, and specify tumor body sites",
+            "dependencies": [
+              "18.3"
+            ],
+            "details": "Implement AddImagingStudy(ResourceReference imagingStudy) to add to Observation.derivedFrom array. Implement AddRadiologyReport(ResourceReference report) to add to Observation.derivedFrom array. Implement AddBodySite(string snomedCode, string display) to build CodeableConcept and add to Observation.bodySite array. Support multiple body sites for multi-lesion assessments. Ensure derivedFrom maintains order of additions for traceability.",
+            "status": "done",
+            "testStrategy": "Test multiple imaging study references. Verify radiology report references. Test multiple body site additions with SNOMED codes."
+          },
+          {
+            "id": 5,
+            "title": "Implement RECIST response classification method",
+            "description": "Create WithRecistResponse method to set the overall RECIST 1.1 response category using NCI terminology",
+            "dependencies": [
+              "18.4"
+            ],
+            "details": "Implement WithRecistResponse(string nciCode, string display) to set Observation.valueCodeableConcept. Use NCI codes: C35571 (Progressive Disease), C18213 (Complete Response), C18058 (Partial Response), C18052 (Stable Disease). Set both code and display text in CodeableConcept. Add system URI for NCI Thesaurus (http://ncimeta.nci.nih.gov). Validate NCI code format. Consider adding convenience methods like WithProgressiveDisease(), WithPartialResponse() that call WithRecistResponse with predefined codes.",
+            "status": "done",
+            "testStrategy": "Test all RECIST response categories. Verify NCI code system URL. Test invalid code handling. Validate complete Observation resource against FHIR R4 schema."
+          }
+        ]
+      },
+      {
+        "id": 19,
+        "title": "Implement Document Processing Builders",
+        "description": "Create OcrDocumentReferenceBuilder and FactExtractionDocumentReferenceBuilder for document transformation workflow with S3 support",
+        "details": "OcrDocumentReferenceBuilder: Implement WithOriginalDocument, WithPatient, WithOcrDevice, WithExtractedText (inline Base64), WithExtractedTextUrl (S3), WithTextractRawUrl, WithTextractSimpleUrl. Set relatesTo with code='transforms' to original. Support both inline content (attachment.data with Base64) and S3 URLs (attachment.url). FactExtractionDocumentReferenceBuilder: Implement WithOriginalDocument, WithOcrDocument, WithPatient, WithExtractionDevice, WithFactsJson(object) with auto-serialization, WithFactsJson(string), WithFactsJsonUrl. Add dual relatesTo for both OCR and original documents. Both builders must validate that either inline OR URL is provided, not both. Implement Base64 encoding for inline content. Set appropriate MIME types: text/plain for OCR, application/json for facts.",
+        "testStrategy": "Test inline content Base64 encoding. Test S3 URL reference handling. Verify relatesTo chains are correct. Test JSON serialization for facts. Validate mutual exclusivity of inline vs URL. Test both builders produce valid DocumentReference resources.",
+        "priority": "medium",
+        "dependencies": [
+          13
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create OcrDocumentReferenceBuilder Base Implementation",
+            "description": "Implement the OcrDocumentReferenceBuilder class inheriting from AiResourceBuilderBase<DocumentReference> with core OCR document methods",
+            "dependencies": [],
+            "details": "Create OcrDocumentReferenceBuilder class inheriting from AiResourceBuilderBase<DocumentReference>. Implement WithOriginalDocument(DocumentReference) to set the first relatesTo with code='transforms'. Implement WithPatient(Patient) and WithOcrDevice(Device) methods. Set DocumentReference.status to 'current' and type to appropriate LOINC code for OCR text document. Initialize attachment array for content storage.",
+            "status": "done",
+            "testStrategy": "Unit test builder instantiation, verify inheritance from base class, test WithOriginalDocument sets relatesTo correctly with 'transforms' code, test WithPatient and WithOcrDevice set proper references"
+          },
+          {
+            "id": 2,
+            "title": "Implement OCR Content Storage Methods",
+            "description": "Add methods for storing OCR extracted text either as inline Base64 or S3 URL reference with proper validation",
+            "dependencies": [
+              "19.1"
+            ],
+            "details": "Implement WithExtractedText(string text) to store text inline as Base64 encoded attachment.data with contentType='text/plain'. Implement WithExtractedTextUrl(string s3Url) to set attachment.url for S3 reference. Add WithTextractRawUrl(string) and WithTextractSimpleUrl(string) for Textract-specific URLs. Implement validation logic to ensure only one storage method (inline OR URL) is used per attachment. Handle Base64 encoding for inline content properly.",
+            "status": "done",
+            "testStrategy": "Test Base64 encoding for inline text content, verify mutual exclusivity validation between inline and URL, test S3 URL format validation, verify MIME type is set to 'text/plain' for all attachments"
+          },
+          {
+            "id": 3,
+            "title": "Create FactExtractionDocumentReferenceBuilder Base Implementation",
+            "description": "Implement the FactExtractionDocumentReferenceBuilder class with core fact extraction document methods and dual relationship support",
+            "dependencies": [],
+            "details": "Create FactExtractionDocumentReferenceBuilder class inheriting from AiResourceBuilderBase<DocumentReference>. Implement WithOriginalDocument(DocumentReference) and WithOcrDocument(DocumentReference) to set dual relatesTo entries. Implement WithPatient(Patient) and WithExtractionDevice(Device) methods. Set DocumentReference.status to 'current' and type to appropriate code for fact extraction results. Initialize attachment array for JSON content storage.",
+            "status": "done",
+            "testStrategy": "Test builder instantiation and base class inheritance, verify dual relatesTo entries are created for both OCR and original documents, test WithPatient and WithExtractionDevice set proper references"
+          },
+          {
+            "id": 4,
+            "title": "Implement Fact Storage Methods with JSON Handling",
+            "description": "Add methods for storing extracted facts as JSON either inline or via S3 URL with automatic serialization support",
+            "dependencies": [
+              "19.3"
+            ],
+            "details": "Implement WithFactsJson(object facts) to auto-serialize object to JSON string and store as Base64 encoded attachment.data. Implement WithFactsJson(string jsonString) for pre-serialized JSON storage. Implement WithFactsJsonUrl(string s3Url) for S3 reference. Set contentType='application/json' for all fact attachments. Add validation to ensure only one storage method is used. Use System.Text.Json for serialization with proper error handling.",
+            "status": "done",
+            "testStrategy": "Test JSON serialization for object input, verify Base64 encoding for inline JSON content, test mutual exclusivity validation, verify MIME type is 'application/json', test serialization error handling for invalid objects"
+          },
+          {
+            "id": 5,
+            "title": "Add Validation and Integration Tests",
+            "description": "Implement comprehensive validation logic and create integration tests for both builders working together in document processing pipeline",
+            "dependencies": [
+              "19.1",
+              "19.2",
+              "19.3",
+              "19.4"
+            ],
+            "details": "Add Build() override in both builders to validate that at least one content attachment exists and that inline/URL exclusivity is maintained. Create integration tests simulating: Original document → OCR processing → Fact extraction workflow. Test S3 URL handling for large documents. Verify relatesTo chains maintain proper document lineage. Test both builders produce valid FHIR DocumentReference resources that validate against R4 schema. Ensure all resources have proper AIAST labels.",
+            "status": "done",
+            "testStrategy": "Integration test full document processing pipeline, test validation prevents invalid configurations, verify FHIR R4 schema compliance for all generated resources, test S3 URL reference scenarios, validate relatesTo chain integrity"
+          }
+        ]
+      },
+      {
+        "id": 20,
+        "title": "Implement Provenance Builder and Complete Integration Testing",
+        "description": "Create AiProvenanceBuilder for audit trails and implement comprehensive integration test suite",
+        "details": "Implement AiProvenanceBuilder with methods: WithProvenanceId(string), ForTarget(ResourceReference, string version), WithOccurredDateTime, WithAiDevice, WithOrganization, AddSourceEntity, WithPolicy, WithReason, WithLogFileUrl(string s3Url). Set agent array with AI Device as 'assembler' and Organization as 'author'. Support optional S3 log file reference as entity with role='derivation'. Create comprehensive integration tests: ADT+CSPC+PSA workflow, Document processing pipeline (Original→OCR→Facts), Provenance tracking for all AI resources, Query patterns by inference GUID and AIAST label. Test complete FHIR Bundle creation with all resource types. Validate all resources serialize/deserialize correctly with Firely SDK. Performance test for Lambda deployment scenarios.",
+        "testStrategy": "Test complete inference pipeline end-to-end. Verify provenance correctly references all source entities. Test S3 log file URL handling. Validate all AI resources have AIAST labels and inference GUIDs. Test FHIR Bundle validation. Memory and performance profiling for AWS Lambda constraints.",
+        "priority": "high",
+        "dependencies": [
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create AiProvenanceBuilder Core Structure and Base Methods",
+            "description": "Implement the AiProvenanceBuilder class inheriting from AiResourceBuilderBase<Provenance> with foundational builder methods for provenance tracking",
+            "dependencies": [],
+            "details": "Create AiProvenanceBuilder class inheriting from AiResourceBuilderBase<Provenance>. Implement core methods: WithProvenanceId(string) for setting provenance.id, ForTarget(ResourceReference reference, string version) to set provenance.target array with resource reference and version metadata, WithOccurredDateTime(DateTime? occurred) for setting provenance.occurredDateTime or occurredPeriod. Initialize provenance.recorded to current timestamp. Set provenance.activity with appropriate coding for AI inference activity. Ensure proper initialization of provenance.agent array for later population.",
+            "status": "done",
+            "testStrategy": "Unit test each builder method for correct property assignment. Verify WithProvenanceId generates proper FHIR ID format. Test ForTarget handles both single and multiple targets. Validate DateTime handling for occurred timestamp."
+          },
+          {
+            "id": 2,
+            "title": "Implement Agent and Organization Methods for Provenance",
+            "description": "Add methods to configure AI Device as assembler agent and Organization as author agent in the provenance record",
+            "dependencies": [
+              "20.1"
+            ],
+            "details": "Implement WithAiDevice(ResourceReference deviceRef) method to add Device as agent with type 'assembler' (use appropriate FHIR participation type code). Implement WithOrganization(ResourceReference orgRef) to add Organization as agent with type 'author'. Create helper method AddAgent(ResourceReference who, string typeCode, string typeDisplay) for reusable agent addition logic. Ensure agent.who references are properly formatted. Add agent.onBehalfOf support for delegated actions. Validate that both assembler and author roles are present when Build() is called.",
+            "status": "done",
+            "testStrategy": "Test WithAiDevice creates agent with correct assembler type. Test WithOrganization creates agent with author type. Verify multiple agents can be added. Test agent references are valid FHIR references."
+          },
+          {
+            "id": 3,
+            "title": "Implement Source Entity and S3 Log File Support",
+            "description": "Add methods for tracking source entities and optional S3 log file references as derivation entities",
+            "dependencies": [
+              "20.1",
+              "20.2"
+            ],
+            "details": "Implement AddSourceEntity(ResourceReference entityRef, string role = \"source\") to add source resources to provenance.entity array with appropriate role coding. Implement WithLogFileUrl(string s3Url) to add S3 log file as entity with role='derivation'. Create entity structure with entity.role (CodeableConcept), entity.what (Reference to resource or URL). Support multiple source entities (e.g., original documents, OCR results). Implement WithPolicy(string policyUrl) to set provenance.policy array. Implement WithReason(CodeableConcept reason) for provenance.reason array. Ensure proper URL validation for S3 URLs.",
+            "status": "done",
+            "testStrategy": "Test AddSourceEntity correctly adds multiple source entities. Verify WithLogFileUrl creates derivation entity with S3 URL. Test entity role codes are valid. Validate S3 URL format checking."
+          },
+          {
+            "id": 4,
+            "title": "Create Comprehensive Integration Test Suite Setup",
+            "description": "Set up integration test infrastructure and implement ADT+CSPC+PSA workflow tests with complete provenance tracking",
+            "dependencies": [
+              "20.1",
+              "20.2",
+              "20.3"
+            ],
+            "details": "Create IntegrationTests test class with test fixture setup. Implement test for complete ADT+CSPC+PSA inference workflow: Create patient, create ADT therapy observation using builder from task 15, create CSPC status using builder from task 16, create PSA test results using builder from task 17, create AI inference using builder from task 18, create provenance using AiProvenanceBuilder linking all resources. Test provenance correctly references all source entities (ADT, CSPC, PSA) and inference result. Verify inference GUID propagation through all resources. Test AIAST label presence on all AI-generated resources.",
+            "status": "done",
+            "testStrategy": "End-to-end test of complete workflow. Verify all resources are linked via provenance. Test Bundle creation with all resources. Validate against FHIR R4 schema. Check resource cross-references are valid."
+          },
+          {
+            "id": 5,
+            "title": "Implement Document Processing Pipeline Tests and Performance Validation",
+            "description": "Create integration tests for document processing pipeline and validate performance for Lambda deployment",
+            "dependencies": [
+              "20.1",
+              "20.2",
+              "20.3",
+              "20.4"
+            ],
+            "details": "Implement document processing pipeline test: Create original DocumentReference, create OCR DocumentReference using OcrDocumentReferenceBuilder (task 19), create Facts DocumentReference using FactExtractionDocumentReferenceBuilder (task 19), create provenance tracking the transformation chain. Test query patterns: Query by inference GUID across all resources, query by AIAST label to find all AI resources, query provenance by target resource. Implement performance tests: Measure memory usage for typical Bundle sizes, test serialization/deserialization performance with Firely SDK, validate execution time meets Lambda constraints (< 15 min, < 10GB memory). Create test for S3 URL handling in both documents and provenance logs.",
+            "status": "done",
+            "testStrategy": "Test complete document pipeline with provenance. Verify transformation chain via relatesTo and provenance. Performance profiling with memory and time metrics. Test Lambda deployment constraints. Validate FHIR Bundle size limits."
+          }
+        ]
       }
     ],
     "metadata": {
       "created": "2025-08-14T03:46:08.337Z",
-      "updated": "2025-08-20T18:54:20.828Z",
+      "updated": "2025-10-01T15:54:11.356Z",
       "description": "Tasks for master context"
     }
   }

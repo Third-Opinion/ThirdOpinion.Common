@@ -4,6 +4,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Shouldly;
 using ThirdOpinion.Common.Aws.S3;
 
 namespace ThirdOpinion.Common.Aws.Tests.S3;
