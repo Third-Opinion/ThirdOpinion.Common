@@ -35,9 +35,10 @@ public class PsaProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_conditionReference)
-            .WithCriteria(CriteriaType.PCWG3, "1.0")
-            .AddPsaEvidence(psaNadir, "nadir", 2.0m)
-            .AddPsaEvidence(psaCurrent, "current", 3.5m)  // 75% increase from nadir
+            .WithCriteria(CriteriaType.ThirdOpinionIO, "1.0")
+            .AddNote("Patient shows signs of PSA progression.")
+            // .AddPsaEvidence(psaNadir, "nadir", 2.0m)
+            // .AddPsaEvidence(psaCurrent, "current", 3.5m)  // 75% increase from nadir
             .WithProgression(true)
             .WithEffectiveDate(new DateTime(2024, 1, 15))
             .Build();

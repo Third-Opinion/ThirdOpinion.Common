@@ -1,5 +1,7 @@
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ThirdOpinion.Common.Fhir.Builders.Observations;
 using ThirdOpinion.Common.Fhir.Configuration;
 using ThirdOpinion.Common.Fhir.Helpers;
@@ -11,9 +13,19 @@ public class AdtStatusObservationBuilderTests
     private readonly AiInferenceConfiguration _configuration;
     private readonly ResourceReference _patientReference;
     private readonly ResourceReference _deviceReference;
+    private readonly ILogger<AdtStatusObservationBuilderTests> _logger;
 
     public AdtStatusObservationBuilderTests()
     {
+        // Setup logging
+        var services = new ServiceCollection();
+        services.AddLogging(builder => builder
+            .AddConsole()
+            .SetMinimumLevel(LogLevel.Debug));
+
+        var serviceProvider = services.BuildServiceProvider();
+        _logger = serviceProvider.GetRequiredService<ILogger<AdtStatusObservationBuilderTests>>();
+
         _configuration = AiInferenceConfiguration.CreateDefault();
         _patientReference = new ResourceReference("Patient/test-patient", "Test Patient");
         _deviceReference = new ResourceReference("Device/ai-device", "AI Detection Device");
@@ -22,6 +34,8 @@ public class AdtStatusObservationBuilderTests
     [Fact]
     public void Build_WithActiveAdtStatus_CreatesCorrectObservation()
     {
+        _logger.LogInformation("Running test: {TestName}", nameof(Build_WithActiveAdtStatus_CreatesCorrectObservation));
+
         // Arrange
         var builder = new AdtStatusObservationBuilder(_configuration);
 
@@ -32,6 +46,11 @@ public class AdtStatusObservationBuilderTests
             .WithStatus(true) // Active ADT
             .WithEffectiveDate(new DateTime(2024, 1, 15, 10, 30, 0))
             .Build();
+
+        // Log the FHIR resource
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        var json = serializer.SerializeToString(observation);
+        _logger.LogDebug("Created FHIR Observation resource:\n{FhirJson}", json);
 
         // Assert
         observation.ShouldNotBeNull();
@@ -65,6 +84,8 @@ public class AdtStatusObservationBuilderTests
     [Fact]
     public void Build_WithInactiveAdtStatus_CreatesCorrectObservation()
     {
+        _logger.LogInformation("Running test: {TestName}", nameof(Build_WithInactiveAdtStatus_CreatesCorrectObservation));
+
         // Arrange
         var builder = new AdtStatusObservationBuilder(_configuration);
 
@@ -74,6 +95,11 @@ public class AdtStatusObservationBuilderTests
             .WithDevice("device-456", "Detection AI")
             .WithStatus(false) // Inactive ADT
             .Build();
+
+        // Log the FHIR resource
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        var json = serializer.SerializeToString(observation);
+        _logger.LogDebug("Created FHIR Observation resource:\n{FhirJson}", json);
 
         // Assert
         var valueCodeableConcept = observation.Value as CodeableConcept;
@@ -89,6 +115,8 @@ public class AdtStatusObservationBuilderTests
     [Fact]
     public void Build_WithMultipleEvidence_AddsAllToDerivedFrom()
     {
+        _logger.LogInformation("Running test: {TestName}", nameof(Build_WithMultipleEvidence_AddsAllToDerivedFrom));
+
         // Arrange
         var builder = new AdtStatusObservationBuilder(_configuration);
 
@@ -101,6 +129,11 @@ public class AdtStatusObservationBuilderTests
             .AddEvidence("Observation/obs2", "Lab Result")
             .AddEvidence(new ResourceReference("DiagnosticReport/report3", "Pathology Report"))
             .Build();
+
+        // Log the FHIR resource
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        var json = serializer.SerializeToString(observation);
+        _logger.LogDebug("Created FHIR Observation resource:\n{FhirJson}", json);
 
         // Assert
         observation.DerivedFrom.ShouldNotBeNull();
@@ -115,6 +148,8 @@ public class AdtStatusObservationBuilderTests
     [Fact]
     public void Build_WithNotes_AddsAnnotations()
     {
+        _logger.LogInformation("Running test: {TestName}", nameof(Build_WithNotes_AddsAnnotations));
+
         // Arrange
         var builder = new AdtStatusObservationBuilder(_configuration);
 
@@ -127,6 +162,11 @@ public class AdtStatusObservationBuilderTests
             .AddNote("PSA levels declining as expected")
             .Build();
 
+        // Log the FHIR resource
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        var json = serializer.SerializeToString(observation);
+        _logger.LogDebug("Created FHIR Observation resource:\n{FhirJson}", json);
+
         // Assert
         observation.Note.ShouldNotBeNull();
         observation.Note.Count.ShouldBe(2);
@@ -138,6 +178,8 @@ public class AdtStatusObservationBuilderTests
     [Fact]
     public void Build_WithExplicitInferenceId_UsesProvidedId()
     {
+        _logger.LogInformation("Running test: {TestName}", nameof(Build_WithExplicitInferenceId_UsesProvidedId));
+
         // Arrange
         var builder = new AdtStatusObservationBuilder(_configuration);
         var customId = "custom-inference-12345";
@@ -150,6 +192,11 @@ public class AdtStatusObservationBuilderTests
             .WithStatus(true)
             .Build();
 
+        // Log the FHIR resource
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        var json = serializer.SerializeToString(observation);
+        _logger.LogDebug("Created FHIR Observation resource:\n{FhirJson}", json);
+
         // Assert
         observation.Id.ShouldBe(customId);
     }
@@ -157,6 +204,8 @@ public class AdtStatusObservationBuilderTests
     [Fact]
     public void Build_WithoutExplicitInferenceId_AutoGeneratesId()
     {
+        _logger.LogInformation("Running test: {TestName}", nameof(Build_WithoutExplicitInferenceId_AutoGeneratesId));
+
         // Arrange
         var builder = new AdtStatusObservationBuilder(_configuration);
 
@@ -167,6 +216,11 @@ public class AdtStatusObservationBuilderTests
             .WithStatus(false)
             .Build();
 
+        // Log the FHIR resource
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        var json = serializer.SerializeToString(observation);
+        _logger.LogDebug("Created FHIR Observation resource:\n{FhirJson}", json);
+
         // Assert
         observation.Id.ShouldNotBeNullOrEmpty();
         observation.Id.ShouldStartWith("to.ai-inference-");
@@ -175,6 +229,8 @@ public class AdtStatusObservationBuilderTests
     [Fact]
     public void Build_WithCriteria_SetsMethodCodeableConcept()
     {
+        _logger.LogInformation("Running test: {TestName}", nameof(Build_WithCriteria_SetsMethodCodeableConcept));
+
         // Arrange
         var builder = new AdtStatusObservationBuilder(_configuration);
 
@@ -185,6 +241,11 @@ public class AdtStatusObservationBuilderTests
             .WithStatus(true)
             .WithCriteria("adt-detect-v1", "ADT Detection Algorithm v1.0", "http://example.org/criteria")
             .Build();
+
+        // Log the FHIR resource
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        var json = serializer.SerializeToString(observation);
+        _logger.LogDebug("Created FHIR Observation resource:\n{FhirJson}", json);
 
         // Assert
         observation.Method.ShouldNotBeNull();
@@ -245,6 +306,8 @@ public class AdtStatusObservationBuilderTests
     [Fact]
     public void FluentInterface_SupportsCompleteChaining()
     {
+        _logger.LogInformation("Running test: {TestName}", nameof(FluentInterface_SupportsCompleteChaining));
+
         // Arrange & Act
         var observation = new AdtStatusObservationBuilder(_configuration)
             .WithInferenceId("test-inference-001")
@@ -258,6 +321,11 @@ public class AdtStatusObservationBuilderTests
             .AddNote("Clinical observation note")
             .AddDerivedFrom("Procedure/proc1", "Related Procedure")
             .Build();
+
+        // Log the FHIR resource
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        var json = serializer.SerializeToString(observation);
+        _logger.LogDebug("Created FHIR Observation resource:\n{FhirJson}", json);
 
         // Assert
         observation.Id.ShouldBe("test-inference-001");
@@ -295,6 +363,8 @@ public class AdtStatusObservationBuilderTests
     [Fact]
     public void WithEffectiveDate_MultipleForms_SetsCorrectly()
     {
+        _logger.LogInformation("Running test: {TestName}", nameof(WithEffectiveDate_MultipleForms_SetsCorrectly));
+
         // Arrange
         var builder1 = new AdtStatusObservationBuilder(_configuration);
         var builder2 = new AdtStatusObservationBuilder(_configuration);
@@ -309,12 +379,21 @@ public class AdtStatusObservationBuilderTests
             .WithEffectiveDate(dateTime)
             .Build();
 
+        // Log the first FHIR resource
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        var json1 = serializer.SerializeToString(observation1);
+        _logger.LogDebug("Created FHIR Observation resource (DateTime):\n{FhirJson}", json1);
+
         var observation2 = builder2
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithStatus(true)
             .WithEffectiveDate(dateTimeOffset)
             .Build();
+
+        // Log the second FHIR resource
+        var json2 = serializer.SerializeToString(observation2);
+        _logger.LogDebug("Created FHIR Observation resource (DateTimeOffset):\n{FhirJson}", json2);
 
         // Assert
         observation1.Effective.ShouldBeOfType<FhirDateTime>();
@@ -324,6 +403,8 @@ public class AdtStatusObservationBuilderTests
     [Fact]
     public void Build_GeneratesValidFhirJson()
     {
+        _logger.LogInformation("Running test: {TestName}", nameof(Build_GeneratesValidFhirJson));
+
         // Arrange
         var builder = new AdtStatusObservationBuilder(_configuration);
         var observation = builder
@@ -338,6 +419,9 @@ public class AdtStatusObservationBuilderTests
         // Act
         var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
         var json = serializer.SerializeToString(observation);
+
+        // Log the FHIR resource
+        _logger.LogDebug("Created FHIR Observation resource for JSON validation:\n{FhirJson}", json);
 
         // Assert
         json.ShouldNotBeNullOrEmpty();
@@ -358,6 +442,8 @@ public class AdtStatusObservationBuilderTests
     [Fact]
     public void AddEvidence_EmptyString_IsIgnored()
     {
+        _logger.LogInformation("Running test: {TestName}", nameof(AddEvidence_EmptyString_IsIgnored));
+
         // Arrange
         var builder = new AdtStatusObservationBuilder(_configuration);
 
@@ -370,6 +456,11 @@ public class AdtStatusObservationBuilderTests
             .AddEvidence("   ", "Display2")
             .Build();
 
+        // Log the FHIR resource
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        var json = serializer.SerializeToString(observation);
+        _logger.LogDebug("Created FHIR Observation resource (empty evidence):\n{FhirJson}", json);
+
         // Assert
         // FHIR Observation initializes collections to empty lists, not null
         observation.DerivedFrom.ShouldNotBeNull();
@@ -379,6 +470,8 @@ public class AdtStatusObservationBuilderTests
     [Fact]
     public void AddNote_EmptyString_IsIgnored()
     {
+        _logger.LogInformation("Running test: {TestName}", nameof(AddNote_EmptyString_IsIgnored));
+
         // Arrange
         var builder = new AdtStatusObservationBuilder(_configuration);
 
@@ -390,6 +483,11 @@ public class AdtStatusObservationBuilderTests
             .AddNote("")
             .AddNote("   ")
             .Build();
+
+        // Log the FHIR resource
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        var json = serializer.SerializeToString(observation);
+        _logger.LogDebug("Created FHIR Observation resource (empty notes):\n{FhirJson}", json);
 
         // Assert
         // FHIR Observation initializes collections to empty lists, not null

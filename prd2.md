@@ -347,6 +347,27 @@ Chronological PSA Values: 11/14/24: Total PSA = 85.23 ng/mL (SEVERELY ELEVATED)
 Treatment Response: PSA decreased to 0.1 ng/mL (>99% reduction)
 ⚠️ CRITICAL DATA ISSUE: Two conflicting PSA values on 4/30/25 require investigation")
     .Build();
+
+var progression = new PsaProgressionObservationBuilder()
+    //.WithInferenceId("to.ai-inference-1")
+    .WithPatient(new ResourceReference("Patient/example"))
+    .WithDevice(new ResourceReference("Device/to.io-trial-eligibility-ai-v2"))
+  //  .WithFocus(new ResourceReference("Condition/to.io-prostate-cancer-cspc-001"))
+    .WithCriteria("psa-progression-1234455-v1.2", 
+        "ThirdOpinion.io PSA Progression Criteria ID:1234455 v1.2",
+        "ThirdOpinion.io PSA progression criteria: ≥30% and ≥3 ng/mL increase from nadir, confirmed by second measurement ≥4 weeks later")
+   // .AddPsaEvidence(new ResourceReference("Observation/psa-2024-07-15"), "PSA nadir 5.2 ng/mL on 2024-07-15")
+   // .AddPsaEvidence(new ResourceReference("Observation/psa-2024-09-01"), "PSA 9.8 ng/mL on 2024-09-01 (first rise)")
+    //.AddPsaEvidence(new ResourceReference("Observation/psa-2024-09-29"), "PSA 11.8 ng/mL on 2024-09-29 (confirmatory, 4 weeks later)")
+    .WithProgression(true)
+    .AddValidUntilComponent(new DateTime(2025, 10, 28))
+    .AddThresholdMetComponent(true)
+    .AddNote("PSA progression confirmed per ThirdOpinion.io criteria: ≥30% and ≥3 ng/mL increase from nadir")
+    .AddDetailedAnalysisNote(@"PSA Analysis - Prostate Cancer Treatment Response
+Chronological PSA Values: 11/14/24: Total PSA = 85.23 ng/mL (SEVERELY ELEVATED)
+Treatment Response: PSA decreased to 0.1 ng/mL (>99% reduction)
+⚠️ CRITICAL DATA ISSUE: Two conflicting PSA values on 4/30/25 require investigation")
+    .Build();
 ```
 
 ### 6. RECIST 1.1 Progression Builder
