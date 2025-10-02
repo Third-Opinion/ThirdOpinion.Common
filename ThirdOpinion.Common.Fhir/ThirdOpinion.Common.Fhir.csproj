@@ -15,6 +15,7 @@
         <PackageTags>fhir;hl7;healthcare</PackageTags>
         <RepositoryUrl>https://github.com/thirdopinion/common</RepositoryUrl>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     </PropertyGroup>
 
     <ItemGroup>

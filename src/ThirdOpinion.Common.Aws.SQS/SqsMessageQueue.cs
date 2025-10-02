@@ -14,6 +14,11 @@ public class SqsMessageQueue : ISqsMessageQueue
     private readonly ILogger<SqsMessageQueue> _logger;
     private readonly IAmazonSQS _sqsClient;
 
+    /// <summary>
+    /// Initializes a new instance of the SqsMessageQueue class
+    /// </summary>
+    /// <param name="sqsClient">The Amazon SQS client</param>
+    /// <param name="logger">The logger instance</param>
     public SqsMessageQueue(IAmazonSQS sqsClient, ILogger<SqsMessageQueue> logger)
     {
         _sqsClient = sqsClient;
@@ -25,6 +30,16 @@ public class SqsMessageQueue : ISqsMessageQueue
         };
     }
 
+    /// <summary>
+    /// Sends a message to an SQS queue with automatic JSON serialization
+    /// </summary>
+    /// <typeparam name="T">The type of message to send</typeparam>
+    /// <param name="queueUrl">The URL of the SQS queue</param>
+    /// <param name="message">The message object to send</param>
+    /// <param name="messageAttributes">Optional message attributes</param>
+    /// <param name="delaySeconds">Optional delay in seconds before the message becomes visible</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The send message response</returns>
     public async Task<SendMessageResponse> SendMessageAsync<T>(string queueUrl,
         T message,
         Dictionary<string, MessageAttributeValue>? messageAttributes = null,
@@ -36,6 +51,15 @@ public class SqsMessageQueue : ISqsMessageQueue
             cancellationToken);
     }
 
+    /// <summary>
+    /// Sends a string message to an SQS queue
+    /// </summary>
+    /// <param name="queueUrl">The URL of the SQS queue</param>
+    /// <param name="messageBody">The message body as a string</param>
+    /// <param name="messageAttributes">Optional message attributes</param>
+    /// <param name="delaySeconds">Optional delay in seconds before the message becomes visible</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The send message response</returns>
     public async Task<SendMessageResponse> SendMessageAsync(string queueUrl,
         string messageBody,
         Dictionary<string, MessageAttributeValue>? messageAttributes = null,
@@ -85,6 +109,14 @@ public class SqsMessageQueue : ISqsMessageQueue
         }
     }
 
+    /// <summary>
+    /// Sends multiple messages to an SQS queue in a single batch with automatic JSON serialization
+    /// </summary>
+    /// <typeparam name="T">The type of messages to send</typeparam>
+    /// <param name="queueUrl">The URL of the SQS queue</param>
+    /// <param name="messages">The collection of message objects to send</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The send message batch response</returns>
     public async Task<SendMessageBatchResponse> SendMessageBatchAsync<T>(string queueUrl,
         IEnumerable<T> messages,
         CancellationToken cancellationToken = default)
@@ -99,6 +131,13 @@ public class SqsMessageQueue : ISqsMessageQueue
         return await SendMessageBatchAsync(queueUrl, entries, cancellationToken);
     }
 
+    /// <summary>
+    /// Sends multiple messages to an SQS queue in a single batch using pre-configured entries
+    /// </summary>
+    /// <param name="queueUrl">The URL of the SQS queue</param>
+    /// <param name="entries">The collection of message batch request entries</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The send message batch response</returns>
     public async Task<SendMessageBatchResponse> SendMessageBatchAsync(string queueUrl,
         IEnumerable<SendMessageBatchRequestEntry> entries,
         CancellationToken cancellationToken = default)
@@ -129,6 +168,15 @@ public class SqsMessageQueue : ISqsMessageQueue
         }
     }
 
+    /// <summary>
+    /// Receives messages from an SQS queue
+    /// </summary>
+    /// <param name="queueUrl">The URL of the SQS queue</param>
+    /// <param name="maxMessages">Maximum number of messages to receive (1-10, default: 10)</param>
+    /// <param name="waitTimeSeconds">Long polling wait time in seconds</param>
+    /// <param name="visibilityTimeout">Visibility timeout for received messages in seconds</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The receive message response containing the messages</returns>
     public async Task<ReceiveMessageResponse> ReceiveMessagesAsync(string queueUrl,
         int maxMessages = 10,
         int? waitTimeSeconds = null,
@@ -141,7 +189,7 @@ public class SqsMessageQueue : ISqsMessageQueue
             {
                 QueueUrl = queueUrl,
                 MaxNumberOfMessages = maxMessages,
-                AttributeNames = new List<string> { "All" },
+                MessageSystemAttributeNames = new List<string> { "All" },
                 MessageAttributeNames = new List<string> { "All" }
             };
 
@@ -162,6 +210,16 @@ public class SqsMessageQueue : ISqsMessageQueue
         }
     }
 
+    /// <summary>
+    /// Receives and processes messages from an SQS queue with automatic JSON deserialization
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize messages to</typeparam>
+    /// <param name="queueUrl">The URL of the SQS queue</param>
+    /// <param name="messageHandler">Function to process each message, return true to delete the message</param>
+    /// <param name="maxMessages">Maximum number of messages to receive (1-10, default: 10)</param>
+    /// <param name="waitTimeSeconds">Long polling wait time in seconds</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A task representing the asynchronous operation</returns>
     public async Task ReceiveMessagesAsync<T>(string queueUrl,
         Func<T, Task<bool>> messageHandler,
         int maxMessages = 10,
@@ -199,6 +257,13 @@ public class SqsMessageQueue : ISqsMessageQueue
             await DeleteMessageBatchAsync(queueUrl, deleteEntries, cancellationToken);
     }
 
+    /// <summary>
+    /// Deletes a single message from an SQS queue
+    /// </summary>
+    /// <param name="queueUrl">The URL of the SQS queue</param>
+    /// <param name="receiptHandle">The receipt handle of the message to delete</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The delete message response</returns>
     public async Task<DeleteMessageResponse> DeleteMessageAsync(string queueUrl,
         string receiptHandle,
         CancellationToken cancellationToken = default)
@@ -223,6 +288,13 @@ public class SqsMessageQueue : ISqsMessageQueue
         }
     }
 
+    /// <summary>
+    /// Deletes multiple messages from an SQS queue in a single batch
+    /// </summary>
+    /// <param name="queueUrl">The URL of the SQS queue</param>
+    /// <param name="entries">The collection of delete message batch request entries</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The delete message batch response</returns>
     public async Task<DeleteMessageBatchResponse> DeleteMessageBatchAsync(string queueUrl,
         IEnumerable<DeleteMessageBatchRequestEntry> entries,
         CancellationToken cancellationToken = default)
@@ -253,6 +325,14 @@ public class SqsMessageQueue : ISqsMessageQueue
         }
     }
 
+    /// <summary>
+    /// Changes the visibility timeout of a message in an SQS queue
+    /// </summary>
+    /// <param name="queueUrl">The URL of the SQS queue</param>
+    /// <param name="receiptHandle">The receipt handle of the message</param>
+    /// <param name="visibilityTimeout">New visibility timeout in seconds</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The change message visibility response</returns>
     public async Task<ChangeMessageVisibilityResponse> ChangeMessageVisibilityAsync(string queueUrl,
         string receiptHandle,
         int visibilityTimeout,
@@ -277,6 +357,13 @@ public class SqsMessageQueue : ISqsMessageQueue
         }
     }
 
+    /// <summary>
+    /// Gets attributes for an SQS queue
+    /// </summary>
+    /// <param name="queueUrl">The URL of the SQS queue</param>
+    /// <param name="attributeNames">List of attribute names to retrieve (defaults to "All")</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The get queue attributes response</returns>
     public async Task<GetQueueAttributesResponse> GetQueueAttributesAsync(string queueUrl,
         List<string>? attributeNames = null,
         CancellationToken cancellationToken = default)
@@ -298,6 +385,13 @@ public class SqsMessageQueue : ISqsMessageQueue
         }
     }
 
+    /// <summary>
+    /// Creates a new SQS queue
+    /// </summary>
+    /// <param name="queueName">The name of the queue to create</param>
+    /// <param name="attributes">Optional queue attributes</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The create queue response containing the queue URL</returns>
     public async Task<CreateQueueResponse> CreateQueueAsync(string queueName,
         Dictionary<string, string>? attributes = null,
         CancellationToken cancellationToken = default)
@@ -327,6 +421,12 @@ public class SqsMessageQueue : ISqsMessageQueue
         }
     }
 
+    /// <summary>
+    /// Gets the URL of an existing SQS queue by name
+    /// </summary>
+    /// <param name="queueName">The name of the queue</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The queue URL</returns>
     public async Task<string> GetQueueUrlAsync(string queueName,
         CancellationToken cancellationToken = default)
     {
@@ -348,6 +448,12 @@ public class SqsMessageQueue : ISqsMessageQueue
         }
     }
 
+    /// <summary>
+    /// Purges all messages from an SQS queue
+    /// </summary>
+    /// <param name="queueUrl">The URL of the SQS queue</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The purge queue response</returns>
     public async Task<PurgeQueueResponse> PurgeQueueAsync(string queueUrl,
         CancellationToken cancellationToken = default)
     {
@@ -370,6 +476,12 @@ public class SqsMessageQueue : ISqsMessageQueue
         }
     }
 
+    /// <summary>
+    /// Lists all SQS queues or queues matching a prefix
+    /// </summary>
+    /// <param name="queueNamePrefix">Optional prefix to filter queue names</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The list queues response containing queue URLs</returns>
     public async Task<ListQueuesResponse> ListQueuesAsync(string? queueNamePrefix = null,
         CancellationToken cancellationToken = default)
     {
@@ -388,6 +500,15 @@ public class SqsMessageQueue : ISqsMessageQueue
         }
     }
 
+    /// <summary>
+    /// Adds permissions to an SQS queue for specified AWS accounts
+    /// </summary>
+    /// <param name="queueUrl">The URL of the SQS queue</param>
+    /// <param name="label">A label for the permission</param>
+    /// <param name="awsAccountIds">List of AWS account IDs to grant permissions to</param>
+    /// <param name="actions">List of SQS actions to allow</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The add permission response</returns>
     public async Task<AddPermissionResponse> AddPermissionAsync(string queueUrl,
         string label,
         List<string> awsAccountIds,
@@ -413,6 +534,13 @@ public class SqsMessageQueue : ISqsMessageQueue
         }
     }
 
+    /// <summary>
+    /// Removes permissions from an SQS queue
+    /// </summary>
+    /// <param name="queueUrl">The URL of the SQS queue</param>
+    /// <param name="label">The label of the permission to remove</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The remove permission response</returns>
     public async Task<RemovePermissionResponse> RemovePermissionAsync(string queueUrl,
         string label,
         CancellationToken cancellationToken = default)
@@ -434,6 +562,13 @@ public class SqsMessageQueue : ISqsMessageQueue
         }
     }
 
+    /// <summary>
+    /// Adds tags to an SQS queue
+    /// </summary>
+    /// <param name="queueUrl">The URL of the SQS queue</param>
+    /// <param name="tags">Dictionary of tag key-value pairs</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The tag queue response</returns>
     public async Task<TagQueueResponse> TagQueueAsync(string queueUrl,
         Dictionary<string, string> tags,
         CancellationToken cancellationToken = default)
@@ -455,6 +590,12 @@ public class SqsMessageQueue : ISqsMessageQueue
         }
     }
 
+    /// <summary>
+    /// Lists all tags for an SQS queue
+    /// </summary>
+    /// <param name="queueUrl">The URL of the SQS queue</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The list queue tags response containing the tags</returns>
     public async Task<ListQueueTagsResponse> ListQueueTagsAsync(string queueUrl,
         CancellationToken cancellationToken = default)
     {

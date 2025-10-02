@@ -12,6 +12,9 @@ using ThirdOpinion.Common.Aws.DynamoDb;
 
 namespace ThirdOpinion.Common.Aws.SQS;
 
+/// <summary>
+/// Background service for handling SQS messages automatically
+/// </summary>
 public class SqsMessageHandler : BackgroundService
 {
     private readonly IDynamoDbRepository _dynamoRepository;
@@ -20,6 +23,14 @@ public class SqsMessageHandler : BackgroundService
     private readonly IServiceProvider _serviceProvider;
     private readonly IAmazonSQS _sqsClient;
 
+    /// <summary>
+    /// Initializes a new instance of the SqsMessageHandler class
+    /// </summary>
+    /// <param name="sqsClient">The Amazon SQS client</param>
+    /// <param name="logger">The logger instance</param>
+    /// <param name="configuration">The configuration provider</param>
+    /// <param name="serviceProvider">The service provider for dependency injection</param>
+    /// <param name="dynamoRepository">The DynamoDB repository</param>
     public SqsMessageHandler(
         IAmazonSQS sqsClient,
         ILogger<SqsMessageHandler> logger,
@@ -36,6 +47,11 @@ public class SqsMessageHandler : BackgroundService
                     ?? throw new ArgumentNullException("AWS:SQS:QueueUrl configuration is missing");
     }
 
+    /// <summary>
+    /// Executes the background service to continuously poll for and process SQS messages
+    /// </summary>
+    /// <param name="stoppingToken">Cancellation token to stop the service</param>
+    /// <returns>A task representing the asynchronous operation</returns>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)

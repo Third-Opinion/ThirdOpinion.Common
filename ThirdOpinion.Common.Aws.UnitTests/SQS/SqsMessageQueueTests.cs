@@ -211,13 +211,13 @@ public class SqsMessageQueueTests
         // Assert
         result.ShouldBe(expectedResponse);
         _sqsClientMock.Verify(x => x.ReceiveMessageAsync(
-            It.Is<ReceiveMessageRequest>(r => 
+            It.Is<ReceiveMessageRequest>(r =>
                 r.QueueUrl == queueUrl &&
                 r.MaxNumberOfMessages == maxMessages &&
                 r.WaitTimeSeconds == waitTimeSeconds &&
                 r.VisibilityTimeout == visibilityTimeout &&
-                r.AttributeNames.Contains("All") &&
-                r.MessageAttributeNames.Contains("All")), 
+                r.MessageSystemAttributeNames.Contains("All") &&
+                r.MessageAttributeNames.Contains("All")),
             It.IsAny<CancellationToken>()), Times.Once);
         
         VerifyLoggerDebugWasCalled($"Received 2 messages from queue {queueUrl}");
