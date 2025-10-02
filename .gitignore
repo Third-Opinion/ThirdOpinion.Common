@@ -425,3 +425,4 @@ TestResults/
 # tasks.json
 # tasks/ 
 .xml
+/packages/*.nupkg
