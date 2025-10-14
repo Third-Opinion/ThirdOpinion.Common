@@ -396,4 +396,134 @@ public class AdtStatusObservationBuilderTests
         observation.Note.ShouldNotBeNull();
         observation.Note.Count.ShouldBe(0);
     }
+
+    [Fact]
+    public void WithTreatmentStartDate_AddsCorrectComponent()
+    {
+        // Arrange
+        var builder = new AdtStatusObservationBuilder(_configuration);
+        var treatmentStartDate = new DateTime(2025, 1, 1);
+        var medicationReferenceId = "MedicationReference/some-medicationreference-3";
+        var displayText = "ADT treatment started on 2025-01-01 with Zoladex 20 mg";
+
+        // Act
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithStatus(true)
+            .WithTreatmentStartDate(treatmentStartDate, medicationReferenceId, displayText)
+            .Build();
+
+        // Assert
+        observation.Component.ShouldNotBeNull();
+        var treatmentComponent = observation.Component.FirstOrDefault(c =>
+            c.Code.Coding.Any(cd => cd.Code == "treatmentStartDate_v1"));
+        treatmentComponent.ShouldNotBeNull();
+
+        // Check code
+        treatmentComponent.Code.Coding[0].System.ShouldBe("https://thirdopinion.io/result-code");
+        treatmentComponent.Code.Coding[0].Code.ShouldBe("treatmentStartDate_v1");
+        treatmentComponent.Code.Coding[0].Display.ShouldBe("The date treatment started");
+        treatmentComponent.Code.Text.ShouldBe(displayText);
+
+        // Check value
+        var valueDateTime = treatmentComponent.Value as FhirDateTime;
+        valueDateTime.ShouldNotBeNull();
+
+        // Check extension
+        treatmentComponent.Extension.ShouldNotBeNull();
+        treatmentComponent.Extension.Count.ShouldBe(1);
+        var extension = treatmentComponent.Extension[0];
+        extension.Url.ShouldBe("https://thirdopinion.io/fhir/StructureDefinition/source-medication-reference");
+        var extensionReference = extension.Value as ResourceReference;
+        extensionReference.ShouldNotBeNull();
+        extensionReference.Reference.ShouldBe(medicationReferenceId);
+        extensionReference.Display.ShouldBe("The MedicationReference used in the analysis.");
+    }
+
+    [Fact]
+    public void WithTreatmentStartDate_NullMedicationReference_ThrowsArgumentException()
+    {
+        // Arrange
+        var builder = new AdtStatusObservationBuilder(_configuration);
+
+        // Act & Assert
+        Should.Throw<ArgumentException>(() =>
+            builder.WithTreatmentStartDate(new DateTime(2025, 1, 1), null!, "Display text"));
+        Should.Throw<ArgumentException>(() =>
+            builder.WithTreatmentStartDate(new DateTime(2025, 1, 1), "", "Display text"));
+        Should.Throw<ArgumentException>(() =>
+            builder.WithTreatmentStartDate(new DateTime(2025, 1, 1), "   ", "Display text"));
+    }
+
+    [Fact]
+    public void WithTreatmentStartDate_NullDisplayText_ThrowsArgumentException()
+    {
+        // Arrange
+        var builder = new AdtStatusObservationBuilder(_configuration);
+
+        // Act & Assert
+        Should.Throw<ArgumentException>(() =>
+            builder.WithTreatmentStartDate(new DateTime(2025, 1, 1), "MedicationReference/test", null!));
+        Should.Throw<ArgumentException>(() =>
+            builder.WithTreatmentStartDate(new DateTime(2025, 1, 1), "MedicationReference/test", ""));
+        Should.Throw<ArgumentException>(() =>
+            builder.WithTreatmentStartDate(new DateTime(2025, 1, 1), "MedicationReference/test", "   "));
+    }
+
+    [Fact]
+    public void WithTreatmentStartDate_IntegratesWithCompleteBuilder()
+    {
+        // Arrange & Act
+        var observation = new AdtStatusObservationBuilder(_configuration)
+            .WithInferenceId("test-inference-001")
+            .WithPatient("Patient/p123", "Jane Doe")
+            .WithDevice("Device/d456", "AI System")
+            .WithStatus(true)
+            .WithCriteria("criteria-001", "Test Criteria")
+            .AddEvidence("DocumentReference/doc1", "Note 1")
+            .WithEffectiveDate(new DateTime(2024, 2, 1))
+            .WithTreatmentStartDate(new DateTime(2025, 1, 1), "MedicationReference/med-ref-1", "ADT treatment started on 2025-01-01 with Zoladex 20 mg")
+            .AddNote("Clinical observation note")
+            .Build();
+
+        // Assert
+        observation.Id.ShouldBe("test-inference-001");
+        observation.Subject.Reference.ShouldBe("Patient/p123");
+        observation.Device.Reference.ShouldBe("Device/d456");
+        observation.Component.ShouldNotBeNull();
+        var treatmentComponent = observation.Component.FirstOrDefault(c =>
+            c.Code.Coding.Any(cd => cd.Code == "treatmentStartDate_v1"));
+        treatmentComponent.ShouldNotBeNull();
+        observation.Note.Count.ShouldBe(1);
+        observation.Method.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void WithTreatmentStartDate_GeneratesCorrectJsonStructure()
+    {
+        // Arrange & Act
+        var observation = new AdtStatusObservationBuilder(_configuration)
+            .WithPatient("Patient/test-patient", "Test Patient")
+            .WithDevice("Device/ai-device", "AI Detection Device")
+            .WithStatus(true)
+            .WithTreatmentStartDate(
+                new DateTime(2025, 1, 1),
+                "MedicationReference/some-medicationreference-3",
+                "ADT treatment started on 2025-01-01 with Zoladex 20 mg")
+            .Build();
+
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        var json = serializer.SerializeToString(observation);
+
+        // Assert - check that JSON contains expected structure
+        json.ShouldContain("\"component\"");
+        json.ShouldContain("\"treatmentStartDate_v1\"");
+        json.ShouldContain("\"The date treatment started\"");
+        json.ShouldContain("\"valueDateTime\"");
+        json.ShouldContain("\"extension\"");
+        json.ShouldContain("\"MedicationReference/some-medicationreference-3\"");
+        json.ShouldContain("\"ADT treatment started on 2025-01-01 with Zoladex 20 mg\"");
+
+    }
 }

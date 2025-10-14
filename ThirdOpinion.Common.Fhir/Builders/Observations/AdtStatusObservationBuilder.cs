@@ -18,6 +18,11 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     private readonly List<string> _notes;
     private float? _confidence;
 
+    // Treatment start date information
+    private DateTime? _treatmentStartDate;
+    private string? _medicationReferenceId;
+    private string? _treatmentStartDisplayText;
+
     /// <summary>
     /// Creates a new ADT Status Observation builder
     /// </summary>
@@ -233,6 +238,27 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     }
 
     /// <summary>
+    /// Sets the treatment start date information for this observation
+    /// </summary>
+    /// <param name="treatmentStartDate">The date treatment started</param>
+    /// <param name="medicationReferenceId">The medication reference ID</param>
+    /// <param name="displayText">The display text for the treatment start date</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public AdtStatusObservationBuilder WithTreatmentStartDate(DateTime treatmentStartDate, string medicationReferenceId, string displayText)
+    {
+        if (string.IsNullOrWhiteSpace(medicationReferenceId))
+            throw new ArgumentException("Medication reference ID cannot be null or empty", nameof(medicationReferenceId));
+
+        if (string.IsNullOrWhiteSpace(displayText))
+            throw new ArgumentException("Display text cannot be null or empty", nameof(displayText));
+
+        _treatmentStartDate = treatmentStartDate;
+        _medicationReferenceId = medicationReferenceId;
+        _treatmentStartDisplayText = displayText;
+        return this;
+    }
+
+    /// <summary>
     /// Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
@@ -368,6 +394,45 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
             };
 
             observation.Component.Add(confidenceComponent);
+        }
+
+        // Add treatment start date component if specified
+        if (_treatmentStartDate.HasValue && !string.IsNullOrWhiteSpace(_medicationReferenceId) && !string.IsNullOrWhiteSpace(_treatmentStartDisplayText))
+        {
+            if (observation.Component == null)
+                observation.Component = new List<Observation.ComponentComponent>();
+
+            var treatmentStartComponent = new Observation.ComponentComponent
+            {
+                Code = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new Coding
+                        {
+                            System = "https://thirdopinion.io/result-code",
+                            Code = "treatmentStartDate_v1",
+                            Display = "The date treatment started"
+                        }
+                    },
+                    Text = _treatmentStartDisplayText
+                },
+                Value = new FhirDateTime(_treatmentStartDate.Value),
+                Extension = new List<Extension>
+                {
+                    new Extension
+                    {
+                        Url = "https://thirdopinion.io/fhir/StructureDefinition/source-medication-reference",
+                        Value = new ResourceReference
+                        {
+                            Reference = _medicationReferenceId,
+                            Display = "The MedicationReference used in the analysis."
+                        }
+                    }
+                }
+            };
+
+            observation.Component.Add(treatmentStartComponent);
         }
 
         // Add notes

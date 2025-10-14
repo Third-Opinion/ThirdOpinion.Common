@@ -210,7 +210,46 @@ public AdtStatusObservationBuilder WithCriteria(string criteriaId, string displa
 public AdtStatusObservationBuilder WithStatus(bool isReceivingAdt)
 public AdtStatusObservationBuilder AddEvidence(ResourceReference reference, string displayText = null)
 public AdtStatusObservationBuilder WithEffectiveDate(DateTime dateTime)
+public AdtStatusObservationBuilder WithTreatmentStartDate(DateTime treatmentStartDate, string medicationReferenceId, string displayText)
 public AdtStatusObservationBuilder AddNote(string noteText)
+```
+
+**WithTreatmentStartDate Method:**
+The `WithTreatmentStartDate` method adds a specialized component to track when ADT treatment began, including medication reference information.
+
+**Parameters:**
+- `treatmentStartDate` (DateTime): The date when ADT treatment started
+- `medicationReferenceId` (string): Reference to the MedicationReference resource (e.g., "MedicationReference/med-123")
+- `displayText` (string): Human-readable description of the treatment start (e.g., "ADT treatment started on 2025-01-01 with Zoladex 20 mg")
+
+**Generated FHIR Component:**
+```json
+{
+  "component": [
+    {
+      "code": {
+        "coding": [
+          {
+            "system": "https://thirdopinion.io/result-code",
+            "code": "treatmentStartDate_v1",
+            "display": "The date treatment started"
+          }
+        ],
+        "text": "{displayText}"
+      },
+      "valueDateTime": "{treatmentStartDate}",
+      "extension": [
+        {
+          "url": "https://thirdopinion.io/fhir/StructureDefinition/source-medication-reference",
+          "valueReference": {
+            "reference": "{medicationReferenceId}",
+            "display": "The MedicationReference used in the analysis."
+          }
+        }
+      ]
+    }
+  ]
+}
 ```
 
 **Example usage with explicit ID:**
@@ -225,6 +264,7 @@ var observation = new AdtStatusObservationBuilder()
     .WithStatus(true)
     .AddEvidence(new ResourceReference("MedicationRequest/a-15454.med-192905", "Eligard 20mg 2025-10-11"))
     .WithEffectiveDate(new DateTime(2025, 9, 30, 10, 30, 0, DateTimeKind.Utc))
+    .WithTreatmentStartDate(new DateTime(2025, 1, 1), "MedicationReference/some-medicationreference-3", "ADT treatment started on 2025-01-01 with Zoladex 20 mg")
     .Build();
 ```
 
@@ -239,6 +279,7 @@ var observation = new AdtStatusObservationBuilder()
         "ThirdOpinion.io on ADT therapy assessment")
     .WithStatus(true)
     .AddEvidence(new ResourceReference("MedicationRequest/a-15454.med-192905"))
+    .WithTreatmentStartDate(new DateTime(2025, 1, 1), "MedicationReference/med-ref-123", "ADT treatment started on 2025-01-01 with Lupron 22.5 mg")
     .Build();
 ```
 
