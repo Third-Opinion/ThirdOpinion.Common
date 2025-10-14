@@ -8,7 +8,7 @@
     <NoBuild>true</NoBuild>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <PackageId>ThirdOpinion.Common</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.0-alpha.1</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
     <Description>Third Opinion Common Libraries - Complete package including AWS services integration (S3, DynamoDB, SQS, Cognito), FHIR R4 healthcare integration, and utility functions</Description>
