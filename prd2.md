@@ -242,61 +242,80 @@ var observation = new AdtStatusObservationBuilder()
     .Build();
 ```
 
-### 4. CSPC Assessment Builder (UPDATED)
+### 4. HSDM Assessment Condition Builder (UPDATED)
 
-#### `CspcAssessmentObservationBuilder` Class
-Constructs Observation resources for castration sensitivity assessment.
+#### `HsdmAssessmentConditionBuilder` Class
+Constructs FHIR Condition resources for HSDM (Hormone Sensitivity Diagnosis Modifier) assessments of Castration-Sensitive Prostate Cancer (CSPC).
 
-**CRITICAL CHANGE**: This builder creates an **Observation** that references an existing Condition via the `focus` field, NOT a new Condition resource.
+**CRITICAL CHANGE**: This builder creates a **Condition** resource, NOT an Observation. It supports three classification types with proper clinical fact evidence integration.
+
+**Supported HSDM Result Types:**
+- `nmCSPC_biochemical_relapse`: Non-metastatic with biochemical relapse (SNOMED 1197209002 + ICD-10 Z19.1 + R97.21)
+- `mCSPC`: Metastatic castration-sensitive (SNOMED 1197209002 + ICD-10 Z19.1)
+- `mCRPC`: Metastatic castration-resistant (SNOMED 445848006 + ICD-10 Z19.2)
 
 **Requirements:**
-- Observation.status = "final"
-- Observation.category = "exam"
-- LOINC code 21889-1 (Cancer disease status)
-- SNOMED code 1197209002 (Castration-sensitive) in valueCodeableConcept
-- ICD-10 code Z19.1 (Hormone sensitive malignancy status) in valueCodeableConcept
+- Condition.clinicalStatus = "active"
+- Condition.verificationStatus = "confirmed"
+- Condition.category = "encounter-diagnosis"
+- Proper SNOMED and ICD-10 code combinations based on HSDM result
 - **MANDATORY**: focus field must reference existing prostate cancer Condition
-- Criteria-based method coding
-- Multiple evidence types (testosterone, PSA, ADT status)
+- **MANDATORY**: clinical facts evidence (Fact[]) is required
+- **MANDATORY**: summary note is required
+- Clinical fact extensions using `https://thirdopinion.io/clinical-fact`
 
 **Key methods:**
 ```csharp
-public CspcAssessmentObservationBuilder WithInferenceId(string id)
-public CspcAssessmentObservationBuilder WithPatient(ResourceReference patientRef)
-public CspcAssessmentObservationBuilder WithDevice(ResourceReference deviceRef)
-public CspcAssessmentObservationBuilder WithFocus(ResourceReference existingConditionRef)  // REQUIRED
-public CspcAssessmentObservationBuilder WithCriteria(string criteriaId, string display, string description)
-public CspcAssessmentObservationBuilder WithCastrationSensitive(bool isSensitive)
-public CspcAssessmentObservationBuilder AddEvidence(ResourceReference reference, string displayText = null)
-public CspcAssessmentObservationBuilder WithEffectiveDate(DateTime dateTime)
-public CspcAssessmentObservationBuilder WithInterpretation(string interpretationText)
-public CspcAssessmentObservationBuilder AddNote(string noteText)
+public HsdmAssessmentConditionBuilder WithInferenceId(string id)
+public HsdmAssessmentConditionBuilder WithPatient(ResourceReference patientRef)
+public HsdmAssessmentConditionBuilder WithDevice(ResourceReference deviceRef)
+public HsdmAssessmentConditionBuilder WithFocus(ResourceReference existingConditionRef)  // REQUIRED
+public HsdmAssessmentConditionBuilder WithCriteria(string criteriaId, string display, string description)
+public HsdmAssessmentConditionBuilder WithHSDMResult(string result)  // REQUIRED: "nmCSPC_biochemical_relapse", "mCSPC", "mCRPC"
+public HsdmAssessmentConditionBuilder AddEvidence(ResourceReference reference, string displayText = null)
+public HsdmAssessmentConditionBuilder AddFactEvidence(Fact[] facts)  // REQUIRED
+public HsdmAssessmentConditionBuilder WithEffectiveDate(DateTime dateTime)
+public HsdmAssessmentConditionBuilder WithConfidence(float confidence)
+public HsdmAssessmentConditionBuilder WithSummary(string noteText)  // REQUIRED
 ```
 
 **Example usage:**
 ```csharp
-var assessment = new CspcAssessmentObservationBuilder()
-    .WithInferenceId("to.ai-inference-1")
+var facts = new[]
+{
+    new Fact
+    {
+        FactGuid = "cc58eb7a-2417-4dab-8782-ec1c99315fd2",
+        FactDocumentReference = "DocumentReference/pathology-001",
+        Type = "diagnosis",
+        FactText = "Metastatic adenocarcinoma of prostate with bone involvement",
+        Ref = new[] { "Section 2.1" },
+        TimeRef = "2024-01-15",
+        Relevance = "Confirms metastatic disease status for HSDM classification"
+    }
+};
+
+var assessment = new HsdmAssessmentConditionBuilder(config)
+    .WithInferenceId("hsdm-assessment-001")
     .WithPatient(new ResourceReference("Patient/example"))
-    .WithDevice(new ResourceReference("Device/to.io-trial-eligibility-ai-v2"))
+    .WithDevice(new ResourceReference("Device/ai-hsdm-classifier-v2"))
     .WithFocus(new ResourceReference("Condition/prostate-cancer-primary-001", "Primary prostate cancer diagnosis"))
-    .WithCriteria("cspc-assessment-1234455-v1.0", 
-        "ThirdOpinion.io CSPC Assessment(ID:1234455) v1.1",
-        "ThirdOpinion.io AI inference for CSPC based on hormone levels, PSA kinetics, and treatment response")
-    .WithCastrationSensitive(true)
-    .AddEvidence(new ResourceReference("Observation/testosterone-level-001"), "Testosterone 15 ng/dL (castrate level)")
-    .AddEvidence(new ResourceReference("Observation/psa-response-001"), "PSA decreased 80% on ADT")
-    .AddEvidence(new ResourceReference("Observation/to.io-adt-status-obs-001"), "Active ADT therapy")
-    .WithInterpretation("Disease responding to ADT, hormone-sensitive")
+    .WithCriteria("HSDM-CRITERIA-2024", "HSDM Classification Criteria v2024",
+                  "Standardized criteria for hormone sensitivity determination")
+    .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
+    .AddFactEvidence(facts)
+    .AddEvidence(new ResourceReference("Observation/testosterone-level-001"), "Castrate testosterone level")
+    .WithSummary("Patient demonstrates metastatic castration-sensitive prostate cancer based on clinical evidence")
+    .WithConfidence(0.92f)
     .WithEffectiveDate(DateTime.UtcNow)
-    .AddNote("Classification derived from testosterone <50 ng/dL during ADT with PSA decline >50%")
     .Build();
 ```
 
 **Validation requirements:**
-- Build() must throw `InvalidOperationException` if focus is not set
+- Build() must throw `InvalidOperationException` if focus, HSDM result, facts, or summary are not set
 - Build() must validate that focus references a Condition resource
-- Must apply both SNOMED 1197209002 AND ICD-10 Z19.1 codes in valueCodeableConcept
+- Must apply proper SNOMED and ICD-10 code combinations based on HSDM result type
+- Clinical facts are stored as FHIR extensions and referenced as evidence
 
 ### 5. PSA Progression Assessment Builder
 
@@ -304,41 +323,111 @@ var assessment = new CspcAssessmentObservationBuilder()
 Constructs Observation resources for PSA progression using either ThirdOpinion.io or PCWG3 criteria.
 
 **Requirements:**
-- Support for custom ThirdOpinion.io criteria
-- Support for PCWG3 criteria
-- Component elements for measurements and validity periods
-- Multiple PSA value references via derivedFrom
-- Detailed clinical analysis notes
+- Observation.status = "final"
+- Observation.category = "laboratory"
+- LOINC code 97509-4 (PSA progression)
+- Support for ThirdOpinion.io and PCWG3 criteria via CriteriaType enum
+- Automatic PSA change calculations (percentage and absolute)
+- PSA evidence with role-based categorization ("baseline", "nadir", "current", "latest")
+- Extension support for PSA evidence roles and values
+- Component elements for calculated changes, validity periods, and confidence scores
+- Multiple PSA value references via derivedFrom with role extensions
+- Specialized "most recent PSA value" component with observation reference
+- Detailed clinical analysis notes and threshold analysis for PCWG3
 
 **Key methods:**
 ```csharp
 public PsaProgressionObservationBuilder WithInferenceId(string id)
 public PsaProgressionObservationBuilder WithPatient(ResourceReference patientRef)
+public PsaProgressionObservationBuilder WithPatient(string patientId, string? display = null)
 public PsaProgressionObservationBuilder WithDevice(ResourceReference deviceRef)
-public PsaProgressionObservationBuilder WithFocus(ResourceReference conditionRef)
-public PsaProgressionObservationBuilder WithCriteria(string criteriaId, string display, string description)
-public PsaProgressionObservationBuilder AddPsaEvidence(ResourceReference observationRef, string displayText)
-public PsaProgressionObservationBuilder WithProgression(bool hasProgressed)
+public PsaProgressionObservationBuilder WithDevice(string deviceId, string? display = null)
+public PsaProgressionObservationBuilder WithFocus(params ResourceReference[] focus)
+public PsaProgressionObservationBuilder WithCriteria(CriteriaType criteriaType, string version)
+public PsaProgressionObservationBuilder AddPsaEvidence(ResourceReference psaObservation, string role, decimal? value = null, string? unit = "ng/mL")
+public PsaProgressionObservationBuilder WithProgression(string progressionStatus)  // "true", "false", or "unknown"
+public PsaProgressionObservationBuilder WithEffectiveDate(DateTime effectiveDate)
+public PsaProgressionObservationBuilder WithEffectiveDate(DateTimeOffset effectiveDate)
+public PsaProgressionObservationBuilder WithMostRecentPsaValue(DateTime mostRecentDateTime, string mostRecentPsaValueText, ResourceReference mostRecentDateTimeObservation)
 public PsaProgressionObservationBuilder AddValidUntilComponent(DateTime validUntil)
 public PsaProgressionObservationBuilder AddThresholdMetComponent(bool thresholdMet)
 public PsaProgressionObservationBuilder AddDetailedAnalysisNote(string analysis)
+public PsaProgressionObservationBuilder WithConfidence(float confidence)
 public PsaProgressionObservationBuilder AddNote(string noteText)
+```
+
+**CriteriaType Enum:**
+```csharp
+public enum CriteriaType
+{
+    ThirdOpinionIO,    // ThirdOpinion.io criteria
+    PCWG3             // Prostate Cancer Working Group 3 criteria
+}
+```
+
+**Key Implementation Notes:**
+- **WithProgression**: Accepts string values "true", "false", or "unknown" (not boolean)
+- **AddPsaEvidence**: Includes role parameter ("baseline", "nadir", "current", "latest") for automatic PSA change calculations
+- **WithCriteria**: Uses CriteriaType enum instead of string parameters
+- **WithFocus**: Accepts multiple ResourceReference parameters for conditions
+- **Automatic Calculations**: Builder automatically calculates percentage and absolute PSA changes based on evidence roles
+- **PCWG3 Support**: Automatically adds threshold analysis (≥25% increase from nadir) for PCWG3 criteria
+
+**WithMostRecentPsaValue Method:**
+The `WithMostRecentPsaValue` method adds a specialized component to track the most recent PSA measurement used in the analysis.
+
+**Parameters:**
+- `mostRecentDateTime` (DateTime): The date/time of the most recent measurement
+- `mostRecentPsaValueText` (string): Descriptive text for the measurement
+- `mostRecentDateTimeObservation` (ResourceReference): Reference to the observation resource
+
+**Generated FHIR Component:**
+```json
+{
+  "component": [
+    {
+      "code": {
+        "coding": [
+          {
+            "system": "https://thirdopinion.io/result-code",
+            "code": "mostRecentMeasurement_v1",
+            "display": "The most recent measurement used in the analysis"
+          }
+        ],
+        "text": "{mostRecentPsaValueText}"
+      },
+      "valueDateTime": "{mostRecentDateTime}",
+      "extension": [
+        {
+          "url": "https://thirdopinion.io/fhir/StructureDefinition/source-observation",
+          "valueReference": {
+            "reference": "{observationReference}",
+            "display": "The most recent result used in the analysis"
+          }
+        }
+      ]
+    }
+  ]
+}
 ```
 
 **Example usage:**
 ```csharp
-var progression = new PsaProgressionObservationBuilder()
+var progression = new PsaProgressionObservationBuilder(configuration)
     .WithInferenceId("to.ai-inference-1")
     .WithPatient(new ResourceReference("Patient/example"))
     .WithDevice(new ResourceReference("Device/to.io-trial-eligibility-ai-v2"))
     .WithFocus(new ResourceReference("Condition/to.io-prostate-cancer-cspc-001"))
-    .WithCriteria("psa-progression-1234455-v1.2", 
-        "ThirdOpinion.io PSA Progression Criteria ID:1234455 v1.2",
-        "ThirdOpinion.io PSA progression criteria: ≥30% and ≥3 ng/mL increase from nadir, confirmed by second measurement ≥4 weeks later")
-    .AddPsaEvidence(new ResourceReference("Observation/psa-2024-07-15"), "PSA nadir 5.2 ng/mL on 2024-07-15")
-    .AddPsaEvidence(new ResourceReference("Observation/psa-2024-09-01"), "PSA 9.8 ng/mL on 2024-09-01 (first rise)")
-    .AddPsaEvidence(new ResourceReference("Observation/psa-2024-09-29"), "PSA 11.8 ng/mL on 2024-09-29 (confirmatory, 4 weeks later)")
-    .WithProgression(true)
+    .WithCriteria(CriteriaType.ThirdOpinionIO, "1.2")
+    .AddPsaEvidence(new ResourceReference("Observation/psa-2024-07-15"), "nadir", 5.2m, "ng/mL")
+    .AddPsaEvidence(new ResourceReference("Observation/psa-2024-09-01"), "current", 9.8m, "ng/mL")
+    .AddPsaEvidence(new ResourceReference("Observation/psa-2024-09-29"), "current", 11.8m, "ng/mL")
+    .WithProgression("true")
+    .WithEffectiveDate(new DateTime(2024, 9, 29))
+    .WithMostRecentPsaValue(
+        new DateTime(2024, 9, 29),
+        "The most recent result used in the analysis is 2024-09-29 with a value of 11.8 ng/mL",
+        new ResourceReference("Observation/psa-2024-09-29", "Most recent PSA measurement"))
     .AddValidUntilComponent(new DateTime(2025, 10, 28))
     .AddThresholdMetComponent(true)
     .AddNote("PSA progression confirmed per ThirdOpinion.io criteria: ≥30% and ≥3 ng/mL increase from nadir")
@@ -362,11 +451,29 @@ var progression = new PsaProgressionObservationBuilder()
     .WithProgression(true)
     .AddValidUntilComponent(new DateTime(2025, 10, 28))
     .AddThresholdMetComponent(true)
+    .WithConfidence(0.95f)
     .AddNote("PSA progression confirmed per ThirdOpinion.io criteria: ≥30% and ≥3 ng/mL increase from nadir")
     .AddDetailedAnalysisNote(@"PSA Analysis - Prostate Cancer Treatment Response
 Chronological PSA Values: 11/14/24: Total PSA = 85.23 ng/mL (SEVERELY ELEVATED)
 Treatment Response: PSA decreased to 0.1 ng/mL (>99% reduction)
 ⚠️ CRITICAL DATA ISSUE: Two conflicting PSA values on 4/30/25 require investigation")
+    .Build();
+```
+
+**Example usage with PCWG3 criteria:**
+```csharp
+var pcwg3Progression = new PsaProgressionObservationBuilder(configuration)
+    .WithInferenceId("to.ai-inference-pcwg3-1")
+    .WithPatient("Patient/example-patient")
+    .WithDevice("Device/psa-analyzer-v2")
+    .WithFocus(new ResourceReference("Condition/prostate-cancer-condition"))
+    .WithCriteria(CriteriaType.PCWG3, "2.0")
+    .AddPsaEvidence(new ResourceReference("Observation/psa-nadir"), "nadir", 2.0m)
+    .AddPsaEvidence(new ResourceReference("Observation/psa-current"), "current", 2.7m)
+    .WithProgression("true")
+    .WithEffectiveDate(new DateTime(2024, 11, 15))
+    .WithConfidence(0.87f)
+    .AddNote("PSA progression per PCWG3: ≥25% increase from nadir (2.0→2.7 ng/mL, 35% increase)")
     .Build();
 ```
 
@@ -603,8 +710,8 @@ All builders must validate required fields before Build() returns:
 - Status/effective dates are valid
 
 **Resource-specific validations:**
-- `CspcAssessmentObservationBuilder`: Focus reference MUST be set
-- `PsaProgressionObservationBuilder`: Must have nadir and current PSA values
+- `HsdmAssessmentConditionBuilder`: Focus reference, HSDM result, facts, and summary MUST be set
+- `PsaProgressionObservationBuilder`: Must have at least one PSA evidence reference and progression status set
 - `RecistProgressionObservationBuilder`: Must have nadir and current SLD
 - `AiProvenanceBuilder`: Must have at least one target and one agent
 
@@ -695,9 +802,10 @@ ThirdOpinion.Fhir.AiInference
 │   │   └── AiResourceBuilderBase.cs
 │   ├── Observations
 │   │   ├── AdtStatusObservationBuilder.cs
-│   │   ├── CspcAssessmentObservationBuilder.cs
 │   │   ├── PsaProgressionObservationBuilder.cs
 │   │   └── RecistProgressionObservationBuilder.cs
+│   ├── Conditions
+│   │   └── HsdmAssessmentConditionBuilder.cs
 │   ├── Documents
 │   │   ├── OcrDocumentReferenceBuilder.cs
 │   │   └── FactExtractionDocumentReferenceBuilder.cs
@@ -811,11 +919,11 @@ Inference logs:        s3://thirdopinion-logs/inference/{yyyy}/{mm}/{dd}/{infere
 - AiInferenceConfiguration
 - Unit tests for base classes
 
-### Phase 2: Observation Builders
+### Phase 2: Observation and Condition Builders
 - AdtStatusObservationBuilder
-- CspcAssessmentObservationBuilder (with focus validation)
+- HsdmAssessmentConditionBuilder (with focus, facts, and summary validation)
 - PsaProgressionObservationBuilder
-- Integration tests for observation workflow
+- Integration tests for observation and condition workflow
 
 ### Phase 3: Advanced Builders
 - RecistProgressionObservationBuilder
@@ -1114,7 +1222,7 @@ var observation = new AdtStatusObservationBuilder()
     "method": {
         "coding": [
             {
-                "system": "https://thirdopinion.io/criteria",
+                "system": " ",
                 "code": "cspc-assessment-1234455-v1.0",
                 "display": "ThirdOpinion.io CSPC Assessment(ID:1234455) v1.1"
             }
@@ -1131,8 +1239,8 @@ var observation = new AdtStatusObservationBuilder()
 
 **Builder usage:**
 ```csharp
-var assessment = new CspcAssessmentObservationBuilder()
-    .WithInferenceId("to.ai-inference-1")
+var assessment = new HsdmAssessmentConditionBuilder(config)
+    .WithInferenceId("hsdm-assessment-001")
     .WithPatient(new ResourceReference("Patient/example"))
     .WithDevice(new ResourceReference("Device/to.io-trial-eligibility-ai-v2"))
     .WithFocus(new ResourceReference("Condition/prostate-cancer-primary-001", "Primary prostate cancer diagnosis (not AI-generated)"))
