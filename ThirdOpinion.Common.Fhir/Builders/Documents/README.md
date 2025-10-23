@@ -113,23 +113,23 @@ var extractedFacts = new[]
 {
     new Fact
     {
-        FactGuid = "fact-001",
-        FactDocumentReference = "DocumentReference/ocr-text-001",
-        Type = "diagnosis",
-        FactText = "Adenocarcinoma of prostate",
-        Ref = new[] { "Line 5", "Diagnosis section" },
-        TimeRef = "2024-01-15",
-        Relevance = "Primary diagnosis for treatment planning"
+        factGuid = "fact-001",
+        factDocumentReference = "DocumentReference/ocr-text-001",
+        type = "diagnosis",
+        fact = "Adenocarcinoma of prostate",
+        @ref = new[] { "Line 5", "Diagnosis section" },
+        timeRef = "2024-01-15",
+        relevance = "Primary diagnosis for treatment planning"
     },
     new Fact
     {
-        FactGuid = "fact-002",
-        FactDocumentReference = "DocumentReference/ocr-text-001",
-        Type = "assessment",
-        FactText = "Gleason Score 4+3=7",
-        Ref = new[] { "Line 6" },
-        TimeRef = "2024-01-15",
-        Relevance = "Prognostic indicator for risk stratification"
+        factGuid = "fact-002",
+        factDocumentReference = "DocumentReference/ocr-text-001",
+        type = "assessment",
+        fact = "Gleason Score 4+3=7",
+        @ref = new[] { "Line 6" },
+        timeRef = "2024-01-15",
+        relevance = "Prognostic indicator for risk stratification"
     }
 };
 
@@ -174,13 +174,13 @@ These methods **must** be called before `Build()`:
 ```csharp
 public class Fact
 {
-    public string FactGuid { get; set; }                    // Unique identifier
-    public string FactDocumentReference { get; set; }       // Source document reference
-    public string Type { get; set; }                       // Category: diagnosis, lab, medication, etc.
-    public string FactText { get; set; }                   // Extracted fact text
-    public string[] Ref { get; set; }                      // Location references in source
-    public string TimeRef { get; set; }                    // Temporal reference
-    public string Relevance { get; set; }                  // Clinical relevance explanation
+    public string factGuid { get; set; }                    // Unique identifier
+    public string factDocumentReference { get; set; }       // Source document reference
+    public string type { get; set; }                       // Category: diagnosis, lab, medication, etc.
+    public string fact { get; set; }                       // Extracted fact text
+    public string[] @ref { get; set; }                     // Location references in source
+    public string timeRef { get; set; }                    // Temporal reference
+    public string relevance { get; set; }                  // Clinical relevance explanation
 }
 ```
 
@@ -449,7 +449,7 @@ The `FactExtractionDocumentReferenceBuilder` performs validation:
 - **Device reference** must be provided
 - **Source document** must be provided
 - **Facts array** cannot be empty
-- **Each fact** must have valid FactGuid, Type, and FactText
+- **Each fact** must have valid factGuid, type, and fact
 - **Confidence** must be between 0.0 and 1.0 if provided
 
 ### Error Handling

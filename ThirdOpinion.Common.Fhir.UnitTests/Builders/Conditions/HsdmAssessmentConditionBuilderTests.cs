@@ -26,13 +26,13 @@ public class HsdmAssessmentConditionBuilderTests
         {
             new Fact
             {
-                FactGuid = "cc58eb7a-2417-4dab-8782-ec1c99315fd2",
-                FactDocumentReference = "DocumentReference/123345",
-                Type = "diagnosis",
-                FactText = "Metastatic malignant neoplasm to bone",
-                Ref = new[] { "1.44" },
-                TimeRef = "2025-03-20",
-                Relevance = "Confirms metastatic disease to bone (M1b status)"
+                factGuid = "cc58eb7a-2417-4dab-8782-ec1c99315fd2",
+                factDocumentReference = "DocumentReference/123345",
+                type = "diagnosis",
+                fact = "Metastatic malignant neoplasm to bone",
+                @ref = new[] { "1.44" },
+                timeRef = "2025-03-20",
+                relevance = "Confirms metastatic disease to bone (M1b status)"
             }
         };
     }
@@ -254,19 +254,19 @@ public class HsdmAssessmentConditionBuilderTests
         {
             new Fact
             {
-                FactGuid = "fact-1",
-                FactDocumentReference = "DocumentReference/doc1",
-                Type = "diagnosis",
-                FactText = "Primary tumor diagnosis",
-                Relevance = "Establishes primary diagnosis"
+                factGuid = "fact-1",
+                factDocumentReference = "DocumentReference/doc1",
+                type = "diagnosis",
+                fact = "Primary tumor diagnosis",
+                relevance = "Establishes primary diagnosis"
             },
             new Fact
             {
-                FactGuid = "fact-2",
-                FactDocumentReference = "DocumentReference/doc2",
-                Type = "treatment",
-                FactText = "Previous treatment history",
-                Relevance = "Shows treatment response pattern"
+                factGuid = "fact-2",
+                factDocumentReference = "DocumentReference/doc2",
+                type = "treatment",
+                fact = "Previous treatment history",
+                relevance = "Shows treatment response pattern"
             }
         };
 

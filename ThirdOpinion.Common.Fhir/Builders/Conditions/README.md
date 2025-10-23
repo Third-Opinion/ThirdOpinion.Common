@@ -34,23 +34,23 @@ var facts = new[]
 {
     new Fact
     {
-        FactGuid = "cc58eb7a-2417-4dab-8782-ec1c99315fd2",
-        FactDocumentReference = "DocumentReference/pathology-report-001",
-        Type = "diagnosis",
-        FactText = "Metastatic adenocarcinoma of prostate with bone involvement",
-        Ref = new[] { "Section 2.1", "Figure 3" },
-        TimeRef = "2024-01-15",
-        Relevance = "Confirms metastatic disease status for HSDM classification"
+        factGuid = "cc58eb7a-2417-4dab-8782-ec1c99315fd2",
+        factDocumentReference = "DocumentReference/pathology-report-001",
+        type = "diagnosis",
+        fact = "Metastatic adenocarcinoma of prostate with bone involvement",
+        @ref = new[] { "Section 2.1", "Figure 3" },
+        timeRef = "2024-01-15",
+        relevance = "Confirms metastatic disease status for HSDM classification"
     },
     new Fact
     {
-        FactGuid = "bb47da6b-3528-5cde-9893-fd2d10426ae3",
-        FactDocumentReference = "DocumentReference/lab-results-003",
-        Type = "lab",
-        FactText = "Testosterone level 0.8 ng/mL (castrate level)",
-        Ref = new[] { "Lab ID: PSA-789" },
-        TimeRef = "2024-01-10",
-        Relevance = "Demonstrates castrate testosterone levels supporting sensitivity classification"
+        factGuid = "bb47da6b-3528-5cde-9893-fd2d10426ae3",
+        factDocumentReference = "DocumentReference/lab-results-003",
+        type = "lab",
+        fact = "Testosterone level 0.8 ng/mL (castrate level)",
+        @ref = new[] { "Lab ID: PSA-789" },
+        timeRef = "2024-01-10",
+        relevance = "Demonstrates castrate testosterone levels supporting sensitivity classification"
     }
 };
 

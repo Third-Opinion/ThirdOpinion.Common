@@ -290,9 +290,9 @@ public class HsdmAssessmentConditionBuilder : AiResourceBuilderBase<Condition>
         _facts.AddRange(facts.Where(f => f != null));
 
         // Add document references as evidence
-        foreach (var fact in facts.Where(f => f != null && !string.IsNullOrWhiteSpace(f.FactDocumentReference)))
+        foreach (var fact in facts.Where(f => f != null && !string.IsNullOrWhiteSpace(f.factDocumentReference)))
         {
-            AddEvidence(fact.FactDocumentReference, $"Fact evidence: {fact.Type}");
+            AddEvidence(fact.factDocumentReference, $"Fact evidence: {fact.type}");
         }
 
         return this;

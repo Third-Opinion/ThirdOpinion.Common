@@ -29,48 +29,48 @@ public static class ClinicalFactExtension
         };
 
         // Add fact GUID
-        if (!string.IsNullOrWhiteSpace(fact.FactGuid))
+        if (!string.IsNullOrWhiteSpace(fact.factGuid))
         {
-            extension.Extension.Add(new Extension("factGuid", new FhirString(fact.FactGuid)));
+            extension.Extension.Add(new Extension("factGuid", new FhirString(fact.factGuid)));
         }
 
         // Add document reference
-        if (!string.IsNullOrWhiteSpace(fact.FactDocumentReference))
+        if (!string.IsNullOrWhiteSpace(fact.factDocumentReference))
         {
-            extension.Extension.Add(new Extension("factDocumentReference", new FhirString(fact.FactDocumentReference)));
+            extension.Extension.Add(new Extension("factDocumentReference", new FhirString(fact.factDocumentReference)));
         }
 
         // Add fact type
-        if (!string.IsNullOrWhiteSpace(fact.Type))
+        if (!string.IsNullOrWhiteSpace(fact.type))
         {
-            extension.Extension.Add(new Extension("type", new FhirString(fact.Type)));
+            extension.Extension.Add(new Extension("type", new FhirString(fact.type)));
         }
 
         // Add fact text
-        if (!string.IsNullOrWhiteSpace(fact.FactText))
+        if (!string.IsNullOrWhiteSpace(fact.fact))
         {
-            extension.Extension.Add(new Extension("fact", new FhirString(fact.FactText)));
+            extension.Extension.Add(new Extension("fact", new FhirString(fact.fact)));
         }
 
         // Add references array
-        if (fact.Ref != null && fact.Ref.Length > 0)
+        if (fact.@ref != null && fact.@ref.Length > 0)
         {
-            foreach (var refValue in fact.Ref.Where(r => !string.IsNullOrWhiteSpace(r)))
+            foreach (var refValue in fact.@ref.Where(r => !string.IsNullOrWhiteSpace(r)))
             {
                 extension.Extension.Add(new Extension("ref", new FhirString(refValue)));
             }
         }
 
         // Add time reference
-        if (!string.IsNullOrWhiteSpace(fact.TimeRef))
+        if (!string.IsNullOrWhiteSpace(fact.timeRef))
         {
-            extension.Extension.Add(new Extension("timeRef", new FhirString(fact.TimeRef)));
+            extension.Extension.Add(new Extension("timeRef", new FhirString(fact.timeRef)));
         }
 
         // Add relevance
-        if (!string.IsNullOrWhiteSpace(fact.Relevance))
+        if (!string.IsNullOrWhiteSpace(fact.relevance))
         {
-            extension.Extension.Add(new Extension("relevance", new FhirString(fact.Relevance)));
+            extension.Extension.Add(new Extension("relevance", new FhirString(fact.relevance)));
         }
 
         return extension;
