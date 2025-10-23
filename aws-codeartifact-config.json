@@ -1,0 +1,23 @@
+{
+  "codeArtifact": {
+    "domain": "thirdopinion",
+    "accountId": "442042533707",
+    "region": "us-east-2",
+    "repository": "Thirdopinion_Nuget"
+  },
+  "package": {
+    "version": "1.0.0-alpha.5",
+    "configuration": "Release",
+    "skipTests": false
+  },
+  "aws": {
+    "profile": "to-prod-admin",
+    "region": "us-east-2"
+  },
+  "nuget": {
+    "sourceName": "aws-codeartifact",
+    "packagesPath": "packages"
+  }
+}
+
+
