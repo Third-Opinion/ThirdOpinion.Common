@@ -31,9 +31,9 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     private readonly List<ResourceReference> _focusReferences;
     private CriteriaType? _criteriaType;
     private string? _criteriaVersion;
-    private bool? _hasProgression;
+    private string? _progressionStatus;
     private FhirDateTime? _effectiveDate;
-    private readonly List<(ResourceReference reference, string role, decimal? value)> _psaEvidence;
+    private readonly List<(ResourceReference reference, string role, decimal? value, string? unit)> _psaEvidence;
     private readonly List<Observation.ComponentComponent> _components;
     private readonly List<string> _notes;
     private float? _confidence;
@@ -53,7 +53,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
         : base(configuration)
     {
         _focusReferences = new List<ResourceReference>();
-        _psaEvidence = new List<(ResourceReference, string, decimal?)>();
+        _psaEvidence = new List<(ResourceReference, string, decimal?, string?)>();
         _components = new List<Observation.ComponentComponent>();
         _notes = new List<string>();
     }
@@ -191,15 +191,16 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     /// <param name="psaObservation">The PSA observation reference</param>
     /// <param name="role">The role of this PSA value (e.g., "baseline", "nadir", "current")</param>
     /// <param name="value">Optional PSA value for calculations</param>
+    /// <param name="unit">Optional unit of measurement for the PSA value (defaults to "ng/mL")</param>
     /// <returns>This builder instance for method chaining</returns>
-    public PsaProgressionObservationBuilder AddPsaEvidence(ResourceReference psaObservation, string role, decimal? value = null)
+    public PsaProgressionObservationBuilder AddPsaEvidence(ResourceReference psaObservation, string role, decimal? value = null, string? unit = "ng/mL")
     {
         if (psaObservation == null)
             throw new ArgumentNullException(nameof(psaObservation));
         if (string.IsNullOrWhiteSpace(role))
             throw new ArgumentException("Role cannot be null or empty", nameof(role));
 
-        _psaEvidence.Add((psaObservation, role, value));
+        _psaEvidence.Add((psaObservation, role, value, unit));
 
         // Update calculated values based on role
         switch (role.ToLowerInvariant())
@@ -220,13 +221,21 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets whether PSA progression is detected
+    /// Sets the PSA progression status
     /// </summary>
-    /// <param name="hasProgression">True if progression is detected, false otherwise</param>
+    /// <param name="progressionStatus">The progression status: "true", "false", or "unknown"</param>
     /// <returns>This builder instance for method chaining</returns>
-    public PsaProgressionObservationBuilder WithProgression(bool hasProgression)
+    /// <exception cref="ArgumentException">Thrown when progressionStatus is not a valid value</exception>
+    public PsaProgressionObservationBuilder WithProgression(string progressionStatus)
     {
-        _hasProgression = hasProgression;
+        if (string.IsNullOrWhiteSpace(progressionStatus))
+            throw new ArgumentException("Progression status cannot be null or empty", nameof(progressionStatus));
+
+        var normalizedStatus = progressionStatus.ToLowerInvariant();
+        if (normalizedStatus != "true" && normalizedStatus != "false" && normalizedStatus != "unknown")
+            throw new ArgumentException("Progression status must be 'true', 'false', or 'unknown'", nameof(progressionStatus));
+
+        _progressionStatus = normalizedStatus;
         return this;
     }
 
@@ -321,6 +330,58 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
+    /// Adds a most recent PSA measurement component with observation reference
+    /// </summary>
+    /// <param name="mostRecentDateTime">The date/time of the most recent measurement</param>
+    /// <param name="mostRecentPsaValueText">The descriptive text for the most recent measurement</param>
+    /// <param name="mostRecentDateTimeObservation">The observation reference for the most recent measurement</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public PsaProgressionObservationBuilder WithMostRecentPsaValue(
+        DateTime mostRecentDateTime,
+        string mostRecentPsaValueText,
+        ResourceReference mostRecentDateTimeObservation)
+    {
+        if (string.IsNullOrWhiteSpace(mostRecentPsaValueText))
+            throw new ArgumentException("Most recent PSA value text cannot be null or empty", nameof(mostRecentPsaValueText));
+        
+        if (mostRecentDateTimeObservation == null)
+            throw new ArgumentNullException(nameof(mostRecentDateTimeObservation));
+
+        var component = new Observation.ComponentComponent
+        {
+            Code = new CodeableConcept
+            {
+                Coding = new List<Coding>
+                {
+                    new Coding
+                    {
+                        System = "https://thirdopinion.io/result-code",
+                        Code = "mostRecentMeasurement_v1",
+                        Display = "The most recent measurement used in the analysis"
+                    }
+                },
+                Text = mostRecentPsaValueText
+            },
+            Value = new FhirDateTime(mostRecentDateTime),
+            Extension = new List<Extension>
+            {
+                new Extension
+                {
+                    Url = "https://thirdopinion.io/fhir/StructureDefinition/source-observation",
+                    Value = new ResourceReference
+                    {
+                        Reference = mostRecentDateTimeObservation.Reference,
+                        Display = "The most recent result used in the analysis"
+                    }
+                }
+            }
+        };
+
+        _components.Add(component);
+        return this;
+    }
+
+    /// <summary>
     /// Sets the effective date/time of this observation
     /// </summary>
     /// <param name="effectiveDate">The effective date/time</param>
@@ -385,7 +446,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
             throw new InvalidOperationException("Device reference is required. Call WithDevice() before Build().");
         }
 
-        if (!_hasProgression.HasValue)
+        if (string.IsNullOrWhiteSpace(_progressionStatus))
         {
             throw new InvalidOperationException("Progression status is required. Call WithProgression() before Build().");
         }
@@ -463,11 +524,52 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
             observation.Method = CreateMethodForCriteria();
         }
 
-        // Add PSA evidence to derivedFrom
+        // Add PSA evidence to derivedFrom with extensions for role and value
         if (_psaEvidence.Any() || DerivedFromReferences.Any())
         {
             observation.DerivedFrom.Clear();
-            observation.DerivedFrom.AddRange(_psaEvidence.Select(e => e.reference));
+            
+            // Add PSA evidence with role and value as extensions
+            foreach (var evidence in _psaEvidence)
+            {
+                var reference = new ResourceReference(evidence.reference.Reference, evidence.reference.Display);
+                
+                // Add role/type as extension
+                reference.Extension = new List<Extension>
+                {
+                    new Extension
+                    {
+                        Url = "http://thirdopinion.ai/fhir/StructureDefinition/psa-evidence-role",
+                        Value = new FhirString(evidence.role)
+                    }
+                };
+                
+                // Add value as extension if available
+                if (evidence.value.HasValue)
+                {
+                    var quantity = new Quantity
+                    {
+                        Value = evidence.value.Value
+                    };
+                    
+                    // Add unit information if provided
+                    if (!string.IsNullOrWhiteSpace(evidence.unit))
+                    {
+                        quantity.Unit = evidence.unit;
+                        quantity.System = "http://unitsofmeasure.org";
+                        quantity.Code = evidence.unit;
+                    }
+                    
+                    reference.Extension.Add(new Extension
+                    {
+                        Url = "http://thirdopinion.ai/fhir/StructureDefinition/psa-evidence-value",
+                        Value = quantity
+                    });
+                }
+                
+                observation.DerivedFrom.Add(reference);
+            }
+            
             observation.DerivedFrom.AddRange(DerivedFromReferences);
         }
 
@@ -519,20 +621,19 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
 
     private CodeableConcept CreateProgressionValue()
     {
-        if (_hasProgression == true)
+        return _progressionStatus switch
         {
-            // Progressive disease
-            return FhirCodingHelper.CreateSnomedConcept(
+            "true" => FhirCodingHelper.CreateSnomedConcept(
                 "277022003",
-                "Progressive disease");
-        }
-        else
-        {
-            // Stable disease
-            return FhirCodingHelper.CreateSnomedConcept(
+                "Progressive disease"),
+            "false" => FhirCodingHelper.CreateSnomedConcept(
                 "359746009",
-                "Stable disease");
-        }
+                "Stable disease"),
+            "unknown" => FhirCodingHelper.CreateSnomedConcept(
+                "261665006",
+                "Unknown"),
+            _ => throw new InvalidOperationException($"Invalid progression status: {_progressionStatus}")
+        };
     }
 
     private CodeableConcept CreateMethodForCriteria()

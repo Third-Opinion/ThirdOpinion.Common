@@ -35,10 +35,10 @@ public class PsaProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_conditionReference)
-            .WithCriteria(CriteriaType.PCWG3, "3.0")
+            .WithCriteria(CriteriaType.PCWG3, "1.0")
             .AddPsaEvidence(psaNadir, "nadir", 2.0m)
             .AddPsaEvidence(psaCurrent, "current", 3.5m)  // 75% increase from nadir
-            .WithProgression(true)
+            .WithProgression("true")
             .WithEffectiveDate(new DateTime(2024, 1, 15))
             .Build();
 
@@ -72,8 +72,34 @@ public class PsaProgressionObservationBuilderTests
 
         // Check PSA evidence in derivedFrom
         observation.DerivedFrom.Count.ShouldBe(2);
-        observation.DerivedFrom[0].ShouldBe(psaNadir);
-        observation.DerivedFrom[1].ShouldBe(psaCurrent);
+        
+        // Check nadir reference
+        observation.DerivedFrom[0].Reference.ShouldBe(psaNadir.Reference);
+        observation.DerivedFrom[0].Display.ShouldBe(psaNadir.Display);
+        observation.DerivedFrom[0].Extension.ShouldNotBeNull();
+        observation.DerivedFrom[0].Extension.Count.ShouldBe(2); // role + value
+        
+        var nadirRoleExt = observation.DerivedFrom[0].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-role"));
+        nadirRoleExt.ShouldNotBeNull();
+        ((FhirString)nadirRoleExt.Value).Value.ShouldBe("nadir");
+        
+        var nadirValueExt = observation.DerivedFrom[0].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
+        nadirValueExt.ShouldNotBeNull();
+        ((Quantity)nadirValueExt.Value).Value.ShouldBe(2.0m);
+        
+        // Check current reference
+        observation.DerivedFrom[1].Reference.ShouldBe(psaCurrent.Reference);
+        observation.DerivedFrom[1].Display.ShouldBe(psaCurrent.Display);
+        observation.DerivedFrom[1].Extension.ShouldNotBeNull();
+        observation.DerivedFrom[1].Extension.Count.ShouldBe(2); // role + value
+        
+        var currentRoleExt = observation.DerivedFrom[1].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-role"));
+        currentRoleExt.ShouldNotBeNull();
+        ((FhirString)currentRoleExt.Value).Value.ShouldBe("current");
+        
+        var currentValueExt = observation.DerivedFrom[1].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
+        currentValueExt.ShouldNotBeNull();
+        ((Quantity)currentValueExt.Value).Value.ShouldBe(3.5m);
 
         // Check calculated components
         observation.Component.ShouldNotBeNull();
@@ -118,7 +144,7 @@ public class PsaProgressionObservationBuilderTests
             .WithCriteria(CriteriaType.ThirdOpinionIO, "2.0")
             .AddPsaEvidence(psaBaseline, "baseline", 5.0m)
             .AddPsaEvidence(psaCurrent, "current", 6.0m)  // 20% increase
-            .WithProgression(false) // Not considered progression
+            .WithProgression("false") // Not considered progression
             .Build();
 
         // Assert
@@ -152,7 +178,7 @@ public class PsaProgressionObservationBuilderTests
             .AddPsaEvidence(new ResourceReference("Observation/1"), "baseline", 4.5m)
             .AddPsaEvidence(new ResourceReference("Observation/2"), "nadir", 1.2m)
             .AddPsaEvidence(new ResourceReference("Observation/3"), "current", 2.4m)
-            .WithProgression(true)
+            .WithProgression("true")
             .WithCriteria(CriteriaType.PCWG3, "1.0")
             .Build();
 
@@ -184,7 +210,7 @@ public class PsaProgressionObservationBuilderTests
             .WithDevice(_deviceReference)
             .WithFocus(condition1, condition2)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
-            .WithProgression(false)
+            .WithProgression("false")
             .Build();
 
         // Assert
@@ -206,7 +232,7 @@ public class PsaProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
-            .WithProgression(false)
+            .WithProgression("false")
             .AddValidUntilComponent(validUntil)
             .Build();
 
@@ -230,7 +256,7 @@ public class PsaProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
-            .WithProgression(true)
+            .WithProgression("true")
             .AddThresholdMetComponent(true)
             .Build();
 
@@ -255,7 +281,7 @@ public class PsaProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
-            .WithProgression(true)
+            .WithProgression("true")
             .AddDetailedAnalysisNote(analysisNote)
             .Build();
 
@@ -279,7 +305,7 @@ public class PsaProgressionObservationBuilderTests
             builder
                 .WithDevice(_deviceReference)
                 .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
-                .WithProgression(true)
+                .WithProgression("true")
                 .Build());
 
         exception.Message.ShouldContain("Patient reference is required");
@@ -296,7 +322,7 @@ public class PsaProgressionObservationBuilderTests
             builder
                 .WithPatient(_patientReference)
                 .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
-                .WithProgression(true)
+                .WithProgression("true")
                 .Build());
 
         exception.Message.ShouldContain("Device reference is required");
@@ -330,7 +356,7 @@ public class PsaProgressionObservationBuilderTests
             builder
                 .WithPatient(_patientReference)
                 .WithDevice(_deviceReference)
-                .WithProgression(true)
+                .WithProgression("true")
                 .Build());
 
         exception.Message.ShouldContain("At least one PSA evidence reference is required");
@@ -393,7 +419,7 @@ public class PsaProgressionObservationBuilderTests
             .WithCriteria(CriteriaType.PCWG3, "1.0")
             .AddPsaEvidence(new ResourceReference("Observation/nadir"), "nadir", 10.0m)
             .AddPsaEvidence(new ResourceReference("Observation/current"), "current", 13.0m)
-            .WithProgression(true)
+            .WithProgression("true")
             .Build();
 
         // Assert
@@ -417,7 +443,7 @@ public class PsaProgressionObservationBuilderTests
             .WithCriteria(CriteriaType.PCWG3, "1.0")
             .AddPsaEvidence(new ResourceReference("Observation/nadir"), "nadir", 10.0m)
             .AddPsaEvidence(new ResourceReference("Observation/current"), "current", 12.0m)
-            .WithProgression(false)
+            .WithProgression("false")
             .Build();
 
         // Assert
@@ -440,7 +466,7 @@ public class PsaProgressionObservationBuilderTests
             .WithCriteria(CriteriaType.ThirdOpinionIO, "3.0")
             .AddPsaEvidence(new ResourceReference("Observation/psa1"), "baseline", 4.0m)
             .AddPsaEvidence(new ResourceReference("Observation/psa2"), "current", 5.5m)
-            .WithProgression(true)
+            .WithProgression("true")
             .AddValidUntilComponent(DateTime.Now.AddMonths(3))
             .AddThresholdMetComponent(true)
             .AddDetailedAnalysisNote("Significant PSA rise detected")
@@ -470,7 +496,7 @@ public class PsaProgressionObservationBuilderTests
             .WithCriteria(CriteriaType.PCWG3, "1.0")
             .AddPsaEvidence(new ResourceReference("Observation/psa-nadir"), "nadir", 2.5m)
             .AddPsaEvidence(new ResourceReference("Observation/psa-current"), "current", 3.5m)
-            .WithProgression(true)
+            .WithProgression("true")
             .AddDetailedAnalysisNote("PSA progression confirmed per PCWG3 criteria")
             .WithEffectiveDate(new DateTime(2024, 1, 15))
             .Build();
@@ -510,7 +536,7 @@ public class PsaProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
-            .WithProgression(true)
+            .WithProgression("true")
             .AddNote("First clinical note")
             .AddNote("Second observation")
             .AddNote("Third remark")
@@ -535,7 +561,7 @@ public class PsaProgressionObservationBuilderTests
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/baseline"), "baseline", 0m)
             .AddPsaEvidence(new ResourceReference("Observation/current"), "current", 2.0m)
-            .WithProgression(true)
+            .WithProgression("true")
             .Build();
 
         // Assert - Should have absolute change but no percentage change
@@ -549,5 +575,357 @@ public class PsaProgressionObservationBuilderTests
         var percentageComponent = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "percentage-change"));
         percentageComponent.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WithProgression_Unknown_CreatesCorrectObservation()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+
+        // Act
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
+            .WithProgression("unknown")
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+        var valueCodeableConcept = observation.Value as CodeableConcept;
+        valueCodeableConcept.ShouldNotBeNull();
+        valueCodeableConcept.Coding[0].Code.ShouldBe("261665006"); // Unknown SNOMED code
+        valueCodeableConcept.Coding[0].Display.ShouldBe("Unknown");
+    }
+
+    [Fact]
+    public void WithProgression_InvalidValue_ThrowsArgumentException()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+
+        // Act & Assert
+        var exception = Should.Throw<ArgumentException>(() =>
+            builder.WithProgression("maybe"));
+
+        exception.Message.ShouldContain("must be 'true', 'false', or 'unknown'");
+    }
+
+    [Fact]
+    public void WithProgression_NullValue_ThrowsArgumentException()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+
+        // Act & Assert
+        Should.Throw<ArgumentException>(() =>
+            builder.WithProgression(null!));
+    }
+
+    [Fact]
+    public void WithProgression_EmptyString_ThrowsArgumentException()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+
+        // Act & Assert
+        Should.Throw<ArgumentException>(() =>
+            builder.WithProgression(""));
+    }
+
+    [Fact]
+    public void WithProgression_CaseInsensitive_WorksCorrectly()
+    {
+        // Arrange
+        var builder1 = new PsaProgressionObservationBuilder(_configuration);
+        var builder2 = new PsaProgressionObservationBuilder(_configuration);
+        var builder3 = new PsaProgressionObservationBuilder(_configuration);
+
+        // Act & Assert - Should accept various cases
+        var obs1 = builder1
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
+            .WithProgression("TRUE")
+            .Build();
+        var value1 = obs1.Value as CodeableConcept;
+        value1?.Coding[0].Code.ShouldBe("277022003"); // Progressive disease
+
+        var obs2 = builder2
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
+            .WithProgression("False")
+            .Build();
+        var value2 = obs2.Value as CodeableConcept;
+        value2?.Coding[0].Code.ShouldBe("359746009"); // Stable disease
+
+        var obs3 = builder3
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
+            .WithProgression("UnKnOwN")
+            .Build();
+        var value3 = obs3.Value as CodeableConcept;
+        value3?.Coding[0].Code.ShouldBe("261665006"); // Unknown
+    }
+
+    [Fact]
+    public void AddPsaEvidence_CustomUnit_StoresCorrectUnit()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+
+        // Act - Use custom unit
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .AddPsaEvidence(new ResourceReference("Observation/psa1"), "baseline", 4.5m, "ug/L")
+            .AddPsaEvidence(new ResourceReference("Observation/psa2"), "current", 6.0m, "ug/L")
+            .WithProgression("true")
+            .Build();
+
+        // Assert - Check custom unit is preserved
+        observation.DerivedFrom[0].Extension.ShouldNotBeNull();
+        var valueExt1 = observation.DerivedFrom[0].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
+        valueExt1.ShouldNotBeNull();
+        var quantity1 = valueExt1.Value as Quantity;
+        quantity1.ShouldNotBeNull();
+        quantity1.Value.ShouldBe(4.5m);
+        quantity1.Unit.ShouldBe("ug/L");
+        quantity1.Code.ShouldBe("ug/L");
+
+        observation.DerivedFrom[1].Extension.ShouldNotBeNull();
+        var valueExt2 = observation.DerivedFrom[1].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
+        valueExt2.ShouldNotBeNull();
+        var quantity2 = valueExt2.Value as Quantity;
+        quantity2.ShouldNotBeNull();
+        quantity2.Value.ShouldBe(6.0m);
+        quantity2.Unit.ShouldBe("ug/L");
+        quantity2.Code.ShouldBe("ug/L");
+    }
+
+    [Fact]
+    public void AddPsaEvidence_DefaultUnit_UsesNgPerMl()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+
+        // Act - Don't specify unit, should default to ng/mL
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
+            .WithProgression("true")
+            .Build();
+
+        // Assert - Check default unit is ng/mL
+        var valueExt = observation.DerivedFrom[0].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
+        valueExt.ShouldNotBeNull();
+        var quantity = valueExt.Value as Quantity;
+        quantity.ShouldNotBeNull();
+        quantity.Value.ShouldBe(5.0m);
+        quantity.Unit.ShouldBe("ng/mL");
+        quantity.Code.ShouldBe("ng/mL");
+    }
+
+    [Fact]
+    public void AddPsaEvidence_NullUnit_OmitsUnitInformation()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+
+        // Act - Explicitly pass null for unit
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m, null)
+            .WithProgression("true")
+            .Build();
+
+        // Assert - Check no unit information is present
+        var valueExt = observation.DerivedFrom[0].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
+        valueExt.ShouldNotBeNull();
+        var quantity = valueExt.Value as Quantity;
+        quantity.ShouldNotBeNull();
+        quantity.Value.ShouldBe(5.0m);
+        quantity.Unit.ShouldBeNull();
+        quantity.Code.ShouldBeNull();
+        quantity.System.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WithMostRecentPsaValue_AddsCorrectComponent()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+        var mostRecentDate = new DateTime(2025, 1, 1);
+        var mostRecentText = "The most recent result used in the analysis is 2025-01-01 with a value of 7 ng/mL";
+        var mostRecentObservation = new ResourceReference("Observation/some-measurement-3", "Most Recent PSA");
+
+        // Act
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
+            .WithProgression("true")
+            .WithMostRecentPsaValue(mostRecentDate, mostRecentText, mostRecentObservation)
+            .Build();
+
+        // Assert
+        observation.Component.ShouldNotBeNull();
+        var mostRecentComponent = observation.Component.FirstOrDefault(c =>
+            c.Code.Coding.Any(cd => cd.Code == "mostRecentMeasurement_v1"));
+        
+        mostRecentComponent.ShouldNotBeNull();
+        
+        // Verify code
+        mostRecentComponent.Code.Coding[0].System.ShouldBe("https://thirdopinion.io/result-code");
+        mostRecentComponent.Code.Coding[0].Code.ShouldBe("mostRecentMeasurement_v1");
+        mostRecentComponent.Code.Coding[0].Display.ShouldBe("The most recent measurement used in the analysis");
+        mostRecentComponent.Code.Text.ShouldBe(mostRecentText);
+        
+        // Verify value
+        var dateTimeValue = mostRecentComponent.Value as FhirDateTime;
+        dateTimeValue.ShouldNotBeNull();
+        dateTimeValue.Value.ShouldStartWith("2025-01-01");
+        
+        // Verify extension
+        mostRecentComponent.Extension.ShouldNotBeNull();
+        mostRecentComponent.Extension.Count.ShouldBe(1);
+        mostRecentComponent.Extension[0].Url.ShouldBe("https://thirdopinion.io/fhir/StructureDefinition/source-observation");
+        
+        var extensionReference = mostRecentComponent.Extension[0].Value as ResourceReference;
+        extensionReference.ShouldNotBeNull();
+        extensionReference.Reference.ShouldBe("Observation/some-measurement-3");
+        extensionReference.Display.ShouldBe("The most recent result used in the analysis");
+    }
+
+    [Fact]
+    public void WithMostRecentPsaValue_NullText_ThrowsArgumentException()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+        var mostRecentDate = new DateTime(2025, 1, 1);
+        var mostRecentObservation = new ResourceReference("Observation/some-measurement-3");
+
+        // Act & Assert
+        var exception = Should.Throw<ArgumentException>(() =>
+            builder.WithMostRecentPsaValue(mostRecentDate, null!, mostRecentObservation));
+        
+        exception.Message.ShouldContain("Most recent PSA value text cannot be null or empty");
+    }
+
+    [Fact]
+    public void WithMostRecentPsaValue_EmptyText_ThrowsArgumentException()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+        var mostRecentDate = new DateTime(2025, 1, 1);
+        var mostRecentObservation = new ResourceReference("Observation/some-measurement-3");
+
+        // Act & Assert
+        var exception = Should.Throw<ArgumentException>(() =>
+            builder.WithMostRecentPsaValue(mostRecentDate, "", mostRecentObservation));
+        
+        exception.Message.ShouldContain("Most recent PSA value text cannot be null or empty");
+    }
+
+    [Fact]
+    public void WithMostRecentPsaValue_NullObservation_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+        var mostRecentDate = new DateTime(2025, 1, 1);
+        var mostRecentText = "The most recent result used in the analysis is 2025-01-01 with a value of 7 ng/mL";
+
+        // Act & Assert
+        Should.Throw<ArgumentNullException>(() =>
+            builder.WithMostRecentPsaValue(mostRecentDate, mostRecentText, null!));
+    }
+
+    [Fact]
+    public void WithMostRecentPsaValue_IntegratesWithCompleteBuilder()
+    {
+        // Arrange & Act
+        var observation = new PsaProgressionObservationBuilder(_configuration)
+            .WithPatient("Patient/p123", "Jane Smith")
+            .WithDevice("Device/d456", "PSA Analyzer")
+            .WithFocus(_conditionReference)
+            .WithCriteria(CriteriaType.PCWG3, "1.0")
+            .AddPsaEvidence(new ResourceReference("Observation/psa-nadir"), "nadir", 2.0m)
+            .AddPsaEvidence(new ResourceReference("Observation/psa-current"), "current", 7.0m)
+            .WithProgression("true")
+            .WithMostRecentPsaValue(
+                new DateTime(2025, 1, 1),
+                "The most recent result used in the analysis is 2025-01-01 with a value of 7 ng/mL",
+                new ResourceReference("Observation/psa-current", "Current PSA Measurement"))
+            .AddValidUntilComponent(DateTime.Now.AddMonths(3))
+            .AddDetailedAnalysisNote("Significant PSA progression detected")
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+        observation.Component.ShouldNotBeNull();
+        
+        // Verify most recent component exists alongside other components
+        var mostRecentComponent = observation.Component.FirstOrDefault(c =>
+            c.Code.Coding.Any(cd => cd.Code == "mostRecentMeasurement_v1"));
+        mostRecentComponent.ShouldNotBeNull();
+        
+        // Verify other components still exist
+        var percentageComponent = observation.Component.FirstOrDefault(c =>
+            c.Code.Coding.Any(cd => cd.Code == "percentage-change"));
+        percentageComponent.ShouldNotBeNull();
+        
+        var validUntilComponent = observation.Component.FirstOrDefault(c =>
+            c.Code.Coding.Any(cd => cd.Code == "valid-until"));
+        validUntilComponent.ShouldNotBeNull();
+        
+        var analysisComponent = observation.Component.FirstOrDefault(c =>
+            c.Code.Coding.Any(cd => cd.Code == "analysis-note"));
+        analysisComponent.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void WithMostRecentPsaValue_GeneratesValidFhirJson()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 7.0m)
+            .WithProgression("true")
+            .WithMostRecentPsaValue(
+                new DateTime(2025, 1, 1),
+                "The most recent result used in the analysis is 2025-01-01 with a value of 7 ng/mL",
+                new ResourceReference("Observation/some-measurement-3", "Most Recent Measurement"))
+            .Build();
+
+        // Act
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        var json = serializer.SerializeToString(observation);
+
+        // Assert
+        json.ShouldNotBeNullOrEmpty();
+        json.ShouldContain("\"component\"");
+        json.ShouldContain("mostRecentMeasurement_v1");
+        json.ShouldContain("https://thirdopinion.io/result-code");
+        json.ShouldContain("The most recent measurement used in the analysis");
+        json.ShouldContain("2025-01-01");
+        json.ShouldContain("https://thirdopinion.io/fhir/StructureDefinition/source-observation");
+        json.ShouldContain("Observation/some-measurement-3");
+
+        // Verify it can be deserialized
+        var parser = new FhirJsonParser();
+        var deserializedObs = parser.Parse<Observation>(json);
+        deserializedObs.ShouldNotBeNull();
+        
+        var mostRecentComponent = deserializedObs.Component.FirstOrDefault(c =>
+            c.Code.Coding.Any(cd => cd.Code == "mostRecentMeasurement_v1"));
+        mostRecentComponent.ShouldNotBeNull();
+        mostRecentComponent.Extension.Count.ShouldBe(1);
     }
 }

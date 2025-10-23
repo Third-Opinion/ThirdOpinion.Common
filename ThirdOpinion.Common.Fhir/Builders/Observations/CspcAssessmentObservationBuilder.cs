@@ -6,31 +6,28 @@ using ThirdOpinion.Common.Fhir.Helpers;
 namespace ThirdOpinion.Common.Fhir.Builders.Observations;
 
 /// <summary>
-/// Builder for creating FHIR Observations that track Androgen Deprivation Therapy (ADT) status
+/// Builder for creating FHIR Observations for Castration-Sensitive Prostate Cancer (CSPC) assessment
 /// </summary>
-public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
+public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observation>
 {
+    private ResourceReference? _focus;
     private ResourceReference? _patientReference;
     private ResourceReference? _deviceReference;
-    private bool? _isReceivingAdt;
+    private bool? _isCastrationSensitive;
     private FhirDateTime? _effectiveDate;
-    private readonly List<(ResourceReference reference, string? display)> _evidenceReferences;
+    private readonly List<ResourceReference> _evidenceReferences;
     private readonly List<string> _notes;
+    private string? _interpretation;
     private float? _confidence;
 
-    // Treatment start date information
-    private DateTime? _treatmentStartDate;
-    private string? _medicationReferenceId;
-    private string? _treatmentStartDisplayText;
-
     /// <summary>
-    /// Creates a new ADT Status Observation builder
+    /// Creates a new CSPC Assessment Observation builder
     /// </summary>
     /// <param name="configuration">The AI inference configuration</param>
-    public AdtStatusObservationBuilder(AiInferenceConfiguration configuration)
+    public CspcAssessmentObservationBuilder(AiInferenceConfiguration configuration)
         : base(configuration)
     {
-        _evidenceReferences = new List<(ResourceReference, string?)>();
+        _evidenceReferences = new List<ResourceReference>();
         _notes = new List<string>();
     }
 
@@ -39,7 +36,7 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     /// </summary>
     /// <param name="id">The inference ID</param>
     /// <returns>This builder instance for method chaining</returns>
-    public new AdtStatusObservationBuilder WithInferenceId(string id)
+    public new CspcAssessmentObservationBuilder WithInferenceId(string id)
     {
         base.WithInferenceId(id);
         return this;
@@ -50,9 +47,9 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     /// </summary>
     /// <param name="id">The criteria ID</param>
     /// <param name="display">The display text for the criteria</param>
-    /// <param name="system">The criteria system URI (optional, uses configuration default if not provided)</param>
+    /// <param name="system">The criteria system URI (optional)</param>
     /// <returns>This builder instance for method chaining</returns>
-    public new AdtStatusObservationBuilder WithCriteria(string id, string display, string? system = null)
+    public new CspcAssessmentObservationBuilder WithCriteria(string id, string display, string? system = null)
     {
         base.WithCriteria(id, display, system);
         return this;
@@ -63,7 +60,7 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     /// </summary>
     /// <param name="reference">The resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
-    public new AdtStatusObservationBuilder AddDerivedFrom(ResourceReference reference)
+    public new CspcAssessmentObservationBuilder AddDerivedFrom(ResourceReference reference)
     {
         base.AddDerivedFrom(reference);
         return this;
@@ -72,13 +69,55 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     /// <summary>
     /// Adds a resource reference that this inference was derived from
     /// </summary>
-    /// <param name="reference">The reference string (e.g., "Patient/123")</param>
-    /// <param name="display">Optional display text for the reference</param>
+    /// <param name="reference">The reference string</param>
+    /// <param name="display">Optional display text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public new AdtStatusObservationBuilder AddDerivedFrom(string reference, string? display = null)
+    public new CspcAssessmentObservationBuilder AddDerivedFrom(string reference, string? display = null)
     {
         base.AddDerivedFrom(reference, display);
         return this;
+    }
+
+    /// <summary>
+    /// Sets the focus reference for this observation (REQUIRED - must reference a Condition)
+    /// </summary>
+    /// <param name="focus">The Condition resource reference</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public CspcAssessmentObservationBuilder WithFocus(ResourceReference focus)
+    {
+        if (focus == null)
+            throw new ArgumentNullException(nameof(focus), "Focus reference cannot be null");
+
+        // Validate that the reference is to a Condition resource
+        if (!string.IsNullOrWhiteSpace(focus.Reference) && !focus.Reference.StartsWith("Condition/"))
+        {
+            throw new ArgumentException(
+                "Focus must reference a Condition resource. Reference must start with 'Condition/'",
+                nameof(focus));
+        }
+
+        _focus = focus;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the focus reference for this observation (REQUIRED - must reference a Condition)
+    /// </summary>
+    /// <param name="conditionId">The Condition ID</param>
+    /// <param name="display">Optional display text</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public CspcAssessmentObservationBuilder WithFocus(string conditionId, string? display = null)
+    {
+        if (string.IsNullOrWhiteSpace(conditionId))
+            throw new ArgumentException("Condition ID cannot be null or empty", nameof(conditionId));
+
+        var reference = new ResourceReference
+        {
+            Reference = conditionId.StartsWith("Condition/") ? conditionId : $"Condition/{conditionId}",
+            Display = display
+        };
+
+        return WithFocus(reference);
     }
 
     /// <summary>
@@ -86,7 +125,7 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     /// </summary>
     /// <param name="patient">The patient resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
-    public AdtStatusObservationBuilder WithPatient(ResourceReference patient)
+    public CspcAssessmentObservationBuilder WithPatient(ResourceReference patient)
     {
         _patientReference = patient ?? throw new ArgumentNullException(nameof(patient));
         return this;
@@ -98,7 +137,7 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     /// <param name="patientId">The patient ID</param>
     /// <param name="display">Optional display text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public AdtStatusObservationBuilder WithPatient(string patientId, string? display = null)
+    public CspcAssessmentObservationBuilder WithPatient(string patientId, string? display = null)
     {
         if (string.IsNullOrWhiteSpace(patientId))
             throw new ArgumentException("Patient ID cannot be null or empty", nameof(patientId));
@@ -112,23 +151,23 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     }
 
     /// <summary>
-    /// Sets the device reference that performed the detection
+    /// Sets the device reference that performed the assessment
     /// </summary>
     /// <param name="device">The device resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
-    public AdtStatusObservationBuilder WithDevice(ResourceReference device)
+    public CspcAssessmentObservationBuilder WithDevice(ResourceReference device)
     {
         _deviceReference = device ?? throw new ArgumentNullException(nameof(device));
         return this;
     }
 
     /// <summary>
-    /// Sets the device reference that performed the detection
+    /// Sets the device reference that performed the assessment
     /// </summary>
     /// <param name="deviceId">The device ID</param>
     /// <param name="display">Optional display text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public AdtStatusObservationBuilder WithDevice(string deviceId, string? display = null)
+    public CspcAssessmentObservationBuilder WithDevice(string deviceId, string? display = null)
     {
         if (string.IsNullOrWhiteSpace(deviceId))
             throw new ArgumentException("Device ID cannot be null or empty", nameof(deviceId));
@@ -142,13 +181,13 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     }
 
     /// <summary>
-    /// Sets the ADT therapy status
+    /// Sets whether the cancer is castration-sensitive
     /// </summary>
-    /// <param name="isReceivingAdt">True if patient is receiving ADT, false otherwise</param>
+    /// <param name="isSensitive">True if castration-sensitive, false if castration-resistant</param>
     /// <returns>This builder instance for method chaining</returns>
-    public AdtStatusObservationBuilder WithStatus(bool isReceivingAdt)
+    public CspcAssessmentObservationBuilder WithCastrationSensitive(bool isSensitive)
     {
-        _isReceivingAdt = isReceivingAdt;
+        _isCastrationSensitive = isSensitive;
         return this;
     }
 
@@ -156,13 +195,17 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     /// Adds evidence supporting this observation
     /// </summary>
     /// <param name="reference">The evidence resource reference</param>
-    /// <param name="display">Optional display text for the evidence</param>
+    /// <param name="display">Optional display text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public AdtStatusObservationBuilder AddEvidence(ResourceReference reference, string? display = null)
+    public CspcAssessmentObservationBuilder AddEvidence(ResourceReference reference, string? display = null)
     {
         if (reference != null)
         {
-            _evidenceReferences.Add((reference, display ?? reference.Display));
+            if (!string.IsNullOrWhiteSpace(display) && string.IsNullOrWhiteSpace(reference.Display))
+            {
+                reference.Display = display;
+            }
+            _evidenceReferences.Add(reference);
         }
         return this;
     }
@@ -170,10 +213,10 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     /// <summary>
     /// Adds evidence supporting this observation
     /// </summary>
-    /// <param name="referenceString">The evidence reference string (e.g., "DocumentReference/123")</param>
-    /// <param name="display">Optional display text for the evidence</param>
+    /// <param name="referenceString">The evidence reference string</param>
+    /// <param name="display">Optional display text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public AdtStatusObservationBuilder AddEvidence(string referenceString, string? display = null)
+    public CspcAssessmentObservationBuilder AddEvidence(string referenceString, string? display = null)
     {
         if (!string.IsNullOrWhiteSpace(referenceString))
         {
@@ -182,7 +225,21 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
                 Reference = referenceString,
                 Display = display
             };
-            _evidenceReferences.Add((reference, display));
+            _evidenceReferences.Add(reference);
+        }
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the interpretation of the assessment
+    /// </summary>
+    /// <param name="interpretation">The interpretation text</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public CspcAssessmentObservationBuilder WithInterpretation(string interpretation)
+    {
+        if (!string.IsNullOrWhiteSpace(interpretation))
+        {
+            _interpretation = interpretation;
         }
         return this;
     }
@@ -192,7 +249,7 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     /// </summary>
     /// <param name="effectiveDate">The effective date/time</param>
     /// <returns>This builder instance for method chaining</returns>
-    public AdtStatusObservationBuilder WithEffectiveDate(DateTime effectiveDate)
+    public CspcAssessmentObservationBuilder WithEffectiveDate(DateTime effectiveDate)
     {
         _effectiveDate = new FhirDateTime(effectiveDate);
         return this;
@@ -203,7 +260,7 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     /// </summary>
     /// <param name="effectiveDate">The effective date/time as DateTimeOffset</param>
     /// <returns>This builder instance for method chaining</returns>
-    public AdtStatusObservationBuilder WithEffectiveDate(DateTimeOffset effectiveDate)
+    public CspcAssessmentObservationBuilder WithEffectiveDate(DateTimeOffset effectiveDate)
     {
         _effectiveDate = new FhirDateTime(effectiveDate);
         return this;
@@ -214,7 +271,7 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     /// </summary>
     /// <param name="noteText">The note text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public AdtStatusObservationBuilder AddNote(string noteText)
+    public CspcAssessmentObservationBuilder AddNote(string noteText)
     {
         if (!string.IsNullOrWhiteSpace(noteText))
         {
@@ -228,7 +285,7 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     /// </summary>
     /// <param name="confidence">The confidence score (0.0 to 1.0)</param>
     /// <returns>This builder instance for method chaining</returns>
-    public AdtStatusObservationBuilder WithConfidence(float confidence)
+    public CspcAssessmentObservationBuilder WithConfidence(float confidence)
     {
         if (confidence < 0.0f || confidence > 1.0f)
             throw new ArgumentOutOfRangeException(nameof(confidence), "Confidence must be between 0.0 and 1.0");
@@ -238,31 +295,16 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     }
 
     /// <summary>
-    /// Sets the treatment start date information for this observation
-    /// </summary>
-    /// <param name="treatmentStartDate">The date treatment started</param>
-    /// <param name="medicationReferenceId">The medication reference ID</param>
-    /// <param name="displayText">The display text for the treatment start date</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public AdtStatusObservationBuilder WithTreatmentStartDate(DateTime treatmentStartDate, string medicationReferenceId, string displayText)
-    {
-        if (string.IsNullOrWhiteSpace(medicationReferenceId))
-            throw new ArgumentException("Medication reference ID cannot be null or empty", nameof(medicationReferenceId));
-
-        if (string.IsNullOrWhiteSpace(displayText))
-            throw new ArgumentException("Display text cannot be null or empty", nameof(displayText));
-
-        _treatmentStartDate = treatmentStartDate;
-        _medicationReferenceId = medicationReferenceId;
-        _treatmentStartDisplayText = displayText;
-        return this;
-    }
-
-    /// <summary>
     /// Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
     {
+        if (_focus == null)
+        {
+            throw new InvalidOperationException(
+                "CSPC assessment requires focus reference to existing Condition. Call WithFocus() before Build().");
+        }
+
         if (_patientReference == null)
         {
             throw new InvalidOperationException("Patient reference is required. Call WithPatient() before Build().");
@@ -273,14 +315,15 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
             throw new InvalidOperationException("Device reference is required. Call WithDevice() before Build().");
         }
 
-        if (!_isReceivingAdt.HasValue)
+        if (!_isCastrationSensitive.HasValue)
         {
-            throw new InvalidOperationException("ADT status is required. Call WithStatus() before Build().");
+            throw new InvalidOperationException(
+                "Castration sensitivity status is required. Call WithCastrationSensitive() before Build().");
         }
     }
 
     /// <summary>
-    /// Builds the ADT Status Observation
+    /// Builds the CSPC Assessment Observation
     /// </summary>
     /// <returns>The completed Observation resource</returns>
     protected override Observation BuildCore()
@@ -289,7 +332,7 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
         {
             Status = ObservationStatus.Final,
 
-            // Category: therapy
+            // Category: exam
             Category = new List<CodeableConcept>
             {
                 new CodeableConcept
@@ -299,17 +342,30 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
                         new Coding
                         {
                             System = "http://terminology.hl7.org/CodeSystem/observation-category",
-                            Code = "therapy",
-                            Display = "Therapy"
+                            Code = "exam",
+                            Display = "Exam"
                         }
                     }
                 }
             },
 
-            // Code: ADT therapy (SNOMED)
-            Code = FhirCodingHelper.CreateSnomedConcept(
-                FhirCodingHelper.SnomedCodes.ADT_THERAPY,
-                "Androgen deprivation therapy"),
+            // Code: LOINC code for cancer disease status
+            Code = new CodeableConcept
+            {
+                Coding = new List<Coding>
+                {
+                    new Coding
+                    {
+                        System = FhirCodingHelper.Systems.LOINC_SYSTEM,
+                        Code = "21889-1",
+                        Display = "Cancer disease status"
+                    }
+                },
+                Text = "Cancer disease status"
+            },
+
+            // Focus (required - references the Condition)
+            Focus = new List<ResourceReference> { _focus! },
 
             // Subject (Patient)
             Subject = _patientReference,
@@ -320,9 +376,21 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
             // Effective date/time
             Effective = _effectiveDate ?? new FhirDateTime(DateTimeOffset.Now),
 
-            // Value: Active or Inactive status
-            Value = CreateStatusValue()
+            // Value: Castration-sensitive or castration-resistant status
+            Value = CreateCastrationSensitivityValue()
         };
+
+        // Add interpretation if provided
+        if (!string.IsNullOrWhiteSpace(_interpretation))
+        {
+            observation.Interpretation = new List<CodeableConcept>
+            {
+                new CodeableConcept
+                {
+                    Text = _interpretation
+                }
+            };
+        }
 
         // Add method if criteria was set
         if (!string.IsNullOrWhiteSpace(CriteriaId))
@@ -343,23 +411,11 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
         }
 
         // Add evidence to derivedFrom
-        // Note: FHIR Observation initializes DerivedFrom as an empty list, not null
-        // We only populate it if we have items to add
+        // Note: FHIR Observation initializes DerivedFrom as an empty list
         if (_evidenceReferences.Any() || DerivedFromReferences.Any())
         {
-            observation.DerivedFrom.Clear(); // Clear the default empty list
-
-            // Add evidence references
-            foreach (var (reference, display) in _evidenceReferences)
-            {
-                if (!string.IsNullOrWhiteSpace(display) && string.IsNullOrWhiteSpace(reference.Display))
-                {
-                    reference.Display = display;
-                }
-                observation.DerivedFrom.Add(reference);
-            }
-
-            // Add any additional derived from references from base class
+            observation.DerivedFrom.Clear();
+            observation.DerivedFrom.AddRange(_evidenceReferences);
             observation.DerivedFrom.AddRange(DerivedFromReferences);
         }
 
@@ -396,51 +452,11 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
             observation.Component.Add(confidenceComponent);
         }
 
-        // Add treatment start date component if specified
-        if (_treatmentStartDate.HasValue && !string.IsNullOrWhiteSpace(_medicationReferenceId) && !string.IsNullOrWhiteSpace(_treatmentStartDisplayText))
-        {
-            if (observation.Component == null)
-                observation.Component = new List<Observation.ComponentComponent>();
-
-            var treatmentStartComponent = new Observation.ComponentComponent
-            {
-                Code = new CodeableConcept
-                {
-                    Coding = new List<Coding>
-                    {
-                        new Coding
-                        {
-                            System = "https://thirdopinion.io/result-code",
-                            Code = "treatmentStartDate_v1",
-                            Display = "The date treatment started"
-                        }
-                    },
-                    Text = _treatmentStartDisplayText
-                },
-                Value = new FhirDateTime(_treatmentStartDate.Value),
-                Extension = new List<Extension>
-                {
-                    new Extension
-                    {
-                        Url = "https://thirdopinion.io/fhir/StructureDefinition/source-medication-reference",
-                        Value = new ResourceReference
-                        {
-                            Reference = _medicationReferenceId,
-                            Display = "The MedicationReference used in the analysis."
-                        }
-                    }
-                }
-            };
-
-            observation.Component.Add(treatmentStartComponent);
-        }
-
         // Add notes
-        // Note: FHIR Observation initializes Note as an empty list, not null
-        // We only populate it if we have notes to add
+        // Note: FHIR Observation initializes Note as an empty list
         if (_notes.Any())
         {
-            observation.Note.Clear(); // Clear the default empty list
+            observation.Note.Clear();
             observation.Note.AddRange(_notes.Select(noteText => new Annotation
             {
                 Time = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:sszzz"),
@@ -452,24 +468,55 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation>
     }
 
     /// <summary>
-    /// Creates the appropriate value CodeableConcept based on ADT status
+    /// Creates the value CodeableConcept with both SNOMED and ICD-10 codes
     /// </summary>
-    private CodeableConcept CreateStatusValue()
+    private CodeableConcept CreateCastrationSensitivityValue()
     {
-        if (_isReceivingAdt == true)
+        if (_isCastrationSensitive == true)
         {
-            // Active status
-            return FhirCodingHelper.CreateSnomedConcept(
-                FhirCodingHelper.SnomedCodes.ACTIVE_STATUS,
-                "Active");
+            // Castration-sensitive: Use BOTH SNOMED and ICD-10 codes
+            return new CodeableConcept
+            {
+                Coding = new List<Coding>
+                {
+                    new Coding
+                    {
+                        System = FhirCodingHelper.Systems.SNOMED_SYSTEM,
+                        Code = "1197209002",
+                        Display = "Castration sensitive prostate cancer"
+                    },
+                    new Coding
+                    {
+                        System = "http://hl7.org/fhir/sid/icd-10-cm",
+                        Code = "Z19.1",
+                        Display = "Hormone sensitive status"
+                    }
+                },
+                Text = "Castration sensitive prostate cancer"
+            };
         }
         else
         {
-            // Inactive/Not receiving - use appropriate SNOMED code
-            // Using "Inactive" status (385655000) from SNOMED
-            return FhirCodingHelper.CreateSnomedConcept(
-                "385655000",
-                "Inactive");
+            // Castration-resistant: Use appropriate codes
+            return new CodeableConcept
+            {
+                Coding = new List<Coding>
+                {
+                    new Coding
+                    {
+                        System = FhirCodingHelper.Systems.SNOMED_SYSTEM,
+                        Code = "445848006",
+                        Display = "Castration resistant prostate cancer"
+                    },
+                    new Coding
+                    {
+                        System = "http://hl7.org/fhir/sid/icd-10-cm",
+                        Code = "Z19.2",
+                        Display = "Hormone resistant status"
+                    }
+                },
+                Text = "Castration resistant prostate cancer"
+            };
         }
     }
 }

@@ -165,7 +165,7 @@ public class DocumentProcessingPipelineTests
             .WithDevice(deviceRef)
             .WithFocus(new ResourceReference($"DocumentReference/{factDocId}"))
             .AddPsaEvidence(new ResourceReference("Observation/psa-current"), "current", 15.2m)
-            .WithProgression(true)
+            .WithProgression("true")
             .Build();
 
         var recistObs = new RecistProgressionObservationBuilder(AiInferenceConfiguration.CreateDefault())
