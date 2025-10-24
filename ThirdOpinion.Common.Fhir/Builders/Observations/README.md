@@ -287,6 +287,171 @@ public RecistProgressionObservationBuilder AddNote(string noteText)
 - At least one component measurement is recommended
 - Focus reference to primary condition is recommended
 
+---
+
+### Pcwg3ProgressionObservationBuilder
+Creates observations for PCWG3 bone scan progression analysis in prostate cancer.
+
+#### Purpose
+Generates FHIR Observations that assess bone scan progression using PCWG3 (Prostate Cancer Working Group 3) criteria for bone metastases progression.
+
+#### Key Features
+- **Category**: `imaging` (Imaging study)
+- **Code**: LOINC `44667-7` (Bone scan findings)
+- **Value**: Progressive disease vs. Stable disease (SNOMED codes)
+- **Evidence**: Supporting clinical facts with structured metadata
+- **AI Integration**: Confidence scoring and AIAST security labeling
+- **PCWG3 Criteria**: Specialized bone scan progression assessment
+
+#### PCWG3 Progression Logic
+- **Progression**: New bone lesions or unequivocal progression of existing lesions
+- **Stable**: No new lesions and no unequivocal progression
+- **Confirmation**: Requires confirmation scan ≥6 weeks after initial detection
+
+#### Basic Usage
+```csharp
+var pcwg3Observation = new Pcwg3ProgressionObservationBuilder(config)
+    .WithInferenceId("pcwg3-assessment-001")
+    .WithPatient("Patient/patient-789", "David Wilson")
+    .WithDevice("Device/pcwg3-bone-scan-ai", "PCWG3 Bone Scan AI v2.0")
+    .WithFocus("Condition/prostate-cancer-with-bone-mets")
+    .WithIdentified(true) // Progression identified
+    .WithInitialLesions("New lesion at L5 vertebra")
+    .WithConfirmationDate(new DateTime(2025, 2, 15))
+    .WithTimeBetweenScans("8 weeks")
+    .WithAdditionalLesions("Multiple new thoracic spine lesions")
+    .WithSupportingFacts(clinicalFacts)
+    .WithConfidence(0.91f)
+    .WithEffectiveDate(DateTime.UtcNow)
+    .AddNote("PCWG3 criteria met: new bone lesions confirmed on follow-up scan")
+    .Build();
+```
+
+#### Supporting Facts Integration
+The builder accepts clinical facts that provide evidence for progression:
+```csharp
+var supportingFacts = new[]
+{
+    new Fact
+    {
+        factGuid = "fact-001",
+        factDocumentReference = "DocumentReference/bone-scan-baseline",
+        type = "finding",
+        fact = "Baseline bone scan showed no evidence of metastatic disease",
+        @ref = new[] { "1.123" },
+        timeRef = "2024-12-01",
+        relevance = "Establishes baseline for progression assessment"
+    },
+    new Fact
+    {
+        factGuid = "fact-002",
+        factDocumentReference = "DocumentReference/bone-scan-followup",
+        type = "finding",
+        fact = "Follow-up scan shows new uptake in L5 and T8 vertebrae",
+        @ref = new[] { "2.456" },
+        timeRef = "2025-02-15",
+        relevance = "Evidence of new bone metastases indicating progression"
+    }
+};
+
+var observation = builder
+    .WithSupportingFacts(supportingFacts)
+    .Build();
+```
+
+#### Component Structure
+The builder creates structured components for:
+- **Initial Lesions**: Description of newly identified lesions
+- **Confirmation Date**: Date progression was confirmed
+- **Time Between Scans**: Interval between initial and confirmation scans
+- **Additional Lesions**: Further lesions beyond initial findings
+- **Confidence Score**: AI assessment confidence (0.0-1.0)
+
+#### API Reference
+```csharp
+public Pcwg3ProgressionObservationBuilder WithInferenceId(string id)
+public Pcwg3ProgressionObservationBuilder WithPatient(ResourceReference patientRef)
+public Pcwg3ProgressionObservationBuilder WithPatient(string patientId, string? display = null)
+public Pcwg3ProgressionObservationBuilder WithDevice(ResourceReference deviceRef)
+public Pcwg3ProgressionObservationBuilder WithDevice(string deviceId, string? display = null)
+public Pcwg3ProgressionObservationBuilder WithFocus(params ResourceReference[] focus)
+public Pcwg3ProgressionObservationBuilder WithIdentified(bool identified)
+public Pcwg3ProgressionObservationBuilder WithInitialLesions(string? initialLesions)
+public Pcwg3ProgressionObservationBuilder WithConfirmationDate(DateTime? confirmationDate)
+public Pcwg3ProgressionObservationBuilder WithTimeBetweenScans(string? timeBetweenScans)
+public Pcwg3ProgressionObservationBuilder WithAdditionalLesions(string? additionalLesions)
+public Pcwg3ProgressionObservationBuilder WithSupportingFacts(params Fact[] facts)
+public Pcwg3ProgressionObservationBuilder WithConfidence(float confidence)
+public Pcwg3ProgressionObservationBuilder WithEffectiveDate(DateTime effectiveDate)
+public Pcwg3ProgressionObservationBuilder AddNote(string noteText)
+```
+
+#### Progressive Disease Example
+```csharp
+var progressionObservation = new Pcwg3ProgressionObservationBuilder(config)
+    .WithPatient("Patient/pc-patient-001")
+    .WithDevice("Device/pcwg3-analyzer")
+    .WithFocus("Condition/prostate-cancer-stage-iv")
+    .WithIdentified(true) // Progression detected
+    .WithInitialLesions("New focal uptake L5 vertebral body")
+    .WithConfirmationDate(new DateTime(2025, 3, 15))
+    .WithTimeBetweenScans("12 weeks")
+    .WithAdditionalLesions("Increased uptake T8, new lesion T12")
+    .WithConfidence(0.94f)
+    .Build();
+
+// Results in SNOMED 277022003 "Progressive disease"
+```
+
+#### Stable Disease Example
+```csharp
+var stableObservation = new Pcwg3ProgressionObservationBuilder(config)
+    .WithPatient("Patient/pc-patient-002")
+    .WithDevice("Device/pcwg3-analyzer")
+    .WithFocus("Condition/prostate-cancer-stage-iv")
+    .WithIdentified(false) // No progression
+    .WithConfidence(0.88f)
+    .Build();
+
+// Results in SNOMED 359746009 "Stable disease"
+```
+
+#### Enhanced RecistProgressionObservationBuilder Features
+The RecistProgressionObservationBuilder has been enhanced with new capabilities:
+
+##### New Methods for Enhanced JSON Support
+```csharp
+public RecistProgressionObservationBuilder WithIdentified(bool identified)
+public RecistProgressionObservationBuilder WithMeasurementChange(string? measurementChange)
+public RecistProgressionObservationBuilder WithImagingType(string? imagingType)
+public RecistProgressionObservationBuilder WithConfirmationDate(DateTime? confirmationDate)
+public RecistProgressionObservationBuilder WithSupportingFacts(params Fact[] facts)
+public RecistProgressionObservationBuilder WithConfidence(float confidence)
+```
+
+##### Enhanced Usage Example
+```csharp
+var enhancedRecistObservation = new RecistProgressionObservationBuilder(config)
+    .WithPatient("Patient/patient-123")
+    .WithDevice("Device/recist-ai-v2")
+    .WithFocus("Condition/nsclc-stage-iv")
+    .WithIdentified(true) // Progression identified
+    .WithMeasurementChange("Target lesions increased from 45.2mm to 58.7mm (30% increase)")
+    .WithImagingType("CT Chest/Abdomen/Pelvis with IV contrast")
+    .WithConfirmationDate(new DateTime(2025, 2, 20))
+    .WithSupportingFacts(radiologyFacts)
+    .WithConfidence(0.92f)
+    .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE, "Progressive Disease")
+    .Build();
+```
+
+#### Validation Requirements
+- Patient reference is required
+- Device reference is required
+- Identified status (boolean) must be set
+- Confidence must be between 0.0 and 1.0
+- Supporting facts should include relevant clinical evidence
+
 ## Common Patterns
 
 ### Error Handling
