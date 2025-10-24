@@ -1,7 +1,9 @@
 using Hl7.Fhir.Model;
 using ThirdOpinion.Common.Fhir.Builders.Base;
 using ThirdOpinion.Common.Fhir.Configuration;
+using ThirdOpinion.Common.Fhir.Extensions;
 using ThirdOpinion.Common.Fhir.Helpers;
+using ThirdOpinion.Common.Fhir.Models;
 
 namespace ThirdOpinion.Common.Fhir.Builders.Observations;
 
@@ -21,6 +23,20 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     private CodeableConcept? _recistResponse;
     private float? _confidence;
 
+    // New fields for enhanced JSON structure support
+    private bool? _identified;
+    private string? _measurementChange;
+    private string? _imagingType;
+    private DateTime? _confirmationDate;
+    private readonly List<Fact> _supportingFacts;
+
+    // Latest version fields
+    private string? _determination;
+    private string? _confidenceRationale;
+    private string? _summary;
+    private DateTime? _imagingDate;
+    private readonly List<Fact> _conflictingFacts;
+
     /// <summary>
     /// Creates a new RECIST Progression Observation builder
     /// </summary>
@@ -32,6 +48,8 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
         _imagingStudies = new List<ResourceReference>();
         _radiologyReports = new List<ResourceReference>();
         _components = new List<Observation.ComponentComponent>();
+        _supportingFacts = new List<Fact>();
+        _conflictingFacts = new List<Fact>();
     }
 
     /// <summary>
@@ -303,6 +321,128 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
+    /// Sets whether RECIST progression is identified
+    /// </summary>
+    /// <param name="identified">True if progression is identified, false otherwise</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public RecistProgressionObservationBuilder WithIdentified(bool identified)
+    {
+        _identified = identified;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the measurement change description
+    /// </summary>
+    /// <param name="measurementChange">Description of measurement changes</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public RecistProgressionObservationBuilder WithMeasurementChange(string? measurementChange)
+    {
+        _measurementChange = measurementChange;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the imaging type used for assessment
+    /// </summary>
+    /// <param name="imagingType">Type of imaging (e.g., "CT", "MRI")</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public RecistProgressionObservationBuilder WithImagingType(string? imagingType)
+    {
+        _imagingType = imagingType;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the confirmation date for progression
+    /// </summary>
+    /// <param name="confirmationDate">Date when progression was confirmed</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public RecistProgressionObservationBuilder WithConfirmationDate(DateTime? confirmationDate)
+    {
+        _confirmationDate = confirmationDate;
+        return this;
+    }
+
+    /// <summary>
+    /// Adds supporting clinical facts as evidence
+    /// </summary>
+    /// <param name="facts">Array of supporting clinical facts</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public RecistProgressionObservationBuilder WithSupportingFacts(params Fact[] facts)
+    {
+        if (facts != null && facts.Length > 0)
+        {
+            _supportingFacts.AddRange(facts.Where(f => f != null));
+
+            // Add document references as evidence
+            foreach (var fact in facts.Where(f => f != null && !string.IsNullOrWhiteSpace(f.factDocumentReference)))
+            {
+                AddRadiologyReport(new ResourceReference(fact.factDocumentReference, $"Supporting fact: {fact.type}"));
+            }
+        }
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the determination result (e.g., "Progressive Disease", "Stable Disease", "Inconclusive")
+    /// </summary>
+    /// <param name="determination">The determination result</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public RecistProgressionObservationBuilder WithDetermination(string? determination)
+    {
+        _determination = determination;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the confidence rationale explaining the confidence score reasoning
+    /// </summary>
+    /// <param name="confidenceRationale">The confidence rationale text</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public RecistProgressionObservationBuilder WithConfidenceRationale(string? confidenceRationale)
+    {
+        _confidenceRationale = confidenceRationale;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the detailed summary of the RECIST assessment
+    /// </summary>
+    /// <param name="summary">The assessment summary</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public RecistProgressionObservationBuilder WithSummary(string? summary)
+    {
+        _summary = summary;
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the imaging date when the assessment was performed
+    /// </summary>
+    /// <param name="imagingDate">The imaging date</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public RecistProgressionObservationBuilder WithImagingDate(DateTime? imagingDate)
+    {
+        _imagingDate = imagingDate;
+        return this;
+    }
+
+    /// <summary>
+    /// Adds conflicting clinical facts that may contradict the assessment
+    /// </summary>
+    /// <param name="facts">Array of conflicting clinical facts</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public RecistProgressionObservationBuilder WithConflictingFacts(params Fact[] facts)
+    {
+        if (facts != null && facts.Length > 0)
+        {
+            _conflictingFacts.AddRange(facts.Where(f => f != null));
+        }
+        return this;
+    }
+
+    /// <summary>
     /// Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
@@ -425,13 +565,204 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
             });
         }
 
+        // Add new components for enhanced data
+        AddEnhancedComponents();
+
         // Add components
         if (_components.Any())
         {
             observation.Component = _components;
         }
 
+        // Add supporting facts as extensions
+        if (_supportingFacts.Any())
+        {
+            var factExtensions = ClinicalFactExtension.CreateExtensions(_supportingFacts);
+            observation.Extension.AddRange(factExtensions);
+        }
+
+        // Add conflicting facts as extensions
+        if (_conflictingFacts.Any())
+        {
+            var conflictingFactExtensions = CreateConflictingFactExtensions(_conflictingFacts);
+            observation.Extension.AddRange(conflictingFactExtensions);
+        }
+
         return observation;
+    }
+
+    /// <summary>
+    /// Adds enhanced components for new JSON structure fields
+    /// </summary>
+    private void AddEnhancedComponents()
+    {
+        // Add identified component
+        if (_identified.HasValue)
+        {
+            _components.Add(new Observation.ComponentComponent
+            {
+                Code = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new Coding
+                        {
+                            System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
+                            Code = "identified",
+                            Display = "Progression Identified"
+                        }
+                    }
+                },
+                Value = new FhirBoolean(_identified.Value)
+            });
+        }
+
+        // Add measurement change component
+        if (!string.IsNullOrWhiteSpace(_measurementChange))
+        {
+            _components.Add(new Observation.ComponentComponent
+            {
+                Code = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new Coding
+                        {
+                            System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
+                            Code = "measurement-change",
+                            Display = "Measurement Change"
+                        }
+                    }
+                },
+                Value = new FhirString(_measurementChange)
+            });
+        }
+
+        // Add imaging type component
+        if (!string.IsNullOrWhiteSpace(_imagingType))
+        {
+            _components.Add(new Observation.ComponentComponent
+            {
+                Code = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new Coding
+                        {
+                            System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
+                            Code = "imaging-type",
+                            Display = "Imaging Type"
+                        }
+                    }
+                },
+                Value = new FhirString(_imagingType)
+            });
+        }
+
+        // Add confirmation date component
+        if (_confirmationDate.HasValue)
+        {
+            _components.Add(new Observation.ComponentComponent
+            {
+                Code = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new Coding
+                        {
+                            System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
+                            Code = "confirmation-date",
+                            Display = "Confirmation Date"
+                        }
+                    }
+                },
+                Value = new FhirDateTime(_confirmationDate.Value)
+            });
+        }
+
+        // Add determination component
+        if (!string.IsNullOrWhiteSpace(_determination))
+        {
+            _components.Add(new Observation.ComponentComponent
+            {
+                Code = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new Coding
+                        {
+                            System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
+                            Code = "determination",
+                            Display = "Determination"
+                        }
+                    }
+                },
+                Value = new FhirString(_determination)
+            });
+        }
+
+        // Add confidence rationale component
+        if (!string.IsNullOrWhiteSpace(_confidenceRationale))
+        {
+            _components.Add(new Observation.ComponentComponent
+            {
+                Code = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new Coding
+                        {
+                            System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
+                            Code = "confidence-rationale",
+                            Display = "Confidence Rationale"
+                        }
+                    }
+                },
+                Value = new FhirString(_confidenceRationale)
+            });
+        }
+
+        // Add summary component
+        if (!string.IsNullOrWhiteSpace(_summary))
+        {
+            _components.Add(new Observation.ComponentComponent
+            {
+                Code = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new Coding
+                        {
+                            System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
+                            Code = "summary",
+                            Display = "Assessment Summary"
+                        }
+                    }
+                },
+                Value = new FhirString(_summary)
+            });
+        }
+
+        // Add imaging date component
+        if (_imagingDate.HasValue)
+        {
+            _components.Add(new Observation.ComponentComponent
+            {
+                Code = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new Coding
+                        {
+                            System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
+                            Code = "imaging-date",
+                            Display = "Imaging Date"
+                        }
+                    }
+                },
+                Value = new FhirDateTime(_imagingDate.Value)
+            });
+        }
     }
 
     /// <summary>
@@ -516,5 +847,72 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
             "percent-change" => "Percent change in SLD",
             _ => code.Replace("-", " ").Replace("_", " ")
         };
+    }
+
+    /// <summary>
+    /// Creates FHIR Extensions for conflicting clinical facts
+    /// </summary>
+    /// <param name="facts">The conflicting clinical facts</param>
+    /// <returns>List of FHIR Extensions for conflicting facts</returns>
+    private List<Extension> CreateConflictingFactExtensions(IEnumerable<Fact> facts)
+    {
+        var extensions = new List<Extension>();
+
+        foreach (var fact in facts.Where(f => f != null))
+        {
+            var extension = new Extension
+            {
+                Url = "https://thirdopinion.io/conflicting-fact"
+            };
+
+            // Add fact GUID
+            if (!string.IsNullOrWhiteSpace(fact.factGuid))
+            {
+                extension.Extension.Add(new Extension("factGuid", new FhirString(fact.factGuid)));
+            }
+
+            // Add document reference
+            if (!string.IsNullOrWhiteSpace(fact.factDocumentReference))
+            {
+                extension.Extension.Add(new Extension("factDocumentReference", new FhirString(fact.factDocumentReference)));
+            }
+
+            // Add fact type
+            if (!string.IsNullOrWhiteSpace(fact.type))
+            {
+                extension.Extension.Add(new Extension("type", new FhirString(fact.type)));
+            }
+
+            // Add fact text
+            if (!string.IsNullOrWhiteSpace(fact.fact))
+            {
+                extension.Extension.Add(new Extension("fact", new FhirString(fact.fact)));
+            }
+
+            // Add references
+            if (fact.@ref != null && fact.@ref.Any())
+            {
+                foreach (var reference in fact.@ref)
+                {
+                    extension.Extension.Add(new Extension("ref", new FhirString(reference)));
+                }
+            }
+
+            // Add time reference
+            if (!string.IsNullOrWhiteSpace(fact.timeRef))
+            {
+                extension.Extension.Add(new Extension("timeRef", new FhirString(fact.timeRef)));
+            }
+
+            // Add relevance
+            if (!string.IsNullOrWhiteSpace(fact.relevance))
+            {
+                extension.Extension.Add(new Extension("relevance", new FhirString(fact.relevance)));
+            }
+
+            extensions.Add(extension);
+        }
+
+        return extensions;
     }
 }

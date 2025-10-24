@@ -3,6 +3,7 @@ using Hl7.Fhir.Serialization;
 using ThirdOpinion.Common.Fhir.Builders.Observations;
 using ThirdOpinion.Common.Fhir.Configuration;
 using ThirdOpinion.Common.Fhir.Helpers;
+using ThirdOpinion.Common.Fhir.Models;
 
 namespace ThirdOpinion.Common.Fhir.UnitTests.Builders.Observations;
 
@@ -14,6 +15,7 @@ public class RecistProgressionObservationBuilderTests
     private readonly ResourceReference _tumorReference;
     private readonly ResourceReference _imagingStudyReference;
     private readonly ResourceReference _radiologyReportReference;
+    private readonly Fact[] _sampleFacts;
 
     public RecistProgressionObservationBuilderTests()
     {
@@ -23,6 +25,30 @@ public class RecistProgressionObservationBuilderTests
         _tumorReference = new ResourceReference("Condition/tumor-123", "Primary Tumor");
         _imagingStudyReference = new ResourceReference("ImagingStudy/ct-123", "CT Chest/Abdomen");
         _radiologyReportReference = new ResourceReference("DiagnosticReport/rad-456", "Radiology Report");
+
+        _sampleFacts = new[]
+        {
+            new Fact
+            {
+                factGuid = "aa10e02a-f391-4614-96e4-35cbe47d2a85",
+                factDocumentReference = "DocumentReference/ct-report-001",
+                type = "measurement",
+                fact = "Target lesion 1 measures 45.2 mm (previously 38.5 mm)",
+                @ref = new[] { "1.123" },
+                timeRef = "2025-01-15",
+                relevance = "Demonstrates progression in target lesion"
+            },
+            new Fact
+            {
+                factGuid = "bb10e02a-f391-4614-96e4-35cbe47d2a86",
+                factDocumentReference = "DocumentReference/ct-report-002",
+                type = "finding",
+                fact = "New liver metastasis identified measuring 12 mm",
+                @ref = new[] { "2.456" },
+                timeRef = "2025-01-15",
+                relevance = "New lesion indicating disease progression"
+            }
+        };
     }
 
     [Fact]
@@ -648,5 +674,270 @@ public class RecistProgressionObservationBuilderTests
 
         var sdValue = sdObservation.Value as CodeableConcept;
         sdValue.Coding[0].Code.ShouldBe("C18052");
+    }
+
+    [Fact]
+    public void WithIdentified_True_CreatesComponentCorrectly()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithIdentified(true)
+            .WithConfidence(0.92f)
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+
+        // Check identified component
+        var identifiedComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "identified"));
+        identifiedComponent.ShouldNotBeNull();
+        ((FhirBoolean)identifiedComponent.Value).Value.ShouldBe(true);
+
+        // Check confidence component
+        var confidenceComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "LA11892-6"));
+        confidenceComponent.ShouldNotBeNull();
+        ((Quantity)confidenceComponent.Value).Value.ShouldBe(0.92m);
+    }
+
+    [Fact]
+    public void WithIdentified_False_CreatesComponentCorrectly()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithIdentified(false)
+            .WithConfidence(0.88f)
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+
+        // Check identified component
+        var identifiedComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "identified"));
+        identifiedComponent.ShouldNotBeNull();
+        ((FhirBoolean)identifiedComponent.Value).Value.ShouldBe(false);
+    }
+
+    [Fact]
+    public void WithMeasurementChange_CreatesComponentCorrectly()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithIdentified(true)
+            .WithMeasurementChange("Target lesions increased from 38.5mm to 45.2mm")
+            .Build();
+
+        // Assert
+        var measurementComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "measurement-change"));
+        measurementComponent.ShouldNotBeNull();
+        ((FhirString)measurementComponent.Value).Value.ShouldBe("Target lesions increased from 38.5mm to 45.2mm");
+    }
+
+    [Fact]
+    public void WithImagingType_CreatesComponentCorrectly()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithIdentified(true)
+            .WithImagingType("CT Chest/Abdomen/Pelvis with contrast")
+            .Build();
+
+        // Assert
+        var imagingTypeComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "imaging-type"));
+        imagingTypeComponent.ShouldNotBeNull();
+        ((FhirString)imagingTypeComponent.Value).Value.ShouldBe("CT Chest/Abdomen/Pelvis with contrast");
+    }
+
+    [Fact]
+    public void WithConfirmationDate_CreatesComponentCorrectly()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+        var confirmationDate = new DateTime(2025, 2, 15);
+
+        // Act
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithIdentified(true)
+            .WithConfirmationDate(confirmationDate)
+            .Build();
+
+        // Assert
+        var confirmationDateComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "confirmation-date"));
+        confirmationDateComponent.ShouldNotBeNull();
+        var dateValue = confirmationDateComponent.Value as FhirDateTime;
+        dateValue.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void WithSupportingFacts_AddsClinicalFactExtensions()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithIdentified(true)
+            .WithSupportingFacts(_sampleFacts)
+            .Build();
+
+        // Assert
+        observation.Extension.ShouldNotBeEmpty();
+
+        // Check that clinical fact extensions were added
+        var clinicalFactExtensions = observation.Extension
+            .Where(e => e.Url == "https://thirdopinion.io/clinical-fact")
+            .ToList();
+
+        clinicalFactExtensions.Count.ShouldBe(2);
+
+        // Verify first fact extension has nested extensions
+        var firstFactExtension = clinicalFactExtensions[0];
+        firstFactExtension.Extension.ShouldNotBeEmpty();
+
+        // Check for factGuid in nested extensions
+        var factGuidExtension = firstFactExtension.Extension
+            .FirstOrDefault(e => e.Url == "factGuid");
+        factGuidExtension.ShouldNotBeNull();
+        ((FhirString)factGuidExtension.Value).Value.ShouldBe("aa10e02a-f391-4614-96e4-35cbe47d2a85");
+
+        // Verify second fact extension has nested extensions
+        var secondFactExtension = clinicalFactExtensions[1];
+        secondFactExtension.Extension.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public void WithConfidence_WithInvalidRange_ThrowsArgumentOutOfRangeException()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act & Assert
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.WithConfidence(-0.1f));
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.WithConfidence(1.1f));
+    }
+
+    [Fact]
+    public void Build_WithAllEnhancedComponents_CreatesCompleteObservation()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+        var confirmationDate = new DateTime(2025, 3, 20);
+
+        // Act
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithIdentified(true)
+            .WithMeasurementChange("Target lesions increased by 17.4%")
+            .WithImagingType("CT Chest/Abdomen/Pelvis")
+            .WithConfirmationDate(confirmationDate)
+            .WithSupportingFacts(_sampleFacts)
+            .WithConfidence(0.89f)
+            .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE, "Progressive Disease")
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+
+        // Check value shows progression from WithRecistResponse
+        var valueCodeableConcept = observation.Value as CodeableConcept;
+        valueCodeableConcept.ShouldNotBeNull();
+        valueCodeableConcept.Coding.First().Code.ShouldBe(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE);
+
+        // Check all enhanced components are present
+        var measurementComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "measurement-change"));
+        measurementComponent.ShouldNotBeNull();
+
+        var imagingComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "imaging-type"));
+        imagingComponent.ShouldNotBeNull();
+
+        var confirmationComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "confirmation-date"));
+        confirmationComponent.ShouldNotBeNull();
+
+        var confidenceComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "LA11892-6"));
+        confidenceComponent.ShouldNotBeNull();
+
+        // Check supporting facts extensions
+        observation.Extension.Any(e => e.Url == "https://thirdopinion.io/clinical-fact").ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Build_WithoutIdentified_SucceedsWithoutException()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+        // No identified component should be present
+        var identifiedComponent = observation.Component
+            ?.FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "identified"));
+        identifiedComponent.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Build_HasAiastSecurityLabel()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithIdentified(true)
+            .Build();
+
+        // Assert
+        observation.Meta.Security.ShouldNotBeNull();
+        observation.Meta.Security.Any(s => s.Code == "AIAST").ShouldBeTrue();
     }
 }
