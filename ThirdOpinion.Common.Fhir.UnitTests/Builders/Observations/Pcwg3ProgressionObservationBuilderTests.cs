@@ -206,20 +206,21 @@ public class Pcwg3ProgressionObservationBuilderTests
     }
 
     [Fact]
-    public void Build_WithoutDetermination_ThrowsInvalidOperationException()
+    public void Build_WithoutDetermination_CreatesObservationWithoutValue()
     {
         // Arrange
         var builder = new Pcwg3ProgressionObservationBuilder(_configuration);
 
-        // Act & Assert
-        var exception = Should.Throw<InvalidOperationException>(() =>
-            builder
-                .WithPatient(_patientReference)
-                .WithDevice(_deviceReference)
-                .WithFocus(_focusReference)
-                .Build());
+        // Act
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_focusReference)
+            .Build();
 
-        exception.Message.ShouldContain("Determination status is required");
+        // Assert
+        observation.ShouldNotBeNull();
+        observation.Value.ShouldBeNull(); // No value when determination not set
     }
 
     [Fact]

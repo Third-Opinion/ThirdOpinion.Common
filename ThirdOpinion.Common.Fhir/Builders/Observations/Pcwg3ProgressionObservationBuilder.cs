@@ -401,11 +401,6 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
         {
             throw new InvalidOperationException("Device reference is required. Call WithDevice() before Build().");
         }
-
-        if (string.IsNullOrWhiteSpace(_determination))
-        {
-            throw new InvalidOperationException("Determination status is required. Call WithDetermination() before Build().");
-        }
     }
 
     /// <summary>
@@ -512,8 +507,13 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
         return observation;
     }
 
-    private CodeableConcept CreateProgressionValue()
+    private CodeableConcept? CreateProgressionValue()
     {
+        if (string.IsNullOrWhiteSpace(_determination))
+        {
+            return null; // No value if determination not set
+        }
+
         if (_determination == "True")
         {
             // Progressive disease
