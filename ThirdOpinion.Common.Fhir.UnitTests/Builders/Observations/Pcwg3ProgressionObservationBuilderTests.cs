@@ -57,7 +57,7 @@ public class Pcwg3ProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_focusReference)
-            .WithIdentified(true)
+            .WithDetermination("True")
             .WithInitialLesions("new lesions")
             .WithConfirmationDate(new DateTime(2025, 4, 23))
             .WithTimeBetweenScans("12 weeks")
@@ -132,7 +132,7 @@ public class Pcwg3ProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_focusReference)
-            .WithIdentified(false)
+            .WithDetermination("False")
             .WithConfidence(0.95f)
             .Build();
 
@@ -147,6 +147,31 @@ public class Pcwg3ProgressionObservationBuilderTests
     }
 
     [Fact]
+    public void Build_WithInconclusiveDetermination_CreatesInconclusiveObservation()
+    {
+        // Arrange
+        var builder = new Pcwg3ProgressionObservationBuilder(_configuration);
+
+        // Act
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_focusReference)
+            .WithDetermination("Inconclusive")
+            .WithConfidence(0.5f)
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+
+        // Check value (inconclusive)
+        var valueCodeableConcept = observation.Value as CodeableConcept;
+        valueCodeableConcept.ShouldNotBeNull();
+        valueCodeableConcept.Coding.First().Code.ShouldBe("373067005");
+        valueCodeableConcept.Coding.First().Display.ShouldBe("Inconclusive");
+    }
+
+    [Fact]
     public void Build_WithoutPatient_ThrowsInvalidOperationException()
     {
         // Arrange
@@ -157,7 +182,7 @@ public class Pcwg3ProgressionObservationBuilderTests
             builder
                 .WithDevice(_deviceReference)
                 .WithFocus(_focusReference)
-                .WithIdentified(true)
+                .WithDetermination("True")
                 .Build());
 
         exception.Message.ShouldContain("Patient reference is required");
@@ -174,14 +199,14 @@ public class Pcwg3ProgressionObservationBuilderTests
             builder
                 .WithPatient(_patientReference)
                 .WithFocus(_focusReference)
-                .WithIdentified(true)
+                .WithDetermination("True")
                 .Build());
 
         exception.Message.ShouldContain("Device reference is required");
     }
 
     [Fact]
-    public void Build_WithoutIdentified_ThrowsInvalidOperationException()
+    public void Build_WithoutDetermination_ThrowsInvalidOperationException()
     {
         // Arrange
         var builder = new Pcwg3ProgressionObservationBuilder(_configuration);
@@ -194,7 +219,7 @@ public class Pcwg3ProgressionObservationBuilderTests
                 .WithFocus(_focusReference)
                 .Build());
 
-        exception.Message.ShouldContain("Identified status is required");
+        exception.Message.ShouldContain("Determination status is required");
     }
 
     [Fact]
@@ -219,7 +244,7 @@ public class Pcwg3ProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_focusReference)
-            .WithIdentified(true)
+            .WithDetermination("True")
             .WithAdditionalLesions("Multiple new bone lesions")
             .Build();
 
@@ -242,7 +267,7 @@ public class Pcwg3ProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_focusReference)
-            .WithIdentified(true)
+            .WithDetermination("True")
             .WithEffectiveDate(testDate)
             .Build();
 
@@ -265,7 +290,7 @@ public class Pcwg3ProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_focusReference)
-            .WithIdentified(true)
+            .WithDetermination("True")
             .AddNote(note1)
             .AddNote(note2)
             .Build();
@@ -290,7 +315,7 @@ public class Pcwg3ProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(focus1, focus2)
-            .WithIdentified(true)
+            .WithDetermination("True")
             .Build();
 
         // Assert
@@ -321,7 +346,7 @@ public class Pcwg3ProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_focusReference)
-            .WithIdentified(true)
+            .WithDetermination("True")
             .Build();
 
         // Assert
