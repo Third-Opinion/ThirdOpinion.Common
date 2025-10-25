@@ -550,4 +550,202 @@ public class PsaProgressionObservationBuilderTests
             c.Code.Coding.Any(cd => cd.Code == "percentage-change"));
         percentageComponent.ShouldBeNull();
     }
+
+    [Fact]
+    public void BuildCondition_WithProgression_CreatesCorrectCondition()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_conditionReference)
+            .WithCriteria(CriteriaType.PCWG3, "3.0")
+            .AddPsaEvidence(new ResourceReference("Observation/psa-nadir"), "nadir", 2.0m)
+            .AddPsaEvidence(new ResourceReference("Observation/psa-current"), "current", 3.5m)
+            .WithProgression(true)
+            .WithEffectiveDate(new DateTime(2024, 1, 15))
+            .WithConfidence(0.85f)
+            .AddNote("PSA progression detected")
+            .Build();
+
+        // Act
+        var condition = builder.BuildCondition(observation);
+
+        // Assert
+        condition.ShouldNotBeNull();
+        condition.ClinicalStatus.Coding[0].Code.ShouldBe("active");
+        condition.VerificationStatus.Coding[0].Code.ShouldBe("confirmed");
+
+        // Check category
+        condition.Category.ShouldHaveSingleItem();
+        condition.Category[0].Coding[0].Code.ShouldBe("encounter-diagnosis");
+
+        // Check SNOMED code for PSA progression
+        condition.Code.Coding.ShouldContain(c => c.System == FhirCodingHelper.Systems.SNOMED_SYSTEM);
+        var snomedCode = condition.Code.Coding.First(c => c.System == FhirCodingHelper.Systems.SNOMED_SYSTEM);
+        snomedCode.Code.ShouldBe("428119001");
+        snomedCode.Display.ShouldBe("Procedure to assess prostate specific antigen progression");
+
+        // Check ICD-10 code
+        condition.Code.Coding.ShouldContain(c => c.System == "http://hl7.org/fhir/sid/icd-10-cm");
+        var icd10Code = condition.Code.Coding.First(c => c.System == "http://hl7.org/fhir/sid/icd-10-cm");
+        icd10Code.Code.ShouldBe("R97.21");
+        icd10Code.Display.ShouldBe("Rising PSA following treatment for malignant neoplasm of prostate");
+
+        // Check text
+        condition.Code.Text.ShouldBe("PSA Progression");
+
+        // Check subject and recorder
+        condition.Subject.ShouldBe(_patientReference);
+        condition.Recorder.ShouldBe(_deviceReference);
+
+        // Check evidence references the observation
+        condition.Evidence.ShouldNotBeNull();
+        condition.Evidence.Count.ShouldBe(1);
+        condition.Evidence[0].Detail.Count.ShouldBe(1);
+        condition.Evidence[0].Detail[0].Reference.ShouldBe($"Observation/{observation.Id}");
+        condition.Evidence[0].Detail[0].Display.ShouldBe("PSA Progression Assessment");
+
+        // Check AI inference extension
+        condition.Extension.ShouldNotBeNull();
+        var aiInferredExtension = condition.Extension.FirstOrDefault(e =>
+            e.Url == "http://thirdopinion.ai/fhir/StructureDefinition/ai-inferred");
+        aiInferredExtension.ShouldNotBeNull();
+        var aiInferredValue = aiInferredExtension.Value as FhirBoolean;
+        aiInferredValue.ShouldNotBeNull();
+        aiInferredValue.Value.ShouldBe(true);
+
+        // Check confidence extension
+        var confidenceExtension = condition.Extension.FirstOrDefault(e =>
+            e.Url == "http://thirdopinion.ai/fhir/StructureDefinition/confidence");
+        confidenceExtension.ShouldNotBeNull();
+        var confidenceValue = confidenceExtension.Value as FhirDecimal;
+        confidenceValue.ShouldNotBeNull();
+        confidenceValue.Value.ShouldBe(0.85m);
+
+        // Check notes
+        condition.Note.ShouldNotBeNull();
+        condition.Note.Count.ShouldBe(1);
+        condition.Note[0].Text.ShouldBe("PSA progression detected");
+    }
+
+    [Fact]
+    public void BuildCondition_WithoutProgression_ReturnsNull()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_conditionReference)
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 2.0m)
+            .WithProgression(false) // No progression
+            .Build();
+
+        // Act
+        var condition = builder.BuildCondition(observation);
+
+        // Assert
+        condition.ShouldBeNull();
+    }
+
+    [Fact]
+    public void BuildWithCondition_WithProgression_ReturnsBothResources()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+
+        // Act
+        var (observation, condition) = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_conditionReference)
+            .WithCriteria(CriteriaType.ThirdOpinionIO, "2.0")
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
+            .WithProgression(true)
+            .WithConfidence(0.92f)
+            .BuildWithCondition();
+
+        // Assert
+        observation.ShouldNotBeNull();
+        condition.ShouldNotBeNull();
+
+        // Verify observation
+        observation.Status.ShouldBe(ObservationStatus.Final);
+        var progressionValue = observation.Value as CodeableConcept;
+        progressionValue.Coding[0].Code.ShouldBe("277022003"); // Progressive disease
+
+        // Verify condition
+        condition.ClinicalStatus.Coding[0].Code.ShouldBe("active");
+        condition.Evidence[0].Detail[0].Reference.ShouldBe($"Observation/{observation.Id}");
+
+        // Both should have same confidence
+        var obsConfidence = observation.Component.FirstOrDefault(c =>
+            c.Code.Text == "AI Confidence Score")?.Value as Quantity;
+        var condConfidence = condition.Extension.FirstOrDefault(e =>
+            e.Url == "http://thirdopinion.ai/fhir/StructureDefinition/confidence")?.Value as FhirDecimal;
+
+        obsConfidence.ShouldNotBeNull();
+        condConfidence.ShouldNotBeNull();
+        condConfidence.Value.ShouldBe(0.92m);
+    }
+
+    [Fact]
+    public void BuildWithCondition_WithoutProgression_ReturnsObservationOnly()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+
+        // Act
+        var (observation, condition) = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 2.0m)
+            .WithProgression(false) // No progression
+            .BuildWithCondition();
+
+        // Assert
+        observation.ShouldNotBeNull();
+        condition.ShouldBeNull();
+
+        // Verify observation shows stable disease
+        var stableValue = observation.Value as CodeableConcept;
+        stableValue.Coding[0].Code.ShouldBe("359746009"); // Stable disease
+    }
+
+    [Fact]
+    public void BuildCondition_WithCriteriaExtension_IncludesCriteriaInCondition()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+        var observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithCriteria("test-criteria-id", "Test Criteria Display")
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
+            .WithProgression(true)
+            .Build();
+
+        // Act
+        var condition = builder.BuildCondition(observation);
+
+        // Assert
+        condition.ShouldNotBeNull();
+        condition.Extension.ShouldNotBeNull();
+
+        var criteriaExtension = condition.Extension.FirstOrDefault(e =>
+            e.Url == "http://thirdopinion.ai/fhir/StructureDefinition/assessment-criteria");
+        criteriaExtension.ShouldNotBeNull();
+
+        var idExtension = criteriaExtension.Extension.FirstOrDefault(e => e.Url == "id");
+        idExtension.ShouldNotBeNull();
+        var idValue = idExtension.Value as FhirString;
+        idValue.Value.ShouldBe("test-criteria-id");
+
+        var displayExtension = criteriaExtension.Extension.FirstOrDefault(e => e.Url == "display");
+        displayExtension.ShouldNotBeNull();
+        var displayValue = displayExtension.Value as FhirString;
+        displayValue.Value.ShouldBe("Test Criteria Display");
+    }
 }
