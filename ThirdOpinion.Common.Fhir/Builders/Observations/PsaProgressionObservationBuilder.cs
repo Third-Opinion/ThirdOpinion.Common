@@ -768,7 +768,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     public Condition? BuildCondition(Observation observation)
     {
         // Only create condition if progression is detected
-        if (_hasProgression != true)
+        if (_progressionStatus != "true")
         {
             return null;
         }

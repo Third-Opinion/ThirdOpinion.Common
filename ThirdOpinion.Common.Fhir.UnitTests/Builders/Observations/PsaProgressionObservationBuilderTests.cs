@@ -589,7 +589,7 @@ public class PsaProgressionObservationBuilderTests
             .WithCriteria(CriteriaType.PCWG3, "3.0")
             .AddPsaEvidence(new ResourceReference("Observation/psa-nadir"), "nadir", 2.0m)
             .AddPsaEvidence(new ResourceReference("Observation/psa-current"), "current", 3.5m)
-            .WithProgression(true)
+            .WithProgression("true")
             .WithEffectiveDate(new DateTime(2024, 1, 15))
             .WithConfidence(0.85f)
             .AddNote("PSA progression detected")
@@ -666,7 +666,7 @@ public class PsaProgressionObservationBuilderTests
             .WithDevice(_deviceReference)
             .WithFocus(_conditionReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 2.0m)
-            .WithProgression(false) // No progression
+            .WithProgression("false") // No progression
             .Build();
 
         // Act
@@ -689,7 +689,7 @@ public class PsaProgressionObservationBuilderTests
             .WithFocus(_conditionReference)
             .WithCriteria(CriteriaType.ThirdOpinionIO, "2.0")
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
-            .WithProgression(true)
+            .WithProgression("true")
             .WithConfidence(0.92f)
             .BuildWithCondition();
 
@@ -728,7 +728,7 @@ public class PsaProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 2.0m)
-            .WithProgression(false) // No progression
+            .WithProgression("false") // No progression
             .BuildWithCondition();
 
         // Assert
@@ -750,7 +750,7 @@ public class PsaProgressionObservationBuilderTests
             .WithDevice(_deviceReference)
             .WithCriteria("test-criteria-id", "Test Criteria Display")
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
-            .WithProgression(true)
+            .WithProgression("true")
             .Build();
 
         // Act
