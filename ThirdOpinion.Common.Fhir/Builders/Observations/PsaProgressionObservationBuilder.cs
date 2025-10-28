@@ -759,4 +759,169 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
             });
         }
     }
+
+    /// <summary>
+    /// Builds a FHIR Condition resource for PSA progression when progression is detected
+    /// </summary>
+    /// <param name="observation">The PSA progression observation to reference as evidence</param>
+    /// <returns>A Condition resource indicating PSA progression</returns>
+    public Condition? BuildCondition(Observation observation)
+    {
+        // Only create condition if progression is detected
+        if (_hasProgression != true)
+        {
+            return null;
+        }
+
+        ValidateRequiredFields();
+
+        var condition = new Condition
+        {
+            // Clinical status: active (the progression is currently present)
+            ClinicalStatus = new CodeableConcept
+            {
+                Coding = new List<Coding>
+                {
+                    new Coding
+                    {
+                        System = "http://terminology.hl7.org/CodeSystem/condition-clinical",
+                        Code = "active",
+                        Display = "Active"
+                    }
+                }
+            },
+
+            // Verification status: confirmed (AI has confirmed the progression)
+            VerificationStatus = new CodeableConcept
+            {
+                Coding = new List<Coding>
+                {
+                    new Coding
+                    {
+                        System = "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+                        Code = "confirmed",
+                        Display = "Confirmed"
+                    }
+                }
+            },
+
+            // Category: encounter-diagnosis
+            Category = new List<CodeableConcept>
+            {
+                new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new Coding
+                        {
+                            System = "http://terminology.hl7.org/CodeSystem/condition-category",
+                            Code = "encounter-diagnosis",
+                            Display = "Encounter Diagnosis"
+                        }
+                    }
+                }
+            },
+
+            // Code: PSA progression using SNOMED codes
+            Code = CreatePsaProgressionConditionCode(),
+
+            // Subject (Patient)
+            Subject = _patientReference,
+
+            // Recorded date
+            RecordedDate = _effectiveDate?.ToString() ?? DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:sszzz"),
+
+            // Recorder (Device)
+            Recorder = _deviceReference
+        };
+
+        // Add observation as evidence
+        condition.Evidence = new List<Condition.EvidenceComponent>
+        {
+            new Condition.EvidenceComponent
+            {
+                Detail = new List<ResourceReference>
+                {
+                    new ResourceReference
+                    {
+                        Reference = $"Observation/{observation.Id}",
+                        Display = "PSA Progression Assessment"
+                    }
+                }
+            }
+        };
+
+        // Add AI inference extensions
+        condition.Extension = new List<Extension>();
+
+        // Add confidence as an extension if specified
+        if (_confidence.HasValue)
+        {
+            condition.Extension.Add(new Extension("http://thirdopinion.ai/fhir/StructureDefinition/confidence",
+                new FhirDecimal((decimal)_confidence.Value)));
+        }
+
+        // Add criteria extension if specified
+        if (!string.IsNullOrWhiteSpace(CriteriaId))
+        {
+            var criteriaExtension = new Extension
+            {
+                Url = "http://thirdopinion.ai/fhir/StructureDefinition/assessment-criteria"
+            };
+            criteriaExtension.Extension.Add(new Extension("id", new FhirString(CriteriaId)));
+            criteriaExtension.Extension.Add(new Extension("display", new FhirString(CriteriaDisplay ?? "")));
+            condition.Extension.Add(criteriaExtension);
+        }
+
+        // Add AI inference marker extension
+        condition.Extension.Add(new Extension("http://thirdopinion.ai/fhir/StructureDefinition/ai-inferred",
+            new FhirBoolean(true)));
+
+        // Add notes if any
+        if (_notes.Any())
+        {
+            condition.Note = _notes.Select(noteText => new Annotation
+            {
+                Time = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:sszzz"),
+                Text = new Markdown(noteText)
+            }).ToList();
+        }
+
+        return condition;
+    }
+
+    /// <summary>
+    /// Builds both the PSA Progression Observation and associated Condition (if progression detected)
+    /// </summary>
+    /// <returns>A tuple containing the Observation and optional Condition</returns>
+    public (Observation observation, Condition? condition) BuildWithCondition()
+    {
+        var observation = Build();
+        var condition = BuildCondition(observation);
+
+        return (observation, condition);
+    }
+
+    private CodeableConcept CreatePsaProgressionConditionCode()
+    {
+        return new CodeableConcept
+        {
+            Coding = new List<Coding>
+            {
+                new Coding
+                {
+                    System = FhirCodingHelper.Systems.SNOMED_SYSTEM,
+                    Code = "428119001",
+                    Display = "Procedure to assess prostate specific antigen progression"
+                },
+                new Coding
+                {
+                    System = "http://hl7.org/fhir/sid/icd-10-cm",
+                    Code = "R97.21",
+                    Display = "Rising PSA following treatment for malignant neoplasm of prostate"
+                }
+            },
+            Text = "PSA Progression"
+        };
+    }
 }

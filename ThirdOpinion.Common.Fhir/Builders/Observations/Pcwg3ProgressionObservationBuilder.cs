@@ -15,7 +15,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     private ResourceReference? _patientReference;
     private ResourceReference? _deviceReference;
     private readonly List<ResourceReference> _focusReferences;
-    private bool? _identified;
+    // Replaced _identified with _determination which is already declared below
     private string? _initialLesions;
     private DateTime? _confirmationDate;
     private string? _additionalLesions;
@@ -158,17 +158,6 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
 
         _focusReferences.Clear();
         _focusReferences.AddRange(focus.Where(f => f != null));
-        return this;
-    }
-
-    /// <summary>
-    /// Sets whether PCWG3 progression is identified
-    /// </summary>
-    /// <param name="identified">True if progression is identified, false otherwise</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public Pcwg3ProgressionObservationBuilder WithIdentified(bool identified)
-    {
-        _identified = identified;
         return this;
     }
 
@@ -326,12 +315,16 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Sets the determination result (e.g., "Progressive Disease", "Stable Disease", "Inconclusive")
+    /// Sets the determination result ("True", "False", or "Inconclusive")
     /// </summary>
-    /// <param name="determination">The determination result</param>
+    /// <param name="determination">The determination value: "True", "False", or "Inconclusive"</param>
     /// <returns>This builder instance for method chaining</returns>
     public Pcwg3ProgressionObservationBuilder WithDetermination(string? determination)
     {
+        if (determination != null && !new[] { "True", "False", "Inconclusive" }.Contains(determination))
+        {
+            throw new ArgumentException($"Invalid determination value: {determination}. Must be 'True', 'False', or 'Inconclusive'.", nameof(determination));
+        }
         _determination = determination;
         return this;
     }
@@ -407,11 +400,6 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
         if (_deviceReference == null)
         {
             throw new InvalidOperationException("Device reference is required. Call WithDevice() before Build().");
-        }
-
-        if (!_identified.HasValue)
-        {
-            throw new InvalidOperationException("Identified status is required. Call WithIdentified() before Build().");
         }
     }
 
@@ -519,21 +507,33 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
         return observation;
     }
 
-    private CodeableConcept CreateProgressionValue()
+    private CodeableConcept? CreateProgressionValue()
     {
-        if (_identified == true)
+        if (string.IsNullOrWhiteSpace(_determination))
+        {
+            return null; // No value if determination not set
+        }
+
+        if (_determination == "True")
         {
             // Progressive disease
             return FhirCodingHelper.CreateSnomedConcept(
                 "277022003",
                 "Progressive disease");
         }
-        else
+        else if (_determination == "False")
         {
             // Stable disease
             return FhirCodingHelper.CreateSnomedConcept(
                 "359746009",
                 "Stable disease");
+        }
+        else // "Inconclusive"
+        {
+            // Inconclusive
+            return FhirCodingHelper.CreateSnomedConcept(
+                "373067005",
+                "Inconclusive");
         }
     }
 
