@@ -409,7 +409,7 @@
         "dependencies": [
           23
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -417,7 +417,7 @@
             "description": "Create the new ThirdOpinion.Common.Aws.Bedrock project structure in the src directory and copy all Bedrock source files from FhirTools",
             "dependencies": [],
             "details": "Create the project directory at src/ThirdOpinion.Common.Aws.Bedrock, copy all files from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Bedrock including BedrockModels.cs, BedrockPricing.cs, BedrockService.cs, IBedrockService.cs, and ServiceCollectionExtensions.cs. Set up the initial project structure following the pattern of other AWS projects in the solution like ThirdOpinion.Common.Aws.S3",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify all source files are copied correctly with proper directory structure"
           },
           {
@@ -428,7 +428,7 @@
               1
             ],
             "details": "Create ThirdOpinion.Common.Aws.Bedrock.csproj following the pattern from ThirdOpinion.Common.Aws.S3.csproj. Add NuGet packages: AWSSDK.Bedrock, AWSSDK.BedrockRuntime, AWSSDK.Core, and standard Microsoft.Extensions packages. Configure project properties including target framework net8.0, nullable reference types, and documentation generation",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify project builds successfully with all required package references"
           },
           {
@@ -439,7 +439,7 @@
               2
             ],
             "details": "Update all namespace declarations in copied files to ThirdOpinion.Common.Aws.Bedrock. Identify and handle dependencies on other FhirTools namespaces like FhirTools.Configuration, FhirTools.Langfuse, FhirTools.Logging, FhirTools.RateLimiting, and FhirTools.Retry. Either create stubs for these services or refactor to use existing ThirdOpinion.Common patterns. Update using statements accordingly",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify all namespace references are updated correctly and code compiles without namespace errors"
           },
           {
@@ -450,7 +450,7 @@
               3
             ],
             "details": "Add ThirdOpinion.Common.Aws.Bedrock.csproj to the ThirdOpinion.Common.sln file under the aws solution folder. Implement streaming response support methods in BedrockService for real-time model inference, including stream handling for different model types (Claude, Llama, etc.). Add appropriate async enumerable patterns for streaming responses",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test solution builds with new project included and streaming methods handle responses correctly"
           },
           {
@@ -461,7 +461,7 @@
               4
             ],
             "details": "Create ThirdOpinion.Common.Aws.Bedrock.Tests project in appropriate test directory. Copy and adapt ToolConfigurationHelperTests.cs from FhirTools.Tests/Bedrock. Add tests for model invocation with mock responses, request/response serialization, streaming response handling, and error handling for model throttling. Ensure tests follow existing test patterns in the ThirdOpinion.Common solution",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run all unit tests to verify Bedrock service functionality with mocked AWS responses"
           }
         ]
@@ -548,7 +548,7 @@
           27,
           28
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -556,7 +556,7 @@
             "description": "Create the test project for HealthLake functionality with proper project configuration, including directory structure and .csproj file setup with all necessary NuGet packages",
             "dependencies": [],
             "details": "Create /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.HealthLake.Tests directory and .csproj file. Configure with net8.0 target framework, add xUnit 2.9.2, Microsoft.NET.Test.Sdk 17.12.0, xunit.runner.visualstudio 2.8.2, Moq 4.20.72, Shouldly 4.2.1, and coverlet.collector 6.0.2 packages. Include proper Using statements for xUnit, Shouldly, and Moq. Add project reference to ThirdOpinion.Common.Aws.HealthLake (once created). Configure NoWarn for nullable warnings as per existing test projects pattern",
-            "status": "pending",
+            "status": "in-progress",
             "testStrategy": "Validate project builds successfully and test discovery works in IDE"
           },
           {
@@ -687,7 +687,7 @@
     ],
     "metadata": {
       "created": "2025-08-14T03:46:08.337Z",
-      "updated": "2025-10-29T01:30:58.226Z",
+      "updated": "2025-10-29T16:25:43.543Z",
       "description": "Tasks for master context"
     }
   }
