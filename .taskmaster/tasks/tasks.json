@@ -409,7 +409,7 @@
         "dependencies": [
           23
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -474,7 +474,7 @@
         "testStrategy": "1. Test trace creation and submission\n2. Validate metric aggregation\n3. Test offline/batch mode if supported\n4. Verify sensitive data masking in traces",
         "priority": "low",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -482,7 +482,7 @@
             "description": "Set up the new ThirdOpinion.Common.Langfuse .NET project with proper folder structure, add it to the solution, and configure necessary NuGet packages including Microsoft.Extensions dependencies, HTTP client packages, and JSON serialization",
             "dependencies": [],
             "details": "Create a new class library project under src/ThirdOpinion.Common.Langfuse directory following the existing project structure pattern. Add project to ThirdOpinion.Common.sln. Configure the .csproj file with TargetFramework net8.0, nullable enabled, and add required NuGet packages: Microsoft.Extensions.Http, Microsoft.Extensions.Logging, Microsoft.Extensions.Configuration, Microsoft.Extensions.DependencyInjection, System.Text.Json. Ensure proper project reference structure matching other Common projects",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify project builds successfully and is properly integrated into the solution structure"
           },
           {
@@ -493,7 +493,7 @@
               1
             ],
             "details": "Copy ILangfuseService.cs, LangfuseService.cs, ILangfuseSchemaService.cs, LangfuseSchemaService.cs, and LangfuseModels.cs from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Langfuse. Update all namespaces from FhirTools.Langfuse to ThirdOpinion.Common.Langfuse. Remove or abstract away any direct AWS Bedrock dependencies from BedrockTracingExtensions.cs to make it provider-agnostic. Update using statements and ensure all type references are correctly resolved",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Ensure all copied files compile without errors after namespace updates and dependency adjustments"
           },
           {
@@ -504,7 +504,7 @@
               2
             ],
             "details": "Implement LangfuseHttpClient class with configured HttpClient using IHttpClientFactory pattern. Add authentication headers support for Langfuse API keys (public and secret keys). Implement retry policies using Polly for transient failures. Create request/response serialization helpers using System.Text.Json. Add configuration models for Langfuse API endpoints (base URL, timeouts, retry settings). Implement batch ingestion endpoint support for efficient telemetry submission",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test HTTP client configuration, authentication header injection, retry behavior on transient failures, and JSON serialization/deserialization of Langfuse models"
           },
           {
@@ -515,7 +515,7 @@
               3
             ],
             "details": "Create ILlmTracingProvider interface for provider-agnostic tracing. Implement TracingContext class for managing trace lifecycle and parent-child relationships. Create ObservationBuilder for constructing generation and span observations with proper metadata. Implement TokenUsageCalculator for tracking input/output tokens and cost calculations. Add support for streaming response tracking and completion callbacks. Create extension methods for common tracing patterns (trace wrapping, automatic span creation). Implement metric aggregation helpers for collecting performance data",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Unit test tracing context management, observation builder patterns, token usage calculations, and metric aggregation logic"
           },
           {
@@ -526,7 +526,7 @@
               4
             ],
             "details": "Create LangfuseConfiguration class with API endpoint URLs, authentication keys, batch settings, and timeout configurations. Implement ServiceCollectionExtensions.cs with AddLangfuse extension method for registering services. Add IConfiguration binding support for reading settings from appsettings.json. Implement sensitive data masking utilities to prevent PII/secrets in traces. Create health check implementation to verify Langfuse connectivity. Add support for environment-specific configurations (dev, staging, prod). Implement offline/batch mode configuration for high-volume scenarios",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test configuration binding from various sources, DI registration and resolution, sensitive data masking in traces, and health check functionality"
           }
         ]
@@ -687,7 +687,7 @@
     ],
     "metadata": {
       "created": "2025-08-14T03:46:08.337Z",
-      "updated": "2025-10-29T01:14:50.180Z",
+      "updated": "2025-10-29T01:30:58.226Z",
       "description": "Tasks for master context"
     }
   }
