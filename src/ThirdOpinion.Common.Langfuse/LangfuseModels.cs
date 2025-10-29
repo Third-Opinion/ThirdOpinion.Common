@@ -1,9 +1,8 @@
 using System.Text.Json.Serialization;
 using System.Text.Json;
-using Amazon.BedrockRuntime.Model;
 using Amazon.Runtime.Documents;
 
-namespace FhirTools.Langfuse;
+namespace ThirdOpinion.Common.Langfuse;
 
 /// <summary>
 /// Response model for Langfuse prompt list API
@@ -369,40 +368,15 @@ public class
     /// </summary>
     public string? ToolDescription { get; set; }
 
-    /// <summary>
-    /// Converts this prompt with schema to a Bedrock ToolConfiguration
-    /// </summary>
+    // TODO: Implement provider-agnostic tool configuration
+    // Removed AWS-specific ToolConfiguration implementation
+    /*
     public ToolConfiguration? BuildToolConfiguration()
     {
-        if (Schema == null)
-            return null;
-
-        try
-        {
-            var tool = new Tool
-            {
-                ToolSpec = new ToolSpecification
-                {
-                    Name = ToolName ?? GenerateToolName(),
-                    Description = ToolDescription ?? GenerateToolDescription(),
-                    InputSchema = new ToolInputSchema
-                    {
-                        Json = new Document(Schema.RootElement.GetRawText())
-                    }
-                }
-            };
-
-            return new ToolConfiguration
-            {
-                Tools = new List<Tool> { tool }
-            };
-        }
-        catch (Exception)
-        {
-            // If schema parsing fails, return null to fall back to non-tool mode
-            return null;
-        }
+        // Implementation removed - AWS-specific
+        return null;
     }
+    */
 
     /// <summary>
     /// Generates a tool name from the prompt name

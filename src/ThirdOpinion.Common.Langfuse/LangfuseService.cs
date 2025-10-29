@@ -1,14 +1,14 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using FhirTools.Bedrock;
-using FhirTools.Configuration;
-using FhirTools.Logging;
+// using ThirdOpinion.Common.Bedrock; - Removed AWS dependency
+using ThirdOpinion.Common.Langfuse.Configuration;
+using ThirdOpinion.Common.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
 
-namespace FhirTools.Langfuse;
+namespace ThirdOpinion.Common.Langfuse;
 
 /// <summary>
 /// HTTP client-based service for interacting with Langfuse API
@@ -16,7 +16,7 @@ namespace FhirTools.Langfuse;
 public class LangfuseService : ILangfuseService, IDisposable
 {
     private readonly HttpClient _httpClient;
-    private readonly LangfuseConfig _config;
+    private readonly LangfuseConfiguration _config;
     private readonly ILogger<LangfuseService> _logger;
     private readonly ICorrelationIdProvider _correlationIdProvider;
     private readonly IAsyncPolicy _retryPolicy;
@@ -32,7 +32,7 @@ public class LangfuseService : ILangfuseService, IDisposable
 
     public LangfuseService(
         IHttpClientFactory httpClientFactory,
-        IOptions<LangfuseConfig> config,
+        IOptions<LangfuseConfiguration> config,
         ILogger<LangfuseService> logger,
         ICorrelationIdProvider correlationIdProvider)
     {
@@ -904,6 +904,8 @@ public class LangfuseService : ILangfuseService, IDisposable
         }
     }
 
+    // TODO: Implement provider-agnostic cost calculation
+    /*
     public async Task<BedrockCostCalculation> CalculateBedrockCostAsync(
         string modelId,
         int inputTokens,
@@ -914,6 +916,7 @@ public class LangfuseService : ILangfuseService, IDisposable
         var pricingService = new BedrockPricingService();
         return await Task.FromResult(pricingService.CalculateCost(modelId, inputTokens, outputTokens));
     }
+    */
 
     public async Task<LangfuseIngestionResponse?> CreateBedrockTraceAndGenerationAsync(
         LangfuseBedrockTraceRequest traceRequest,
@@ -939,8 +942,10 @@ public class LangfuseService : ILangfuseService, IDisposable
         // Ensure the generation is linked to the trace
         generationRequest.TraceId = traceRequest.Id;
 
-        var batch = BedrockTracingExtensions.CreateIngestionBatch(traceRequest, generationRequest);
-        return await SendIngestionBatchAsync(batch, cancellationToken);
+        // TODO: Reimplement without BedrockTracingExtensions
+        // var batch = BedrockTracingExtensions.CreateIngestionBatch(traceRequest, generationRequest);
+        // return await SendIngestionBatchAsync(batch, cancellationToken);
+        return null;
     }
 
     public async Task<LangfuseObservationResponse?> UpdateGenerationAsync(

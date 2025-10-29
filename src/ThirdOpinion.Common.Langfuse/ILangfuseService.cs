@@ -1,4 +1,4 @@
-namespace FhirTools.Langfuse;
+namespace ThirdOpinion.Common.Langfuse;
 
 /// <summary>
 /// Service for interacting with Langfuse API for prompt management and observability
@@ -164,17 +164,6 @@ public interface ILangfuseService
         LangfuseBedrockTraceRequest request,
         CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Calculates costs for Bedrock model usage
-    /// </summary>
-    /// <param name="modelId">Bedrock model identifier</param>
-    /// <param name="inputTokens">Number of input tokens</param>
-    /// <param name="outputTokens">Number of output tokens</param>
-    /// <returns>Cost calculation result</returns>
-    Task<BedrockCostCalculation> CalculateBedrockCostAsync(
-        string modelId,
-        int inputTokens,
-        int outputTokens);
 
     /// <summary>
     /// Creates a complete trace and generation for a Bedrock call in a single batch operation

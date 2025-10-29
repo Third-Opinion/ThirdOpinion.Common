@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using FhirTools.Configuration;
+using ThirdOpinion.Common.Langfuse.Configuration;
 
-namespace FhirTools.Langfuse;
+namespace ThirdOpinion.Common.Langfuse;
 
 /// <summary>
 /// Extension methods for registering Langfuse services in the dependency injection container
@@ -18,12 +18,12 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddLangfuseServices(this IServiceCollection services, IConfiguration configuration)
     {
         // Register configuration
-        services.Configure<LangfuseConfig>(configuration.GetSection("Langfuse"));
+        services.Configure<LangfuseConfiguration>(configuration.GetSection("Langfuse"));
 
         // Register HTTP client for Langfuse service
         services.AddHttpClient<LangfuseService>(client =>
         {
-            var langfuseConfig = configuration.GetSection("Langfuse").Get<LangfuseConfig>() ?? new LangfuseConfig();
+            var langfuseConfig = configuration.GetSection("Langfuse").Get<LangfuseConfiguration>() ?? new LangfuseConfiguration();
             client.BaseAddress = new Uri(langfuseConfig.BaseUrl);
             client.Timeout = TimeSpan.FromSeconds(langfuseConfig.RequestTimeoutSeconds);
 
@@ -37,9 +37,6 @@ public static class ServiceCollectionExtensions
 
         // Register Langfuse service
         services.AddSingleton<ILangfuseService, LangfuseService>();
-
-        // Register Langfuse schema service with caching
-        services.AddSingleton<ILangfuseSchemaService, LangfuseSchemaService>();
 
         // Add memory cache if not already added
         services.AddMemoryCache();
