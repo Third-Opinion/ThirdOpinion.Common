@@ -2,694 +2,692 @@
   "master": {
     "tasks": [
       {
-        "id": 11,
-        "title": "Setup FHIR Library Projects and Dependencies",
-        "description": "Create ThirdOpinion.Common.Fhir library project and ThirdOpinion.Common.Fhir.UnitTests test project with Firely SDK integration",
-        "details": "Create new C# library project ThirdOpinion.Common.Fhir targeting .NET 6+. Install NuGet packages: Hl7.Fhir.R4 (latest stable), Hl7.Fhir.Serialization (for JSON/XML support). Create test project ThirdOpinion.Common.Fhir.UnitTests with xUnit and Shouldly. Set up project structure with folders: Builders/Base, Builders/Observations, Builders/Documents, Configuration, Helpers, Enums. Add project references to ThirdOpinion.Common solution. Configure AWS SDK dependencies if needed for S3 integration.",
-        "testStrategy": "Verify project builds successfully, all NuGet packages restore correctly, and basic Firely SDK resource creation works (create simple Patient resource as smoke test). Ensure test project can reference main library.",
+        "id": 21,
+        "title": "Create ThirdOpinion.Common.Aws.HealthLake Project",
+        "description": "Create a new .NET project for AWS HealthLake functionality and migrate FHIR code from FhirTools",
+        "details": "1. Create new project ThirdOpinion.Common.Aws.HealthLake in the ThirdOpinion.Common solution\n2. Copy all code from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Fhir directory\n3. Update namespaces from FhirTools.Fhir to ThirdOpinion.Common.Aws.HealthLake\n4. Review and update all using statements and project references\n5. Add necessary NuGet packages (AWSSDK.HealthLake, Hl7.Fhir.R4)\n6. Ensure all HealthLake-specific functionality is properly isolated\n7. Update any configuration patterns to match ThirdOpinion.Common conventions",
+        "testStrategy": "1. Verify all classes compile without errors\n2. Check namespace consistency throughout the project\n3. Validate AWS SDK integration points\n4. Run existing unit tests after migration to ensure functionality preservation",
         "priority": "high",
         "dependencies": [],
         "status": "done",
         "subtasks": [
           {
             "id": 1,
-            "title": "Create ThirdOpinion.Common.Fhir library project",
-            "description": "Set up the main FHIR library project with proper .NET configuration and solution integration",
+            "title": "Create ThirdOpinion.Common.Aws.HealthLake project structure",
+            "description": "Initialize the new .NET 8 project for AWS HealthLake functionality with proper project configuration and folder structure",
             "dependencies": [],
-            "details": "Create new C# class library project named 'ThirdOpinion.Common.Fhir' targeting .NET 6.0. Add the project to the ThirdOpinion.Common solution file. Configure the .csproj file with appropriate PropertyGroup settings including <TargetFramework>net6.0</TargetFramework>, <Nullable>enable</Nullable>, and <LangVersion>latest</LangVersion>. Ensure the project follows the same conventions as other ThirdOpinion.Common libraries in the solution.",
+            "details": "Create the project directory at src/ThirdOpinion.Common.Aws.HealthLake, add a new .csproj file configured for .NET 8 with standard ThirdOpinion.Common project settings (ImplicitUsings, Nullable, LangVersion=latest, etc.), and update the ThirdOpinion.Common.sln file to include the new project in the aws solution folder alongside other AWS projects",
             "status": "done",
-            "testStrategy": "Verify the project builds successfully with dotnet build command and appears correctly in the solution structure"
+            "testStrategy": "Verify the project builds successfully with dotnet build and appears correctly in the solution structure"
           },
           {
             "id": 2,
-            "title": "Install and configure Firely SDK NuGet packages",
-            "description": "Add required FHIR R4 packages and configure AWS SDK dependencies for the library project",
+            "title": "Copy and organize FHIR source files from FhirTools",
+            "description": "Transfer all FHIR-related code files from the FhirTools source directory to the new HealthLake project",
             "dependencies": [
-              "11.1"
+              1
             ],
-            "details": "Install NuGet packages to ThirdOpinion.Common.Fhir project: Hl7.Fhir.R4 (latest stable version), Hl7.Fhir.Serialization for JSON/XML support, and Hl7.Fhir.Support.Poco for POCO support. Add AWS SDK packages if needed: AWSSDK.S3 for potential S3 integration. Use PackageReference format in the .csproj file. Verify all packages restore correctly and check for any version conflicts with existing solution packages.",
+            "details": "Copy all files from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Fhir including the main service files (HealthLakeFhirService.cs, AthenaFhirService.cs, interfaces, ServiceCollectionExtensions.cs) and the Exceptions subfolder. Maintain the folder structure, ensuring exception classes are properly organized in an Exceptions subdirectory",
             "status": "done",
-            "testStrategy": "Create a simple smoke test that instantiates a Patient resource using Firely SDK to verify packages are working correctly"
+            "testStrategy": "Validate all files are present in the correct directory structure and verify no files were missed during the copy operation"
           },
           {
             "id": 3,
-            "title": "Create project folder structure and base namespaces",
-            "description": "Establish the organized folder hierarchy for builders, helpers, and configuration classes",
+            "title": "Update namespaces and refactor HealthLake-specific code",
+            "description": "Refactor all copied code to use ThirdOpinion.Common.Aws.HealthLake namespace and separate HealthLake functionality from Athena",
             "dependencies": [
-              "11.1"
+              2
             ],
-            "details": "Create the following folder structure in ThirdOpinion.Common.Fhir project: Builders/Base (for base builder classes), Builders/Observations (for observation builders), Builders/Documents (for document reference builders), Configuration (for FHIR configuration classes), Helpers (for utility classes), Enums (for FHIR-related enumerations). Create placeholder .gitkeep files in empty folders to maintain structure in version control. Set up appropriate namespace declarations following the pattern ThirdOpinion.Common.Fhir.{FolderName}.",
+            "details": "Update all namespace declarations from FhirTools.Fhir to ThirdOpinion.Common.Aws.HealthLake, remove AthenaFhirService.cs from this project (it belongs in the separate AthenaEhr project), keep only HealthLakeFhirService and related interfaces/exceptions. Update all using statements throughout the codebase to reference the new namespace structure",
             "status": "done",
-            "testStrategy": "Verify folder structure is created correctly and namespaces compile without errors"
+            "testStrategy": "Use grep to verify all old namespaces are replaced, ensure no compilation errors related to namespace mismatches"
           },
           {
             "id": 4,
-            "title": "Create ThirdOpinion.Common.Fhir.UnitTests test project",
-            "description": "Set up the unit test project with xUnit and Shouldly frameworks",
+            "title": "Configure NuGet packages and project references",
+            "description": "Add all required NuGet packages for AWS HealthLake and FHIR functionality to the project",
             "dependencies": [
-              "11.1"
+              3
             ],
-            "details": "Create new xUnit test project named 'ThirdOpinion.Common.Fhir.UnitTests' targeting .NET 6.0. Add project reference to ThirdOpinion.Common.Fhir. Install test packages: xunit (latest), xunit.runner.visualstudio (latest), Microsoft.NET.Test.Sdk (latest), Shouldly (latest for fluent assertions), coverlet.collector (for code coverage). Copy .runsettings file from existing test projects if available for consistent test configuration. Create matching folder structure for test organization mirroring the main project.",
+            "details": "Add package references to the .csproj file including AWSSDK.HealthLake, AWSSDK.Core, Hl7.Fhir.R4 (version 5.12.2 to match existing), Microsoft.Extensions.DependencyInjection.Abstractions, Microsoft.Extensions.Options, Microsoft.Extensions.Logging.Abstractions, and Microsoft.Extensions.Configuration.Abstractions. Use consistent versions with other ThirdOpinion.Common.Aws projects",
             "status": "done",
-            "testStrategy": "Create and run a simple test that verifies the test project can reference the main library and that xUnit/Shouldly are working"
+            "testStrategy": "Run dotnet restore to ensure all packages resolve correctly, verify package versions match other AWS projects in the solution"
           },
           {
             "id": 5,
-            "title": "Implement initial FHIR resource validation test",
-            "description": "Create a basic integration test to validate the complete setup works end-to-end",
+            "title": "Integrate with ThirdOpinion.Common conventions and test compilation",
+            "description": "Ensure the project follows ThirdOpinion.Common patterns and successfully compiles with the solution",
             "dependencies": [
-              "11.2",
-              "11.3",
-              "11.4"
+              4
             ],
-            "details": "In the test project, create a FhirSetupTests class in the root namespace. Implement a test method that: creates a simple Patient resource using Firely SDK, sets basic properties (name, birthDate, identifier), serializes the resource to JSON using FhirJsonSerializer, deserializes it back to verify round-trip works, validates the resource against FHIR R4 schema if validator is available. This serves as a smoke test to ensure all components (project, packages, references) are correctly configured.",
+            "details": "Review ServiceCollectionExtensions.cs to ensure dependency injection follows the pattern used in other ThirdOpinion.Common.Aws projects, verify configuration patterns match conventions (using Options pattern with IConfiguration), ensure proper async/await patterns and cancellation token usage throughout. Run dotnet build on the entire solution to verify no compilation errors and all cross-project references work correctly",
             "status": "done",
-            "testStrategy": "Run the test using dotnet test command, verify it passes and produces expected Patient resource JSON output"
+            "testStrategy": "Execute dotnet build for the entire solution, run any existing unit tests that reference FHIR functionality to ensure backward compatibility"
           }
         ]
       },
       {
-        "id": 12,
-        "title": "Implement Core Helper Classes",
-        "description": "Create FhirIdGenerator and FhirCodingHelper static classes with FHIR code constants and ID generation utilities",
-        "details": "Implement FhirIdGenerator with methods: GenerateInferenceId() for auto-generating 'to.ai-inference-{GUID}' format, GenerateInferenceId(int) for sequential IDs, GenerateProvenanceId(), GenerateDocumentId(string type), GenerateResourceId(string prefix, string guid). Implement FhirCodingHelper with constants for SNOMED codes (ADT_THERAPY=413712001, CASTRATION_SENSITIVE=1197209002, etc.), ICD-10 codes (PROSTATE_CANCER=C61, HORMONE_SENSITIVE=Z19.1, etc.), LOINC codes (CANCER_DISEASE_STATUS=21889-1, PSA_TOTAL=2857-1, etc.), NCI Thesaurus codes. Add factory methods for creating CodeableConcept objects from codes.",
-        "testStrategy": "Unit test all ID generation methods for correct format and uniqueness. Verify GUID generation produces valid GUIDs. Test sequential ID generation maintains sequence. Validate all code constants against FHIR terminology servers. Test CodeableConcept factory methods produce valid FHIR objects.",
+        "id": 22,
+        "title": "Create ThirdOpinion.Common.AthenaEhr Project",
+        "description": "Create a new .NET project for Athena EHR integration including OAuth functionality",
+        "details": "1. Create new project ThirdOpinion.Common.AthenaEhr in the solution\n2. Copy relevant FHIR code from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Fhir that relates to Athena\n3. Copy all OAuth code from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/OAuth\n4. Update namespaces to ThirdOpinion.Common.AthenaEhr\n5. Integrate OAuth handlers with Athena-specific FHIR implementations\n6. Add required OAuth NuGet packages (Microsoft.AspNetCore.Authentication.OAuth, IdentityModel)\n7. Configure dependency injection for OAuth services",
+        "testStrategy": "1. Test OAuth token acquisition and refresh flows\n2. Validate Athena API endpoint connectivity\n3. Test FHIR resource CRUD operations through Athena\n4. Verify authorization header propagation",
         "priority": "high",
-        "dependencies": [
-          11
-        ],
+        "dependencies": [],
         "status": "done",
         "subtasks": [
           {
             "id": 1,
-            "title": "Create FhirIdGenerator class with GUID-based ID generation methods",
-            "description": "Implement the FhirIdGenerator static class with core GUID-based ID generation methods for various FHIR resource types",
+            "title": "Create ThirdOpinion.Common.AthenaEhr project structure and configuration",
+            "description": "Create the new .NET 8 project ThirdOpinion.Common.AthenaEhr with proper structure following the existing solution pattern, update the solution file to include the new project",
             "dependencies": [],
-            "details": "Create a new static class FhirIdGenerator in ThirdOpinion.Common.Fhir/Helpers/. Implement GenerateInferenceId() method that returns 'to.ai-inference-{GUID}' format using Guid.NewGuid(). Implement GenerateProvenanceId() returning 'to.ai-provenance-{GUID}'. Implement GenerateDocumentId(string type) returning 'to.ai-document-{type}-{GUID}'. Implement GenerateResourceId(string prefix, string guid = null) that uses provided GUID or generates new one. All methods should return lowercase GUIDs for consistency.",
+            "details": "Create the project directory at /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/src/ThirdOpinion.Common.AthenaEhr following the existing convention. Create a csproj file with target framework net8.0 and necessary project settings including documentation generation. Add the project to the ThirdOpinion.Common.sln solution file with appropriate GUID and configuration mappings for Debug/Release and different CPU architectures.",
             "status": "done",
-            "testStrategy": "Unit test each ID generation method for correct format using regex patterns. Verify GUID uniqueness by generating 1000 IDs and checking for duplicates. Test that custom GUID parameter works in GenerateResourceId."
+            "testStrategy": "Verify project compiles successfully with dotnet build and is properly referenced in the solution"
           },
           {
             "id": 2,
-            "title": "Add sequential ID generation to FhirIdGenerator",
-            "description": "Extend FhirIdGenerator with sequential ID generation capabilities for ordered inference IDs",
+            "title": "Copy and adapt Athena-specific FHIR implementations from FhirTools",
+            "description": "Copy AthenaFhirService.cs and related FHIR exceptions from FhirTools/FhirTools/Fhir directory, update namespaces to ThirdOpinion.Common.AthenaEhr",
             "dependencies": [
-              "12.1"
+              1
             ],
-            "details": "Add GenerateInferenceId(int sequenceNumber) overload that returns 'to.ai-inference-{sequenceNumber:D6}' format (6-digit zero-padded). Implement thread-safe internal counter using Interlocked.Increment for auto-incrementing IDs. Add GenerateSequentialId(string prefix, int? sequence = null) for flexible sequential ID generation. Consider adding configuration for sequence number format and padding.",
+            "details": "Copy AthenaFhirService.cs from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Fhir to the new project. Also copy the Exceptions directory with any Athena-related exception classes. Update all namespaces from FhirTools.Fhir to ThirdOpinion.Common.AthenaEhr. Review and update any using statements and references to align with ThirdOpinion.Common namespace structure. Add reference to Hl7.Fhir.R4 NuGet package.",
             "status": "done",
-            "testStrategy": "Test sequential ID formatting with various numbers (1, 999, 100000). Verify thread safety by spawning multiple threads generating IDs simultaneously. Test that sequential IDs maintain order and uniqueness."
+            "testStrategy": "Ensure all copied files compile without namespace conflicts and all FHIR types are properly resolved"
           },
           {
             "id": 3,
-            "title": "Create FhirCodingHelper class with SNOMED and ICD-10 code constants",
-            "description": "Implement FhirCodingHelper static class with comprehensive medical coding system constants for SNOMED-CT and ICD-10",
-            "dependencies": [],
-            "details": "Create FhirCodingHelper static class with nested classes for organization: SnomedCodes class with constants ADT_THERAPY = \"413712001\", CASTRATION_SENSITIVE = \"1197209002\", CASTRATION_RESISTANT = \"1197210007\", AI_ALGORITHM = \"706689003\", ACTIVE_STATUS = \"385654001\". IcdCodes class with PROSTATE_CANCER = \"C61\", HORMONE_SENSITIVE = \"Z19.1\", HORMONE_RESISTANT = \"Z19.2\". Add System URIs as constants: SNOMED_SYSTEM = \"http://snomed.info/sct\", ICD10_SYSTEM = \"http://hl7.org/fhir/sid/icd-10\".",
+            "title": "Integrate OAuth implementation components from FhirTools",
+            "description": "Copy all OAuth implementation files including AthenaOAuthService, token handling, and exceptions, updating namespaces and integrating with Athena FHIR service",
+            "dependencies": [
+              1
+            ],
+            "details": "Copy all files from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/OAuth directory including AthenaOAuthService.cs, IAthenaOAuthService.cs, IOAuthService.cs, OAuthException.cs, OAuthToken.cs, OAuthTokenResponse.cs, and ServiceCollectionExtensions.cs. Update namespaces to ThirdOpinion.Common.AthenaEhr.OAuth. Ensure proper integration between OAuth services and AthenaFhirService for authentication flow.",
             "status": "done",
-            "testStrategy": "Verify all code constants are accessible and have correct values. Test that system URIs match FHIR specifications. Validate codes against known medical terminology standards."
+            "testStrategy": "Test OAuth token acquisition, refresh flows, and verify proper authentication header injection into Athena API calls"
           },
           {
             "id": 4,
-            "title": "Add LOINC and NCI Thesaurus codes to FhirCodingHelper",
-            "description": "Extend FhirCodingHelper with LOINC laboratory codes and NCI Thesaurus oncology terminology",
+            "title": "Configure NuGet dependencies and package references",
+            "description": "Add all required NuGet packages for OAuth, FHIR, HTTP client functionality, and dependency injection to the project file",
             "dependencies": [
-              "12.3"
+              1,
+              2,
+              3
             ],
-            "details": "Add LoincCodes nested class with CANCER_DISEASE_STATUS = \"21889-1\", PSA_TOTAL = \"2857-1\", PSA_FREE = \"19201-3\", TESTOSTERONE = \"2986-8\", GLEASON_SCORE = \"35266-6\". Add NciCodes class with relevant prostate cancer codes. Include system URIs: LOINC_SYSTEM = \"http://loinc.org\", NCI_SYSTEM = \"http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl\". Consider adding display names as optional constants for commonly used codes.",
+            "details": "Add Microsoft.AspNetCore.Authentication.OAuth and IdentityModel packages for OAuth support. Include Microsoft.Extensions.Http, Microsoft.Extensions.DependencyInjection, Microsoft.Extensions.Configuration packages for dependency injection. Add Polly for resilient HTTP calls and Microsoft.Extensions.Http.Polly for HTTP client policies. Ensure version compatibility with existing projects in the solution. Reference ThirdOpinion.Common.Fhir project if needed for shared FHIR functionality.",
             "status": "done",
-            "testStrategy": "Test all LOINC codes match official LOINC database values. Verify NCI Thesaurus codes are valid. Ensure system URIs are correctly formatted for FHIR usage."
+            "testStrategy": "Verify all packages restore successfully and no version conflicts exist with other projects in solution"
           },
           {
             "id": 5,
-            "title": "Implement CodeableConcept factory methods in FhirCodingHelper",
-            "description": "Add factory methods to FhirCodingHelper for creating FHIR CodeableConcept objects from the defined code constants",
+            "title": "Implement service collection extensions and dependency injection setup",
+            "description": "Create consolidated service collection extensions that properly register both OAuth and Athena FHIR services with appropriate configuration options",
             "dependencies": [
-              "12.3",
-              "12.4"
+              2,
+              3,
+              4
             ],
-            "details": "Implement CreateCodeableConcept(string system, string code, string display = null) that returns a new CodeableConcept with single Coding. Add specific factory methods: CreateSnomedConcept(string code, string display = null), CreateIcd10Concept(string code, string display = null), CreateLoincConcept(string code, string display = null). Add CreateConceptFromConstant(string constantName) using reflection to lookup constants. Include optional text parameter for CodeableConcept.Text field. Ensure all methods handle null/empty validation.",
+            "details": "Merge and refactor the ServiceCollectionExtensions.cs files from both OAuth and Fhir directories into a unified extension method. Create AddAthenaEhr extension method that registers IAthenaOAuthService, IFhirSourceService/IFhirDestinationService implementations. Configure HttpClient with proper base URLs, timeout settings, and Polly retry policies. Implement configuration binding for AthenaSettings including client credentials and endpoint URLs.",
             "status": "done",
-            "testStrategy": "Test factory methods produce valid CodeableConcept objects with correct system URIs. Verify reflection-based lookup works for all defined constants. Test that generated CodeableConcepts serialize correctly to JSON/XML. Validate against FHIR R4 schema."
+            "testStrategy": "Test dependency injection registration in a test host, verify all services resolve correctly with proper scoping"
           }
         ]
       },
       {
-        "id": 13,
-        "title": "Build Base Infrastructure and Configuration",
-        "description": "Implement AiResourceBuilderBase<T> abstract class and AiInferenceConfiguration for common builder functionality",
-        "details": "Create generic AiResourceBuilderBase<T> where T : Resource with properties: InferenceId (auto-generated if not set), CriteriaId, CriteriaDisplay, DerivedFromReferences list. Implement methods: WithInferenceId(string), WithCriteria(string, string, string), EnsureInferenceId() for auto-generation, abstract Build(). Add automatic AIAST security label application in base Build logic. Implement AiInferenceConfiguration class with properties: InferenceSystem, CriteriaSystem, ModelSystem, DocumentTrackingSystem, ProvenanceSystem, DefaultModelVersion, OrganizationReference. Ensure thread-safe ID generation using lock or Interlocked operations.",
-        "testStrategy": "Test auto-generation of inference IDs when not explicitly set. Verify AIAST security label is always applied. Test thread safety with parallel Build() calls. Validate configuration injection works correctly. Test that Build() throws InvalidOperationException for missing required fields.",
-        "priority": "high",
-        "dependencies": [
-          12
-        ],
+        "id": 23,
+        "title": "Create ThirdOpinion.Common.Aws.Misc Project",
+        "description": "Create a project for miscellaneous AWS utilities and migrate AWS and SecretsManager code",
+        "details": "1. Create new project ThirdOpinion.Common.Aws.Misc\n2. Copy all code from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Aws\n3. Copy all code from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/SecretsManager\n4. Update namespaces to ThirdOpinion.Common.Aws.Misc\n5. Consolidate AWS SDK dependencies (AWSSDK.Core, AWSSDK.SecretsManager)\n6. Implement unified configuration pattern for AWS services\n7. Create service collection extensions for dependency injection",
+        "testStrategy": "1. Test SecretsManager retrieval with mock AWS credentials\n2. Validate AWS service client initialization\n3. Test error handling for AWS service failures\n4. Verify secret caching mechanisms if present",
+        "priority": "medium",
+        "dependencies": [],
         "status": "done",
         "subtasks": [
           {
             "id": 1,
-            "title": "Create AiResourceBuilderBase<T> Abstract Class Structure",
-            "description": "Define the generic abstract base class AiResourceBuilderBase<T> with all core properties and abstract methods",
+            "title": "Create ThirdOpinion.Common.Aws.Misc project structure and configuration",
+            "description": "Initialize the new .NET project with appropriate project configuration, dependencies, and place it in the correct location within the solution structure",
             "dependencies": [],
-            "details": "Create abstract class AiResourceBuilderBase<T> where T : Resource. Define properties: protected string InferenceId, protected string CriteriaId, protected string CriteriaDisplay, protected List<ResourceReference> DerivedFromReferences (initialize as empty list). Define abstract method: public abstract T Build(). Add protected AiInferenceConfiguration Configuration property for dependency injection. Create constructor that accepts AiInferenceConfiguration parameter.",
+            "details": "Create a new .NET 8.0 class library project under src/ThirdOpinion.Common.Aws.Misc following the existing project structure pattern. Configure the .csproj file with standard settings matching other AWS projects including target framework, nullable reference types, implicit usings, and package metadata. Add the project to ThirdOpinion.Common.sln under the aws solution folder.",
             "status": "done",
-            "testStrategy": "Create mock concrete implementation to verify abstract class can be inherited correctly. Test that properties can be set and retrieved. Verify constructor properly accepts configuration."
+            "testStrategy": "Verify the project builds successfully with dotnet build command and is properly integrated into the solution structure"
           },
           {
             "id": 2,
-            "title": "Implement Fluent Builder Methods in Base Class",
-            "description": "Add fluent interface methods for setting inference ID, criteria, and derived from references",
+            "title": "Migrate AWS signature services from FhirTools",
+            "description": "Copy and adapt the AWS signature service implementations including interfaces and concrete classes from the FhirTools project to the new project with updated namespaces",
             "dependencies": [
-              "13.1"
+              1
             ],
-            "details": "Implement public methods in AiResourceBuilderBase: WithInferenceId(string id) that sets InferenceId and returns this, WithCriteria(string id, string display, string system = null) that sets CriteriaId and CriteriaDisplay, AddDerivedFrom(ResourceReference reference) that adds to DerivedFromReferences list, AddDerivedFrom(string reference, string display = null) that creates ResourceReference and adds to list. All methods should return 'this' for method chaining.",
+            "details": "Copy IAwsSignatureService.cs, AWS4Signer.cs, and AwsSignatureService.cs from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Aws to src/ThirdOpinion.Common.Aws.Misc. Update all namespaces from FhirTools.Aws to ThirdOpinion.Common.Aws.Misc. Add required NuGet packages including AWSSDK.Core and any dependencies needed for HTTP request signing.",
             "status": "done",
-            "testStrategy": "Test fluent interface chaining works correctly. Verify WithInferenceId sets the ID properly. Test WithCriteria sets both ID and display. Verify AddDerivedFrom correctly adds references to the list."
+            "testStrategy": "Create unit tests to verify AWS Signature V4 signing functionality with mock HTTP requests and validate signature headers are correctly generated"
           },
           {
             "id": 3,
-            "title": "Implement Thread-Safe Inference ID Generation",
-            "description": "Create EnsureInferenceId method with thread-safe auto-generation of inference IDs when not explicitly set",
+            "title": "Migrate SecretsManager services and configuration",
+            "description": "Transfer the SecretsManager implementation including service interface, concrete implementation, and configuration classes to the new project",
             "dependencies": [
-              "13.2"
+              1
             ],
-            "details": "Implement protected method EnsureInferenceId() that checks if InferenceId is null/empty. If empty, generate ID using format 'to.ai-inference-{GUID}' where GUID is generated using Guid.NewGuid().ToString('D'). Use lock statement or Interlocked operations to ensure thread safety. Consider using static readonly object _idGenerationLock = new object() for synchronization. Method should be called at the beginning of Build() implementation in derived classes.",
+            "details": "Copy ISecretsManagerService.cs and SecretsManagerService.cs from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/SecretsManager, and SecretsManagerConfig.cs from Configuration folder. Update namespaces to ThirdOpinion.Common.Aws.Misc. Add AWSSDK.SecretsManager NuGet package and dependencies like Polly for retry policies, Microsoft.Extensions.Caching.Memory for caching support.",
             "status": "done",
-            "testStrategy": "Test parallel calls to EnsureInferenceId generate unique IDs. Verify format matches 'to.ai-inference-{GUID}' pattern. Test that explicitly set IDs are not overwritten. Use Task.WhenAll with multiple parallel tasks to verify thread safety."
+            "testStrategy": "Test secret retrieval with mock IAmazonSecretsManager client, verify caching behavior, test retry policies for transient failures, and validate JSON parsing of secret values"
           },
           {
             "id": 4,
-            "title": "Create AiInferenceConfiguration Class",
-            "description": "Implement configuration class to hold system references and default settings for AI inference operations",
-            "dependencies": [],
-            "details": "Create class AiInferenceConfiguration with properties: string InferenceSystem (URI for inference code system), string CriteriaSystem (URI for criteria code system), string ModelSystem (URI for model code system), string DocumentTrackingSystem (URI for document tracking), string ProvenanceSystem (URI for provenance system), string DefaultModelVersion (e.g., 'v1.0'), ResourceReference OrganizationReference (reference to organization performing inference). Add constructor to initialize with required values. Consider adding validation in setters to ensure URIs are valid.",
+            "title": "Implement dependency injection extensions and configuration pattern",
+            "description": "Create ServiceCollectionExtensions class with extension methods for registering AWS services and implement a unified configuration approach",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Create ServiceCollectionExtensions.cs following the pattern from existing AWS projects. Implement AddAwsMiscServices extension method that registers IAwsSignatureService, ISecretsManagerService with proper configuration binding. Create unified AwsMiscOptions class combining configuration for all services. Ensure proper lifecycle management (singleton/scoped/transient) based on service requirements.",
             "status": "done",
-            "testStrategy": "Test configuration object creation with valid values. Verify all properties can be set and retrieved. Test validation rejects invalid URIs if implemented. Test configuration can be injected into builder base class."
+            "testStrategy": "Test dependency injection registration in a test host, verify services can be resolved correctly, test configuration binding from appsettings.json"
           },
           {
             "id": 5,
-            "title": "Implement AIAST Security Label Application",
-            "description": "Add automatic AIAST security label application logic to the base Build method template",
+            "title": "Create comprehensive unit tests and documentation",
+            "description": "Develop unit tests for all migrated services and create appropriate README documentation for the new project",
             "dependencies": [
-              "13.1",
-              "13.2",
-              "13.3",
-              "13.4"
+              2,
+              3,
+              4
             ],
-            "details": "Create protected method ApplyAiastSecurityLabel(T resource) that adds Meta.Security with AIAST label: system='http://terminology.hl7.org/CodeSystem/v3-ActCode', code='AIAST', display='AI Assisted'. Create protected virtual method BuildCore() that derived classes override for their specific build logic. Implement template pattern in Build(): call EnsureInferenceId(), call BuildCore() to get resource from derived class, call ApplyAiastSecurityLabel(resource), return resource. Ensure Meta object is created if null.",
+            "details": "Create a test project ThirdOpinion.Common.Aws.Misc.UnitTests following existing test project patterns. Write unit tests for SecretsManagerService including secret retrieval, caching, error handling scenarios. Write tests for AwsSignatureService covering signature generation. Create README.md documenting usage, configuration options, and examples. Ensure all tests pass and achieve reasonable code coverage.",
             "status": "done",
-            "testStrategy": "Verify AIAST label is always applied to built resources. Test that Meta.Security collection is properly initialized if null. Test Build() throws InvalidOperationException if required fields are missing. Verify template pattern calls methods in correct order."
+            "testStrategy": "Run all unit tests with dotnet test, verify code coverage meets standards, validate that mocked AWS services behave correctly in various scenarios"
           }
         ]
       },
       {
-        "id": 14,
-        "title": "Implement AI Device Builder",
-        "description": "Create AiDeviceBuilder class for constructing Device resources representing AI inference engines",
-        "details": "Inherit from AiResourceBuilderBase<Device>. Implement methods: WithModelName(string name, string typeCode), WithManufacturer(string), WithVersion(string), AddProperty(string name, Quantity value), AddProperty(string name, decimal value, string unit). Set Device.status to 'active', add SNOMED code 706689003 for AI algorithm. Support flexible property additions using Device.property array. Add identifier with model version from configuration. Implement proper DeviceName with type code. Handle version array population.",
-        "testStrategy": "Test Device resource creation with all required fields. Verify property additions work for various data types. Test SNOMED AI algorithm code is applied. Validate Device validates against FHIR R4 schema. Test serialization/deserialization with Firely SDK.",
+        "id": 24,
+        "title": "Create ThirdOpinion.Common.Fhir.Documents Project",
+        "description": "Create a project for FHIR document handling excluding CSV reader functionality",
+        "details": "1. Create new project ThirdOpinion.Common.Fhir.Documents\n2. Copy code from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Documents\n3. Exclude DocumentCsvReaderService and related CSV functionality\n4. Update namespaces to ThirdOpinion.Common.Fhir.Documents\n5. Add references to ThirdOpinion.Common.Aws.HealthLake for FHIR dependencies\n6. Refactor document interfaces to remove CSV-specific methods\n7. Implement document builders and converters for supported formats",
+        "testStrategy": "1. Test document creation and serialization\n2. Validate FHIR DocumentReference resource generation\n3. Test document metadata extraction\n4. Verify exclusion of CSV reader functionality",
         "priority": "medium",
         "dependencies": [
-          13
+          21
         ],
         "status": "done",
         "subtasks": [
           {
             "id": 1,
-            "title": "Create AiDeviceBuilder class structure and base implementation",
-            "description": "Set up the AiDeviceBuilder class that inherits from AiResourceBuilderBase<Device> and implement core infrastructure",
+            "title": "Create ThirdOpinion.Common.Fhir.Documents project structure",
+            "description": "Set up the new ThirdOpinion.Common.Fhir.Documents project with proper configuration and NuGet references",
             "dependencies": [],
-            "details": "Create AiDeviceBuilder.cs in the appropriate namespace. Inherit from AiResourceBuilderBase<Device>. Initialize the Device resource in constructor with status='active'. Add SNOMED code 706689003 (AI algorithm) to Device.type. Set up private fields for storing builder state (model name, manufacturer, version, properties list). Implement the base constructor that calls the parent class constructor.",
+            "details": "Create a new .NET 8.0 class library project named ThirdOpinion.Common.Fhir.Documents in the ThirdOpinion.Common solution. Configure the project file with appropriate properties including target framework net8.0, implicit usings, nullable reference types, and latest C# language version. Add the project to the solution file and ensure it follows the existing project structure patterns",
             "status": "done",
-            "testStrategy": "Unit test class instantiation and verify Device resource is created with status='active' and correct SNOMED code"
+            "testStrategy": "Verify project builds successfully and is properly integrated into the solution"
           },
           {
             "id": 2,
-            "title": "Implement model and manufacturer configuration methods",
-            "description": "Add methods for configuring the AI model name with type code and manufacturer details",
+            "title": "Copy and migrate document models and exceptions",
+            "description": "Transfer document models and exception classes from FhirTools to the new project with updated namespaces",
             "dependencies": [
-              "14.1"
+              1
             ],
-            "details": "Implement WithModelName(string name, string typeCode) method that sets Device.deviceName with both name and type code. Implement WithManufacturer(string manufacturer) method that sets Device.manufacturer. Ensure both methods return 'this' for fluent interface pattern. Store model name in Device.deviceName collection with appropriate DeviceDeviceName structure including name and type properties.",
+            "details": "Copy all model classes from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Documents/Models including DocumentReferenceData, BundleData, DocumentReferenceRecord, DocumentDownloadResult, and PracticeInfo. Also copy the DocumentDownloadException class. Update all namespaces from FhirTools.Documents to ThirdOpinion.Common.Fhir.Documents and ensure all using statements are correctly updated",
             "status": "done",
-            "testStrategy": "Test WithModelName sets deviceName correctly with type code. Test WithManufacturer sets manufacturer field. Verify fluent interface chaining works"
+            "testStrategy": "Compile the project to verify all models are properly defined with correct namespaces"
           },
           {
             "id": 3,
-            "title": "Implement version handling and identifier generation",
-            "description": "Add version configuration and automatic identifier generation with model version from configuration",
+            "title": "Migrate core document service interfaces",
+            "description": "Copy and refactor document service interfaces, excluding CSV-specific functionality",
             "dependencies": [
-              "14.2"
+              2
             ],
-            "details": "Implement WithVersion(string version) method that populates Device.version array. Add logic to automatically generate an identifier containing the model version retrieved from configuration. Use FhirIdGenerator (from task 12) if available or implement temporary ID generation. Set identifier system to appropriate namespace (e.g., 'https://thirdopinion.ai/device-model-version'). Store version in both Device.version collection and as part of the identifier value.",
+            "details": "Copy interfaces including IBinaryDownloadService, IFileNamingService, IMetadataExtractorService, IBase64ContentExtractor, INotFoundBinaryTracker, IBundleParserService, IS3StorageService, IFileOrganizationService, IPatientEverythingService, and IDocumentDownloadService. Exclude IDocumentCsvReaderService completely. Update all namespaces and remove any references to CSV reader functionality from the copied interfaces",
             "status": "done",
-            "testStrategy": "Test version array population with single and multiple versions. Verify identifier is generated with correct system and version value. Test configuration retrieval for model version"
+            "testStrategy": "Verify all interfaces compile without CSV dependencies and maintain proper abstraction"
           },
           {
             "id": 4,
-            "title": "Implement property addition methods for flexible data types",
-            "description": "Create methods to add custom properties with Quantity and decimal/unit value support",
+            "title": "Implement document service classes",
+            "description": "Transfer and adapt all non-CSV document service implementations with proper dependency injection setup",
             "dependencies": [
-              "14.3"
+              3
             ],
-            "details": "Implement AddProperty(string name, Quantity value) method that adds a DeviceProperty with valueQuantity. Implement AddProperty(string name, decimal value, string unit) method that creates a Quantity and adds as DeviceProperty. Initialize Device.property list if null. Each property should have a type (CodeableConcept) with the property name as display text. Support multiple property additions by maintaining an internal collection. Ensure proper FHIR Quantity structure with value, unit, system (UCUM), and code.",
+            "details": "Copy service implementations including BinaryDownloadService, FileNamingService, MetadataExtractorService, Base64ContentExtractor, NotFoundBinaryTracker, BundleParserService, S3StorageService, FileOrganizationService, PatientEverythingService, and HealthLakeDocumentDownloadService. Update namespaces and remove any CSV-related code. Add references to ThirdOpinion.Common.Aws.S3 for S3 functionality and ThirdOpinion.Common.Fhir for FHIR dependencies",
             "status": "done",
-            "testStrategy": "Test adding multiple properties with Quantity objects. Test decimal/unit overload creates correct Quantity. Verify property array contains all added properties with correct types and values"
+            "testStrategy": "Test each service class individually with unit tests to ensure proper functionality"
           },
           {
             "id": 5,
-            "title": "Implement Build method and complete validation",
-            "description": "Override or implement the Build method to finalize Device resource construction with full validation",
+            "title": "Configure dependency injection and add package references",
+            "description": "Set up ServiceCollectionExtensions and add all required NuGet package references",
             "dependencies": [
-              "14.4"
+              4
             ],
-            "details": "Override Build() method from AiResourceBuilderBase if needed. Perform validation to ensure required fields are set (deviceName, status, type with SNOMED code). Apply any remaining AIAST labels and inference GUID if not already set by base class. Ensure all collected properties are properly added to Device.property array. Validate the complete Device resource against FHIR R4 schema using Firely SDK validation. Return the fully constructed and validated Device resource.",
+            "details": "Create ServiceCollectionExtensions class with AddDocumentServices extension method, excluding CSV reader registration. Add required NuGet packages including Hl7.Fhir.R4, AWSSDK.S3, Microsoft.Extensions.DependencyInjection, and any other required dependencies. Add project references to ThirdOpinion.Common.Fhir and ThirdOpinion.Common.Aws.S3. Ensure the dependency injection configuration properly registers all document services for use in applications",
             "status": "done",
-            "testStrategy": "Integration test building complete Device with all fields populated. Test validation catches missing required fields. Verify FHIR R4 compliance with Firely SDK validation. Test serialization/deserialization preserves all data"
+            "testStrategy": "Verify dependency injection registration works correctly in a test harness and all services can be resolved"
           }
         ]
       },
       {
-        "id": 15,
-        "title": "Implement ADT Status Observation Builder",
-        "description": "Create AdtStatusObservationBuilder for ADT therapy detection observations with evidence tracking",
-        "details": "Inherit from AiResourceBuilderBase<Observation>. Set status='final', category='therapy', SNOMED code 413712001. Implement methods: WithPatient(ResourceReference), WithDevice(ResourceReference), WithStatus(bool isReceivingAdt), AddEvidence(ResourceReference, string display), WithEffectiveDate(DateTime), AddNote(string). Use valueCodeableConcept with SNOMED 385654001 for 'Active' status. Populate derivedFrom array with evidence references. Apply method coding with criteria details. Support auto-generation of inference ID if WithInferenceId() not called. Add validation that patient and device references are set before Build().",
-        "testStrategy": "Test observation creation with active/inactive ADT status. Verify multiple evidence references are correctly added to derivedFrom. Test auto-generated vs explicit inference IDs. Validate required field validation throws appropriate exceptions. Test FHIR compliance with R4 schema validation.",
-        "priority": "high",
-        "dependencies": [
-          13
-        ],
-        "status": "done",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Create AdtStatusObservationBuilder class structure and base implementation",
-            "description": "Set up the AdtStatusObservationBuilder class inheriting from AiResourceBuilderBase<Observation> with core properties and constructor",
-            "dependencies": [],
-            "details": "Create AdtStatusObservationBuilder.cs in the appropriate namespace. Inherit from AiResourceBuilderBase<Observation>. In constructor, initialize the Observation resource with: status='final', category with coding system='http://terminology.hl7.org/CodeSystem/observation-category' and code='therapy', code with SNOMED system and code 413712001 (display='Androgen deprivation therapy'). Initialize empty lists for evidence references and notes. Set up private fields for patient reference, device reference, ADT status boolean, and effective date.",
-            "status": "done",
-            "testStrategy": "Unit test constructor initialization verifies status='final', category='therapy', and SNOMED code 413712001 are set correctly"
-          },
-          {
-            "id": 2,
-            "title": "Implement core builder methods for patient, device, and status",
-            "description": "Add WithPatient, WithDevice, and WithStatus methods to set the primary observation properties",
-            "dependencies": [
-              "15.1"
-            ],
-            "details": "Implement WithPatient(ResourceReference patient) to set subject reference. Implement WithDevice(ResourceReference device) to set device reference. Implement WithStatus(bool isReceivingAdt) to set valueCodeableConcept - if true, use SNOMED code 385654001 (display='Active'), if false use appropriate inactive/not-receiving code. Store the status internally for Build() validation. Ensure all methods return 'this' for fluent chaining. Add null checks and throw ArgumentNullException for null references.",
-            "status": "done",
-            "testStrategy": "Test WithPatient and WithDevice properly set references. Verify WithStatus(true) sets SNOMED 385654001 for active status. Verify WithStatus(false) sets appropriate inactive code. Test null parameter handling throws exceptions"
-          },
-          {
-            "id": 3,
-            "title": "Implement evidence tracking and note methods",
-            "description": "Add AddEvidence and AddNote methods for capturing supporting evidence and clinical notes",
-            "dependencies": [
-              "15.2"
-            ],
-            "details": "Implement AddEvidence(ResourceReference reference, string display) to add evidence references to internal collection. Each evidence will be added to derivedFrom array during Build(). Implement AddNote(string noteText) to add Annotation objects to observation.note array with time stamp and text. Implement WithEffectiveDate(DateTime effectiveDate) to set observation.effective[x] as FhirDateTime. Ensure evidence references include proper display text for clarity. Support multiple calls to AddEvidence and AddNote for accumulating data.",
-            "status": "done",
-            "testStrategy": "Test multiple AddEvidence calls accumulate in derivedFrom array. Verify AddNote creates proper Annotation objects with timestamps. Test WithEffectiveDate sets effective[x] correctly. Validate evidence display text is preserved"
-          },
-          {
-            "id": 4,
-            "title": "Implement Build method with validation and auto-generation logic",
-            "description": "Create the Build() method that validates required fields, applies evidence, and handles auto-generation of inference ID",
-            "dependencies": [
-              "15.3"
-            ],
-            "details": "Override Build() method from base class. Validate patient and device references are set, throw InvalidOperationException with descriptive message if missing. Apply all accumulated evidence references to observation.derivedFrom array. Apply method coding with details about ADT detection criteria. If WithInferenceId() was not called, auto-generate inference ID using FhirIdGenerator.GenerateInferenceId() format. Set observation.id if not already set. Apply any accumulated notes to observation.note. Ensure all AIAST labeling from base class is applied.",
-            "status": "done",
-            "testStrategy": "Test Build() throws exception when patient or device missing. Verify auto-generated inference ID follows 'to.ai-inference-{GUID}' format. Test explicit WithInferenceId() overrides auto-generation. Validate all evidence appears in derivedFrom"
-          },
-          {
-            "id": 5,
-            "title": "Add comprehensive unit tests and FHIR compliance validation",
-            "description": "Create complete unit test suite covering all builder scenarios and FHIR R4 compliance",
-            "dependencies": [
-              "15.4"
-            ],
-            "details": "Create AdtStatusObservationBuilderTests.cs with test methods for: complete observation with active ADT status, inactive ADT status observation, multiple evidence references, auto-generated vs explicit inference IDs, required field validation exceptions, method chaining fluent interface, FHIR R4 schema validation using Firely SDK validator. Test edge cases: empty evidence list, very long note text, future/past effective dates. Verify serialization/deserialization maintains all properties. Test that AIAST labels are properly applied from base class.",
-            "status": "done",
-            "testStrategy": "Run all unit tests with code coverage >95%. Validate all generated observations against FHIR R4 schema. Test memory usage stays within Lambda constraints. Performance test Build() completes in <100ms"
-          }
-        ]
-      },
-      {
-        "id": 16,
-        "title": "Implement CSPC Assessment Observation Builder",
-        "description": "Create CspcAssessmentObservationBuilder for castration sensitivity assessment with mandatory focus field validation",
-        "details": "Inherit from AiResourceBuilderBase<Observation>. CRITICAL: Implement WithFocus(ResourceReference) as REQUIRED method that sets focus field referencing existing Condition. Set status='final', category='exam', LOINC code 21889-1. Implement methods: WithPatient, WithDevice, WithCastrationSensitive(bool), AddEvidence, WithInterpretation(string), WithEffectiveDate, AddNote. Apply BOTH SNOMED 1197209002 AND ICD-10 Z19.1 codes in valueCodeableConcept for castration-sensitive status. Add Build() validation that throws InvalidOperationException if focus is not set with message 'CSPC assessment requires focus reference to existing Condition. Call WithFocus() before Build()'. Validate focus reference points to Condition resource type.",
-        "testStrategy": "Test Build() fails without focus reference. Verify both SNOMED and ICD-10 codes are applied. Test interpretation field population. Validate focus must reference Condition resource. Test complete observation validates against R4 schema.",
-        "priority": "high",
-        "dependencies": [
-          13
-        ],
-        "status": "done",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Create CspcAssessmentObservationBuilder Class Structure",
-            "description": "Set up the basic class structure inheriting from AiResourceBuilderBase<Observation> with required fields and initialization",
-            "dependencies": [],
-            "details": "Create CspcAssessmentObservationBuilder.cs in the Builders folder. Inherit from AiResourceBuilderBase<Observation>. Add private fields for _focus (ResourceReference), _patient (ResourceReference), _device (ResourceReference), _isCastrationSensitive (bool?), _evidence (List<ResourceReference>), _interpretation (string), _effectiveDate (DateTime?), and _notes (List<string>). In constructor, initialize the Observation with status='final', category with coding system='http://terminology.hl7.org/CodeSystem/observation-category' code='exam', and code with LOINC system='http://loinc.org' code='21889-1' display='Cancer disease status'.",
-            "status": "done",
-            "testStrategy": "Unit test class instantiation and verify default status, category, and LOINC code are set correctly"
-          },
-          {
-            "id": 2,
-            "title": "Implement Required WithFocus Method and Focus Validation",
-            "description": "Implement the mandatory WithFocus method that sets the focus field and validates it references a Condition resource",
-            "dependencies": [
-              "16.1"
-            ],
-            "details": "Implement WithFocus(ResourceReference focus) method that validates the reference is not null and references a Condition resource type (check reference.Reference starts with 'Condition/'). Store the reference in _focus field. This method must return 'this' for fluent chaining. Add validation logic to ensure the reference format is correct and throw ArgumentException with descriptive message if validation fails.",
-            "status": "done",
-            "testStrategy": "Test WithFocus accepts valid Condition references, rejects null references, rejects non-Condition resource types, and properly sets the focus field"
-          },
-          {
-            "id": 3,
-            "title": "Implement Core Builder Methods",
-            "description": "Add WithPatient, WithDevice, WithEffectiveDate, and AddNote methods for setting basic observation properties",
-            "dependencies": [
-              "16.1"
-            ],
-            "details": "Implement WithPatient(ResourceReference patient) to set Subject field. Implement WithDevice(ResourceReference device) to set Device field. Implement WithEffectiveDate(DateTime date) to set EffectiveDateTimeElement. Implement AddNote(string note) to append to Notes collection with new Annotation { Text = new Markdown(note), Time = DateTimeOffset.Now.ToString() }. All methods should validate inputs and return 'this' for method chaining.",
-            "status": "done",
-            "testStrategy": "Test each method sets appropriate fields, validates null inputs appropriately, and supports method chaining"
-          },
-          {
-            "id": 4,
-            "title": "Implement Castration Sensitivity and Evidence Methods",
-            "description": "Add WithCastrationSensitive, AddEvidence, and WithInterpretation methods with proper SNOMED and ICD-10 coding",
-            "dependencies": [
-              "16.1"
-            ],
-            "details": "Implement WithCastrationSensitive(bool isSensitive) that sets _isCastrationSensitive and creates ValueCodeableConcept with TWO codings: SNOMED system='http://snomed.info/sct' code='1197209002' display='Castration sensitive prostate cancer' AND ICD-10 system='http://hl7.org/fhir/sid/icd-10-cm' code='Z19.1' display='Hormone sensitive status'. Implement AddEvidence(ResourceReference evidence, string display = null) to append to DerivedFrom list. Implement WithInterpretation(string interpretation) to set Interpretation with new CodeableConcept { Text = interpretation }.",
-            "status": "done",
-            "testStrategy": "Verify both SNOMED and ICD-10 codes are present in valueCodeableConcept, test evidence references are added to derivedFrom array, validate interpretation text is set correctly"
-          },
-          {
-            "id": 5,
-            "title": "Implement Build Method with Focus Validation",
-            "description": "Create Build method that validates focus field is set and constructs the final Observation resource",
-            "dependencies": [
-              "16.1",
-              "16.2",
-              "16.3",
-              "16.4"
-            ],
-            "details": "Override Build() method to first check if _focus is null. If null, throw InvalidOperationException with message 'CSPC assessment requires focus reference to existing Condition. Call WithFocus() before Build()'. Set Resource.Focus = _focus, Resource.Subject = _patient, Resource.Device = _device. If _isCastrationSensitive.HasValue, set ValueCodeableConcept with both SNOMED and ICD-10 codes. Set EffectiveDateTimeElement if _effectiveDate has value. Add all notes to Notes collection. Copy all evidence references to DerivedFrom. Set Interpretation if provided. Call base.Build() and return the configured Observation.",
-            "status": "done",
-            "testStrategy": "Test Build() throws InvalidOperationException when focus is not set, verify exception message is exact, test successful build with all fields populated, validate complete observation against FHIR R4 schema"
-          }
-        ]
-      },
-      {
-        "id": 17,
-        "title": "Implement PSA Progression Observation Builder",
-        "description": "Create PsaProgressionObservationBuilder supporting ThirdOpinion.io and PCWG3 criteria with component calculations",
-        "details": "Inherit from AiResourceBuilderBase<Observation>. Set category='laboratory', LOINC code 97509-4. Implement methods: WithPatient, WithDevice, WithFocus, WithCriteria (supporting both ThirdOpinion.io and PCWG3), AddPsaEvidence(ResourceReference, string), WithProgression(bool), AddValidUntilComponent(DateTime), AddThresholdMetComponent(bool), AddDetailedAnalysisNote(string). Use SNOMED 277022003 for progressive disease in valueCodeableConcept. Create component array with valid until period, threshold met boolean. Support different criteria codes: 'psa-progression-{id}-v{version}' for ThirdOpinion.io, 'psa-progression-pcwg3-{id}-v{version}' for PCWG3. Auto-calculate percentage and absolute changes if PSA values provided.",
-        "testStrategy": "Test both ThirdOpinion.io and PCWG3 criteria implementations. Verify component calculations for PSA changes. Test multiple PSA evidence references. Validate progression boolean sets correct value coding. Test detailed analysis notes are properly formatted.",
-        "priority": "high",
-        "dependencies": [
-          13
-        ],
-        "status": "done",
-        "subtasks": [
-          {
-            "id": 1,
-            "title": "Create PsaProgressionObservationBuilder base class structure",
-            "description": "Set up the PsaProgressionObservationBuilder class inheriting from AiResourceBuilderBase<Observation> with core properties and constructor",
-            "dependencies": [],
-            "details": "Create PsaProgressionObservationBuilder.cs in the appropriate namespace. Inherit from AiResourceBuilderBase<Observation>. In constructor, initialize the Observation with category='laboratory' using new CodeableConcept with system='http://terminology.hl7.org/CodeSystem/observation-category' and code='laboratory'. Set the main LOINC code using Code = new CodeableConcept with system='http://loinc.org', code='97509-4', display='PSA progression'. Initialize empty lists for PSA evidence references and components. Set up private fields for criteria type (ThirdOpinion.io vs PCWG3), patient reference, device reference, and focus reference.",
-            "status": "done",
-            "testStrategy": "Unit test constructor initialization verifies category and LOINC code are set correctly. Test inheritance from AiResourceBuilderBase works properly."
-          },
-          {
-            "id": 2,
-            "title": "Implement core builder methods for patient, device, focus and criteria",
-            "description": "Add WithPatient, WithDevice, WithFocus, and WithCriteria methods to set core observation properties",
-            "dependencies": [
-              "17.1"
-            ],
-            "details": "Implement WithPatient(ResourceReference patient) to set Subject property. Implement WithDevice(ResourceReference device) to set Device property. Implement WithFocus(List<ResourceReference> focus) to set Focus array. Implement WithCriteria(string criteriaType, string version) to handle both 'ThirdOpinion.io' and 'PCWG3' types, generating appropriate method codes like 'psa-progression-{id}-v{version}' for ThirdOpinion.io or 'psa-progression-pcwg3-{id}-v{version}' for PCWG3. Store criteria type internally for later calculations. Set Method property with CodeableConcept containing the generated code.",
-            "status": "done",
-            "testStrategy": "Test WithPatient sets correct subject reference. Test WithDevice sets device reference. Test WithFocus handles multiple references. Test WithCriteria generates correct codes for both ThirdOpinion.io and PCWG3 formats."
-          },
-          {
-            "id": 3,
-            "title": "Implement PSA evidence and progression value methods",
-            "description": "Add methods for managing PSA evidence references and setting progression status",
-            "dependencies": [
-              "17.2"
-            ],
-            "details": "Implement AddPsaEvidence(ResourceReference psaObservation, string role) to add PSA observation references to DerivedFrom array. Store PSA values internally for calculation. Implement WithProgression(bool hasProgression) to set ValueCodeableConcept - if true, use SNOMED code 277022003 for 'progressive disease', if false use appropriate SNOMED code for 'stable disease' or custom code. Extract PSA values from referenced observations if available for automatic percentage and absolute change calculations based on criteria type (ThirdOpinion.io vs PCWG3 thresholds).",
-            "status": "done",
-            "testStrategy": "Test AddPsaEvidence adds references to DerivedFrom array. Test WithProgression sets correct SNOMED codes for true/false values. Verify PSA value extraction works when references are provided."
-          },
-          {
-            "id": 4,
-            "title": "Implement component addition methods for detailed analysis",
-            "description": "Add methods for creating observation components with valid until dates, threshold met flags, and analysis notes",
-            "dependencies": [
-              "17.3"
-            ],
-            "details": "Implement AddValidUntilComponent(DateTime validUntil) to add component with code='valid-until' and valuePeriod ending at specified date. Implement AddThresholdMetComponent(bool thresholdMet) to add component with code='threshold-met' and valueBoolean. Implement AddDetailedAnalysisNote(string note) to add component with code='analysis-note' and valueString. Auto-calculate and add components for percentage change and absolute change if PSA values were provided via AddPsaEvidence. For PCWG3 criteria, check 25% increase threshold; for ThirdOpinion.io use configured thresholds. Ensure all components have proper LOINC or custom coding systems.",
-            "status": "done",
-            "testStrategy": "Test AddValidUntilComponent creates proper period component. Test AddThresholdMetComponent creates boolean component. Test AddDetailedAnalysisNote creates string component. Verify auto-calculation components are added when PSA values available."
-          },
-          {
-            "id": 5,
-            "title": "Implement Build method with validation and PSA calculations",
-            "description": "Override Build method to perform final calculations, validation, and return completed Observation",
-            "dependencies": [
-              "17.4"
-            ],
-            "details": "Override Build() method to finalize the Observation. If PSA evidence was added, calculate percentage change: ((current - baseline) / baseline) * 100, and absolute change: (current - baseline). Based on criteria type, determine if thresholds are met (PCWG3: 25% increase from nadir, ThirdOpinion.io: configurable thresholds). Auto-add calculated components if not already present. Set Status = ObservationStatus.Final. Set EffectiveDateTime to current time if not set. Validate required fields: Subject (patient), Code (LOINC), and at least one PSA evidence reference. Add AIAST label and inference GUID as per base class. Return completed Observation resource.",
-            "status": "done",
-            "testStrategy": "Integration test with multiple PSA values verifies calculations. Test PCWG3 25% threshold detection. Test ThirdOpinion.io configurable thresholds. Validate all required FHIR fields are present. Test Build produces valid FHIR R4 Observation."
-          }
-        ]
-      },
-      {
-        "id": 18,
-        "title": "Implement RECIST Progression and Clinical Builders",
-        "description": "Create RecistProgressionObservationBuilder for RECIST 1.1 radiographic progression with imaging references",
-        "details": "Inherit from AiResourceBuilderBase<Observation>. Set category='imaging', LOINC 21976-6, NCI C111544 for RECIST 1.1. Implement methods: WithPatient, WithDevice, WithFocus, WithCriteria, AddComponent(string, Quantity), AddComponent(string, bool), AddComponent(string, CodeableConcept), AddImagingStudy(ResourceReference), AddRadiologyReport(ResourceReference), WithRecistResponse(string nciCode, string display), AddBodySite(string snomedCode, string display). Use NCI codes for response (C35571 for Progressive Disease). Create component array for SLD, nadir SLD, percent change, absolute change, new lesions boolean. Support multiple body sites. Add derivedFrom references to imaging studies and reports.",
-        "testStrategy": "Test RECIST response codes application. Verify component array handles different value types (Quantity, boolean, CodeableConcept). Test multiple body site additions. Validate imaging study and report references. Test complete resource against R4 schema.",
+        "id": 25,
+        "title": "Migrate Retry and RateLimiting to ThirdOpinion.Common.Misc",
+        "description": "Add retry and rate limiting functionality to the existing Misc project",
+        "details": "1. Copy /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Retry to ThirdOpinion.Common.Misc\n2. Copy /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/RateLimiting to ThirdOpinion.Common.Misc\n3. Update namespaces to ThirdOpinion.Common.Misc\n4. Add Polly NuGet package for retry policies\n5. Implement rate limiting using System.Threading.RateLimiting\n6. Create extension methods for HttpClient with retry and rate limiting\n7. Configure default policies for common scenarios",
+        "testStrategy": "1. Test exponential backoff retry logic\n2. Validate rate limiter token bucket behavior\n3. Test circuit breaker patterns if implemented\n4. Verify retry exhaustion handling",
         "priority": "medium",
-        "dependencies": [
-          13
-        ],
+        "dependencies": [],
         "status": "done",
         "subtasks": [
           {
             "id": 1,
-            "title": "Create RecistProgressionObservationBuilder base class structure",
-            "description": "Set up the RecistProgressionObservationBuilder class inheriting from AiResourceBuilderBase<Observation> with core RECIST 1.1 configuration",
+            "title": "Copy and update Retry source files to ThirdOpinion.Common.Misc",
+            "description": "Copy all Retry implementation files from FhirTools to ThirdOpinion.Common.Misc project and update namespaces from FhirTools.Retry to ThirdOpinion.Common.Misc.Retry",
             "dependencies": [],
-            "details": "Create RecistProgressionObservationBuilder.cs in the Builders directory. Inherit from AiResourceBuilderBase<Observation>. In constructor, set observation category to 'imaging' using FHIR CodeableConcept. Add LOINC code 21976-6 (Cancer disease status) as primary code. Add NCI code C111544 (RECIST 1.1) as secondary code in the code array. Initialize empty component list for measurements. Set observation status to 'final'. Ensure base constructor properly initializes the Observation resource.",
+            "details": "Copy all 6 files from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Retry to /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/src/ThirdOpinion.Common.Misc/Retry. Update namespaces from FhirTools.Retry to ThirdOpinion.Common.Misc.Retry. Ensure all using statements are updated including references to FhirTools.Fhir.Exceptions.HealthLakeException. Files to copy: IRetryPolicyService.cs, RetryMetrics.cs, ServiceCollectionExtensions.cs, RetryConfig.cs, CircuitBreakerStatus.cs, RetryPolicyService.cs",
             "status": "done",
-            "testStrategy": "Unit test constructor properly sets category, LOINC code, NCI code, and status. Verify inheritance chain works correctly."
+            "testStrategy": "Verify compilation after namespace updates and ensure no broken references"
           },
           {
             "id": 2,
-            "title": "Implement patient, device, and focus configuration methods",
-            "description": "Add methods to configure patient reference, AI device reference, and tumor focus for the RECIST observation",
-            "dependencies": [
-              "18.1"
-            ],
-            "details": "Implement WithPatient(ResourceReference patient) to set Observation.subject. Implement WithDevice(ResourceReference device) to set Observation.device for AI inference tracking. Implement WithFocus(params ResourceReference[] focuses) to set Observation.focus array for tumor/lesion references. Implement WithCriteria(string criteria) to add RECIST criteria version as an extension or component. Each method should return 'this' for fluent chaining. Add null checks and validation.",
+            "title": "Copy and update RateLimiting source files to ThirdOpinion.Common.Misc",
+            "description": "Copy all RateLimiting implementation files from FhirTools to ThirdOpinion.Common.Misc project and update namespaces from FhirTools.RateLimiting to ThirdOpinion.Common.Misc.RateLimiting",
+            "dependencies": [],
+            "details": "Copy all 10 files from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/RateLimiting to /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/src/ThirdOpinion.Common.Misc/RateLimiting. Update namespaces from FhirTools.RateLimiting to ThirdOpinion.Common.Misc.RateLimiting. Files to copy: RateLimiterService.cs, RateLimitStatus.cs, AdaptiveRateLimiter.cs, IRateLimiter.cs, RateLimitMetrics.cs, RateLimitingHttpMessageHandler.cs, IRateLimiterService.cs, ServiceCollectionExtensions.cs, TokenBucketRateLimiter.cs, RateLimitConfig.cs",
             "status": "done",
-            "testStrategy": "Test each method sets correct resource references. Verify fluent interface chaining works. Test null reference handling."
+            "testStrategy": "Verify compilation after namespace updates and ensure no broken references"
           },
           {
             "id": 3,
-            "title": "Implement component addition methods for measurements",
-            "description": "Create overloaded AddComponent methods to handle different RECIST measurement types (Quantity, boolean, CodeableConcept)",
+            "title": "Add required NuGet packages and update project file",
+            "description": "Update ThirdOpinion.Common.Misc.csproj to add Polly and System.Threading.RateLimiting NuGet packages, and configure proper root namespace",
             "dependencies": [
-              "18.2"
+              1,
+              2
             ],
-            "details": "Implement AddComponent(string code, Quantity value) for numeric measurements like SLD, nadir SLD. Implement AddComponent(string code, bool value) for new lesions indicator. Implement AddComponent(string code, CodeableConcept value) for coded responses. Each method creates Observation.ObservationComponentComponent with appropriate LOINC/SNOMED codes. Support percent change (LOINC 33359-2), absolute change, sum of longest diameters (LOINC 33728-8), new lesions (LOINC 44666-9). Store components in Observation.component array.",
+            "details": "Add PackageReference for Polly (latest stable version) and System.Threading.RateLimiting to ThirdOpinion.Common.Misc.csproj. Update RootNamespace from 'Misc' to 'ThirdOpinion.Common.Misc' to match the new namespace structure. Ensure all necessary dependencies like Microsoft.Extensions.Logging and Microsoft.Extensions.DependencyInjection are included for the migrated code to compile",
             "status": "done",
-            "testStrategy": "Test each AddComponent overload with valid inputs. Verify component array builds correctly with mixed types. Test LOINC code mappings."
+            "testStrategy": "Restore NuGet packages and verify successful package installation"
           },
           {
             "id": 4,
-            "title": "Implement imaging reference and body site methods",
-            "description": "Add methods to link imaging studies, radiology reports, and specify tumor body sites",
+            "title": "Create HttpClient extension methods with retry and rate limiting",
+            "description": "Implement extension methods for HttpClient that integrate retry policies and rate limiting functionality for common HTTP scenarios",
             "dependencies": [
-              "18.3"
+              3
             ],
-            "details": "Implement AddImagingStudy(ResourceReference imagingStudy) to add to Observation.derivedFrom array. Implement AddRadiologyReport(ResourceReference report) to add to Observation.derivedFrom array. Implement AddBodySite(string snomedCode, string display) to build CodeableConcept and add to Observation.bodySite array. Support multiple body sites for multi-lesion assessments. Ensure derivedFrom maintains order of additions for traceability.",
+            "details": "Create a new file HttpClientExtensions.cs in ThirdOpinion.Common.Misc containing extension methods like AddWithRetryPolicy(), AddWithRateLimit(), and AddWithRetryAndRateLimit(). These methods should configure HttpClient with appropriate DelegatingHandlers for retry and rate limiting. Implement default policies for common scenarios like transient failures (429, 503) and exponential backoff. Ensure methods support both IHttpClientFactory and direct HttpClient configuration",
             "status": "done",
-            "testStrategy": "Test multiple imaging study references. Verify radiology report references. Test multiple body site additions with SNOMED codes."
+            "testStrategy": "Test extension methods with mock HttpClient, verify retry behavior on transient failures, and validate rate limiting token consumption"
           },
           {
             "id": 5,
-            "title": "Implement RECIST response classification method",
-            "description": "Create WithRecistResponse method to set the overall RECIST 1.1 response category using NCI terminology",
+            "title": "Copy and adapt unit tests for Retry and RateLimiting",
+            "description": "Copy existing unit tests from FhirTools.Tests and create new test files in ThirdOpinion.Common.Misc.UnitTests with updated namespaces and references",
             "dependencies": [
-              "18.4"
+              4
             ],
-            "details": "Implement WithRecistResponse(string nciCode, string display) to set Observation.valueCodeableConcept. Use NCI codes: C35571 (Progressive Disease), C18213 (Complete Response), C18058 (Partial Response), C18052 (Stable Disease). Set both code and display text in CodeableConcept. Add system URI for NCI Thesaurus (http://ncimeta.nci.nih.gov). Validate NCI code format. Consider adding convenience methods like WithProgressiveDisease(), WithPartialResponse() that call WithRecistResponse with predefined codes.",
+            "details": "Copy test files from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools.Tests/Retry (3 files) and /Users/ken/code/ThirdOpinion/FhirTools/FhirTools.Tests/RateLimiting (1 file) to ThirdOpinion.Common.Misc.UnitTests. Update all namespaces from FhirTools to ThirdOpinion.Common.Misc. Add tests for the new HttpClient extension methods. Ensure test project references are updated and all mocking frameworks (Moq, FluentAssertions) are properly configured",
             "status": "done",
-            "testStrategy": "Test all RECIST response categories. Verify NCI code system URL. Test invalid code handling. Validate complete Observation resource against FHIR R4 schema."
+            "testStrategy": "Run all migrated tests using dotnet test, ensure 100% pass rate, verify code coverage meets minimum requirements"
           }
         ]
       },
       {
-        "id": 19,
-        "title": "Implement Document Processing Builders",
-        "description": "Create OcrDocumentReferenceBuilder and FactExtractionDocumentReferenceBuilder for document transformation workflow with S3 support",
-        "details": "OcrDocumentReferenceBuilder: Implement WithOriginalDocument, WithPatient, WithOcrDevice, WithExtractedText (inline Base64), WithExtractedTextUrl (S3), WithTextractRawUrl, WithTextractSimpleUrl. Set relatesTo with code='transforms' to original. Support both inline content (attachment.data with Base64) and S3 URLs (attachment.url). FactExtractionDocumentReferenceBuilder: Implement WithOriginalDocument, WithOcrDocument, WithPatient, WithExtractionDevice, WithFactsJson(object) with auto-serialization, WithFactsJson(string), WithFactsJsonUrl. Add dual relatesTo for both OCR and original documents. Both builders must validate that either inline OR URL is provided, not both. Implement Base64 encoding for inline content. Set appropriate MIME types: text/plain for OCR, application/json for facts.",
-        "testStrategy": "Test inline content Base64 encoding. Test S3 URL reference handling. Verify relatesTo chains are correct. Test JSON serialization for facts. Validate mutual exclusivity of inline vs URL. Test both builders produce valid DocumentReference resources.",
-        "priority": "medium",
-        "dependencies": [
-          13
-        ],
+        "id": 26,
+        "title": "Migrate Logging to ThirdOpinion.Common.Logging",
+        "description": "Add logging functionality to the existing Logging project",
+        "details": "1. Copy /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Logging to ThirdOpinion.Common.Logging\n2. Update namespaces to ThirdOpinion.Common.Logging\n3. Ensure compatibility with existing logging infrastructure in ThirdOpinion.Common\n4. Add structured logging support using Serilog or Microsoft.Extensions.Logging\n5. Implement correlation ID tracking\n6. Create logging middleware and interceptors\n7. Configure log enrichers for AWS context",
+        "testStrategy": "1. Test log output formats and levels\n2. Validate structured logging property extraction\n3. Test correlation ID propagation across service calls\n4. Verify log filtering and sampling configurations",
+        "priority": "high",
+        "dependencies": [],
         "status": "done",
         "subtasks": [
           {
             "id": 1,
-            "title": "Create OcrDocumentReferenceBuilder Base Implementation",
-            "description": "Implement the OcrDocumentReferenceBuilder class inheriting from AiResourceBuilderBase<DocumentReference> with core OCR document methods",
+            "title": "Copy and organize logging source files from FhirTools",
+            "description": "Copy the entire Logging directory from FhirTools to ThirdOpinion.Common.Logging and organize the file structure to match the target project's conventions",
             "dependencies": [],
-            "details": "Create OcrDocumentReferenceBuilder class inheriting from AiResourceBuilderBase<DocumentReference>. Implement WithOriginalDocument(DocumentReference) to set the first relatesTo with code='transforms'. Implement WithPatient(Patient) and WithOcrDevice(Device) methods. Set DocumentReference.status to 'current' and type to appropriate LOINC code for OCR text document. Initialize attachment array for content storage.",
+            "details": "Copy all files from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Logging to ThirdOpinion.Common.Logging directory. Preserve the folder structure including any subdirectories. Identify all C# files, configuration files, and any resource files that need to be migrated. Create a mapping of old file paths to new file paths for reference during namespace updates.",
             "status": "done",
-            "testStrategy": "Unit test builder instantiation, verify inheritance from base class, test WithOriginalDocument sets relatesTo correctly with 'transforms' code, test WithPatient and WithOcrDevice set proper references"
+            "testStrategy": "Verify all files are copied correctly by comparing file counts and directory structures between source and destination"
           },
           {
             "id": 2,
-            "title": "Implement OCR Content Storage Methods",
-            "description": "Add methods for storing OCR extracted text either as inline Base64 or S3 URL reference with proper validation",
+            "title": "Update namespaces and project references throughout copied files",
+            "description": "Replace all FhirTools namespace references with ThirdOpinion.Common.Logging and update using statements to match the new project structure",
             "dependencies": [
-              "19.1"
+              1
             ],
-            "details": "Implement WithExtractedText(string text) to store text inline as Base64 encoded attachment.data with contentType='text/plain'. Implement WithExtractedTextUrl(string s3Url) to set attachment.url for S3 reference. Add WithTextractRawUrl(string) and WithTextractSimpleUrl(string) for Textract-specific URLs. Implement validation logic to ensure only one storage method (inline OR URL) is used per attachment. Handle Base64 encoding for inline content properly.",
+            "details": "Search and replace all occurrences of 'FhirTools.Logging' namespace with 'ThirdOpinion.Common.Logging'. Update all using statements that reference FhirTools namespaces to use ThirdOpinion.Common equivalents. Ensure all internal project references are updated to point to ThirdOpinion.Common assemblies. Update any XML documentation comments that reference the old namespace.",
             "status": "done",
-            "testStrategy": "Test Base64 encoding for inline text content, verify mutual exclusivity validation between inline and URL, test S3 URL format validation, verify MIME type is set to 'text/plain' for all attachments"
+            "testStrategy": "Compile the project to ensure no namespace conflicts or missing references exist"
           },
           {
             "id": 3,
-            "title": "Create FactExtractionDocumentReferenceBuilder Base Implementation",
-            "description": "Implement the FactExtractionDocumentReferenceBuilder class with core fact extraction document methods and dual relationship support",
-            "dependencies": [],
-            "details": "Create FactExtractionDocumentReferenceBuilder class inheriting from AiResourceBuilderBase<DocumentReference>. Implement WithOriginalDocument(DocumentReference) and WithOcrDocument(DocumentReference) to set dual relatesTo entries. Implement WithPatient(Patient) and WithExtractionDevice(Device) methods. Set DocumentReference.status to 'current' and type to appropriate code for fact extraction results. Initialize attachment array for JSON content storage.",
+            "title": "Integrate Serilog and configure structured logging capabilities",
+            "description": "Add Serilog NuGet packages and implement structured logging with proper configuration for various output sinks and formatting options",
+            "dependencies": [
+              2
+            ],
+            "details": "Add Serilog, Serilog.Extensions.Logging, Serilog.Sinks.Console, and Serilog.Sinks.File NuGet packages to the project. Create a LoggingConfiguration class to handle Serilog setup with structured logging support. Implement log event enrichers for adding contextual information. Configure output templates for both human-readable and JSON formats. Set up log level filtering and minimum level configurations.",
             "status": "done",
-            "testStrategy": "Test builder instantiation and base class inheritance, verify dual relatesTo entries are created for both OCR and original documents, test WithPatient and WithExtractionDevice set proper references"
+            "testStrategy": "Create unit tests to verify structured logging outputs correct JSON format and properties are properly extracted"
           },
           {
             "id": 4,
-            "title": "Implement Fact Storage Methods with JSON Handling",
-            "description": "Add methods for storing extracted facts as JSON either inline or via S3 URL with automatic serialization support",
+            "title": "Implement correlation ID tracking and propagation system",
+            "description": "Create middleware and interceptors for automatic correlation ID generation and propagation across service boundaries",
             "dependencies": [
-              "19.3"
+              3
             ],
-            "details": "Implement WithFactsJson(object facts) to auto-serialize object to JSON string and store as Base64 encoded attachment.data. Implement WithFactsJson(string jsonString) for pre-serialized JSON storage. Implement WithFactsJsonUrl(string s3Url) for S3 reference. Set contentType='application/json' for all fact attachments. Add validation to ensure only one storage method is used. Use System.Text.Json for serialization with proper error handling.",
+            "details": "Create a CorrelationIdMiddleware class for ASP.NET Core applications to generate and track correlation IDs. Implement ICorrelationIdProvider interface for accessing current correlation ID. Add HTTP client handlers to automatically include correlation ID in outgoing requests. Create log enrichers to automatically add correlation ID to all log entries. Implement AsyncLocal storage for correlation ID to ensure thread-safe access across async operations.",
             "status": "done",
-            "testStrategy": "Test JSON serialization for object input, verify Base64 encoding for inline JSON content, test mutual exclusivity validation, verify MIME type is 'application/json', test serialization error handling for invalid objects"
+            "testStrategy": "Write integration tests to verify correlation ID is properly propagated through HTTP calls and appears in all related log entries"
           },
           {
             "id": 5,
-            "title": "Add Validation and Integration Tests",
-            "description": "Implement comprehensive validation logic and create integration tests for both builders working together in document processing pipeline",
+            "title": "Configure AWS-specific log enrichers and CloudWatch integration",
+            "description": "Implement log enrichers for AWS context information and configure CloudWatch Logs sink for centralized logging in AWS environments",
             "dependencies": [
-              "19.1",
-              "19.2",
-              "19.3",
-              "19.4"
+              4
             ],
-            "details": "Add Build() override in both builders to validate that at least one content attachment exists and that inline/URL exclusivity is maintained. Create integration tests simulating: Original document → OCR processing → Fact extraction workflow. Test S3 URL handling for large documents. Verify relatesTo chains maintain proper document lineage. Test both builders produce valid FHIR DocumentReference resources that validate against R4 schema. Ensure all resources have proper AIAST labels.",
+            "details": "Add Serilog.Sinks.AwsCloudWatch NuGet package for CloudWatch integration. Create AWS context enrichers to automatically add EC2 instance ID, Lambda function name, and other AWS-specific metadata to logs. Configure CloudWatch log group and stream naming conventions. Implement batching and retry logic for CloudWatch log uploads. Add configuration options for different AWS regions and credentials. Create environment-specific logging configurations for local development versus AWS deployment.",
             "status": "done",
-            "testStrategy": "Integration test full document processing pipeline, test validation prevents invalid configurations, verify FHIR R4 schema compliance for all generated resources, test S3 URL reference scenarios, validate relatesTo chain integrity"
+            "testStrategy": "Test AWS enrichers with mocked AWS services and verify CloudWatch sink properly batches and sends logs"
           }
         ]
       },
       {
-        "id": 20,
-        "title": "Implement Provenance Builder and Complete Integration Testing",
-        "description": "Create AiProvenanceBuilder for audit trails and implement comprehensive integration test suite",
-        "details": "Implement AiProvenanceBuilder with methods: WithProvenanceId(string), ForTarget(ResourceReference, string version), WithOccurredDateTime, WithAiDevice, WithOrganization, AddSourceEntity, WithPolicy, WithReason, WithLogFileUrl(string s3Url). Set agent array with AI Device as 'assembler' and Organization as 'author'. Support optional S3 log file reference as entity with role='derivation'. Create comprehensive integration tests: ADT+CSPC+PSA workflow, Document processing pipeline (Original→OCR→Facts), Provenance tracking for all AI resources, Query patterns by inference GUID and AIAST label. Test complete FHIR Bundle creation with all resource types. Validate all resources serialize/deserialize correctly with Firely SDK. Performance test for Lambda deployment scenarios.",
-        "testStrategy": "Test complete inference pipeline end-to-end. Verify provenance correctly references all source entities. Test S3 log file URL handling. Validate all AI resources have AIAST labels and inference GUIDs. Test FHIR Bundle validation. Memory and performance profiling for AWS Lambda constraints.",
+        "id": 27,
+        "title": "Create ThirdOpinion.Common.Aws.Bedrock Project",
+        "description": "Create a project for AWS Bedrock AI/ML service integration",
+        "details": "1. Create new project ThirdOpinion.Common.Aws.Bedrock\n2. Copy /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Bedrock\n3. Update namespaces to ThirdOpinion.Common.Aws.Bedrock\n4. Add AWSSDK.Bedrock and AWSSDK.BedrockRuntime NuGet packages\n5. Implement model invocation abstractions\n6. Create response parsing utilities for different model types\n7. Add streaming response support for real-time inference",
+        "testStrategy": "1. Test model invocation with mock responses\n2. Validate request/response serialization\n3. Test streaming response handling\n4. Verify error handling for model throttling",
+        "priority": "low",
+        "dependencies": [
+          23
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create project structure and copy source files",
+            "description": "Create the new ThirdOpinion.Common.Aws.Bedrock project structure in the src directory and copy all Bedrock source files from FhirTools",
+            "dependencies": [],
+            "details": "Create the project directory at src/ThirdOpinion.Common.Aws.Bedrock, copy all files from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Bedrock including BedrockModels.cs, BedrockPricing.cs, BedrockService.cs, IBedrockService.cs, and ServiceCollectionExtensions.cs. Set up the initial project structure following the pattern of other AWS projects in the solution like ThirdOpinion.Common.Aws.S3",
+            "status": "pending",
+            "testStrategy": "Verify all source files are copied correctly with proper directory structure"
+          },
+          {
+            "id": 2,
+            "title": "Create and configure .csproj file with NuGet packages",
+            "description": "Create the project file and add all required AWS SDK and other dependencies for Bedrock functionality",
+            "dependencies": [
+              1
+            ],
+            "details": "Create ThirdOpinion.Common.Aws.Bedrock.csproj following the pattern from ThirdOpinion.Common.Aws.S3.csproj. Add NuGet packages: AWSSDK.Bedrock, AWSSDK.BedrockRuntime, AWSSDK.Core, and standard Microsoft.Extensions packages. Configure project properties including target framework net8.0, nullable reference types, and documentation generation",
+            "status": "pending",
+            "testStrategy": "Verify project builds successfully with all required package references"
+          },
+          {
+            "id": 3,
+            "title": "Update namespaces and resolve dependencies",
+            "description": "Update all namespace declarations from FhirTools.Bedrock to ThirdOpinion.Common.Aws.Bedrock and resolve internal dependencies",
+            "dependencies": [
+              2
+            ],
+            "details": "Update all namespace declarations in copied files to ThirdOpinion.Common.Aws.Bedrock. Identify and handle dependencies on other FhirTools namespaces like FhirTools.Configuration, FhirTools.Langfuse, FhirTools.Logging, FhirTools.RateLimiting, and FhirTools.Retry. Either create stubs for these services or refactor to use existing ThirdOpinion.Common patterns. Update using statements accordingly",
+            "status": "pending",
+            "testStrategy": "Verify all namespace references are updated correctly and code compiles without namespace errors"
+          },
+          {
+            "id": 4,
+            "title": "Add project to solution and configure streaming support",
+            "description": "Add the new project to the ThirdOpinion.Common solution and implement streaming response capabilities for real-time inference",
+            "dependencies": [
+              3
+            ],
+            "details": "Add ThirdOpinion.Common.Aws.Bedrock.csproj to the ThirdOpinion.Common.sln file under the aws solution folder. Implement streaming response support methods in BedrockService for real-time model inference, including stream handling for different model types (Claude, Llama, etc.). Add appropriate async enumerable patterns for streaming responses",
+            "status": "pending",
+            "testStrategy": "Test solution builds with new project included and streaming methods handle responses correctly"
+          },
+          {
+            "id": 5,
+            "title": "Create unit tests and verify integration",
+            "description": "Create unit test project for Bedrock functionality and verify proper integration with the solution",
+            "dependencies": [
+              4
+            ],
+            "details": "Create ThirdOpinion.Common.Aws.Bedrock.Tests project in appropriate test directory. Copy and adapt ToolConfigurationHelperTests.cs from FhirTools.Tests/Bedrock. Add tests for model invocation with mock responses, request/response serialization, streaming response handling, and error handling for model throttling. Ensure tests follow existing test patterns in the ThirdOpinion.Common solution",
+            "status": "pending",
+            "testStrategy": "Run all unit tests to verify Bedrock service functionality with mocked AWS responses"
+          }
+        ]
+      },
+      {
+        "id": 28,
+        "title": "Create ThirdOpinion.Common.Langfuse Project",
+        "description": "Create a project for Langfuse observability integration",
+        "details": "1. Create new project ThirdOpinion.Common.Langfuse\n2. Copy /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Langfuse\n3. Update namespaces to ThirdOpinion.Common.Langfuse\n4. Add Langfuse SDK NuGet package or implement REST client\n5. Create tracing abstractions for LLM operations\n6. Implement span creation and metric collection\n7. Add configuration for Langfuse API endpoints and keys",
+        "testStrategy": "1. Test trace creation and submission\n2. Validate metric aggregation\n3. Test offline/batch mode if supported\n4. Verify sensitive data masking in traces",
+        "priority": "low",
+        "dependencies": [],
+        "status": "in-progress",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create ThirdOpinion.Common.Langfuse project structure and configure dependencies",
+            "description": "Set up the new ThirdOpinion.Common.Langfuse .NET project with proper folder structure, add it to the solution, and configure necessary NuGet packages including Microsoft.Extensions dependencies, HTTP client packages, and JSON serialization",
+            "dependencies": [],
+            "details": "Create a new class library project under src/ThirdOpinion.Common.Langfuse directory following the existing project structure pattern. Add project to ThirdOpinion.Common.sln. Configure the .csproj file with TargetFramework net8.0, nullable enabled, and add required NuGet packages: Microsoft.Extensions.Http, Microsoft.Extensions.Logging, Microsoft.Extensions.Configuration, Microsoft.Extensions.DependencyInjection, System.Text.Json. Ensure proper project reference structure matching other Common projects",
+            "status": "pending",
+            "testStrategy": "Verify project builds successfully and is properly integrated into the solution structure"
+          },
+          {
+            "id": 2,
+            "title": "Copy and migrate Langfuse core service implementations from FhirTools",
+            "description": "Transfer the core Langfuse service files from FhirTools/FhirTools/Langfuse to the new project, updating namespaces and removing FhirTools-specific dependencies",
+            "dependencies": [
+              1
+            ],
+            "details": "Copy ILangfuseService.cs, LangfuseService.cs, ILangfuseSchemaService.cs, LangfuseSchemaService.cs, and LangfuseModels.cs from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools/Langfuse. Update all namespaces from FhirTools.Langfuse to ThirdOpinion.Common.Langfuse. Remove or abstract away any direct AWS Bedrock dependencies from BedrockTracingExtensions.cs to make it provider-agnostic. Update using statements and ensure all type references are correctly resolved",
+            "status": "pending",
+            "testStrategy": "Ensure all copied files compile without errors after namespace updates and dependency adjustments"
+          },
+          {
+            "id": 3,
+            "title": "Implement Langfuse REST client and HTTP communication layer",
+            "description": "Create HTTP client configuration and implement REST API communication for Langfuse endpoints with proper authentication, retry policies, and error handling",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement LangfuseHttpClient class with configured HttpClient using IHttpClientFactory pattern. Add authentication headers support for Langfuse API keys (public and secret keys). Implement retry policies using Polly for transient failures. Create request/response serialization helpers using System.Text.Json. Add configuration models for Langfuse API endpoints (base URL, timeouts, retry settings). Implement batch ingestion endpoint support for efficient telemetry submission",
+            "status": "pending",
+            "testStrategy": "Test HTTP client configuration, authentication header injection, retry behavior on transient failures, and JSON serialization/deserialization of Langfuse models"
+          },
+          {
+            "id": 4,
+            "title": "Create LLM tracing abstractions and observation builders",
+            "description": "Develop provider-agnostic abstractions for LLM operation tracing, span creation, and metric collection that can work with various LLM providers beyond AWS Bedrock",
+            "dependencies": [
+              3
+            ],
+            "details": "Create ILlmTracingProvider interface for provider-agnostic tracing. Implement TracingContext class for managing trace lifecycle and parent-child relationships. Create ObservationBuilder for constructing generation and span observations with proper metadata. Implement TokenUsageCalculator for tracking input/output tokens and cost calculations. Add support for streaming response tracking and completion callbacks. Create extension methods for common tracing patterns (trace wrapping, automatic span creation). Implement metric aggregation helpers for collecting performance data",
+            "status": "pending",
+            "testStrategy": "Unit test tracing context management, observation builder patterns, token usage calculations, and metric aggregation logic"
+          },
+          {
+            "id": 5,
+            "title": "Add configuration system and dependency injection setup",
+            "description": "Implement configuration models for Langfuse API settings, create service collection extensions for dependency injection, and add data masking for sensitive information in traces",
+            "dependencies": [
+              4
+            ],
+            "details": "Create LangfuseConfiguration class with API endpoint URLs, authentication keys, batch settings, and timeout configurations. Implement ServiceCollectionExtensions.cs with AddLangfuse extension method for registering services. Add IConfiguration binding support for reading settings from appsettings.json. Implement sensitive data masking utilities to prevent PII/secrets in traces. Create health check implementation to verify Langfuse connectivity. Add support for environment-specific configurations (dev, staging, prod). Implement offline/batch mode configuration for high-volume scenarios",
+            "status": "pending",
+            "testStrategy": "Test configuration binding from various sources, DI registration and resolution, sensitive data masking in traces, and health check functionality"
+          }
+        ]
+      },
+      {
+        "id": 29,
+        "title": "Migrate Unit Tests and Create Test Projects",
+        "description": "Create test projects for each migrated component and copy corresponding unit tests",
+        "details": "1. Create test projects for each new project (e.g., ThirdOpinion.Common.Aws.HealthLake.Tests)\n2. Copy relevant tests from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools.Tests\n3. Update namespaces and project references in all test files\n4. Add xUnit, Moq, and FluentAssertions packages to test projects\n5. Update test fixtures and mock configurations\n6. Ensure test data and resources are properly copied\n7. Configure test runners and code coverage tools\n8. Create shared test utilities project if needed",
+        "testStrategy": "1. Run all migrated tests to ensure they pass\n2. Validate code coverage metrics meet requirements\n3. Test discovery works in IDE and CI/CD\n4. Verify test isolation and no cross-test dependencies",
         "priority": "high",
         "dependencies": [
-          14,
-          15,
-          16,
-          17,
-          18,
-          19
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28
         ],
-        "status": "done",
+        "status": "pending",
         "subtasks": [
           {
             "id": 1,
-            "title": "Create AiProvenanceBuilder Core Structure and Base Methods",
-            "description": "Implement the AiProvenanceBuilder class inheriting from AiResourceBuilderBase<Provenance> with foundational builder methods for provenance tracking",
+            "title": "Create ThirdOpinion.Common.Aws.HealthLake.Tests project structure",
+            "description": "Create the test project for HealthLake functionality with proper project configuration, including directory structure and .csproj file setup with all necessary NuGet packages",
             "dependencies": [],
-            "details": "Create AiProvenanceBuilder class inheriting from AiResourceBuilderBase<Provenance>. Implement core methods: WithProvenanceId(string) for setting provenance.id, ForTarget(ResourceReference reference, string version) to set provenance.target array with resource reference and version metadata, WithOccurredDateTime(DateTime? occurred) for setting provenance.occurredDateTime or occurredPeriod. Initialize provenance.recorded to current timestamp. Set provenance.activity with appropriate coding for AI inference activity. Ensure proper initialization of provenance.agent array for later population.",
-            "status": "done",
-            "testStrategy": "Unit test each builder method for correct property assignment. Verify WithProvenanceId generates proper FHIR ID format. Test ForTarget handles both single and multiple targets. Validate DateTime handling for occurred timestamp."
+            "details": "Create /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.HealthLake.Tests directory and .csproj file. Configure with net8.0 target framework, add xUnit 2.9.2, Microsoft.NET.Test.Sdk 17.12.0, xunit.runner.visualstudio 2.8.2, Moq 4.20.72, Shouldly 4.2.1, and coverlet.collector 6.0.2 packages. Include proper Using statements for xUnit, Shouldly, and Moq. Add project reference to ThirdOpinion.Common.Aws.HealthLake (once created). Configure NoWarn for nullable warnings as per existing test projects pattern",
+            "status": "pending",
+            "testStrategy": "Validate project builds successfully and test discovery works in IDE"
           },
           {
             "id": 2,
-            "title": "Implement Agent and Organization Methods for Provenance",
-            "description": "Add methods to configure AI Device as assembler agent and Organization as author agent in the provenance record",
+            "title": "Migrate HealthLake and AWS signing tests from FhirTools",
+            "description": "Copy and adapt HealthLakeFhirServiceTests, AwsSignatureServiceTests, and AWS4SignerTests from FhirTools.Tests to the new HealthLake test project with proper namespace updates",
             "dependencies": [
-              "20.1"
+              1
             ],
-            "details": "Implement WithAiDevice(ResourceReference deviceRef) method to add Device as agent with type 'assembler' (use appropriate FHIR participation type code). Implement WithOrganization(ResourceReference orgRef) to add Organization as agent with type 'author'. Create helper method AddAgent(ResourceReference who, string typeCode, string typeDisplay) for reusable agent addition logic. Ensure agent.who references are properly formatted. Add agent.onBehalfOf support for delegated actions. Validate that both assembler and author roles are present when Build() is called.",
-            "status": "done",
-            "testStrategy": "Test WithAiDevice creates agent with correct assembler type. Test WithOrganization creates agent with author type. Verify multiple agents can be added. Test agent references are valid FHIR references."
+            "details": "Copy /Users/ken/code/ThirdOpinion/FhirTools/FhirTools.Tests/Fhir/HealthLakeFhirServiceTests.cs and AWS test files from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools.Tests/Aws directory. Update all namespaces from FhirTools.Tests to ThirdOpinion.Common.Aws.HealthLake.Tests. Update using statements and project references to point to new ThirdOpinion.Common projects. Ensure all mock configurations and test fixtures are properly updated to work with the new namespace structure",
+            "status": "pending",
+            "testStrategy": "Run all migrated tests to ensure they compile and pass with updated references"
           },
           {
             "id": 3,
-            "title": "Implement Source Entity and S3 Log File Support",
-            "description": "Add methods for tracking source entities and optional S3 log file references as derivation entities",
+            "title": "Create test projects for Logging and Misc components",
+            "description": "Set up ThirdOpinion.Common.Logging.Tests project and update existing ThirdOpinion.Common.Misc.UnitTests with migrated retry and rate limiting tests",
             "dependencies": [
-              "20.1",
-              "20.2"
+              1
             ],
-            "details": "Implement AddSourceEntity(ResourceReference entityRef, string role = \"source\") to add source resources to provenance.entity array with appropriate role coding. Implement WithLogFileUrl(string s3Url) to add S3 log file as entity with role='derivation'. Create entity structure with entity.role (CodeableConcept), entity.what (Reference to resource or URL). Support multiple source entities (e.g., original documents, OCR results). Implement WithPolicy(string policyUrl) to set provenance.policy array. Implement WithReason(CodeableConcept reason) for provenance.reason array. Ensure proper URL validation for S3 URLs.",
-            "status": "done",
-            "testStrategy": "Test AddSourceEntity correctly adds multiple source entities. Verify WithLogFileUrl creates derivation entity with S3 URL. Test entity role codes are valid. Validate S3 URL format checking."
+            "details": "Create ThirdOpinion.Common.Logging.Tests project with same package configuration as HealthLake.Tests. Copy retry tests from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools.Tests/Retry (RetryPolicyServiceTests.cs, RetryIntegrationTests.cs, HttpRequestExceptionTest.cs) to ThirdOpinion.Common.Misc.UnitTests. Copy RateLimiterServiceIntegrationTests.cs from FhirTools.Tests/RateLimiting. Update all namespaces and ensure Polly and System.Threading.RateLimiting dependencies are properly configured",
+            "status": "pending",
+            "testStrategy": "Verify all retry and rate limiting tests execute successfully with proper exponential backoff and token bucket behavior"
           },
           {
             "id": 4,
-            "title": "Create Comprehensive Integration Test Suite Setup",
-            "description": "Set up integration test infrastructure and implement ADT+CSPC+PSA workflow tests with complete provenance tracking",
+            "title": "Migrate test data resources and shared test utilities",
+            "description": "Copy test data files, JSON configurations, and create a shared test utilities project for common test helpers, fixtures, and mock builders used across multiple test projects",
             "dependencies": [
-              "20.1",
-              "20.2",
-              "20.3"
+              2,
+              3
             ],
-            "details": "Create IntegrationTests test class with test fixture setup. Implement test for complete ADT+CSPC+PSA inference workflow: Create patient, create ADT therapy observation using builder from task 15, create CSPC status using builder from task 16, create PSA test results using builder from task 17, create AI inference using builder from task 18, create provenance using AiProvenanceBuilder linking all resources. Test provenance correctly references all source entities (ADT, CSPC, PSA) and inference result. Verify inference GUID propagation through all resources. Test AIAST label presence on all AI-generated resources.",
-            "status": "done",
-            "testStrategy": "End-to-end test of complete workflow. Verify all resources are linked via provenance. Test Bundle creation with all resources. Validate against FHIR R4 schema. Check resource cross-references are valid."
+            "details": "Create ThirdOpinion.Common.TestUtilities project containing shared test fixtures, mock builders, and test data helpers. Identify and copy any test resource files (JSON, XML, CSV) from FhirTools.Tests to appropriate test project directories. Create shared mock configurations for AWS services, HTTP clients, and logging infrastructure. Implement test data builders and factories for commonly used domain objects. Ensure all test projects reference the TestUtilities project",
+            "status": "pending",
+            "testStrategy": "Validate shared utilities are accessible from all test projects and test data files are properly embedded or copied to output"
           },
           {
             "id": 5,
-            "title": "Implement Document Processing Pipeline Tests and Performance Validation",
-            "description": "Create integration tests for document processing pipeline and validate performance for Lambda deployment",
+            "title": "Configure test runners and integrate code coverage reporting",
+            "description": "Set up test execution configuration, code coverage collection with coverlet, and ensure all tests are discoverable in both IDE and CI/CD pipelines",
             "dependencies": [
-              "20.1",
-              "20.2",
-              "20.3",
-              "20.4"
+              1,
+              2,
+              3,
+              4
             ],
-            "details": "Implement document processing pipeline test: Create original DocumentReference, create OCR DocumentReference using OcrDocumentReferenceBuilder (task 19), create Facts DocumentReference using FactExtractionDocumentReferenceBuilder (task 19), create provenance tracking the transformation chain. Test query patterns: Query by inference GUID across all resources, query by AIAST label to find all AI resources, query provenance by target resource. Implement performance tests: Measure memory usage for typical Bundle sizes, test serialization/deserialization performance with Firely SDK, validate execution time meets Lambda constraints (< 15 min, < 10GB memory). Create test for S3 URL handling in both documents and provenance logs.",
-            "status": "done",
-            "testStrategy": "Test complete document pipeline with provenance. Verify transformation chain via relatesTo and provenance. Performance profiling with memory and time metrics. Test Lambda deployment constraints. Validate FHIR Bundle size limits."
+            "details": "Configure Directory.Build.props in test directory for shared test settings. Set up coverlet.msbuild or coverlet.collector for code coverage with proper exclusion filters for generated code. Create runsettings file for test execution configuration including test timeouts and parallel execution settings. Verify test discovery works in Visual Studio, VS Code, and command line (dotnet test). Configure code coverage thresholds and reporting format (opencover/cobertura). Create test script or makefile for running all tests with coverage reporting",
+            "status": "pending",
+            "testStrategy": "Execute full test suite with coverage reporting, verify minimum 80% coverage threshold, ensure reports generate in CI-friendly format"
+          }
+        ]
+      },
+      {
+        "id": 30,
+        "title": "Configure NuGet Package and Create Documentation",
+        "description": "Update NuGet package configuration to include all new projects and create comprehensive documentation",
+        "details": "1. Update .nuspec or PackageReference in each project for NuGet packaging\n2. Configure package metadata (version, authors, description, tags)\n3. Set up package dependencies between ThirdOpinion.Common projects\n4. Create/update ThirdOpinion.Common.FunctionalTests from FhirTools.FunctionalTests\n5. Create consolidated documentation file (ThirdOpinion.Common.Usage.md) with:\n   - Overview of each project and its purpose\n   - Key interfaces and usage patterns\n   - Configuration requirements\n   - Code examples for common scenarios\n   - Migration notes from FhirTools\n6. Update solution file to include all new projects\n7. Configure CI/CD pipeline for package publishing",
+        "testStrategy": "1. Build and pack all projects successfully\n2. Test NuGet package installation in a sample project\n3. Validate package dependencies are correctly resolved\n4. Run functional tests against packaged assemblies\n5. Verify documentation is accurate and examples work",
+        "priority": "high",
+        "dependencies": [
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Configure NuGet Package Metadata and Update Solution File",
+            "description": "Update all project files to enable NuGet packaging with proper metadata, configure the ThirdOpinion.Common meta-package, and ensure the solution file includes all new projects that will be added in dependent tasks",
+            "dependencies": [],
+            "details": "Update IsPackable property to true in all library projects (ThirdOpinion.Common.Fhir, ThirdOpinion.Common.Misc, ThirdOpinion.Common.Aws.* projects). Set proper PackageId, Version, Authors, Company, Description, and PackageTags for each project. Configure ThirdOpinion.Common.csproj as a meta-package that references all sub-packages. Update the solution file to include placeholders for ThirdOpinion.Common.Aws.HealthLake, ThirdOpinion.Common.Aws.Bedrock, and ThirdOpinion.Common.Fhir.Documents projects that will be created in tasks 22-27. Ensure proper solution folder structure with AWS projects grouped under the 'aws' folder and FHIR projects properly organized.",
+            "status": "pending",
+            "testStrategy": "Build solution with dotnet build to verify all projects compile successfully. Run dotnet pack on each project to ensure NuGet packages are generated with correct metadata."
+          },
+          {
+            "id": 2,
+            "title": "Set Up Inter-Project Dependencies and Package References",
+            "description": "Configure proper dependencies between ThirdOpinion.Common projects and update the meta-package to reference all sub-packages correctly",
+            "dependencies": [
+              1
+            ],
+            "details": "Add ProjectReference entries in projects that depend on each other (e.g., ThirdOpinion.Common.Fhir.Documents will reference ThirdOpinion.Common.Aws.HealthLake). Update ThirdOpinion.Common.csproj to include PackageReference entries for all sub-packages that will be published. Configure version consistency across all packages using a shared property or version file. Ensure AWS SDK dependencies are properly configured with consistent versions across all projects. Set up proper dependency chains so packages install their required dependencies automatically.",
+            "status": "pending",
+            "testStrategy": "Create a test project and attempt to install the meta-package to verify all dependencies resolve correctly. Validate that transitive dependencies are properly handled."
+          },
+          {
+            "id": 3,
+            "title": "Update Functional Tests with FhirTools Migration",
+            "description": "Migrate and update ThirdOpinion.Common.FunctionalTests to include tests from FhirTools.FunctionalTests and add coverage for new projects",
+            "dependencies": [
+              2
+            ],
+            "details": "Review existing FhirTools.FunctionalTests code at /Users/ken/code/ThirdOpinion/FhirTools/FhirTools.FunctionalTests. Migrate relevant test cases to ThirdOpinion.Common.FunctionalTests while updating namespaces and references. Add test coverage for new projects including ThirdOpinion.Common.Aws.HealthLake, ThirdOpinion.Common.Aws.Bedrock, and ThirdOpinion.Common.Fhir.Documents. Update project references in the test project to include all new library projects. Configure test settings and ensure AWS credential handling works properly for functional tests. Update appsettings.Test.json with any new configuration requirements.",
+            "status": "pending",
+            "testStrategy": "Run all functional tests locally with dotnet test. Verify AWS integration tests work with proper credentials. Ensure test coverage includes all major functionality from migrated projects."
+          },
+          {
+            "id": 4,
+            "title": "Create Comprehensive Usage Documentation",
+            "description": "Create ThirdOpinion.Common.Usage.md with complete documentation covering all projects, usage patterns, migration guide, and examples",
+            "dependencies": [
+              3
+            ],
+            "details": "Create a comprehensive markdown file at the root level named ThirdOpinion.Common.Usage.md. Include an overview section describing each project (ThirdOpinion.Common.Aws.Cognito, DynamoDb, S3, SQS, HealthLake, Bedrock, Fhir, Fhir.Documents, Misc). Document key interfaces and their usage patterns for each project. Provide configuration requirements including AWS credentials, regions, and service-specific settings. Include code examples for common scenarios like FHIR resource creation, AWS service integration, document handling. Add a migration guide section explaining how to migrate from FhirTools to ThirdOpinion.Common packages. Include troubleshooting section for common issues.",
+            "status": "pending",
+            "testStrategy": "Review documentation for completeness and accuracy. Validate all code examples compile and run correctly. Ensure migration instructions work for a sample project."
+          },
+          {
+            "id": 5,
+            "title": "Configure CI/CD Pipeline for Package Publishing",
+            "description": "Update the existing CI/CD pipeline to handle building, testing, and publishing all new NuGet packages including proper versioning and dependency management",
+            "dependencies": [
+              4
+            ],
+            "details": "Update .github/workflows/ci-cd.yml to build all new projects in the correct order based on dependencies. Configure the packaging step to generate NuGet packages for all library projects, not just ThirdOpinion.Common meta-package. Update version determination logic to handle multiple packages with synchronized versioning. Ensure the pipeline handles project dependencies correctly during the build phase. Configure package validation to check all generated packages before publishing. Update the publish steps to push all packages to AWS CodeArtifact in the correct order to satisfy dependencies. Add package dependency validation to ensure packages reference correct versions of sibling packages.",
+            "status": "pending",
+            "testStrategy": "Run the CI/CD pipeline in a test environment to verify all packages build and pack successfully. Test package publishing to a development repository. Verify that consuming applications can install and use the published packages correctly."
           }
         ]
       }
     ],
     "metadata": {
       "created": "2025-08-14T03:46:08.337Z",
-      "updated": "2025-10-01T15:54:11.356Z",
+      "updated": "2025-10-29T01:14:50.180Z",
       "description": "Tasks for master context"
     }
   }
