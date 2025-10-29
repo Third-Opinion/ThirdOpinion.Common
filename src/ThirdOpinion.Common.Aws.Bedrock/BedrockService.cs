@@ -126,16 +126,14 @@ public class BedrockService : IBedrockService, IDisposable
             };
 
             // Create trace and generation
-            // TODO: Re-enable when BedrockTracingExtensions is available
-            // trace = BedrockTracingExtensions.CreateBedrockTrace(
-            //     traceId,
-            //     $"bedrock-{BedrockTracingExtensions.ExtractModelName(request.ModelId)}",
-            //     traceMetadata,
-            //     request.Prompt ?? request.Messages?.FirstOrDefault()?.Content
-            // );
+            trace = BedrockTracingExtensions.CreateBedrockTrace(
+                traceId,
+                $"bedrock-{BedrockTracingExtensions.ExtractModelName(request.ModelId)}",
+                traceMetadata,
+                request.Prompt ?? request.Messages?.FirstOrDefault()?.Content
+            );
 
-            // TODO: Re-enable when extension methods are available
-            // generation = request.ToLangfuseGeneration(traceId, generationId, startTime, promptName, promptVersion, _correlationIdProvider);
+            generation = request.ToLangfuseGeneration(traceId, generationId, startTime, promptName, promptVersion, _correlationIdProvider);
         }
 
         try
@@ -185,13 +183,12 @@ public class BedrockService : IBedrockService, IDisposable
                     );
 
                     // Update generation with response data
-                    // TODO: Re-enable when extension methods are available
-                    // generation.WithResponse(result, cost);
-                    // trace.WithOutput(result.Content, success: true);
+                    generation.WithResponse(result, cost);
+                    trace.WithOutput(result.Content, success: true);
 
                     // Send to LangFuse
-                    // var batch = BedrockTracingExtensions.CreateIngestionBatch(trace, generation);
-                    // await _langfuseService.SendIngestionBatchAsync(batch, cancellationToken);
+                    var batch = BedrockTracingExtensions.CreateIngestionBatch(trace, generation);
+                    await _langfuseService.SendIngestionBatchAsync(batch, cancellationToken);
 
                     _logger.LogDebug("Successfully sent Bedrock tracing data to LangFuse [CorrelationId: {CorrelationId}]", correlationId);
                 }
@@ -217,12 +214,11 @@ public class BedrockService : IBedrockService, IDisposable
             {
                 try
                 {
-                    // TODO: Re-enable when extension methods are available
-                    // generation.WithError(ex);
-                    // trace.WithOutput(null, success: false, errorMessage: ex.Message);
+                    generation.WithError(ex);
+                    trace.WithOutput(null, success: false, errorMessage: ex.Message);
 
-                    // var batch = BedrockTracingExtensions.CreateIngestionBatch(trace, generation);
-                    // await _langfuseService.SendIngestionBatchAsync(batch, cancellationToken);
+                    var batch = BedrockTracingExtensions.CreateIngestionBatch(trace, generation);
+                    await _langfuseService.SendIngestionBatchAsync(batch, cancellationToken);
 
                     _logger.LogDebug("Successfully sent error tracing data to LangFuse [CorrelationId: {CorrelationId}]", correlationId);
                 }
@@ -553,7 +549,7 @@ public class BedrockService : IBedrockService, IDisposable
                     ModelArn = model.ModelArn ?? string.Empty,
                     InputModalities = model.InputModalities?.ToList() ?? new List<string>(),
                     OutputModalities = model.OutputModalities?.ToList() ?? new List<string>(),
-                    ResponseStreamingSupported = model.ResponseStreamingSupported,
+                    ResponseStreamingSupported = model.ResponseStreamingSupported ?? false,
                     Customizations = new List<string>(), // Not available in FoundationModelSummary
                     InferenceTypes = new List<string>() // Not available in FoundationModelSummary
                 });
@@ -607,7 +603,7 @@ public class BedrockService : IBedrockService, IDisposable
                 ModelArn = model.ModelArn ?? string.Empty,
                 InputModalities = model.InputModalities?.ToList() ?? new List<string>(),
                 OutputModalities = model.OutputModalities?.ToList() ?? new List<string>(),
-                ResponseStreamingSupported = model.ResponseStreamingSupported,
+                ResponseStreamingSupported = model.ResponseStreamingSupported ?? false,
                 Customizations = new List<string>(), // Not available in FoundationModelDetails
                 InferenceTypes = new List<string>() // Not available in FoundationModelDetails
             };

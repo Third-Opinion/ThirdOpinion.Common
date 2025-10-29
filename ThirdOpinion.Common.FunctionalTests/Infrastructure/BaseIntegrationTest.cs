@@ -2,10 +2,16 @@ using Amazon.CognitoIdentityProvider;
 using Amazon.DynamoDBv2;
 using Amazon.S3;
 using Amazon.SQS;
+using Amazon.Bedrock;
+using Amazon.BedrockRuntime;
+using Amazon.HealthLake;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ThirdOpinion.Common.FunctionalTests.Utilities;
+using ThirdOpinion.Common.Aws.Bedrock;
+using ThirdOpinion.Common.Langfuse;
+using ThirdOpinion.Common.Aws.Misc.SecretsManager;
 using Xunit.Abstractions;
 
 namespace ThirdOpinion.Common.FunctionalTests.Infrastructure;
@@ -25,6 +31,14 @@ public abstract class BaseIntegrationTest : IAsyncLifetime
     protected readonly IAmazonDynamoDB DynamoDbClient;
     protected readonly IAmazonS3 S3Client;
     protected readonly IAmazonSQS SqsClient;
+    protected readonly IAmazonBedrock BedrockClient;
+    protected readonly IAmazonBedrockRuntime BedrockRuntimeClient;
+    protected readonly IAmazonHealthLake HealthLakeClient;
+
+    // Service Clients
+    protected readonly IBedrockService? BedrockService;
+    protected readonly ILangfuseService? LangfuseService;
+    protected readonly ISecretsManagerService? SecretsManagerService;
     
     
     protected BaseIntegrationTest(ITestOutputHelper output)
@@ -52,6 +66,14 @@ public abstract class BaseIntegrationTest : IAsyncLifetime
         DynamoDbClient = ServiceProvider.GetRequiredService(typeof(IAmazonDynamoDB)) as IAmazonDynamoDB;
         S3Client = ServiceProvider.GetRequiredService(typeof(IAmazonS3)) as IAmazonS3;
         SqsClient = ServiceProvider.GetRequiredService(typeof(IAmazonSQS)) as IAmazonSQS;
+        BedrockClient = ServiceProvider.GetRequiredService(typeof(IAmazonBedrock)) as IAmazonBedrock;
+        BedrockRuntimeClient = ServiceProvider.GetRequiredService(typeof(IAmazonBedrockRuntime)) as IAmazonBedrockRuntime;
+        HealthLakeClient = ServiceProvider.GetRequiredService(typeof(IAmazonHealthLake)) as IAmazonHealthLake;
+
+        // Get service clients (optional - may not be configured)
+        BedrockService = ServiceProvider.GetService<IBedrockService>();
+        LangfuseService = ServiceProvider.GetService<ILangfuseService>();
+        SecretsManagerService = ServiceProvider.GetService<ISecretsManagerService>();
     }
 
     /// <summary>

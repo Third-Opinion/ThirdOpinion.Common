@@ -26,6 +26,11 @@ public class LangfuseConfiguration
     public string SecretKey { get; set; } = string.Empty;
 
     /// <summary>
+    /// Project name for organizing traces and observations
+    /// </summary>
+    public string ProjectName { get; set; } = "third-opinion";
+
+    /// <summary>
     /// HTTP request timeout in seconds
     /// </summary>
     [Range(1, 300)]

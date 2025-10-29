@@ -243,37 +243,87 @@ jobs:
         BASE_VERSION=${{ steps.version.outputs.base_version }}
         VERSION_SOURCE=${{ steps.version.outputs.version_source }}
 
-        echo "Updating project version:"
+        echo "Updating project versions:"
         echo "  Base version: $BASE_VERSION"
         echo "  Final version: $VERSION"
         echo "  Version source: $VERSION_SOURCE"
 
-        # Update the main project version
-        sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" src/ThirdOpinion.Common.csproj
+        # Update all project versions
+        find src -name "*.csproj" -exec sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" {} \;
+        find . -name "ThirdOpinion.Common.Fhir.csproj" -exec sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" {} \;
 
         # For assembly versions, use the base version (without pre-release suffixes)
-        # Extract major.minor.patch from version (remove pre-release suffix)
         ASSEMBLY_VERSION=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' || echo "$BASE_VERSION")
-        sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$ASSEMBLY_VERSION.0<\/AssemblyVersion>/g" src/ThirdOpinion.Common.csproj
-        sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$ASSEMBLY_VERSION.0<\/FileVersion>/g" src/ThirdOpinion.Common.csproj
 
-        echo "Updated ThirdOpinion.Common package version to: $VERSION"
+        # Update assembly versions for all projects
+        find src -name "*.csproj" -exec sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$ASSEMBLY_VERSION.0<\/AssemblyVersion>/g" {} \;
+        find src -name "*.csproj" -exec sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$ASSEMBLY_VERSION.0<\/FileVersion>/g" {} \;
+
+        echo "Updated all package versions to: $VERSION"
         echo "Updated assembly versions to: $ASSEMBLY_VERSION.0"
 
-        # Show the updated project file version section for verification
-        echo "Updated project file version section:"
-        grep -A2 -B2 "<Version>" src/ThirdOpinion.Common.csproj || echo "Could not find version in project file"
+        # Show sample updated project file for verification
+        echo "Sample updated project file version section:"
+        grep -A2 -B2 "<Version>" src/ThirdOpinion.Common.csproj || echo "Could not find version in main project file"
 
     - name: Build sub-projects first
       run: |
         dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
 
-    - name: Pack NuGet package
+    - name: Pack NuGet packages
       run: |
+        echo "Creating packages for all projects..."
+        VERSION=${{ steps.version.outputs.version }}
+
+        # Pack individual component packages first
+        for project in src/ThirdOpinion.Common.*/ThirdOpinion.Common.*.csproj; do
+          if [[ -f "$project" ]]; then
+            echo "Packing $(basename "$project" .csproj)..."
+            dotnet pack "$project" \
+              --configuration Release \
+              --output ./packages/ \
+              -p:Version=$VERSION \
+              --no-build
+          fi
+        done
+
+        # Note: ThirdOpinion.Common.Fhir project file missing, skipping
+
+        # Update main project to use package references instead of project references
+        echo "Converting main project to use package references..."
+        MAIN_PROJ="src/ThirdOpinion.Common.csproj"
+
+        # Backup original file
+        cp "$MAIN_PROJ" "$MAIN_PROJ.backup"
+
+        # Replace ProjectReference with PackageReference
+        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Aws\.Cognito\\ThirdOpinion\.Common\.Aws\.Cognito\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Aws.Cognito" Version="'$VERSION'" />|g' "$MAIN_PROJ"
+        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Aws\.DynamoDb\\ThirdOpinion\.Common\.Aws\.DynamoDb\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Aws.DynamoDb" Version="'$VERSION'" />|g' "$MAIN_PROJ"
+        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Aws\.S3\\ThirdOpinion\.Common\.Aws\.S3\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Aws.S3" Version="'$VERSION'" />|g' "$MAIN_PROJ"
+        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Aws\.SQS\\ThirdOpinion\.Common\.Aws\.SQS\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Aws.SQS" Version="'$VERSION'" />|g' "$MAIN_PROJ"
+        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Aws\.HealthLake\\ThirdOpinion\.Common\.Aws\.HealthLake\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Aws.HealthLake" Version="'$VERSION'" />|g' "$MAIN_PROJ"
+        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Aws\.Bedrock\\ThirdOpinion\.Common\.Aws\.Bedrock\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Aws.Bedrock" Version="'$VERSION'" />|g' "$MAIN_PROJ"
+        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.AthenaEhr\\ThirdOpinion\.Common\.AthenaEhr\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.AthenaEhr" Version="'$VERSION'" />|g' "$MAIN_PROJ"
+        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Misc\\ThirdOpinion\.Common\.Misc\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Misc" Version="'$VERSION'" />|g' "$MAIN_PROJ"
+        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Logging\\ThirdOpinion\.Common\.Logging\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Logging" Version="'$VERSION'" />|g' "$MAIN_PROJ"
+        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Fhir\.Documents\\ThirdOpinion\.Common\.Fhir\.Documents\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Fhir.Documents" Version="'$VERSION'" />|g' "$MAIN_PROJ"
+        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Langfuse\\ThirdOpinion\.Common\.Langfuse\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Langfuse" Version="'$VERSION'" />|g' "$MAIN_PROJ"
+
+        # Add local package source to find the packages we just created
+        echo "Adding local package source..."
+        dotnet nuget add source "$(pwd)/packages" --name "LocalPackages"
+
+        # Pack main meta-package using the newly created packages
+        echo "Packing ThirdOpinion.Common meta-package..."
         dotnet pack src/ThirdOpinion.Common.csproj \
           --configuration Release \
           --output ./packages/ \
-          -p:Version=${{ steps.version.outputs.version }}
+          -p:Version=$VERSION \
+          --source "LocalPackages" \
+          --source "nuget.org"
+
+        # Restore original file for future development
+        mv "$MAIN_PROJ.backup" "$MAIN_PROJ"
 
     - name: Upload packages as artifacts
       uses: actions/upload-artifact@v4
@@ -405,14 +455,25 @@ jobs:
     - name: Get package information
       id: package-info
       run: |
-        PACKAGE_FILE=$(ls ./packages/*.nupkg | head -n 1)
-        PACKAGE_NAME=$(basename "$PACKAGE_FILE" .nupkg)
+        # Get the main meta-package for release information
+        MAIN_PACKAGE_FILE=$(ls ./packages/ThirdOpinion.Common.*.nupkg | grep -v "\\.Aws\\." | grep -v "\\.Fhir\\." | grep -v "\\.Misc\\." | grep -v "\\.Langfuse\\." | grep -v "\\.AthenaEhr\\." | grep -v "\\.Logging\\." | head -n 1)
+        if [[ -z "$MAIN_PACKAGE_FILE" ]]; then
+          # Fallback to any package if main package not found
+          MAIN_PACKAGE_FILE=$(ls ./packages/*.nupkg | head -n 1)
+        fi
+
+        PACKAGE_NAME=$(basename "$MAIN_PACKAGE_FILE" .nupkg)
         VERSION=$(echo "$PACKAGE_NAME" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9\.\-]+)?$')
 
-        echo "Package: $PACKAGE_NAME"
+        echo "Main Package: $PACKAGE_NAME"
         echo "Version: $VERSION"
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+
+        # Count total packages
+        PACKAGE_COUNT=$(ls ./packages/*.nupkg | wc -l)
+        echo "package_count=$PACKAGE_COUNT" >> $GITHUB_OUTPUT
+        echo "Total packages to publish: $PACKAGE_COUNT"
 
         if [[ $VERSION == *"-"* ]]; then
           echo "is_prerelease=true" >> $GITHUB_OUTPUT
@@ -495,12 +556,18 @@ jobs:
     - name: Create release summary
       if: github.event_name == 'release'
       run: |
-        echo "## 📦 Package Published Successfully" >> $GITHUB_STEP_SUMMARY
+        echo "## 📦 Packages Published Successfully" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Version:** ${{ steps.package-info.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Package:** ${{ steps.package-info.outputs.package_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Total Packages:** ${{ steps.package-info.outputs.package_count }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Main Package:** ${{ steps.package-info.outputs.package_name }}" >> $GITHUB_STEP_SUMMARY
         echo "**Repository:** ${{ steps.codeartifact.outputs.repo_url }}" >> $GITHUB_STEP_SUMMARY
         echo "**Pre-release:** ${{ steps.package-info.outputs.is_prerelease }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Published Packages" >> $GITHUB_STEP_SUMMARY
+        for package in ./packages/*.nupkg; do
+          echo "- $(basename "$package")" >> $GITHUB_STEP_SUMMARY
+        done
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### Installation" >> $GITHUB_STEP_SUMMARY
         echo '```bash' >> $GITHUB_STEP_SUMMARY

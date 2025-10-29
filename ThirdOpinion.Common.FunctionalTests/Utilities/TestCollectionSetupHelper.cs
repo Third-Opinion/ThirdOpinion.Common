@@ -5,6 +5,14 @@ using Amazon.CognitoIdentityProvider;
 using Amazon.DynamoDBv2;
 using Amazon.S3;
 using Amazon.SQS;
+using Amazon.Bedrock;
+using Amazon.BedrockRuntime;
+using Amazon.HealthLake;
+using Amazon.SecretsManager;
+using ThirdOpinion.Common.Aws.Bedrock;
+using ThirdOpinion.Common.Langfuse;
+using ThirdOpinion.Common.Aws.Misc.SecretsManager;
+using ThirdOpinion.Common.Langfuse.Configuration;
 
 namespace ThirdOpinion.Common.FunctionalTests.Utilities;
 
@@ -48,9 +56,43 @@ public static class TestCollectionSetupHelper
         var sqsClient = new AmazonSQSClient(credentials, regionEndpoint);
         services.AddSingleton(typeof(IAmazonSQS), sqsClient);
 
+        var bedrockClient = new AmazonBedrockClient(credentials, regionEndpoint);
+        services.AddSingleton(typeof(IAmazonBedrock), bedrockClient);
+
+        var bedrockRuntimeClient = new AmazonBedrockRuntimeClient(credentials, regionEndpoint);
+        services.AddSingleton(typeof(IAmazonBedrockRuntime), bedrockRuntimeClient);
+
+        var healthLakeClient = new AmazonHealthLakeClient(credentials, regionEndpoint);
+        services.AddSingleton(typeof(IAmazonHealthLake), healthLakeClient);
+
+        var secretsManagerClient = new AmazonSecretsManagerClient(credentials, regionEndpoint);
+        services.AddSingleton(typeof(IAmazonSecretsManager), secretsManagerClient);
+
+        // Configure ThirdOpinion services with options patterns
+        ConfigureThirdOpinionServices(services, configuration);
+
         return services;
     }
-    
+
+    private static void ConfigureThirdOpinionServices(IServiceCollection services, IConfiguration configuration)
+    {
+        // Configure Langfuse if keys are provided
+        var langfusePublicKey = configuration.GetValue<string>("Langfuse:PublicKey");
+        var langfuseSecretKey = configuration.GetValue<string>("Langfuse:SecretKey");
+
+        if (!string.IsNullOrEmpty(langfusePublicKey) && !string.IsNullOrEmpty(langfuseSecretKey))
+        {
+            services.Configure<LangfuseConfiguration>(configuration.GetSection("Langfuse"));
+            services.AddSingleton<ILangfuseService, LangfuseService>();
+        }
+
+        // Configure Bedrock service
+        services.AddSingleton<IBedrockService, BedrockService>();
+
+        // Configure Secrets Manager service
+        services.AddSingleton<ISecretsManagerService, SecretsManagerService>();
+    }
+
     private static void ValidateSSOProfile(string profileName)
     {
         // Explicitly reject AWS access key environment variables

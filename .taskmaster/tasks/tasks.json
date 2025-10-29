@@ -548,7 +548,7 @@
           27,
           28
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -556,7 +556,7 @@
             "description": "Create the test project for HealthLake functionality with proper project configuration, including directory structure and .csproj file setup with all necessary NuGet packages",
             "dependencies": [],
             "details": "Create /Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.HealthLake.Tests directory and .csproj file. Configure with net8.0 target framework, add xUnit 2.9.2, Microsoft.NET.Test.Sdk 17.12.0, xunit.runner.visualstudio 2.8.2, Moq 4.20.72, Shouldly 4.2.1, and coverlet.collector 6.0.2 packages. Include proper Using statements for xUnit, Shouldly, and Moq. Add project reference to ThirdOpinion.Common.Aws.HealthLake (once created). Configure NoWarn for nullable warnings as per existing test projects pattern",
-            "status": "in-progress",
+            "status": "done",
             "testStrategy": "Validate project builds successfully and test discovery works in IDE"
           },
           {
@@ -567,7 +567,7 @@
               1
             ],
             "details": "Copy /Users/ken/code/ThirdOpinion/FhirTools/FhirTools.Tests/Fhir/HealthLakeFhirServiceTests.cs and AWS test files from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools.Tests/Aws directory. Update all namespaces from FhirTools.Tests to ThirdOpinion.Common.Aws.HealthLake.Tests. Update using statements and project references to point to new ThirdOpinion.Common projects. Ensure all mock configurations and test fixtures are properly updated to work with the new namespace structure",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run all migrated tests to ensure they compile and pass with updated references"
           },
           {
@@ -578,7 +578,7 @@
               1
             ],
             "details": "Create ThirdOpinion.Common.Logging.Tests project with same package configuration as HealthLake.Tests. Copy retry tests from /Users/ken/code/ThirdOpinion/FhirTools/FhirTools.Tests/Retry (RetryPolicyServiceTests.cs, RetryIntegrationTests.cs, HttpRequestExceptionTest.cs) to ThirdOpinion.Common.Misc.UnitTests. Copy RateLimiterServiceIntegrationTests.cs from FhirTools.Tests/RateLimiting. Update all namespaces and ensure Polly and System.Threading.RateLimiting dependencies are properly configured",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify all retry and rate limiting tests execute successfully with proper exponential backoff and token bucket behavior"
           },
           {
@@ -590,7 +590,7 @@
               3
             ],
             "details": "Create ThirdOpinion.Common.TestUtilities project containing shared test fixtures, mock builders, and test data helpers. Identify and copy any test resource files (JSON, XML, CSV) from FhirTools.Tests to appropriate test project directories. Create shared mock configurations for AWS services, HTTP clients, and logging infrastructure. Implement test data builders and factories for commonly used domain objects. Ensure all test projects reference the TestUtilities project",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Validate shared utilities are accessible from all test projects and test data files are properly embedded or copied to output"
           },
           {
@@ -604,7 +604,7 @@
               4
             ],
             "details": "Configure Directory.Build.props in test directory for shared test settings. Set up coverlet.msbuild or coverlet.collector for code coverage with proper exclusion filters for generated code. Create runsettings file for test execution configuration including test timeouts and parallel execution settings. Verify test discovery works in Visual Studio, VS Code, and command line (dotnet test). Configure code coverage thresholds and reporting format (opencover/cobertura). Create test script or makefile for running all tests with coverage reporting",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Execute full test suite with coverage reporting, verify minimum 80% coverage threshold, ensure reports generate in CI-friendly format"
           }
         ]
@@ -627,7 +627,7 @@
           28,
           29
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -635,7 +635,7 @@
             "description": "Update all project files to enable NuGet packaging with proper metadata, configure the ThirdOpinion.Common meta-package, and ensure the solution file includes all new projects that will be added in dependent tasks",
             "dependencies": [],
             "details": "Update IsPackable property to true in all library projects (ThirdOpinion.Common.Fhir, ThirdOpinion.Common.Misc, ThirdOpinion.Common.Aws.* projects). Set proper PackageId, Version, Authors, Company, Description, and PackageTags for each project. Configure ThirdOpinion.Common.csproj as a meta-package that references all sub-packages. Update the solution file to include placeholders for ThirdOpinion.Common.Aws.HealthLake, ThirdOpinion.Common.Aws.Bedrock, and ThirdOpinion.Common.Fhir.Documents projects that will be created in tasks 22-27. Ensure proper solution folder structure with AWS projects grouped under the 'aws' folder and FHIR projects properly organized.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Build solution with dotnet build to verify all projects compile successfully. Run dotnet pack on each project to ensure NuGet packages are generated with correct metadata."
           },
           {
@@ -646,7 +646,7 @@
               1
             ],
             "details": "Add ProjectReference entries in projects that depend on each other (e.g., ThirdOpinion.Common.Fhir.Documents will reference ThirdOpinion.Common.Aws.HealthLake). Update ThirdOpinion.Common.csproj to include PackageReference entries for all sub-packages that will be published. Configure version consistency across all packages using a shared property or version file. Ensure AWS SDK dependencies are properly configured with consistent versions across all projects. Set up proper dependency chains so packages install their required dependencies automatically.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Create a test project and attempt to install the meta-package to verify all dependencies resolve correctly. Validate that transitive dependencies are properly handled."
           },
           {
@@ -657,7 +657,7 @@
               2
             ],
             "details": "Review existing FhirTools.FunctionalTests code at /Users/ken/code/ThirdOpinion/FhirTools/FhirTools.FunctionalTests. Migrate relevant test cases to ThirdOpinion.Common.FunctionalTests while updating namespaces and references. Add test coverage for new projects including ThirdOpinion.Common.Aws.HealthLake, ThirdOpinion.Common.Aws.Bedrock, and ThirdOpinion.Common.Fhir.Documents. Update project references in the test project to include all new library projects. Configure test settings and ensure AWS credential handling works properly for functional tests. Update appsettings.Test.json with any new configuration requirements.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run all functional tests locally with dotnet test. Verify AWS integration tests work with proper credentials. Ensure test coverage includes all major functionality from migrated projects."
           },
           {
@@ -668,7 +668,7 @@
               3
             ],
             "details": "Create a comprehensive markdown file at the root level named ThirdOpinion.Common.Usage.md. Include an overview section describing each project (ThirdOpinion.Common.Aws.Cognito, DynamoDb, S3, SQS, HealthLake, Bedrock, Fhir, Fhir.Documents, Misc). Document key interfaces and their usage patterns for each project. Provide configuration requirements including AWS credentials, regions, and service-specific settings. Include code examples for common scenarios like FHIR resource creation, AWS service integration, document handling. Add a migration guide section explaining how to migrate from FhirTools to ThirdOpinion.Common packages. Include troubleshooting section for common issues.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Review documentation for completeness and accuracy. Validate all code examples compile and run correctly. Ensure migration instructions work for a sample project."
           },
           {
@@ -679,7 +679,7 @@
               4
             ],
             "details": "Update .github/workflows/ci-cd.yml to build all new projects in the correct order based on dependencies. Configure the packaging step to generate NuGet packages for all library projects, not just ThirdOpinion.Common meta-package. Update version determination logic to handle multiple packages with synchronized versioning. Ensure the pipeline handles project dependencies correctly during the build phase. Configure package validation to check all generated packages before publishing. Update the publish steps to push all packages to AWS CodeArtifact in the correct order to satisfy dependencies. Add package dependency validation to ensure packages reference correct versions of sibling packages.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run the CI/CD pipeline in a test environment to verify all packages build and pack successfully. Test package publishing to a development repository. Verify that consuming applications can install and use the published packages correctly."
           }
         ]
@@ -687,7 +687,7 @@
     ],
     "metadata": {
       "created": "2025-08-14T03:46:08.337Z",
-      "updated": "2025-10-29T16:25:43.543Z",
+      "updated": "2025-10-29T16:58:21.668Z",
       "description": "Tasks for master context"
     }
   }
