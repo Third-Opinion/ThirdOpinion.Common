@@ -40,6 +40,14 @@ public class BedrockService : IBedrockService, IDisposable
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
+    /// <summary>
+    /// Initializes a new instance of the BedrockService
+    /// </summary>
+    /// <param name="bedrockRuntimeClient">The AWS Bedrock runtime client</param>
+    /// <param name="logger">Logger instance</param>
+    /// <param name="correlationIdProvider">Optional correlation ID provider</param>
+    /// <param name="langfuseService">Optional Langfuse service for tracing</param>
+    /// <param name="pricingService">Optional pricing service for cost calculation</param>
     public BedrockService(
         IAmazonBedrockRuntime bedrockRuntimeClient,
         ILogger<BedrockService> logger,

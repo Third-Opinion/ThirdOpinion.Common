@@ -8,7 +8,7 @@
         <IsPackable>true</IsPackable>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-        <NoWarn></NoWarn>
+        <NoWarn>1591</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

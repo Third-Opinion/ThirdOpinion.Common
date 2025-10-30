@@ -17,6 +17,9 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Adds HealthLake FHIR services to the service collection
     /// </summary>
+    /// <param name="services">The service collection to add services to</param>
+    /// <param name="configuration">Configuration containing HealthLake settings</param>
+    /// <returns>The service collection for chaining</returns>
     public static IServiceCollection AddHealthLakeServices(this IServiceCollection services, IConfiguration configuration)
     {
         if (services == null) throw new ArgumentNullException(nameof(services));

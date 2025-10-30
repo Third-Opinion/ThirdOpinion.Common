@@ -30,6 +30,13 @@ public class LangfuseService : ILangfuseService, IDisposable
         WriteIndented = false
     };
 
+    /// <summary>
+    /// Initializes a new instance of the LangfuseService
+    /// </summary>
+    /// <param name="httpClientFactory">Factory for creating HTTP clients</param>
+    /// <param name="config">Langfuse configuration options</param>
+    /// <param name="logger">Logger instance</param>
+    /// <param name="correlationIdProvider">Correlation ID provider for request tracking</param>
     public LangfuseService(
         IHttpClientFactory httpClientFactory,
         IOptions<LangfuseConfiguration> config,

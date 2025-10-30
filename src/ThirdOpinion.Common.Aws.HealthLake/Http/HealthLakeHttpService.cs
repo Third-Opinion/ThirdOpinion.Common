@@ -14,6 +14,12 @@ public class HealthLakeHttpService : IHealthLakeHttpService
     private readonly HttpClient _httpClient;
     private readonly HealthLakeConfig _config;
 
+    /// <summary>
+    /// Initializes a new instance of the HealthLakeHttpService
+    /// </summary>
+    /// <param name="logger">Logger instance</param>
+    /// <param name="httpClient">HTTP client for making requests</param>
+    /// <param name="config">HealthLake configuration options</param>
     public HealthLakeHttpService(
         ILogger<HealthLakeHttpService> logger,
         HttpClient httpClient,

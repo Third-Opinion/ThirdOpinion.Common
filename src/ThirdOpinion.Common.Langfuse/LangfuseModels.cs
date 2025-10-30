@@ -9,9 +9,15 @@ namespace ThirdOpinion.Common.Langfuse;
 /// </summary>
 public class LangfusePromptListResponse
 {
+    /// <summary>
+    /// List of prompt responses
+    /// </summary>
     [JsonPropertyName("data")]
     public List<LangfusePromptResponse> Data { get; set; } = new();
 
+    /// <summary>
+    /// Pagination metadata
+    /// </summary>
     [JsonPropertyName("meta")]
     public LangfuseMetadata? Meta { get; set; }
 }
@@ -21,15 +27,27 @@ public class LangfusePromptListResponse
 /// </summary>
 public class LangfuseMetadata
 {
+    /// <summary>
+    /// Current page number
+    /// </summary>
     [JsonPropertyName("page")]
     public int Page { get; set; }
 
+    /// <summary>
+    /// Number of items per page
+    /// </summary>
     [JsonPropertyName("limit")]
     public int Limit { get; set; }
 
+    /// <summary>
+    /// Total number of items
+    /// </summary>
     [JsonPropertyName("totalItems")]
     public int TotalItems { get; set; }
 
+    /// <summary>
+    /// Total number of pages
+    /// </summary>
     [JsonPropertyName("totalPages")]
     public int TotalPages { get; set; }
 }

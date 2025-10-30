@@ -76,6 +76,13 @@ public class HealthLakeFhirService : IFhirDestinationService
         "MeasureReport"
     };
 
+    /// <summary>
+    /// Initializes a new instance of the HealthLakeFhirService
+    /// </summary>
+    /// <param name="healthLakeClient">The AWS HealthLake client</param>
+    /// <param name="config">HealthLake configuration options</param>
+    /// <param name="logger">Logger instance</param>
+    /// <param name="healthLakeHttpService">HTTP service for HealthLake requests</param>
     public HealthLakeFhirService(
         IAmazonHealthLake healthLakeClient,
         IOptions<HealthLakeConfig> config,
@@ -97,6 +104,12 @@ public class HealthLakeFhirService : IFhirDestinationService
     /// <summary>
     /// Writes a FHIR resource to HealthLake with optional version control
     /// </summary>
+    /// <param name="resourceType">The FHIR resource type</param>
+    /// <param name="resourceId">The unique identifier for the resource</param>
+    /// <param name="resourceJson">The FHIR resource as JSON string</param>
+    /// <param name="ifMatchVersion">Optional version for conditional update</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The new version of the resource</returns>
     public async Task<string?> PutResourceAsync(string resourceType, string resourceId, string resourceJson, string? ifMatchVersion, CancellationToken cancellationToken = default)
     {
         ValidateResourceType(resourceType);
@@ -232,6 +245,7 @@ public class HealthLakeFhirService : IFhirDestinationService
         return SupportedResourceTypes.ToList().AsReadOnly();
     }
 
+    /// <inheritdoc />
     public async Task<WriteResult> WriteResourceAsync(string resourceJson, CancellationToken cancellationToken = default)
     {
         try
@@ -292,6 +306,14 @@ public class HealthLakeFhirService : IFhirDestinationService
         }
     }
 
+    /// <summary>
+    /// Handles the HTTP response from a PUT operation
+    /// </summary>
+    /// <param name="response">The HTTP response message</param>
+    /// <param name="resourceType">The FHIR resource type</param>
+    /// <param name="resourceId">The resource identifier</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The version of the resource if available</returns>
     private async Task<string?> HandlePutResponseAsync(HttpResponseMessage response, string resourceType, string resourceId, CancellationToken cancellationToken)
     {
         string? version = null;
@@ -365,6 +387,11 @@ public class HealthLakeFhirService : IFhirDestinationService
         }
     }
 
+    /// <summary>
+    /// Extracts error details from a FHIR OperationOutcome response
+    /// </summary>
+    /// <param name="responseContent">The response content as string</param>
+    /// <returns>Extracted error message or null</returns>
     private Task<string?> ExtractOperationOutcomeAsync(string responseContent)
     {
         try
@@ -411,6 +438,11 @@ public class HealthLakeFhirService : IFhirDestinationService
         return Task.FromResult<string?>(null);
     }
 
+    /// <summary>
+    /// Validates that the resource type is supported
+    /// </summary>
+    /// <param name="resourceType">The resource type to validate</param>
+    /// <exception cref="ArgumentException">Thrown when resource type is invalid</exception>
     private static void ValidateResourceType(string resourceType)
     {
         if (string.IsNullOrWhiteSpace(resourceType))
@@ -422,6 +454,11 @@ public class HealthLakeFhirService : IFhirDestinationService
                 nameof(resourceType));
     }
 
+    /// <summary>
+    /// Determines if an HTTP status code indicates a retryable error
+    /// </summary>
+    /// <param name="statusCode">The HTTP status code</param>
+    /// <returns>True if the error is retryable</returns>
     private static bool IsRetryableStatusCode(HttpStatusCode statusCode)
     {
         return statusCode == HttpStatusCode.TooManyRequests ||
@@ -430,12 +467,22 @@ public class HealthLakeFhirService : IFhirDestinationService
                statusCode == HttpStatusCode.RequestTimeout;
     }
 
+    /// <summary>
+    /// Validates that the resource ID is not null or empty
+    /// </summary>
+    /// <param name="resourceId">The resource ID to validate</param>
+    /// <exception cref="ArgumentException">Thrown when resource ID is invalid</exception>
     private static void ValidateResourceId(string resourceId)
     {
         if (string.IsNullOrWhiteSpace(resourceId))
             throw new ArgumentException("Resource ID cannot be null or empty.", nameof(resourceId));
     }
 
+    /// <summary>
+    /// Validates that the resource JSON is valid
+    /// </summary>
+    /// <param name="resourceJson">The JSON to validate</param>
+    /// <exception cref="ArgumentException">Thrown when JSON is invalid</exception>
     private static void ValidateResourceJson(string resourceJson)
     {
         if (string.IsNullOrWhiteSpace(resourceJson))
@@ -452,6 +499,9 @@ public class HealthLakeFhirService : IFhirDestinationService
         }
     }
 
+    /// <summary>
+    /// Disposes resources used by the service
+    /// </summary>
     public void Dispose()
     {
         _concurrencySemaphore?.Dispose();

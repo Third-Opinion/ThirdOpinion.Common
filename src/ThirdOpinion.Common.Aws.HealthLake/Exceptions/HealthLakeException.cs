@@ -17,39 +17,72 @@ public class HealthLakeException : FhirResourceException
     /// </summary>
     public string? AwsRequestId { get; protected set; }
 
+    /// <summary>
+    /// Initializes a new instance of HealthLakeException
+    /// </summary>
+    /// <param name="message">The error message</param>
     public HealthLakeException(string message) : base(message)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of HealthLakeException with an inner exception
+    /// </summary>
+    /// <param name="message">The error message</param>
+    /// <param name="innerException">The inner exception</param>
     public HealthLakeException(string message, Exception innerException) : base(message, innerException)
     {
     }
 
-    public HealthLakeException(string message, string resourceType, string resourceId) 
+    /// <summary>
+    /// Initializes a new instance of HealthLakeException for a specific resource
+    /// </summary>
+    /// <param name="message">The error message</param>
+    /// <param name="resourceType">The FHIR resource type</param>
+    /// <param name="resourceId">The resource identifier</param>
+    public HealthLakeException(string message, string resourceType, string resourceId)
         : base(message, resourceType, resourceId)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of HealthLakeException with full AWS context
+    /// </summary>
+    /// <param name="message">The error message</param>
+    /// <param name="resourceType">The FHIR resource type</param>
+    /// <param name="resourceId">The resource identifier</param>
+    /// <param name="statusCode">The HTTP status code</param>
+    /// <param name="awsErrorCode">The AWS error code</param>
+    /// <param name="awsRequestId">The AWS request ID</param>
     public HealthLakeException(
-        string message, 
-        string resourceType, 
-        string resourceId, 
+        string message,
+        string resourceType,
+        string resourceId,
         HttpStatusCode statusCode,
         string? awsErrorCode = null,
-        string? awsRequestId = null) 
+        string? awsRequestId = null)
         : base(message, resourceType, resourceId, statusCode)
     {
         AwsErrorCode = awsErrorCode;
         AwsRequestId = awsRequestId;
     }
 
+    /// <summary>
+    /// Initializes a new instance of HealthLakeException with an inner exception and AWS context
+    /// </summary>
+    /// <param name="message">The error message</param>
+    /// <param name="resourceType">The FHIR resource type</param>
+    /// <param name="resourceId">The resource identifier</param>
+    /// <param name="innerException">The inner exception</param>
+    /// <param name="awsErrorCode">The AWS error code</param>
+    /// <param name="awsRequestId">The AWS request ID</param>
     public HealthLakeException(
-        string message, 
-        string resourceType, 
-        string resourceId, 
+        string message,
+        string resourceType,
+        string resourceId,
         Exception innerException,
         string? awsErrorCode = null,
-        string? awsRequestId = null) 
+        string? awsRequestId = null)
         : base(message, resourceType, resourceId, innerException)
     {
         AwsErrorCode = awsErrorCode;
@@ -62,6 +95,11 @@ public class HealthLakeException : FhirResourceException
 /// </summary>
 public class HealthLakeAccessDeniedException : HealthLakeException
 {
+    /// <summary>
+    /// Initializes a new instance of HealthLakeAccessDeniedException
+    /// </summary>
+    /// <param name="message">The error message</param>
+    /// <param name="awsRequestId">The AWS request ID</param>
     public HealthLakeAccessDeniedException(string message, string? awsRequestId = null)
         : base(message)
     {
@@ -75,6 +113,13 @@ public class HealthLakeAccessDeniedException : HealthLakeException
 /// </summary>
 public class HealthLakeConflictException : HealthLakeException
 {
+    /// <summary>
+    /// Initializes a new instance of HealthLakeConflictException
+    /// </summary>
+    /// <param name="resourceType">The FHIR resource type</param>
+    /// <param name="resourceId">The resource identifier</param>
+    /// <param name="message">Optional custom error message</param>
+    /// <param name="awsRequestId">The AWS request ID</param>
     public HealthLakeConflictException(string resourceType, string resourceId, string? message = null, string? awsRequestId = null)
         : base(message ?? $"Resource conflict in HealthLake: {resourceType}/{resourceId}", resourceType, resourceId, HttpStatusCode.Conflict)
     {
@@ -92,6 +137,12 @@ public class HealthLakeThrottlingException : HealthLakeException
     /// </summary>
     public DateTimeOffset? RetryAfter { get; }
 
+    /// <summary>
+    /// Initializes a new instance of HealthLakeThrottlingException
+    /// </summary>
+    /// <param name="message">The error message</param>
+    /// <param name="retryAfter">When to retry the request</param>
+    /// <param name="awsRequestId">The AWS request ID</param>
     public HealthLakeThrottlingException(string message, DateTimeOffset? retryAfter = null, string? awsRequestId = null)
         : base(message)
     {

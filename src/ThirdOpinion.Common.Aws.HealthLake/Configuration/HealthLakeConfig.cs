@@ -3,11 +3,20 @@ using ThirdOpinion.Common.Aws.HealthLake.Retry;
 
 namespace ThirdOpinion.Common.Aws.HealthLake.Configuration;
 
+/// <summary>
+/// Configuration settings for AWS HealthLake integration
+/// </summary>
 public class HealthLakeConfig
 {
+    /// <summary>
+    /// AWS region where the HealthLake datastore is located
+    /// </summary>
     [Required]
     public string Region { get; set; } = string.Empty;
 
+    /// <summary>
+    /// HealthLake datastore identifier
+    /// </summary>
     [Required]
     public string DatastoreId { get; set; } = string.Empty;
 
@@ -18,12 +27,21 @@ public class HealthLakeConfig
     /// </summary>
     public string? ProfileName { get; set; }
 
+    /// <summary>
+    /// Maximum number of requests per minute for rate limiting
+    /// </summary>
     [Range(1, 10000)]
     public int RateLimitPerMinute { get; set; } = 100;
 
+    /// <summary>
+    /// Request timeout in seconds
+    /// </summary>
     [Range(1, 300)]
     public int RequestTimeoutSeconds { get; set; } = 60;
 
+    /// <summary>
+    /// Whether to use AWS SSO for authentication
+    /// </summary>
     public bool UseSSO { get; set; } = true;
     
     /// <summary>

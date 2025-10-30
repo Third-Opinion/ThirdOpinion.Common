@@ -11,6 +11,15 @@ public static class BedrockTracingExtensions
     /// <summary>
     /// Converts a ModelInvocationRequest to a LangFuse generation request
     /// </summary>
+    /// <typeparam name="TRequest">The type of the request object</typeparam>
+    /// <param name="request">The model invocation request</param>
+    /// <param name="traceId">The trace identifier</param>
+    /// <param name="generationId">The generation identifier</param>
+    /// <param name="startTime">The start time of the generation</param>
+    /// <param name="promptName">The name of the prompt</param>
+    /// <param name="promptVersion">The version of the prompt</param>
+    /// <param name="correlationIdProvider">Optional correlation ID provider</param>
+    /// <returns>A LangFuse generation request</returns>
     public static LangfuseGenerationRequest ToLangfuseGeneration<TRequest>(
         this TRequest request,
         string traceId,
@@ -164,6 +173,12 @@ public static class BedrockTracingExtensions
     /// <summary>
     /// Updates a LangFuse generation with response data
     /// </summary>
+    /// <typeparam name="TResponse">The type of the response object</typeparam>
+    /// <param name="generation">The generation request to update</param>
+    /// <param name="response">The response data</param>
+    /// <param name="cost">Optional cost calculation</param>
+    /// <param name="region">Optional AWS region</param>
+    /// <returns>The updated generation request</returns>
     public static LangfuseGenerationRequest WithResponse<TResponse>(
         this LangfuseGenerationRequest generation,
         TResponse response,
@@ -267,6 +282,12 @@ public static class BedrockTracingExtensions
     /// <summary>
     /// Creates a LangFuse trace request from Bedrock context
     /// </summary>
+    /// <param name="traceId">The trace identifier</param>
+    /// <param name="traceName">The name of the trace</param>
+    /// <param name="traceMetadata">Optional trace metadata</param>
+    /// <param name="input">Optional input data</param>
+    /// <param name="userId">Optional user identifier</param>
+    /// <returns>A Bedrock trace request</returns>
     public static LangfuseBedrockTraceRequest CreateBedrockTrace(
         string traceId,
         string traceName,
@@ -321,6 +342,9 @@ public static class BedrockTracingExtensions
     /// <summary>
     /// Creates ingestion events for trace and generation
     /// </summary>
+    /// <param name="trace">The trace request</param>
+    /// <param name="generation">The generation request</param>
+    /// <returns>An ingestion batch containing both events</returns>
     public static LangfuseIngestionBatch CreateIngestionBatch(
         LangfuseBedrockTraceRequest trace,
         LangfuseGenerationRequest generation)
@@ -403,6 +427,8 @@ public static class BedrockTracingExtensions
     /// <summary>
     /// Extracts a readable model name from the full Bedrock model ID
     /// </summary>
+    /// <param name="modelId">The full Bedrock model identifier</param>
+    /// <returns>A readable model name</returns>
     public static string ExtractModelName(string modelId)
     {
         if (string.IsNullOrWhiteSpace(modelId))
@@ -509,6 +535,8 @@ public static class BedrockTracingExtensions
     /// <summary>
     /// Safely converts an object to JSON string for metadata
     /// </summary>
+    /// <param name="obj">The object to convert</param>
+    /// <returns>JSON string representation</returns>
     public static string ToJsonString(this object obj)
     {
         try

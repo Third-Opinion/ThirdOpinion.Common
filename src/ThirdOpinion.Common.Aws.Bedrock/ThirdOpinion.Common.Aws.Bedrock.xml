@@ -358,6 +358,16 @@
             Service for invoking AI models via AWS Bedrock runtime
             </summary>
         </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.#ctor(Amazon.BedrockRuntime.IAmazonBedrockRuntime,Microsoft.Extensions.Logging.ILogger{ThirdOpinion.Common.Aws.Bedrock.BedrockService},ThirdOpinion.Common.Logging.ICorrelationIdProvider,ThirdOpinion.Common.Langfuse.ILangfuseService,ThirdOpinion.Common.Aws.Bedrock.IBedrockPricingService)">
+            <summary>
+            Initializes a new instance of the BedrockService
+            </summary>
+            <param name="bedrockRuntimeClient">The AWS Bedrock runtime client</param>
+            <param name="logger">Logger instance</param>
+            <param name="correlationIdProvider">Optional correlation ID provider</param>
+            <param name="langfuseService">Optional Langfuse service for tracing</param>
+            <param name="pricingService">Optional pricing service for cost calculation</param>
+        </member>
         <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.InvokeModelAsync(System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object},System.Threading.CancellationToken)">
             <inheritdoc />
         </member>

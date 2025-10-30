@@ -65,7 +65,18 @@ public interface IFhirDestinationService
 /// </summary>
 public class WriteResult
 {
+    /// <summary>
+    /// Indicates whether the write operation was successful
+    /// </summary>
     public bool Success { get; set; }
+
+    /// <summary>
+    /// Error message if the operation failed, null if successful
+    /// </summary>
     public string? ErrorMessage { get; set; }
+
+    /// <summary>
+    /// Indicates whether the operation can be retried
+    /// </summary>
     public bool IsRetryable { get; set; }
 }
