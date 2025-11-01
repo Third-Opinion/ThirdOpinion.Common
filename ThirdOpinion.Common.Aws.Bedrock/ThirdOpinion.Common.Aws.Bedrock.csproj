@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <IsPackable>true</IsPackable>
+        <PackageId>ThirdOpinion.Common.Aws.Bedrock</PackageId>
+        <Version>1.0.0-alpha.5</Version>
+        <Authors>ThirdOpinion</Authors>
+        <Company>ThirdOpinion</Company>
+        <Description>AWS Bedrock AI/ML service integration for ThirdOpinion applications</Description>
+        <PackageTags>aws;bedrock;ai;ml;llm</PackageTags>
+        <RepositoryUrl>https://github.com/thirdopinion/common</RepositoryUrl>
+        <TargetFramework>net8.0</TargetFramework>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <DocumentationFile>$(OutputPath)ThirdOpinion.Common.Aws.Bedrock.xml</DocumentationFile>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <NoWarn>1591</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AWSSDK.Core" Version="4.0.1.3"/>
+        <PackageReference Include="AWSSDK.Bedrock" Version="4.0.2"/>
+        <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.2"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9"/>
+        <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.9"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.9"/>
+        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.9"/>
+        <PackageReference Include="System.Text.Json" Version="9.0.0"/>
+        <PackageReference Include="Polly" Version="8.5.2"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\ThirdOpinion.Common.Langfuse\ThirdOpinion.Common.Langfuse.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Logging\ThirdOpinion.Common.Logging.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Misc\ThirdOpinion.Common.Misc.csproj"/>
+    </ItemGroup>
+
+</Project>
