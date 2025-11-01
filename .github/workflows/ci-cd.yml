@@ -248,82 +248,38 @@ jobs:
         echo "  Final version: $VERSION"
         echo "  Version source: $VERSION_SOURCE"
 
-        # Update all project versions
-        find src -name "*.csproj" -exec sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" {} \;
-        find . -name "ThirdOpinion.Common.Fhir.csproj" -exec sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" {} \;
-
         # For assembly versions, use the base version (without pre-release suffixes)
         ASSEMBLY_VERSION=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' || echo "$BASE_VERSION")
 
-        # Update assembly versions for all projects
-        find src -name "*.csproj" -exec sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$ASSEMBLY_VERSION.0<\/AssemblyVersion>/g" {} \;
-        find src -name "*.csproj" -exec sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$ASSEMBLY_VERSION.0<\/FileVersion>/g" {} \;
+        # Update main project version
+        sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" src/ThirdOpinion.Common.csproj
+        sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$ASSEMBLY_VERSION.0<\/AssemblyVersion>/g" src/ThirdOpinion.Common.csproj
+        sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$ASSEMBLY_VERSION.0<\/FileVersion>/g" src/ThirdOpinion.Common.csproj
 
-        echo "Updated all package versions to: $VERSION"
-        echo "Updated assembly versions to: $ASSEMBLY_VERSION.0"
+        echo "Updated package version to: $VERSION"
+        echo "Updated assembly version to: $ASSEMBLY_VERSION.0"
 
-        # Show sample updated project file for verification
-        echo "Sample updated project file version section:"
+        # Show updated project file for verification
+        echo "Updated project file version section:"
         grep -A2 -B2 "<Version>" src/ThirdOpinion.Common.csproj || echo "Could not find version in main project file"
 
-    - name: Build sub-projects first
+    - name: Build solution
       run: |
         dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
 
-    - name: Pack NuGet packages
+    - name: Pack combined NuGet package
       run: |
-        echo "Creating packages for all projects..."
+        echo "Creating combined ThirdOpinion.Common package..."
         VERSION=${{ steps.version.outputs.version }}
 
-        # Pack individual component packages first
-        for project in src/ThirdOpinion.Common.*/ThirdOpinion.Common.*.csproj; do
-          if [[ -f "$project" ]]; then
-            echo "Packing $(basename "$project" .csproj)..."
-            dotnet pack "$project" \
-              --configuration Release \
-              --output ./packages/ \
-              -p:Version=$VERSION \
-              --no-build
-          fi
-        done
-
-        # Note: ThirdOpinion.Common.Fhir project file missing, skipping
-
-        # Update main project to use package references instead of project references
-        echo "Converting main project to use package references..."
-        MAIN_PROJ="src/ThirdOpinion.Common.csproj"
-
-        # Backup original file
-        cp "$MAIN_PROJ" "$MAIN_PROJ.backup"
-
-        # Replace ProjectReference with PackageReference
-        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Aws\.Cognito\\ThirdOpinion\.Common\.Aws\.Cognito\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Aws.Cognito" Version="'$VERSION'" />|g' "$MAIN_PROJ"
-        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Aws\.DynamoDb\\ThirdOpinion\.Common\.Aws\.DynamoDb\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Aws.DynamoDb" Version="'$VERSION'" />|g' "$MAIN_PROJ"
-        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Aws\.S3\\ThirdOpinion\.Common\.Aws\.S3\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Aws.S3" Version="'$VERSION'" />|g' "$MAIN_PROJ"
-        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Aws\.SQS\\ThirdOpinion\.Common\.Aws\.SQS\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Aws.SQS" Version="'$VERSION'" />|g' "$MAIN_PROJ"
-        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Aws\.HealthLake\\ThirdOpinion\.Common\.Aws\.HealthLake\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Aws.HealthLake" Version="'$VERSION'" />|g' "$MAIN_PROJ"
-        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Aws\.Bedrock\\ThirdOpinion\.Common\.Aws\.Bedrock\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Aws.Bedrock" Version="'$VERSION'" />|g' "$MAIN_PROJ"
-        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.AthenaEhr\\ThirdOpinion\.Common\.AthenaEhr\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.AthenaEhr" Version="'$VERSION'" />|g' "$MAIN_PROJ"
-        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Misc\\ThirdOpinion\.Common\.Misc\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Misc" Version="'$VERSION'" />|g' "$MAIN_PROJ"
-        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Logging\\ThirdOpinion\.Common\.Logging\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Logging" Version="'$VERSION'" />|g' "$MAIN_PROJ"
-        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Fhir\.Documents\\ThirdOpinion\.Common\.Fhir\.Documents\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Fhir.Documents" Version="'$VERSION'" />|g' "$MAIN_PROJ"
-        sed -i 's|<ProjectReference Include="ThirdOpinion\.Common\.Langfuse\\ThirdOpinion\.Common\.Langfuse\.csproj" PrivateAssets="all" />|<PackageReference Include="ThirdOpinion.Common.Langfuse" Version="'$VERSION'" />|g' "$MAIN_PROJ"
-
-        # Add local package source to find the packages we just created
-        echo "Adding local package source..."
-        dotnet nuget add source "$(pwd)/packages" --name "LocalPackages"
-
-        # Pack main meta-package using the newly created packages
-        echo "Packing ThirdOpinion.Common meta-package..."
+        # Pack single combined package with all sub-projects as embedded DLLs
+        echo "Packing ThirdOpinion.Common (combined package with all sub-projects)..."
         dotnet pack src/ThirdOpinion.Common.csproj \
           --configuration Release \
           --output ./packages/ \
-          -p:Version=$VERSION \
-          --source "LocalPackages" \
-          --source "nuget.org"
+          -p:PackageVersion=$VERSION
 
-        # Restore original file for future development
-        mv "$MAIN_PROJ.backup" "$MAIN_PROJ"
+        echo "✅ Package created successfully"
 
     - name: Upload packages as artifacts
       uses: actions/upload-artifact@v4
