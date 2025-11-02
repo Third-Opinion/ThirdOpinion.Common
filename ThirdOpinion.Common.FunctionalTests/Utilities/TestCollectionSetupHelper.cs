@@ -82,6 +82,7 @@ public static class TestCollectionSetupHelper
         IConfiguration configuration)
     {
         // Add required infrastructure services
+        services.AddHttpClient(); // Required by LangfuseService and other services
         services.AddRateLimiting();
         services.AddRetryPolicies();
         services.AddFhirToolsLogging();
