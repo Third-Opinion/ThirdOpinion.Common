@@ -1,12 +1,14 @@
-using Amazon.BedrockRuntime;
-using Amazon.BedrockRuntime.Model;
-using Microsoft.Extensions.Configuration;
-using ThirdOpinion.Common.FunctionalTests.Infrastructure;
-using Xunit.Abstractions;
-using Shouldly;
+using System.Net;
 using System.Text;
 using System.Text.Json;
+using Amazon.Bedrock.Model;
+using Amazon.BedrockRuntime.Model;
+using Amazon.Runtime.EventStreams;
+using Microsoft.Extensions.Configuration;
 using ThirdOpinion.Common.Aws.Bedrock;
+using ThirdOpinion.Common.FunctionalTests.Infrastructure;
+using Xunit.Abstractions;
+using ListFoundationModelsResponse = Amazon.Bedrock.Model.ListFoundationModelsResponse;
 
 namespace ThirdOpinion.Common.FunctionalTests.Tests;
 
@@ -14,16 +16,19 @@ namespace ThirdOpinion.Common.FunctionalTests.Tests;
 public class BedrockFunctionalTests : BaseIntegrationTest
 {
     private readonly string _defaultModelId;
+    private readonly int _maxTokens;
     private readonly string _streamingModelId;
     private readonly string _testPrompt;
-    private readonly int _maxTokens;
 
     public BedrockFunctionalTests(ITestOutputHelper output) : base(output)
     {
-        _defaultModelId = Configuration.GetValue<string>("Bedrock:DefaultModelId") ?? "anthropic.claude-3-haiku-20240307-v1:0";
-        _streamingModelId = Configuration.GetValue<string>("Bedrock:StreamingModelId") ?? "anthropic.claude-3-sonnet-20240229-v1:0";
-        _testPrompt = Configuration.GetValue<string>("Bedrock:TestPrompt") ?? "Hello, this is a test prompt for functional testing.";
-        _maxTokens = Configuration.GetValue<int>("Bedrock:MaxTokens", 100);
+        _defaultModelId = Configuration.GetValue<string>("Bedrock:DefaultModelId") ??
+                          "anthropic.claude-3-haiku-20240307-v1:0";
+        _streamingModelId = Configuration.GetValue<string>("Bedrock:StreamingModelId") ??
+                            "anthropic.claude-3-sonnet-20240229-v1:0";
+        _testPrompt = Configuration.GetValue<string>("Bedrock:TestPrompt") ??
+                      "Hello, this is a test prompt for functional testing.";
+        _maxTokens = Configuration.GetValue("Bedrock:MaxTokens", 100);
     }
 
     [Fact]
@@ -31,14 +36,16 @@ public class BedrockFunctionalTests : BaseIntegrationTest
     {
         WriteOutput("Testing Bedrock client - listing foundation models...");
 
-        var request = new Amazon.Bedrock.Model.ListFoundationModelsRequest();
-        var response = await BedrockClient.ListFoundationModelsAsync(request);
+        var request = new ListFoundationModelsRequest();
+        ListFoundationModelsResponse? response
+            = await BedrockClient.ListFoundationModelsAsync(request);
 
         WriteOutput($"Found {response.ModelSummaries.Count} foundation models");
 
         response.ShouldNotBeNull();
         response.ModelSummaries.ShouldNotBeEmpty();
-        response.ModelSummaries.Any(m => m.ModelId.Contains("claude")).ShouldBeTrue("Should find Claude models");
+        response.ModelSummaries.Any(m => m.ModelId.Contains("claude"))
+            .ShouldBeTrue("Should find Claude models");
 
         WriteOutput("✓ Successfully listed foundation models");
     }
@@ -58,7 +65,7 @@ public class BedrockFunctionalTests : BaseIntegrationTest
             }
         };
 
-        var body = JsonSerializer.Serialize(claudeRequest);
+        string body = JsonSerializer.Serialize(claudeRequest);
         var request = new InvokeModelRequest
         {
             ModelId = _defaultModelId,
@@ -67,15 +74,15 @@ public class BedrockFunctionalTests : BaseIntegrationTest
             Accept = "application/json"
         };
 
-        var response = await BedrockRuntimeClient.InvokeModelAsync(request);
+        InvokeModelResponse? response = await BedrockRuntimeClient.InvokeModelAsync(request);
 
         WriteOutput($"Response status: {response.HttpStatusCode}");
 
         response.ShouldNotBeNull();
-        response.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        response.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
         response.Body.ShouldNotBeNull();
 
-        var responseBody = await new StreamReader(response.Body).ReadToEndAsync();
+        string responseBody = await new StreamReader(response.Body).ReadToEndAsync();
         responseBody.ShouldNotBeNullOrEmpty();
 
         WriteOutput($"Response length: {responseBody.Length} characters");
@@ -97,7 +104,7 @@ public class BedrockFunctionalTests : BaseIntegrationTest
             }
         };
 
-        var body = JsonSerializer.Serialize(claudeRequest);
+        string body = JsonSerializer.Serialize(claudeRequest);
         var request = new InvokeModelWithResponseStreamRequest
         {
             ModelId = _streamingModelId,
@@ -106,25 +113,24 @@ public class BedrockFunctionalTests : BaseIntegrationTest
             Accept = "application/json"
         };
 
-        var response = await BedrockRuntimeClient.InvokeModelWithResponseStreamAsync(request);
+        InvokeModelWithResponseStreamResponse? response
+            = await BedrockRuntimeClient.InvokeModelWithResponseStreamAsync(request);
 
         WriteOutput($"Response status: {response.HttpStatusCode}");
 
         response.ShouldNotBeNull();
-        response.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        response.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
         response.Body.ShouldNotBeNull();
 
         var chunkCount = 0;
         var totalLength = 0L;
 
-        await foreach (var streamEvent in response.Body)
-        {
+        await foreach (IEventStreamEvent? streamEvent in response.Body)
             if (streamEvent is PayloadPart payloadPart && payloadPart.Bytes != null)
             {
                 chunkCount++;
                 totalLength += payloadPart.Bytes.Length;
             }
-        }
 
         WriteOutput($"Received {chunkCount} chunks, total {totalLength} bytes");
         chunkCount.ShouldBeGreaterThan(0, "Should receive streaming chunks");
@@ -176,13 +182,9 @@ public class BedrockFunctionalTests : BaseIntegrationTest
         }
 
         if (LangfuseService == null)
-        {
             WriteOutput("⚠️ LangfuseService not configured, test will run without tracing");
-        }
         else
-        {
             WriteOutput("✓ Both BedrockService and LangfuseService configured, tracing enabled");
-        }
 
         WriteOutput("Testing BedrockService with Langfuse tracing integration...");
 
@@ -220,7 +222,7 @@ public class BedrockFunctionalTests : BaseIntegrationTest
             }
         };
 
-        var body = JsonSerializer.Serialize(claudeRequest);
+        string body = JsonSerializer.Serialize(claudeRequest);
         var request = new InvokeModelRequest
         {
             ModelId = "invalid-model-id",

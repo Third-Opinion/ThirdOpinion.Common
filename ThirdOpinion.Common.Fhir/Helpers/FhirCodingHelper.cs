@@ -1,14 +1,165 @@
+using System.Reflection;
 using Hl7.Fhir.Model;
 
 namespace ThirdOpinion.Common.Fhir.Helpers;
 
 /// <summary>
-/// Provides medical coding system constants and factory methods for FHIR CodeableConcept objects
+///     Provides medical coding system constants and factory methods for FHIR CodeableConcept objects
 /// </summary>
 public static class FhirCodingHelper
 {
     /// <summary>
-    /// FHIR System URIs for various coding systems
+    ///     Creates a CodeableConcept with a single coding
+    /// </summary>
+    /// <param name="system">The coding system URI</param>
+    /// <param name="code">The code value</param>
+    /// <param name="display">The display text (optional)</param>
+    /// <returns>A new CodeableConcept</returns>
+    public static CodeableConcept CreateCodeableConcept(string system,
+        string code,
+        string? display = null)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(system);
+        ArgumentException.ThrowIfNullOrEmpty(code);
+
+        var concept = new CodeableConcept
+        {
+            Coding = new List<Coding>
+            {
+                new()
+                {
+                    System = system,
+                    Code = code,
+                    Display = display
+                }
+            }
+        };
+
+        if (!string.IsNullOrEmpty(display)) concept.Text = display;
+
+        return concept;
+    }
+
+    /// <summary>
+    ///     Creates a SNOMED-CT CodeableConcept
+    /// </summary>
+    /// <param name="code">The SNOMED code</param>
+    /// <param name="display">The display text (optional)</param>
+    /// <returns>A new CodeableConcept with SNOMED coding</returns>
+    public static CodeableConcept CreateSnomedConcept(string code, string? display = null)
+    {
+        return CreateCodeableConcept(Systems.SNOMED_SYSTEM, code, display);
+    }
+
+    /// <summary>
+    ///     Creates an ICD-10 CodeableConcept
+    /// </summary>
+    /// <param name="code">The ICD-10 code</param>
+    /// <param name="display">The display text (optional)</param>
+    /// <returns>A new CodeableConcept with ICD-10 coding</returns>
+    public static CodeableConcept CreateIcd10Concept(string code, string? display = null)
+    {
+        return CreateCodeableConcept(Systems.ICD10_SYSTEM, code, display);
+    }
+
+    /// <summary>
+    ///     Creates a LOINC CodeableConcept
+    /// </summary>
+    /// <param name="code">The LOINC code</param>
+    /// <param name="display">The display text (optional)</param>
+    /// <returns>A new CodeableConcept with LOINC coding</returns>
+    public static CodeableConcept CreateLoincConcept(string code, string? display = null)
+    {
+        return CreateCodeableConcept(Systems.LOINC_SYSTEM, code, display);
+    }
+
+    /// <summary>
+    ///     Creates an NCI Thesaurus CodeableConcept
+    /// </summary>
+    /// <param name="code">The NCI code</param>
+    /// <param name="display">The display text (optional)</param>
+    /// <returns>A new CodeableConcept with NCI coding</returns>
+    public static CodeableConcept CreateNciConcept(string code, string? display = null)
+    {
+        return CreateCodeableConcept(Systems.NCI_SYSTEM, code, display);
+    }
+
+    /// <summary>
+    ///     Creates a CodeableConcept from a constant name using reflection
+    /// </summary>
+    /// <param name="constantName">The name of the constant to lookup</param>
+    /// <param name="display">The display text (optional)</param>
+    /// <returns>A new CodeableConcept if constant found, null otherwise</returns>
+    public static CodeableConcept? CreateConceptFromConstant(string constantName,
+        string? display = null)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(constantName);
+
+        // Search in SNOMED codes
+        FieldInfo? snomedField = typeof(SnomedCodes).GetField(constantName);
+        if (snomedField != null)
+        {
+            var code = snomedField.GetValue(null)?.ToString();
+            if (code != null) return CreateSnomedConcept(code, display);
+        }
+
+        // Search in ICD codes
+        FieldInfo? icdField = typeof(IcdCodes).GetField(constantName);
+        if (icdField != null)
+        {
+            var code = icdField.GetValue(null)?.ToString();
+            if (code != null) return CreateIcd10Concept(code, display);
+        }
+
+        // Search in LOINC codes
+        FieldInfo? loincField = typeof(LoincCodes).GetField(constantName);
+        if (loincField != null)
+        {
+            var code = loincField.GetValue(null)?.ToString();
+            if (code != null) return CreateLoincConcept(code, display);
+        }
+
+        // Search in NCI codes
+        FieldInfo? nciField = typeof(NciCodes).GetField(constantName);
+        if (nciField != null)
+        {
+            var code = nciField.GetValue(null)?.ToString();
+            if (code != null) return CreateNciConcept(code, display);
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    ///     Adds an additional coding to an existing CodeableConcept
+    /// </summary>
+    /// <param name="concept">The CodeableConcept to add to</param>
+    /// <param name="system">The coding system URI</param>
+    /// <param name="code">The code value</param>
+    /// <param name="display">The display text (optional)</param>
+    /// <returns>The updated CodeableConcept</returns>
+    public static CodeableConcept AddCoding(CodeableConcept concept,
+        string system,
+        string code,
+        string? display = null)
+    {
+        ArgumentNullException.ThrowIfNull(concept);
+        ArgumentException.ThrowIfNullOrEmpty(system);
+        ArgumentException.ThrowIfNullOrEmpty(code);
+
+        concept.Coding ??= new List<Coding>();
+        concept.Coding.Add(new Coding
+        {
+            System = system,
+            Code = code,
+            Display = display
+        });
+
+        return concept;
+    }
+
+    /// <summary>
+    ///     FHIR System URIs for various coding systems
     /// </summary>
     public static class Systems
     {
@@ -26,7 +177,7 @@ public static class FhirCodingHelper
     }
 
     /// <summary>
-    /// SNOMED-CT codes commonly used in oncology
+    ///     SNOMED-CT codes commonly used in oncology
     /// </summary>
     public static class SnomedCodes
     {
@@ -56,7 +207,7 @@ public static class FhirCodingHelper
     }
 
     /// <summary>
-    /// ICD-10 codes for cancer diagnoses
+    ///     ICD-10 codes for cancer diagnoses
     /// </summary>
     public static class IcdCodes
     {
@@ -77,7 +228,7 @@ public static class FhirCodingHelper
     }
 
     /// <summary>
-    /// LOINC codes for laboratory tests and clinical observations
+    ///     LOINC codes for laboratory tests and clinical observations
     /// </summary>
     public static class LoincCodes
     {
@@ -110,7 +261,7 @@ public static class FhirCodingHelper
     }
 
     /// <summary>
-    /// NCI Thesaurus codes for oncology concepts
+    ///     NCI Thesaurus codes for oncology concepts
     /// </summary>
     public static class NciCodes
     {
@@ -140,164 +291,5 @@ public static class FhirCodingHelper
 
         /// <summary>Progressive disease</summary>
         public const string PROGRESSIVE_DISEASE = "C35571";
-    }
-
-    /// <summary>
-    /// Creates a CodeableConcept with a single coding
-    /// </summary>
-    /// <param name="system">The coding system URI</param>
-    /// <param name="code">The code value</param>
-    /// <param name="display">The display text (optional)</param>
-    /// <returns>A new CodeableConcept</returns>
-    public static CodeableConcept CreateCodeableConcept(string system, string code, string? display = null)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(system);
-        ArgumentException.ThrowIfNullOrEmpty(code);
-
-        var concept = new CodeableConcept
-        {
-            Coding = new List<Coding>
-            {
-                new Coding
-                {
-                    System = system,
-                    Code = code,
-                    Display = display
-                }
-            }
-        };
-
-        if (!string.IsNullOrEmpty(display))
-        {
-            concept.Text = display;
-        }
-
-        return concept;
-    }
-
-    /// <summary>
-    /// Creates a SNOMED-CT CodeableConcept
-    /// </summary>
-    /// <param name="code">The SNOMED code</param>
-    /// <param name="display">The display text (optional)</param>
-    /// <returns>A new CodeableConcept with SNOMED coding</returns>
-    public static CodeableConcept CreateSnomedConcept(string code, string? display = null)
-    {
-        return CreateCodeableConcept(Systems.SNOMED_SYSTEM, code, display);
-    }
-
-    /// <summary>
-    /// Creates an ICD-10 CodeableConcept
-    /// </summary>
-    /// <param name="code">The ICD-10 code</param>
-    /// <param name="display">The display text (optional)</param>
-    /// <returns>A new CodeableConcept with ICD-10 coding</returns>
-    public static CodeableConcept CreateIcd10Concept(string code, string? display = null)
-    {
-        return CreateCodeableConcept(Systems.ICD10_SYSTEM, code, display);
-    }
-
-    /// <summary>
-    /// Creates a LOINC CodeableConcept
-    /// </summary>
-    /// <param name="code">The LOINC code</param>
-    /// <param name="display">The display text (optional)</param>
-    /// <returns>A new CodeableConcept with LOINC coding</returns>
-    public static CodeableConcept CreateLoincConcept(string code, string? display = null)
-    {
-        return CreateCodeableConcept(Systems.LOINC_SYSTEM, code, display);
-    }
-
-    /// <summary>
-    /// Creates an NCI Thesaurus CodeableConcept
-    /// </summary>
-    /// <param name="code">The NCI code</param>
-    /// <param name="display">The display text (optional)</param>
-    /// <returns>A new CodeableConcept with NCI coding</returns>
-    public static CodeableConcept CreateNciConcept(string code, string? display = null)
-    {
-        return CreateCodeableConcept(Systems.NCI_SYSTEM, code, display);
-    }
-
-    /// <summary>
-    /// Creates a CodeableConcept from a constant name using reflection
-    /// </summary>
-    /// <param name="constantName">The name of the constant to lookup</param>
-    /// <param name="display">The display text (optional)</param>
-    /// <returns>A new CodeableConcept if constant found, null otherwise</returns>
-    public static CodeableConcept? CreateConceptFromConstant(string constantName, string? display = null)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(constantName);
-
-        // Search in SNOMED codes
-        var snomedField = typeof(SnomedCodes).GetField(constantName);
-        if (snomedField != null)
-        {
-            var code = snomedField.GetValue(null)?.ToString();
-            if (code != null)
-            {
-                return CreateSnomedConcept(code, display);
-            }
-        }
-
-        // Search in ICD codes
-        var icdField = typeof(IcdCodes).GetField(constantName);
-        if (icdField != null)
-        {
-            var code = icdField.GetValue(null)?.ToString();
-            if (code != null)
-            {
-                return CreateIcd10Concept(code, display);
-            }
-        }
-
-        // Search in LOINC codes
-        var loincField = typeof(LoincCodes).GetField(constantName);
-        if (loincField != null)
-        {
-            var code = loincField.GetValue(null)?.ToString();
-            if (code != null)
-            {
-                return CreateLoincConcept(code, display);
-            }
-        }
-
-        // Search in NCI codes
-        var nciField = typeof(NciCodes).GetField(constantName);
-        if (nciField != null)
-        {
-            var code = nciField.GetValue(null)?.ToString();
-            if (code != null)
-            {
-                return CreateNciConcept(code, display);
-            }
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Adds an additional coding to an existing CodeableConcept
-    /// </summary>
-    /// <param name="concept">The CodeableConcept to add to</param>
-    /// <param name="system">The coding system URI</param>
-    /// <param name="code">The code value</param>
-    /// <param name="display">The display text (optional)</param>
-    /// <returns>The updated CodeableConcept</returns>
-    public static CodeableConcept AddCoding(CodeableConcept concept, string system, string code, string? display = null)
-    {
-        ArgumentNullException.ThrowIfNull(concept);
-        ArgumentException.ThrowIfNullOrEmpty(system);
-        ArgumentException.ThrowIfNullOrEmpty(code);
-
-        concept.Coding ??= new List<Coding>();
-        concept.Coding.Add(new Coding
-        {
-            System = system,
-            Code = code,
-            Display = display
-        });
-
-        return concept;
     }
 }

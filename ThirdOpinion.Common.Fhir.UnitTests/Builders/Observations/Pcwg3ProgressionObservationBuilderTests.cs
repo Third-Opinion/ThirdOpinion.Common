@@ -8,9 +8,9 @@ namespace ThirdOpinion.Common.Fhir.UnitTests.Builders.Observations;
 public class Pcwg3ProgressionObservationBuilderTests
 {
     private readonly AiInferenceConfiguration _configuration;
-    private readonly ResourceReference _patientReference;
     private readonly ResourceReference _deviceReference;
     private readonly ResourceReference _focusReference;
+    private readonly ResourceReference _patientReference;
     private readonly Fact[] _sampleFacts;
 
     public Pcwg3ProgressionObservationBuilderTests()
@@ -52,7 +52,7 @@ public class Pcwg3ProgressionObservationBuilderTests
         var builder = new Pcwg3ProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithInferenceId("pcwg3-test-001")
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
@@ -90,31 +90,32 @@ public class Pcwg3ProgressionObservationBuilderTests
         observation.Component.Count.ShouldBeGreaterThan(0);
 
         // Check for initial lesions component
-        var initialLesionsComponent = observation.Component
+        Observation.ComponentComponent? initialLesionsComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "initial-lesions"));
         initialLesionsComponent.ShouldNotBeNull();
         ((FhirString)initialLesionsComponent.Value).Value.ShouldBe("new lesions");
 
         // Check for confirmation date component
-        var confirmationDateComponent = observation.Component
+        Observation.ComponentComponent? confirmationDateComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "confirmation-date"));
         confirmationDateComponent.ShouldNotBeNull();
 
         // Check for time between scans component
-        var timeBetweenScansComponent = observation.Component
+        Observation.ComponentComponent? timeBetweenScansComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "time-between-scans"));
         timeBetweenScansComponent.ShouldNotBeNull();
         ((FhirString)timeBetweenScansComponent.Value).Value.ShouldBe("12 weeks");
 
         // Check for confidence component
-        var confidenceComponent = observation.Component
+        Observation.ComponentComponent? confidenceComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "LA11892-6"));
         confidenceComponent.ShouldNotBeNull();
         ((Quantity)confidenceComponent.Value).Value.ShouldBe(0.85m);
 
         // Check supporting facts extensions
         observation.Extension.ShouldNotBeEmpty();
-        observation.Extension.Any(e => e.Url == "https://thirdopinion.io/clinical-fact").ShouldBeTrue();
+        observation.Extension.Any(e => e.Url == "https://thirdopinion.io/clinical-fact")
+            .ShouldBeTrue();
 
         // Check method
         observation.Method.ShouldNotBeNull();
@@ -128,7 +129,7 @@ public class Pcwg3ProgressionObservationBuilderTests
         var builder = new Pcwg3ProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_focusReference)
@@ -153,7 +154,7 @@ public class Pcwg3ProgressionObservationBuilderTests
         var builder = new Pcwg3ProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_focusReference)
@@ -212,7 +213,7 @@ public class Pcwg3ProgressionObservationBuilderTests
         var builder = new Pcwg3ProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_focusReference)
@@ -241,7 +242,7 @@ public class Pcwg3ProgressionObservationBuilderTests
         var builder = new Pcwg3ProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_focusReference)
@@ -250,7 +251,7 @@ public class Pcwg3ProgressionObservationBuilderTests
             .Build();
 
         // Assert
-        var additionalLesionsComponent = observation.Component
+        Observation.ComponentComponent? additionalLesionsComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "additional-lesions"));
         additionalLesionsComponent.ShouldNotBeNull();
         ((FhirString)additionalLesionsComponent.Value).Value.ShouldBe("Multiple new bone lesions");
@@ -264,7 +265,7 @@ public class Pcwg3ProgressionObservationBuilderTests
         var testDate = new DateTime(2025, 4, 23, 14, 30, 0);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_focusReference)
@@ -287,7 +288,7 @@ public class Pcwg3ProgressionObservationBuilderTests
         var note2 = "Confirmation scan required per PCWG3 criteria";
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_focusReference)
@@ -299,8 +300,8 @@ public class Pcwg3ProgressionObservationBuilderTests
         // Assert
         observation.Note.ShouldNotBeNull();
         observation.Note.Count.ShouldBe(2);
-        observation.Note[0].Text.ToString().ShouldBe(note1);
-        observation.Note[1].Text.ToString().ShouldBe(note2);
+        observation.Note[0].Text.ShouldBe(note1);
+        observation.Note[1].Text.ShouldBe(note2);
     }
 
     [Fact]
@@ -312,7 +313,7 @@ public class Pcwg3ProgressionObservationBuilderTests
         var focus2 = new ResourceReference("Condition/cancer-2", "Metastatic Disease");
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(focus1, focus2)
@@ -343,7 +344,7 @@ public class Pcwg3ProgressionObservationBuilderTests
         var builder = new Pcwg3ProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_focusReference)

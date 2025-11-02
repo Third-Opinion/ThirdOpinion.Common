@@ -2,13 +2,16 @@
 
 ## Overview
 
-ThirdOpinion.Common is a comprehensive collection of .NET libraries designed to simplify development of healthcare applications with AWS integration, FHIR R4 support, and utility functions. The package suite provides production-ready components for common patterns in healthcare software development.
+ThirdOpinion.Common is a comprehensive collection of .NET libraries designed to simplify development of healthcare
+applications with AWS integration, FHIR R4 support, and utility functions. The package suite provides production-ready
+components for common patterns in healthcare software development.
 
 ## Package Structure
 
 ### Core Packages
 
 #### ThirdOpinion.Common
+
 The meta-package that includes all sub-packages as dependencies. Install this for comprehensive functionality.
 
 ```bash
@@ -18,14 +21,17 @@ dotnet add package ThirdOpinion.Common
 ### AWS Integration Packages
 
 #### ThirdOpinion.Common.Aws.Cognito
+
 **Purpose**: AWS Cognito authentication and user management
 **Key Features**:
+
 - JWT token validation and management
 - User pool operations
 - Group-based authorization
 - Custom authentication flows
 
 **Usage Example**:
+
 ```csharp
 using ThirdOpinion.Common.Aws.Cognito;
 
@@ -58,14 +64,17 @@ public class SecureController : ControllerBase
 ```
 
 #### ThirdOpinion.Common.Aws.DynamoDb
+
 **Purpose**: DynamoDB operations with repository pattern
 **Key Features**:
+
 - Generic repository implementation
 - Query and scan operations
 - Batch operations
 - Index support
 
 **Usage Example**:
+
 ```csharp
 using ThirdOpinion.Common.Aws.DynamoDb;
 
@@ -98,14 +107,17 @@ public class PatientService
 ```
 
 #### ThirdOpinion.Common.Aws.S3
+
 **Purpose**: S3 storage operations
 **Key Features**:
+
 - Upload/download operations
 - Presigned URL generation
 - Metadata management
 - Multipart upload support
 
 **Usage Example**:
+
 ```csharp
 using ThirdOpinion.Common.Aws.S3;
 
@@ -143,14 +155,17 @@ public class DocumentService
 ```
 
 #### ThirdOpinion.Common.Aws.SQS
+
 **Purpose**: SQS message queuing
 **Key Features**:
+
 - Message publishing and consuming
 - Dead letter queue support
 - Batch operations
 - Message attributes
 
 **Usage Example**:
+
 ```csharp
 using ThirdOpinion.Common.Aws.SQS;
 
@@ -184,14 +199,17 @@ public class NotificationService
 ```
 
 #### ThirdOpinion.Common.Aws.HealthLake
+
 **Purpose**: AWS HealthLake FHIR datastore integration
 **Key Features**:
+
 - FHIR R4 resource operations
 - Bulk import/export
 - Search capabilities
 - Transaction support
 
 **Usage Example**:
+
 ```csharp
 using ThirdOpinion.Common.Aws.HealthLake;
 
@@ -227,14 +245,17 @@ public class FhirService
 ```
 
 #### ThirdOpinion.Common.Aws.Bedrock
+
 **Purpose**: AWS Bedrock AI/ML service integration
 **Key Features**:
+
 - Claude model integration
 - Text generation
 - Cost tracking
 - Langfuse observability
 
 **Usage Example**:
+
 ```csharp
 using ThirdOpinion.Common.Aws.Bedrock;
 
@@ -274,14 +295,17 @@ public class AiService
 ### FHIR Integration Packages
 
 #### ThirdOpinion.Common.Fhir
+
 **Purpose**: FHIR R4 resource building and validation
 **Key Features**:
+
 - Resource builders for common FHIR resources
 - Validation helpers
 - Extension management
 - Profile support
 
 **Usage Example**:
+
 ```csharp
 using ThirdOpinion.Common.Fhir;
 
@@ -307,14 +331,17 @@ var observation = new ObservationBuilder()
 ```
 
 #### ThirdOpinion.Common.Fhir.Documents
+
 **Purpose**: FHIR document handling and processing
 **Key Features**:
+
 - Document reference management
 - File upload/download
 - Document validation
 - Bulk processing
 
 **Usage Example**:
+
 ```csharp
 using ThirdOpinion.Common.Fhir.Documents;
 
@@ -353,14 +380,17 @@ public class DocumentService
 ### Utility Packages
 
 #### ThirdOpinion.Common.Misc
+
 **Purpose**: Utility functions and helpers
 **Key Features**:
+
 - Retry policies
 - Rate limiting
 - Validation helpers
 - Extension methods
 
 **Usage Example**:
+
 ```csharp
 using ThirdOpinion.Common.Misc.Retry;
 using ThirdOpinion.Common.Misc.RateLimiting;
@@ -395,14 +425,17 @@ services.AddRateLimiting(options =>
 ```
 
 #### ThirdOpinion.Common.Logging
+
 **Purpose**: Structured logging with correlation IDs
 **Key Features**:
+
 - Correlation ID management
 - Structured logging configuration
 - Request/response logging middleware
 - Performance tracking
 
 **Usage Example**:
+
 ```csharp
 using ThirdOpinion.Common.Logging;
 
@@ -442,14 +475,17 @@ public class PatientController : ControllerBase
 ```
 
 #### ThirdOpinion.Common.AthenaEhr
+
 **Purpose**: Athena EHR integration
 **Key Features**:
+
 - OAuth authentication
 - FHIR API integration
 - Patient data synchronization
 - Appointment management
 
 **Usage Example**:
+
 ```csharp
 using ThirdOpinion.Common.AthenaEhr;
 
@@ -480,14 +516,17 @@ public class EhrService
 ```
 
 #### ThirdOpinion.Common.Langfuse
+
 **Purpose**: Langfuse observability for AI operations
 **Key Features**:
+
 - LLM request/response tracking
 - Cost monitoring
 - Performance analytics
 - Custom metadata
 
 **Usage Example**:
+
 ```csharp
 using ThirdOpinion.Common.Langfuse;
 
@@ -520,6 +559,7 @@ public class AiAnalyticsService
 ## Configuration
 
 ### AWS Credentials
+
 All AWS services require proper credentials configuration. Use any of the standard AWS credential providers:
 
 ```json
@@ -532,6 +572,7 @@ All AWS services require proper credentials configuration. Use any of the standa
 ```
 
 Or environment variables:
+
 ```bash
 export AWS_ACCESS_KEY_ID=your-access-key
 export AWS_SECRET_ACCESS_KEY=your-secret-key
@@ -589,6 +630,7 @@ export AWS_DEFAULT_REGION=us-east-1
 ## Migration from FhirTools
 
 ### Package Mapping
+
 - `FhirTools.Aws` → `ThirdOpinion.Common.Aws.Misc`
 - `FhirTools.Configuration` → `ThirdOpinion.Common.Configuration` (distributed across packages)
 - `FhirTools.Fhir` → `ThirdOpinion.Common.Aws.HealthLake`
@@ -598,16 +640,19 @@ export AWS_DEFAULT_REGION=us-east-1
 - `FhirTools.Retry` → `ThirdOpinion.Common.Misc.Retry`
 
 ### Namespace Changes
+
 1. Update all `using FhirTools.*` statements to corresponding `ThirdOpinion.Common.*`
 2. Update service registrations in `Startup.cs`/`Program.cs`
 3. Update configuration section names if needed
 
 ### Breaking Changes
+
 - Some configuration property names have changed for consistency
 - Service registration methods have been renamed for clarity
 - Some interfaces have been split for better separation of concerns
 
 ### Migration Steps
+
 1. **Install New Packages**: Replace FhirTools packages with ThirdOpinion.Common packages
 2. **Update Namespaces**: Use find/replace to update namespace references
 3. **Update Configuration**: Review and update configuration sections
@@ -617,6 +662,7 @@ export AWS_DEFAULT_REGION=us-east-1
 ## Common Patterns
 
 ### Error Handling
+
 All services follow consistent error handling patterns:
 
 ```csharp
@@ -640,6 +686,7 @@ catch (Exception ex)
 ```
 
 ### Async/Await
+
 All operations are async by default:
 
 ```csharp
@@ -651,6 +698,7 @@ var patients = _repository.GetPatientsAsync(providerId).Result;
 ```
 
 ### Dependency Injection
+
 Register all services in your DI container:
 
 ```csharp
@@ -669,22 +717,27 @@ services.AddS3Service(options => { });
 ### Common Issues
 
 #### AWS Credentials
+
 **Problem**: `AmazonServiceException: Unable to get IAM security credentials`
 **Solution**: Ensure AWS credentials are properly configured via AWS CLI, environment variables, or IAM roles.
 
 #### Package Dependencies
+
 **Problem**: `FileNotFoundException` for AWS SDK assemblies
 **Solution**: Ensure all required AWS SDK packages are installed and versions are compatible.
 
 #### Configuration
+
 **Problem**: `NullReferenceException` in service constructors
 **Solution**: Verify all configuration sections are present and services are registered in DI container.
 
 #### FHIR Validation
+
 **Problem**: FHIR resources fail validation
 **Solution**: Use the built-in builders and validation helpers to ensure resources conform to FHIR R4 specification.
 
 ### Logging and Debugging
+
 Enable detailed logging for troubleshooting:
 
 ```json
@@ -699,6 +752,7 @@ Enable detailed logging for troubleshooting:
 ```
 
 ### Performance Considerations
+
 - Use connection pooling for HTTP clients
 - Implement proper retry policies with exponential backoff
 - Cache frequently accessed data
@@ -710,9 +764,11 @@ Enable detailed logging for troubleshooting:
 For issues, questions, or contributions, please refer to the project repository and documentation.
 
 ### Version Compatibility
+
 - .NET 8.0 or later
 - AWS SDK v4.x
 - FHIR R4 specification
 
 ### License
+
 This package is licensed under the MIT License.

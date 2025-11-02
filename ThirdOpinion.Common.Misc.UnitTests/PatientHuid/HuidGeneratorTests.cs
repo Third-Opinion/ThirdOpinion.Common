@@ -198,7 +198,7 @@ public class HuidGeneratorTests
     {
         // Arrange
         var regex = new Regex(HuidGenerator.HuidPattern);
-        var testIds = new[] { 1, 100, 12345, 999999, long.MaxValue / 2 };
+        long[] testIds = new[] { 1, 100, 12345, 999999, long.MaxValue / 2 };
 
         foreach (long id in testIds)
         {

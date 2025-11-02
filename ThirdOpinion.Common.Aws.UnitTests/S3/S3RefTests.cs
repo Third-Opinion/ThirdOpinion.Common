@@ -75,7 +75,8 @@ public class tS3RefTests
     public void ToS3Path_ReturnsCorrectPath()
     {
         // Arrange
-        var s3Ref = new S3Ref("data-bucket", "analytics/2023/report.csv", "us-east-1", "123456789012");
+        var s3Ref = new S3Ref("data-bucket", "analytics/2023/report.csv", "us-east-1",
+            "123456789012");
 
         // Act
         var result = s3Ref.ToS3Path();
@@ -88,13 +89,15 @@ public class tS3RefTests
     public void ToArn_ReturnsCorrectArnFormat()
     {
         // Arrange
-        var s3Ref = new S3Ref("backup-bucket", "backups/database.sql", "ap-southeast-1", "111222333444");
+        var s3Ref = new S3Ref("backup-bucket", "backups/database.sql", "ap-southeast-1",
+            "111222333444");
 
         // Act
         var result = s3Ref.ToArn();
 
         // Assert
-        result.ShouldBe("arn:aws:s3:ap-southeast-1:111222333444:backup-bucket/backups/database.sql");
+        result.ShouldBe(
+            "arn:aws:s3:ap-southeast-1:111222333444:backup-bucket/backups/database.sql");
     }
 
     [Fact]
@@ -159,7 +162,8 @@ public class tS3RefTests
         var invalidArn = "invalid-arn-format";
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => S3Ref.ParseArn(invalidArn));
+        ArgumentException? exception
+            = Should.Throw<ArgumentException>(() => S3Ref.ParseArn(invalidArn));
         exception.Message.ShouldBe("Invalid S3 ARN format (Parameter 'arn')");
     }
 
@@ -170,7 +174,8 @@ public class tS3RefTests
         var nonS3Arn = "arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0";
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => S3Ref.ParseArn(nonS3Arn));
+        ArgumentException? exception
+            = Should.Throw<ArgumentException>(() => S3Ref.ParseArn(nonS3Arn));
         exception.Message.ShouldBe("Invalid S3 ARN format (Parameter 'arn')");
     }
 
@@ -198,7 +203,8 @@ public class tS3RefTests
         var invalidUri = "https://example.com/not-s3";
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => S3Ref.ParseObjectUri(invalidUri));
+        ArgumentException? exception
+            = Should.Throw<ArgumentException>(() => S3Ref.ParseObjectUri(invalidUri));
         exception.Message.ShouldBe("Invalid S3 URI format (Parameter 'objectUri')");
     }
 
@@ -226,7 +232,8 @@ public class tS3RefTests
         var invalidUri = "https://invalid-endpoint.com/bucket/key";
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => S3Ref.ParseEndpointUri(invalidUri));
+        ArgumentException? exception
+            = Should.Throw<ArgumentException>(() => S3Ref.ParseEndpointUri(invalidUri));
         exception.Message.ShouldBe("Invalid S3 URI format (Parameter 'fileUri')");
     }
 
@@ -381,7 +388,7 @@ public class tS3RefTests
             ("", null)
         };
 
-        foreach (var (key, expectedFileName) in testCases)
+        foreach ((string? key, string? expectedFileName) in testCases)
         {
             // Arrange
             var s3Ref = new S3Ref("bucket", key, "region", "account");

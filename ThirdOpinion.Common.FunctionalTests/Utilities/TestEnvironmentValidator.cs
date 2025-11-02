@@ -1,10 +1,15 @@
+using Amazon.CognitoIdentityProvider;
+using Amazon.CognitoIdentityProvider.Model;
+using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.Model;
+using Amazon.Runtime.CredentialManagement;
+using Amazon.S3;
+using Amazon.S3.Model;
+using Amazon.SQS;
+using Amazon.SQS.Model;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Amazon.CognitoIdentityProvider;
-using Amazon.DynamoDBv2;
-using Amazon.S3;
-using Amazon.SQS;
 
 namespace ThirdOpinion.Common.FunctionalTests.Utilities;
 
@@ -13,7 +18,8 @@ public class TestEnvironmentValidator
     private readonly IConfiguration _configuration;
     private readonly ILogger<TestEnvironmentValidator> _logger;
 
-    public TestEnvironmentValidator(IConfiguration configuration, ILogger<TestEnvironmentValidator> logger)
+    public TestEnvironmentValidator(IConfiguration configuration,
+        ILogger<TestEnvironmentValidator> logger)
     {
         _configuration = configuration;
         _logger = logger;
@@ -22,7 +28,7 @@ public class TestEnvironmentValidator
     public async Task<ValidationResult> ValidateEnvironmentAsync()
     {
         var result = new ValidationResult();
-        
+
         try
         {
             _logger.LogInformation("Starting test environment validation");
@@ -36,7 +42,8 @@ public class TestEnvironmentValidator
             // Validate test settings
             ValidateTestSettings(result);
 
-            _logger.LogInformation("Test environment validation completed. Success: {Success}, Warnings: {Warnings}, Errors: {Errors}",
+            _logger.LogInformation(
+                "Test environment validation completed. Success: {Success}, Warnings: {Warnings}, Errors: {Errors}",
                 result.IsValid, result.Warnings.Count, result.Errors.Count);
         }
         catch (Exception ex)
@@ -54,50 +61,38 @@ public class TestEnvironmentValidator
 
         // Check required configuration sections
         var requiredSections = new[] { "AWS", "TestSettings" };
-        foreach (var section in requiredSections)
-        {
+        foreach (string section in requiredSections)
             if (!_configuration.GetSection(section).Exists())
-            {
                 result.Errors.Add($"Required configuration section '{section}' is missing");
-            }
-        }
 
         // Validate AWS configuration
-        var awsSection = _configuration.GetSection("AWS");
+        IConfigurationSection awsSection = _configuration.GetSection("AWS");
         if (awsSection.Exists())
         {
             var region = awsSection.GetValue<string>("Region");
 
             if (string.IsNullOrEmpty(region))
-            {
                 result.Warnings.Add("AWS Region not specified, using default");
-            }
 
             _logger.LogInformation("Real AWS mode enabled");
             ValidateAwsCredentials(result);
         }
 
         // Validate test settings
-        var testSection = _configuration.GetSection("TestSettings");
+        IConfigurationSection testSection = _configuration.GetSection("TestSettings");
         if (testSection.Exists())
         {
             var prefix = testSection.GetValue<string>("TestResourcePrefix");
             if (string.IsNullOrEmpty(prefix))
-            {
                 result.Warnings.Add("TestResourcePrefix not specified, using default");
-            }
 
             var timeout = testSection.GetValue<string>("TestTimeout");
             if (!string.IsNullOrEmpty(timeout) && !TimeSpan.TryParse(timeout, out _))
-            {
                 result.Errors.Add($"Invalid TestTimeout format: {timeout}");
-            }
 
             var retryDelay = testSection.GetValue<string>("RetryDelay");
             if (!string.IsNullOrEmpty(retryDelay) && !TimeSpan.TryParse(retryDelay, out _))
-            {
                 result.Errors.Add($"Invalid RetryDelay format: {retryDelay}");
-            }
         }
     }
 
@@ -105,8 +100,8 @@ public class TestEnvironmentValidator
     {
         _logger.LogDebug("Validating AWS SSO credentials");
 
-        var awsProfile = Environment.GetEnvironmentVariable("AWS_PROFILE") ?? "to-dev-admin";
-        
+        string awsProfile = Environment.GetEnvironmentVariable("AWS_PROFILE") ?? "to-dev-admin";
+
         // Reject AWS access key environment variables
         if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID")) ||
             !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY")))
@@ -119,14 +114,14 @@ public class TestEnvironmentValidator
         }
 
         // Check for AWS config files
-        var configFile = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), 
-            ".aws", 
+        string configFile = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            ".aws",
             "config");
-        
-        var credentialsFile = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), 
-            ".aws", 
+
+        string credentialsFile = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            ".aws",
             "credentials");
 
         if (!File.Exists(configFile) && !File.Exists(credentialsFile))
@@ -136,19 +131,19 @@ public class TestEnvironmentValidator
                 $"Please configure SSO by running: aws configure sso --profile {awsProfile}");
             return;
         }
-        
+
         // Validate SSO profile exists and is configured
         try
         {
-            var chain = new Amazon.Runtime.CredentialManagement.CredentialProfileStoreChain();
-            if (!chain.TryGetProfile(awsProfile, out var profile))
+            var chain = new CredentialProfileStoreChain();
+            if (!chain.TryGetProfile(awsProfile, out CredentialProfile? profile))
             {
                 result.Errors.Add(
                     $"AWS SSO profile '{awsProfile}' not found. " +
                     $"Please run: aws configure sso --profile {awsProfile}");
                 return;
             }
-            
+
             // Verify it's an SSO profile
             if (profile.Options.SsoAccountId == null || profile.Options.SsoRoleName == null)
             {
@@ -157,7 +152,7 @@ public class TestEnvironmentValidator
                     $"Please configure SSO by running: aws configure sso --profile {awsProfile}");
                 return;
             }
-            
+
             _logger.LogInformation($"AWS SSO profile '{awsProfile}' validated successfully");
             result.ServiceValidations["AWS SSO Profile"] = $"✓ {awsProfile} configured";
         }
@@ -172,7 +167,8 @@ public class TestEnvironmentValidator
     {
         _logger.LogDebug("Validating AWS services connectivity");
 
-        var serviceProvider = TestCollectionSetupHelper.BuildTestServiceProvider(_configuration);
+        IServiceProvider serviceProvider
+            = TestCollectionSetupHelper.BuildTestServiceProvider(_configuration);
 
         try
         {
@@ -195,16 +191,20 @@ public class TestEnvironmentValidator
         }
     }
 
-    private async Task ValidateCognitoAsync(IServiceProvider serviceProvider, ValidationResult result)
+    private async Task ValidateCognitoAsync(IServiceProvider serviceProvider,
+        ValidationResult result)
     {
         try
         {
-            var cognitoClient = serviceProvider.GetRequiredService(typeof(IAmazonCognitoIdentityProvider)) as IAmazonCognitoIdentityProvider;
-            var response = await cognitoClient.ListUserPoolsAsync(new Amazon.CognitoIdentityProvider.Model.ListUserPoolsRequest
-            {
-                MaxResults = 1
-            });
-            
+            var cognitoClient
+                = serviceProvider.GetRequiredService(typeof(IAmazonCognitoIdentityProvider)) as
+                    IAmazonCognitoIdentityProvider;
+            ListUserPoolsResponse? response = await cognitoClient.ListUserPoolsAsync(
+                new ListUserPoolsRequest
+                {
+                    MaxResults = 1
+                });
+
             result.ServiceValidations["Cognito"] = "✓ Connected";
             _logger.LogDebug("Cognito connectivity validated");
         }
@@ -216,16 +216,18 @@ public class TestEnvironmentValidator
         }
     }
 
-    private async Task ValidateDynamoDbAsync(IServiceProvider serviceProvider, ValidationResult result)
+    private async Task ValidateDynamoDbAsync(IServiceProvider serviceProvider,
+        ValidationResult result)
     {
         try
         {
-            var dynamoClient = serviceProvider.GetRequiredService(typeof(IAmazonDynamoDB)) as IAmazonDynamoDB;
-            var response = await dynamoClient.ListTablesAsync(new Amazon.DynamoDBv2.Model.ListTablesRequest
+            var dynamoClient
+                = serviceProvider.GetRequiredService(typeof(IAmazonDynamoDB)) as IAmazonDynamoDB;
+            ListTablesResponse? response = await dynamoClient.ListTablesAsync(new ListTablesRequest
             {
                 Limit = 1
             });
-            
+
             result.ServiceValidations["DynamoDB"] = "✓ Connected";
             _logger.LogDebug("DynamoDB connectivity validated");
         }
@@ -242,8 +244,8 @@ public class TestEnvironmentValidator
         try
         {
             var s3Client = serviceProvider.GetRequiredService(typeof(IAmazonS3)) as IAmazonS3;
-            var response = await s3Client.ListBucketsAsync();
-            
+            ListBucketsResponse? response = await s3Client.ListBucketsAsync();
+
             result.ServiceValidations["S3"] = "✓ Connected";
             _logger.LogDebug("S3 connectivity validated");
         }
@@ -260,11 +262,11 @@ public class TestEnvironmentValidator
         try
         {
             var sqsClient = serviceProvider.GetRequiredService(typeof(IAmazonSQS)) as IAmazonSQS;
-            var response = await sqsClient.ListQueuesAsync(new Amazon.SQS.Model.ListQueuesRequest
+            ListQueuesResponse? response = await sqsClient.ListQueuesAsync(new ListQueuesRequest
             {
                 MaxResults = 1
             });
-            
+
             result.ServiceValidations["SQS"] = "✓ Connected";
             _logger.LogDebug("SQS connectivity validated");
         }
@@ -280,43 +282,34 @@ public class TestEnvironmentValidator
     {
         _logger.LogDebug("Validating test settings");
 
-        var testSettings = _configuration.GetSection("TestSettings");
-        
+        IConfigurationSection testSettings = _configuration.GetSection("TestSettings");
+
         // Validate timeout settings
-        var timeout = TestCollectionSetupHelper.GetTestTimeout(_configuration);
+        TimeSpan timeout = TestCollectionSetupHelper.GetTestTimeout(_configuration);
         if (timeout.TotalSeconds < 30)
-        {
-            result.Warnings.Add("Test timeout is very short, tests may fail due to AWS service latency");
-        }
+            result.Warnings.Add(
+                "Test timeout is very short, tests may fail due to AWS service latency");
         else if (timeout.TotalMinutes > 30)
-        {
             result.Warnings.Add("Test timeout is very long, consider reducing for faster feedback");
-        }
 
         // Validate retry settings
-        var maxRetries = TestCollectionSetupHelper.GetMaxRetryAttempts(_configuration);
+        int maxRetries = TestCollectionSetupHelper.GetMaxRetryAttempts(_configuration);
         if (maxRetries < 1)
-        {
             result.Errors.Add("MaxRetryAttempts must be at least 1");
-        }
         else if (maxRetries > 10)
-        {
             result.Warnings.Add("MaxRetryAttempts is very high, tests may take a long time");
-        }
 
         // Validate parallel execution settings
         var parallelExecution = _configuration.GetValue<bool>("TestSettings:ParallelExecution");
-        
+
         if (parallelExecution)
-        {
-            result.Warnings.Add("Parallel execution with real AWS services may cause resource conflicts");
-        }
+            result.Warnings.Add(
+                "Parallel execution with real AWS services may cause resource conflicts");
 
         // Check if running in CI
         if (TestCollectionSetupHelper.IsRunningInCI())
-        {
-            result.Warnings.Add("Running in CI environment - ensure AWS credentials are properly configured");
-        }
+            result.Warnings.Add(
+                "Running in CI environment - ensure AWS credentials are properly configured");
     }
 }
 
@@ -325,21 +318,17 @@ public class ValidationResult
     public List<string> Errors { get; } = new();
     public List<string> Warnings { get; } = new();
     public Dictionary<string, string> ServiceValidations { get; } = new();
-    
+
     public bool IsValid => Errors.Count == 0;
-    
+
     public string GetSummary()
     {
         var summary = new List<string>();
-        
+
         if (IsValid)
-        {
             summary.Add("✓ Test environment validation passed");
-        }
         else
-        {
             summary.Add("✗ Test environment validation failed");
-        }
 
         if (Errors.Any())
         {

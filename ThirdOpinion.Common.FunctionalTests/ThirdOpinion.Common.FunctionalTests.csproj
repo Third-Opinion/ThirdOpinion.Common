@@ -14,14 +14,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AWSSDK.SSO" Version="4.0.0.19" />
-        <PackageReference Include="AWSSDK.SSOOIDC" Version="4.0.0.19" />
+        <PackageReference Include="AWSSDK.SSO" Version="4.0.0.19"/>
+        <PackageReference Include="AWSSDK.SSOOIDC" Version="4.0.0.19"/>
         <PackageReference Include="coverlet.collector" Version="6.0.0"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0"/>
         <PackageReference Include="xunit" Version="2.5.3"/>
         <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3"/>
         <PackageReference Include="Shouldly" Version="4.2.1"/>
-        
+
         <!-- AWS SDK packages -->
         <PackageReference Include="AWSSDK.Core" Version="4.0.1.3"/>
         <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="4.0.3.2"/>
@@ -63,10 +63,14 @@
         <ProjectReference Include="..\src\ThirdOpinion.Common.AthenaEhr\ThirdOpinion.Common.AthenaEhr.csproj"/>
         <ProjectReference Include="..\src\ThirdOpinion.Common.Misc\ThirdOpinion.Common.Misc.csproj"/>
         <ProjectReference Include="..\src\ThirdOpinion.Common.Logging\ThirdOpinion.Common.Logging.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.Bedrock\ThirdOpinion.Common.Aws.Bedrock.csproj" />
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.Misc\ThirdOpinion.Common.Aws.Misc.csproj" />
         <ProjectReference Include="..\ThirdOpinion.Common.Fhir\ThirdOpinion.Common.Fhir.csproj"/>
         <ProjectReference Include="..\src\ThirdOpinion.Common.Fhir.Documents\ThirdOpinion.Common.Fhir.Documents.csproj"/>
         <ProjectReference Include="..\src\ThirdOpinion.Common.Langfuse\ThirdOpinion.Common.Langfuse.csproj"/>
         <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.Misc\ThirdOpinion.Common.Aws.Misc.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Langfuse\ThirdOpinion.Common.Langfuse.csproj" />
+        <ProjectReference Include="..\ThirdOpinion.Common.Misc\ThirdOpinion.Common.Misc.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -10,12 +10,12 @@ namespace ThirdOpinion.Common.Fhir.UnitTests.Builders.Observations;
 public class RecistProgressionObservationBuilderTests
 {
     private readonly AiInferenceConfiguration _configuration;
-    private readonly ResourceReference _patientReference;
     private readonly ResourceReference _deviceReference;
-    private readonly ResourceReference _tumorReference;
     private readonly ResourceReference _imagingStudyReference;
+    private readonly ResourceReference _patientReference;
     private readonly ResourceReference _radiologyReportReference;
     private readonly Fact[] _sampleFacts;
+    private readonly ResourceReference _tumorReference;
 
     public RecistProgressionObservationBuilderTests()
     {
@@ -24,7 +24,8 @@ public class RecistProgressionObservationBuilderTests
         _deviceReference = new ResourceReference("Device/ai-device", "RECIST Analysis Device");
         _tumorReference = new ResourceReference("Condition/tumor-123", "Primary Tumor");
         _imagingStudyReference = new ResourceReference("ImagingStudy/ct-123", "CT Chest/Abdomen");
-        _radiologyReportReference = new ResourceReference("DiagnosticReport/rad-456", "Radiology Report");
+        _radiologyReportReference
+            = new ResourceReference("DiagnosticReport/rad-456", "Radiology Report");
 
         _sampleFacts = new[]
         {
@@ -58,15 +59,26 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
             .WithCriteria("1.1")
-            .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE, "Progressive Disease")
-            .AddComponent("33728-8", new Quantity { Value = 45.2m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
-            .AddComponent("nadir-sld", new Quantity { Value = 38.5m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
-            .AddComponent("percent-change", new Quantity { Value = 17.4m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
+            .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE,
+                "Progressive Disease")
+            .AddComponent("33728-8",
+                new Quantity
+                {
+                    Value = 45.2m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm"
+                })
+            .AddComponent("nadir-sld",
+                new Quantity
+                {
+                    Value = 38.5m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm"
+                })
+            .AddComponent("percent-change",
+                new Quantity
+                    { Value = 17.4m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
             .AddComponent("new-lesions", true)
             .AddImagingStudy(_imagingStudyReference)
             .AddRadiologyReport(_radiologyReportReference)
@@ -83,11 +95,13 @@ public class RecistProgressionObservationBuilderTests
 
         // Check codes - should have both LOINC 21976-6 and NCI C111544
         observation.Code.Coding.Count.ShouldBe(2);
-        var loincCoding = observation.Code.Coding.First(c => c.System == FhirCodingHelper.Systems.LOINC_SYSTEM);
+        Coding? loincCoding
+            = observation.Code.Coding.First(c => c.System == FhirCodingHelper.Systems.LOINC_SYSTEM);
         loincCoding.Code.ShouldBe("21976-6");
         loincCoding.Display.ShouldBe("Cancer disease status");
 
-        var nciCoding = observation.Code.Coding.First(c => c.System == FhirCodingHelper.Systems.NCI_SYSTEM);
+        Coding? nciCoding
+            = observation.Code.Coding.First(c => c.System == FhirCodingHelper.Systems.NCI_SYSTEM);
         nciCoding.Code.ShouldBe("C111544");
         nciCoding.Display.ShouldBe("RECIST 1.1");
 
@@ -119,15 +133,16 @@ public class RecistProgressionObservationBuilderTests
         observation.Component.Count.ShouldBe(4);
 
         // Check SLD component
-        var sldComponent = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? sldComponent = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "33728-8"));
         sldComponent.ShouldNotBeNull();
         var sldValue = sldComponent.Value as Quantity;
         sldValue.Value.ShouldBe(45.2m);
 
         // Check new lesions component
-        var newLesionsComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "new-lesions"));
+        Observation.ComponentComponent? newLesionsComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "new-lesions"));
         newLesionsComponent.ShouldNotBeNull();
         var newLesionsValue = newLesionsComponent.Value as FhirBoolean;
         newLesionsValue.Value.ShouldBe(true);
@@ -140,13 +155,19 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient("patient-456", "Jane Doe")
             .WithDevice("device-789", "AI Imaging Analyzer")
             .WithCriteria("1.1")
             .WithRecistResponse(FhirCodingHelper.NciCodes.STABLE_DISEASE, "Stable Disease")
-            .AddComponent("33728-8", new Quantity { Value = 42.0m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
-            .AddComponent("percent-change", new Quantity { Value = -5.2m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
+            .AddComponent("33728-8",
+                new Quantity
+                {
+                    Value = 42.0m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm"
+                })
+            .AddComponent("percent-change",
+                new Quantity
+                    { Value = -5.2m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
             .AddComponent("new-lesions", false)
             .Build();
 
@@ -155,7 +176,7 @@ public class RecistProgressionObservationBuilderTests
         valueCodeableConcept.ShouldNotBeNull();
         valueCodeableConcept.Coding[0].Code.ShouldBe(FhirCodingHelper.NciCodes.STABLE_DISEASE);
 
-        var percentComponent = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? percentComponent = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "percent-change"));
         var percentValue = percentComponent?.Value as Quantity;
         percentValue.Value.ShouldBe(-5.2m);
@@ -166,17 +187,18 @@ public class RecistProgressionObservationBuilderTests
     {
         // Arrange
         var builder = new RecistProgressionObservationBuilder(_configuration);
-        var quantity = new Quantity { Value = 25.5m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" };
+        var quantity = new Quantity
+            { Value = 25.5m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" };
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddComponent("33728-8", quantity)
             .Build();
 
         // Assert
-        var component = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? component = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "33728-8"));
         component.ShouldNotBeNull();
         var componentValue = component.Value as Quantity;
@@ -190,14 +212,14 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddComponent("44666-9", true)
             .Build();
 
         // Assert
-        var component = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? component = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "44666-9"));
         component.ShouldNotBeNull();
         var componentValue = component.Value as FhirBoolean;
@@ -209,17 +231,17 @@ public class RecistProgressionObservationBuilderTests
     {
         // Arrange
         var builder = new RecistProgressionObservationBuilder(_configuration);
-        var concept = FhirCodingHelper.CreateSnomedConcept("123456789", "Test Concept");
+        CodeableConcept concept = FhirCodingHelper.CreateSnomedConcept("123456789", "Test Concept");
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddComponent("test-code", concept)
             .Build();
 
         // Assert
-        var component = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? component = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "test-code"));
         component.ShouldNotBeNull();
         var componentValue = component.Value as CodeableConcept;
@@ -233,7 +255,7 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithBodySite("39607008", "Lung structure")
@@ -254,7 +276,7 @@ public class RecistProgressionObservationBuilderTests
         var tumor2 = new ResourceReference("Condition/tumor-2", "Metastatic Lesion");
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(tumor1, tumor2)
@@ -275,7 +297,7 @@ public class RecistProgressionObservationBuilderTests
         var study2 = new ResourceReference("ImagingStudy/ct-2", "Follow-up CT");
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddImagingStudy(study1)
@@ -296,7 +318,7 @@ public class RecistProgressionObservationBuilderTests
         var report = new ResourceReference("DiagnosticReport/rad-report", "Imaging Report");
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddRadiologyReport(report)
@@ -344,7 +366,7 @@ public class RecistProgressionObservationBuilderTests
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
-            builder.WithPatient((ResourceReference)null!));
+            builder.WithPatient(null!));
     }
 
     [Fact]
@@ -366,7 +388,7 @@ public class RecistProgressionObservationBuilderTests
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
-            builder.WithDevice((ResourceReference)null!));
+            builder.WithDevice(null!));
     }
 
     [Fact]
@@ -506,14 +528,16 @@ public class RecistProgressionObservationBuilderTests
     public void FluentInterface_SupportsCompleteChaining()
     {
         // Arrange & Act
-        var observation = new RecistProgressionObservationBuilder(_configuration)
+        Observation observation = new RecistProgressionObservationBuilder(_configuration)
             .WithInferenceId("recist-001")
             .WithPatient("Patient/p789", "John Smith")
             .WithDevice("Device/d123", "RECIST AI Device")
             .WithFocus(_tumorReference)
             .WithCriteria("1.1")
             .WithRecistResponse(FhirCodingHelper.NciCodes.COMPLETE_RESPONSE, "Complete Response")
-            .AddComponent("33728-8", new Quantity { Value = 0m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
+            .AddComponent("33728-8",
+                new Quantity
+                    { Value = 0m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
             .AddComponent("new-lesions", false)
             .WithBodySite("39607008", "Lung structure")
             .AddImagingStudy(_imagingStudyReference)
@@ -526,7 +550,7 @@ public class RecistProgressionObservationBuilderTests
         observation.Subject.Reference.ShouldBe("Patient/p789");
         observation.Device.Reference.ShouldBe("Device/d123");
         observation.Focus[0].ShouldBe(_tumorReference);
-                observation.DerivedFrom.Count.ShouldBe(3); // imaging + report + derived
+        observation.DerivedFrom.Count.ShouldBe(3); // imaging + report + derived
         observation.Component.Count.ShouldBe(2);
 
         var responseValue = observation.Value as CodeableConcept;
@@ -538,14 +562,21 @@ public class RecistProgressionObservationBuilderTests
     {
         // Arrange
         var builder = new RecistProgressionObservationBuilder(_configuration);
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
             .WithCriteria("1.1")
-            .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE, "Progressive Disease")
-            .AddComponent("33728-8", new Quantity { Value = 55.7m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
-            .AddComponent("percent-change", new Quantity { Value = 23.5m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
+            .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE,
+                "Progressive Disease")
+            .AddComponent("33728-8",
+                new Quantity
+                {
+                    Value = 55.7m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm"
+                })
+            .AddComponent("percent-change",
+                new Quantity
+                    { Value = 23.5m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
             .AddComponent("new-lesions", true)
             .WithBodySite("39607008", "Lung structure")
             .AddImagingStudy(_imagingStudyReference)
@@ -554,7 +585,7 @@ public class RecistProgressionObservationBuilderTests
 
         // Act
         var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
-        var json = serializer.SerializeToString(observation);
+        string json = serializer.SerializeToString(observation);
 
         // Assert
         json.ShouldNotBeNullOrEmpty();
@@ -586,14 +617,16 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
-            .AddComponent("33359-2", new Quantity { Value = 15.5m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
+            .AddComponent("33359-2",
+                new Quantity
+                    { Value = 15.5m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
             .Build();
 
         // Assert
-        var component = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? component = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "33359-2"));
         component.ShouldNotBeNull();
         component.Code.Coding[0].System.ShouldBe(FhirCodingHelper.Systems.LOINC_SYSTEM);
@@ -607,14 +640,18 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
-            .AddComponent("371508000", new Quantity { Value = 45.2m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
+            .AddComponent("371508000",
+                new Quantity
+                {
+                    Value = 45.2m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm"
+                })
             .Build();
 
         // Assert
-        var component = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? component = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "371508000"));
         component.ShouldNotBeNull();
         component.Code.Coding[0].System.ShouldBe(FhirCodingHelper.Systems.SNOMED_SYSTEM);
@@ -628,17 +665,22 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
-            .AddComponent("nadir-sld", new Quantity { Value = 38.5m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
+            .AddComponent("nadir-sld",
+                new Quantity
+                {
+                    Value = 38.5m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm"
+                })
             .Build();
 
         // Assert
-        var component = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? component = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "nadir-sld"));
         component.ShouldNotBeNull();
-        component.Code.Coding[0].System.ShouldBe("http://thirdopinion.ai/fhir/CodeSystem/recist-components");
+        component.Code.Coding[0].System
+            .ShouldBe("http://thirdopinion.ai/fhir/CodeSystem/recist-components");
         component.Code.Coding[0].Display.ShouldBe("Nadir sum of longest diameters");
     }
 
@@ -646,7 +688,7 @@ public class RecistProgressionObservationBuilderTests
     public void Build_WithAllRecistResponseTypes_SupportsAllNciCodes()
     {
         // Test Complete Response
-        var crObservation = new RecistProgressionObservationBuilder(_configuration)
+        Observation crObservation = new RecistProgressionObservationBuilder(_configuration)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithRecistResponse("C18213", "Complete Response")
@@ -656,7 +698,7 @@ public class RecistProgressionObservationBuilderTests
         crValue.Coding[0].Code.ShouldBe("C18213");
 
         // Test Partial Response
-        var prObservation = new RecistProgressionObservationBuilder(_configuration)
+        Observation prObservation = new RecistProgressionObservationBuilder(_configuration)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithRecistResponse("C18058", "Partial Response")
@@ -666,7 +708,7 @@ public class RecistProgressionObservationBuilderTests
         prValue.Coding[0].Code.ShouldBe("C18058");
 
         // Test Stable Disease
-        var sdObservation = new RecistProgressionObservationBuilder(_configuration)
+        Observation sdObservation = new RecistProgressionObservationBuilder(_configuration)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithRecistResponse("C18052", "Stable Disease")
@@ -683,7 +725,7 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
@@ -695,13 +737,13 @@ public class RecistProgressionObservationBuilderTests
         observation.ShouldNotBeNull();
 
         // Check determination component
-        var determinationComponent = observation.Component
+        Observation.ComponentComponent? determinationComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "determination"));
         determinationComponent.ShouldNotBeNull();
         ((FhirString)determinationComponent.Value).Value.ShouldBe("True");
 
         // Check confidence component
-        var confidenceComponent = observation.Component
+        Observation.ComponentComponent? confidenceComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "LA11892-6"));
         confidenceComponent.ShouldNotBeNull();
         ((Quantity)confidenceComponent.Value).Value.ShouldBe(0.92m);
@@ -714,7 +756,7 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
@@ -726,7 +768,7 @@ public class RecistProgressionObservationBuilderTests
         observation.ShouldNotBeNull();
 
         // Check determination component
-        var determinationComponent = observation.Component
+        Observation.ComponentComponent? determinationComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "determination"));
         determinationComponent.ShouldNotBeNull();
         ((FhirString)determinationComponent.Value).Value.ShouldBe("False");
@@ -739,7 +781,7 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
@@ -751,7 +793,7 @@ public class RecistProgressionObservationBuilderTests
         observation.ShouldNotBeNull();
 
         // Check determination component
-        var determinationComponent = observation.Component
+        Observation.ComponentComponent? determinationComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "determination"));
         determinationComponent.ShouldNotBeNull();
         ((FhirString)determinationComponent.Value).Value.ShouldBe("Inconclusive");
@@ -764,7 +806,7 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
@@ -773,10 +815,11 @@ public class RecistProgressionObservationBuilderTests
             .Build();
 
         // Assert
-        var measurementComponent = observation.Component
+        Observation.ComponentComponent? measurementComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "measurement-change"));
         measurementComponent.ShouldNotBeNull();
-        ((FhirString)measurementComponent.Value).Value.ShouldBe("Target lesions increased from 38.5mm to 45.2mm");
+        ((FhirString)measurementComponent.Value).Value.ShouldBe(
+            "Target lesions increased from 38.5mm to 45.2mm");
     }
 
     [Fact]
@@ -786,7 +829,7 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
@@ -795,10 +838,11 @@ public class RecistProgressionObservationBuilderTests
             .Build();
 
         // Assert
-        var imagingTypeComponent = observation.Component
+        Observation.ComponentComponent? imagingTypeComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "imaging-type"));
         imagingTypeComponent.ShouldNotBeNull();
-        ((FhirString)imagingTypeComponent.Value).Value.ShouldBe("CT Chest/Abdomen/Pelvis with contrast");
+        ((FhirString)imagingTypeComponent.Value).Value.ShouldBe(
+            "CT Chest/Abdomen/Pelvis with contrast");
     }
 
     [Fact]
@@ -809,7 +853,7 @@ public class RecistProgressionObservationBuilderTests
         var confirmationDate = new DateTime(2025, 2, 15);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
@@ -818,7 +862,7 @@ public class RecistProgressionObservationBuilderTests
             .Build();
 
         // Assert
-        var confirmationDateComponent = observation.Component
+        Observation.ComponentComponent? confirmationDateComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "confirmation-date"));
         confirmationDateComponent.ShouldNotBeNull();
         var dateValue = confirmationDateComponent.Value as FhirDateTime;
@@ -832,7 +876,7 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
@@ -844,24 +888,25 @@ public class RecistProgressionObservationBuilderTests
         observation.Extension.ShouldNotBeEmpty();
 
         // Check that clinical fact extensions were added
-        var clinicalFactExtensions = observation.Extension
+        List<Extension> clinicalFactExtensions = observation.Extension
             .Where(e => e.Url == "https://thirdopinion.io/clinical-fact")
             .ToList();
 
         clinicalFactExtensions.Count.ShouldBe(2);
 
         // Verify first fact extension has nested extensions
-        var firstFactExtension = clinicalFactExtensions[0];
+        Extension firstFactExtension = clinicalFactExtensions[0];
         firstFactExtension.Extension.ShouldNotBeEmpty();
 
         // Check for factGuid in nested extensions
-        var factGuidExtension = firstFactExtension.Extension
+        Extension? factGuidExtension = firstFactExtension.Extension
             .FirstOrDefault(e => e.Url == "factGuid");
         factGuidExtension.ShouldNotBeNull();
-        ((FhirString)factGuidExtension.Value).Value.ShouldBe("aa10e02a-f391-4614-96e4-35cbe47d2a85");
+        ((FhirString)factGuidExtension.Value).Value.ShouldBe(
+            "aa10e02a-f391-4614-96e4-35cbe47d2a85");
 
         // Verify second fact extension has nested extensions
-        var secondFactExtension = clinicalFactExtensions[1];
+        Extension secondFactExtension = clinicalFactExtensions[1];
         secondFactExtension.Extension.ShouldNotBeEmpty();
     }
 
@@ -884,7 +929,7 @@ public class RecistProgressionObservationBuilderTests
         var confirmationDate = new DateTime(2025, 3, 20);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
@@ -894,7 +939,8 @@ public class RecistProgressionObservationBuilderTests
             .WithConfirmationDate(confirmationDate)
             .WithSupportingFacts(_sampleFacts)
             .WithConfidence(0.89f)
-            .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE, "Progressive Disease")
+            .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE,
+                "Progressive Disease")
             .Build();
 
         // Assert
@@ -903,27 +949,29 @@ public class RecistProgressionObservationBuilderTests
         // Check value shows progression from WithRecistResponse
         var valueCodeableConcept = observation.Value as CodeableConcept;
         valueCodeableConcept.ShouldNotBeNull();
-        valueCodeableConcept.Coding.First().Code.ShouldBe(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE);
+        valueCodeableConcept.Coding.First().Code
+            .ShouldBe(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE);
 
         // Check all enhanced components are present
-        var measurementComponent = observation.Component
+        Observation.ComponentComponent? measurementComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "measurement-change"));
         measurementComponent.ShouldNotBeNull();
 
-        var imagingComponent = observation.Component
+        Observation.ComponentComponent? imagingComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "imaging-type"));
         imagingComponent.ShouldNotBeNull();
 
-        var confirmationComponent = observation.Component
+        Observation.ComponentComponent? confirmationComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "confirmation-date"));
         confirmationComponent.ShouldNotBeNull();
 
-        var confidenceComponent = observation.Component
+        Observation.ComponentComponent? confidenceComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "LA11892-6"));
         confidenceComponent.ShouldNotBeNull();
 
         // Check supporting facts extensions
-        observation.Extension.Any(e => e.Url == "https://thirdopinion.io/clinical-fact").ShouldBeTrue();
+        observation.Extension.Any(e => e.Url == "https://thirdopinion.io/clinical-fact")
+            .ShouldBeTrue();
     }
 
     [Fact]
@@ -933,7 +981,7 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
@@ -942,7 +990,7 @@ public class RecistProgressionObservationBuilderTests
         // Assert
         observation.ShouldNotBeNull();
         // No identified component should be present
-        var identifiedComponent = observation.Component
+        Observation.ComponentComponent? identifiedComponent = observation.Component
             ?.FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "identified"));
         identifiedComponent.ShouldBeNull();
     }
@@ -954,7 +1002,7 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)

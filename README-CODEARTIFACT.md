@@ -5,6 +5,7 @@ This project is configured to publish NuGet packages to AWS CodeArtifact.
 ## Quick Start
 
 ### Prerequisites
+
 1. AWS CLI installed and configured
 2. AWS credentials with CodeArtifact permissions
 3. Access to the `thirdopinion` CodeArtifact domain
@@ -32,6 +33,7 @@ aws codeartifact list-domains --region us-east-2
 ## Configuration
 
 Edit `aws-codeartifact-config.json` to modify:
+
 - Package version
 - AWS profile
 - Build configuration
@@ -48,6 +50,7 @@ Edit `aws-codeartifact-config.json` to modify:
 ## Package Contents
 
 The published package includes:
+
 - AWS Cognito integration
 - DynamoDB repository pattern
 - S3 storage utilities
@@ -69,5 +72,3 @@ Common issues and solutions:
 4. **Package exists**: Increment version number
 
 For more help, see the detailed documentation or run scripts with `-Verbose` flag.
-
-

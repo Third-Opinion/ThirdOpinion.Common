@@ -1,10 +1,6 @@
 using System.Net;
-using ThirdOpinion.Common.Misc.Retry;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Moq;
-using Polly;
-using Shouldly;
+using ThirdOpinion.Common.Misc.Retry;
 
 namespace ThirdOpinion.Common.Misc.Tests.Retry;
 
@@ -97,10 +93,7 @@ public class RetryPolicyServiceTests
             callCount++;
 
             // Fail first 3 attempts, succeed on 4th (initial + 3 retries)
-            if (callCount < 4)
-            {
-                throw new HttpRequestException("Connection timeout occurred");
-            }
+            if (callCount < 4) throw new HttpRequestException("Connection timeout occurred");
 
             await Task.CompletedTask; // Make it async
             return successResponse;
@@ -197,7 +190,8 @@ public class RetryPolicyServiceTests
             await policy.ExecuteAsync(async () =>
             {
                 callCount++;
-                throw new HttpRequestException("Server error", null, HttpStatusCode.InternalServerError);
+                throw new HttpRequestException("Server error", null,
+                    HttpStatusCode.InternalServerError);
             });
         });
 
@@ -270,7 +264,8 @@ public class RetryPolicyServiceTests
             await policy.ExecuteAsync(async () =>
             {
                 callTimes.Add(DateTime.UtcNow);
-                throw new HttpRequestException("Server error", null, HttpStatusCode.InternalServerError);
+                throw new HttpRequestException("Server error", null,
+                    HttpStatusCode.InternalServerError);
             });
         });
 
@@ -280,8 +275,8 @@ public class RetryPolicyServiceTests
         // Verify increasing delays (allowing for some variance due to jitter)
         if (callTimes.Count >= 3)
         {
-            var delay1 = callTimes[1] - callTimes[0];
-            var delay2 = callTimes[2] - callTimes[1];
+            TimeSpan delay1 = callTimes[1] - callTimes[0];
+            TimeSpan delay2 = callTimes[2] - callTimes[1];
 
             // Second delay should be longer than first (exponential backoff)
             // Allow some variance for jitter

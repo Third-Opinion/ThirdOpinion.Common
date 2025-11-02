@@ -1,4 +1,4 @@
-using Misc.StringExtensions;
+using ThirdOpinion.Common.Aws.S3.StringExtensions;
 
 namespace ThirdOpinion.Common.UnitTests.Misc.StringExtensions;
 

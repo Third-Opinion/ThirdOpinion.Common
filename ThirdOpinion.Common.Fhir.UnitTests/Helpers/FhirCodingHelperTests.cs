@@ -13,7 +13,8 @@ public class FhirCodingHelperTests
         FhirCodingHelper.Systems.SNOMED_SYSTEM.ShouldBe("http://snomed.info/sct");
         FhirCodingHelper.Systems.ICD10_SYSTEM.ShouldBe("http://hl7.org/fhir/sid/icd-10");
         FhirCodingHelper.Systems.LOINC_SYSTEM.ShouldBe("http://loinc.org");
-        FhirCodingHelper.Systems.NCI_SYSTEM.ShouldBe("http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl");
+        FhirCodingHelper.Systems.NCI_SYSTEM.ShouldBe(
+            "http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl");
     }
 
     [Fact]
@@ -65,7 +66,7 @@ public class FhirCodingHelperTests
     public void CreateCodeableConcept_CreatesValidConcept()
     {
         // Act
-        var concept = FhirCodingHelper.CreateCodeableConcept(
+        CodeableConcept concept = FhirCodingHelper.CreateCodeableConcept(
             FhirCodingHelper.Systems.SNOMED_SYSTEM,
             "12345",
             "Test Display");
@@ -83,7 +84,7 @@ public class FhirCodingHelperTests
     public void CreateCodeableConcept_WithoutDisplay_OmitsText()
     {
         // Act
-        var concept = FhirCodingHelper.CreateCodeableConcept(
+        CodeableConcept concept = FhirCodingHelper.CreateCodeableConcept(
             FhirCodingHelper.Systems.LOINC_SYSTEM,
             "98765");
 
@@ -96,7 +97,7 @@ public class FhirCodingHelperTests
     public void CreateSnomedConcept_CreatesCorrectConcept()
     {
         // Act
-        var concept = FhirCodingHelper.CreateSnomedConcept(
+        CodeableConcept concept = FhirCodingHelper.CreateSnomedConcept(
             FhirCodingHelper.SnomedCodes.PROSTATE_CANCER,
             "Prostate Cancer");
 
@@ -110,7 +111,7 @@ public class FhirCodingHelperTests
     public void CreateIcd10Concept_CreatesCorrectConcept()
     {
         // Act
-        var concept = FhirCodingHelper.CreateIcd10Concept(
+        CodeableConcept concept = FhirCodingHelper.CreateIcd10Concept(
             FhirCodingHelper.IcdCodes.PROSTATE_CANCER,
             "Malignant neoplasm of prostate");
 
@@ -124,7 +125,7 @@ public class FhirCodingHelperTests
     public void CreateLoincConcept_CreatesCorrectConcept()
     {
         // Act
-        var concept = FhirCodingHelper.CreateLoincConcept(
+        CodeableConcept concept = FhirCodingHelper.CreateLoincConcept(
             FhirCodingHelper.LoincCodes.PSA_TOTAL,
             "PSA Total");
 
@@ -138,7 +139,7 @@ public class FhirCodingHelperTests
     public void CreateNciConcept_CreatesCorrectConcept()
     {
         // Act
-        var concept = FhirCodingHelper.CreateNciConcept(
+        CodeableConcept concept = FhirCodingHelper.CreateNciConcept(
             FhirCodingHelper.NciCodes.COMPLETE_RESPONSE,
             "Complete Response");
 
@@ -152,7 +153,7 @@ public class FhirCodingHelperTests
     public void CreateConceptFromConstant_FindsSnomedCode()
     {
         // Act
-        var concept = FhirCodingHelper.CreateConceptFromConstant("ADT_THERAPY", "ADT");
+        CodeableConcept? concept = FhirCodingHelper.CreateConceptFromConstant("ADT_THERAPY", "ADT");
 
         // Assert
         concept.ShouldNotBeNull();
@@ -165,7 +166,7 @@ public class FhirCodingHelperTests
     public void CreateConceptFromConstant_FindsIcdCode()
     {
         // Act
-        var concept = FhirCodingHelper.CreateConceptFromConstant("HORMONE_SENSITIVE");
+        CodeableConcept? concept = FhirCodingHelper.CreateConceptFromConstant("HORMONE_SENSITIVE");
 
         // Assert
         concept.ShouldNotBeNull();
@@ -178,7 +179,8 @@ public class FhirCodingHelperTests
     public void CreateConceptFromConstant_FindsLoincCode()
     {
         // Act
-        var concept = FhirCodingHelper.CreateConceptFromConstant("PSA_TOTAL", "PSA Total");
+        CodeableConcept? concept
+            = FhirCodingHelper.CreateConceptFromConstant("PSA_TOTAL", "PSA Total");
 
         // Assert
         concept.ShouldNotBeNull();
@@ -190,7 +192,7 @@ public class FhirCodingHelperTests
     public void CreateConceptFromConstant_FindsNciCode()
     {
         // Act
-        var concept = FhirCodingHelper.CreateConceptFromConstant("CRPC");
+        CodeableConcept? concept = FhirCodingHelper.CreateConceptFromConstant("CRPC");
 
         // Assert
         concept.ShouldNotBeNull();
@@ -202,7 +204,7 @@ public class FhirCodingHelperTests
     public void CreateConceptFromConstant_UnknownConstant_ReturnsNull()
     {
         // Act
-        var concept = FhirCodingHelper.CreateConceptFromConstant("UNKNOWN_CONSTANT");
+        CodeableConcept? concept = FhirCodingHelper.CreateConceptFromConstant("UNKNOWN_CONSTANT");
 
         // Assert
         concept.ShouldBeNull();
@@ -212,7 +214,7 @@ public class FhirCodingHelperTests
     public void AddCoding_AddsAdditionalCoding()
     {
         // Arrange
-        var concept = FhirCodingHelper.CreateSnomedConcept(
+        CodeableConcept concept = FhirCodingHelper.CreateSnomedConcept(
             FhirCodingHelper.SnomedCodes.PROSTATE_CANCER,
             "Prostate Cancer");
 
@@ -234,19 +236,20 @@ public class FhirCodingHelperTests
     public void CreatedCodeableConcepts_SerializeCorrectly()
     {
         // Arrange
-        var concept = FhirCodingHelper.CreateLoincConcept(
+        CodeableConcept concept = FhirCodingHelper.CreateLoincConcept(
             FhirCodingHelper.LoincCodes.PSA_TOTAL,
             "Prostate specific antigen [Mass/volume] in Serum or Plasma");
 
         // Act
         var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
-        var json = serializer.SerializeToString(concept);
+        string json = serializer.SerializeToString(concept);
 
         // Assert
         json.ShouldNotBeNullOrEmpty();
         json.ShouldContain("\"system\": \"http://loinc.org\"");
         json.ShouldContain("\"code\": \"2857-1\"");
-        json.ShouldContain("\"display\": \"Prostate specific antigen [Mass/volume] in Serum or Plasma\"");
+        json.ShouldContain(
+            "\"display\": \"Prostate specific antigen [Mass/volume] in Serum or Plasma\"");
     }
 
     [Fact]

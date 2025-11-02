@@ -9,16 +9,17 @@ namespace ThirdOpinion.Common.Fhir.UnitTests.Builders.Conditions;
 
 public class HsdmAssessmentConditionBuilderTests
 {
-    private readonly AiInferenceConfiguration _configuration;
     private readonly ResourceReference _conditionReference;
-    private readonly ResourceReference _patientReference;
+    private readonly AiInferenceConfiguration _configuration;
     private readonly ResourceReference _deviceReference;
+    private readonly ResourceReference _patientReference;
     private readonly Fact[] _sampleFacts;
 
     public HsdmAssessmentConditionBuilderTests()
     {
         _configuration = AiInferenceConfiguration.CreateDefault();
-        _conditionReference = new ResourceReference("Condition/prostate-cancer-001", "Prostate Cancer");
+        _conditionReference
+            = new ResourceReference("Condition/prostate-cancer-001", "Prostate Cancer");
         _patientReference = new ResourceReference("Patient/test-patient", "Test Patient");
         _deviceReference = new ResourceReference("Device/ai-device", "AI Assessment Device");
 
@@ -44,11 +45,12 @@ public class HsdmAssessmentConditionBuilderTests
         var builder = new HsdmAssessmentConditionBuilder(_configuration);
 
         // Act
-        var condition = builder
+        Condition condition = builder
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
-            .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.NonMetastaticBiochemicalRelapse)
+            .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults
+                .NonMetastaticBiochemicalRelapse)
             .AddFactEvidence(_sampleFacts)
             .WithSummary("Patient shows biochemical relapse with rising PSA following treatment")
             .WithEffectiveDate(new DateTime(2024, 1, 15, 10, 30, 0))
@@ -62,31 +64,36 @@ public class HsdmAssessmentConditionBuilderTests
         // Check category
         condition.Category.ShouldHaveSingleItem();
         condition.Category[0].Coding[0].Code.ShouldBe("encounter-diagnosis");
-        condition.Category[0].Coding[0].System.ShouldBe("http://terminology.hl7.org/CodeSystem/condition-category");
+        condition.Category[0].Coding[0].System
+            .ShouldBe("http://terminology.hl7.org/CodeSystem/condition-category");
 
         // Check code - should have 3 coding entries for nmCSPC_biochemical_relapse
         condition.Code.Coding.Count.ShouldBe(3);
 
         // Check SNOMED code
-        var snomedCoding = condition.Code.Coding.FirstOrDefault(c => c.System == FhirCodingHelper.Systems.SNOMED_SYSTEM);
+        Coding? snomedCoding
+            = condition.Code.Coding.FirstOrDefault(c =>
+                c.System == FhirCodingHelper.Systems.SNOMED_SYSTEM);
         snomedCoding.ShouldNotBeNull();
         snomedCoding.Code.ShouldBe("1197209002");
         snomedCoding.Display.ShouldBe("Castration-sensitive prostate cancer");
 
         // Check ICD-10 Z19.1 code
-        var icd10Z191Coding = condition.Code.Coding.FirstOrDefault(c =>
+        Coding? icd10Z191Coding = condition.Code.Coding.FirstOrDefault(c =>
             c.System == "http://hl7.org/fhir/sid/icd-10-cm" && c.Code == "Z19.1");
         icd10Z191Coding.ShouldNotBeNull();
         icd10Z191Coding.Display.ShouldBe("Hormone sensitive malignancy status");
 
         // Check ICD-10 R97.21 code
-        var icd10R9721Coding = condition.Code.Coding.FirstOrDefault(c =>
+        Coding? icd10R9721Coding = condition.Code.Coding.FirstOrDefault(c =>
             c.System == "http://hl7.org/fhir/sid/icd-10-cm" && c.Code == "R97.21");
         icd10R9721Coding.ShouldNotBeNull();
-        icd10R9721Coding.Display.ShouldBe("Rising PSA following treatment for malignant neoplasm of prostate");
+        icd10R9721Coding.Display.ShouldBe(
+            "Rising PSA following treatment for malignant neoplasm of prostate");
 
         // Check text
-        condition.Code.Text.ShouldBe("Castration-Sensitive Prostate Cancer with Biochemical Relapse");
+        condition.Code.Text.ShouldBe(
+            "Castration-Sensitive Prostate Cancer with Biochemical Relapse");
 
         // Check subject and recorder
         condition.Subject.ShouldBe(_patientReference);
@@ -99,11 +106,13 @@ public class HsdmAssessmentConditionBuilderTests
         // Check notes
         condition.Note.ShouldNotBeNull();
         condition.Note.Count.ShouldBe(1);
-        condition.Note[0].Text.ToString().ShouldBe("Patient shows biochemical relapse with rising PSA following treatment");
+        condition.Note[0].Text
+            .ShouldBe("Patient shows biochemical relapse with rising PSA following treatment");
 
         // Check fact extensions
         condition.Extension.ShouldNotBeNull();
-        var factExtensions = condition.Extension.Where(e => e.Url == ClinicalFactExtension.ExtensionUrl);
+        IEnumerable<Extension> factExtensions
+            = condition.Extension.Where(e => e.Url == ClinicalFactExtension.ExtensionUrl);
         factExtensions.ShouldHaveSingleItem();
 
         // Check AIAST label from base class
@@ -118,11 +127,12 @@ public class HsdmAssessmentConditionBuilderTests
         var builder = new HsdmAssessmentConditionBuilder(_configuration);
 
         // Act
-        var condition = builder
+        Condition condition = builder
             .WithFocus("condition-456", "Advanced Prostate Cancer")
             .WithPatient("patient-123", "John Doe")
             .WithDevice("device-789", "Assessment AI")
-            .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
+            .WithHSDMResult(
+                HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
             .AddFactEvidence(_sampleFacts)
             .WithSummary("Patient has metastatic castration-sensitive prostate cancer")
             .Build();
@@ -131,18 +141,20 @@ public class HsdmAssessmentConditionBuilderTests
         condition.Code.Coding.Count.ShouldBe(2); // Only SNOMED + Z19.1, no R97.21
 
         // Check SNOMED code
-        var snomedCoding = condition.Code.Coding.FirstOrDefault(c => c.System == FhirCodingHelper.Systems.SNOMED_SYSTEM);
+        Coding? snomedCoding
+            = condition.Code.Coding.FirstOrDefault(c =>
+                c.System == FhirCodingHelper.Systems.SNOMED_SYSTEM);
         snomedCoding.ShouldNotBeNull();
         snomedCoding.Code.ShouldBe("1197209002");
 
         // Check ICD-10 Z19.1 code
-        var icd10Coding = condition.Code.Coding.FirstOrDefault(c =>
+        Coding? icd10Coding = condition.Code.Coding.FirstOrDefault(c =>
             c.System == "http://hl7.org/fhir/sid/icd-10-cm");
         icd10Coding.ShouldNotBeNull();
         icd10Coding.Code.ShouldBe("Z19.1");
 
         // Should NOT have R97.21 code
-        var risingPsaCoding = condition.Code.Coding.FirstOrDefault(c => c.Code == "R97.21");
+        Coding? risingPsaCoding = condition.Code.Coding.FirstOrDefault(c => c.Code == "R97.21");
         risingPsaCoding.ShouldBeNull();
 
         condition.Code.Text.ShouldBe("Castration-Sensitive Prostate Cancer (mCSPC)");
@@ -155,11 +167,12 @@ public class HsdmAssessmentConditionBuilderTests
         var builder = new HsdmAssessmentConditionBuilder(_configuration);
 
         // Act
-        var condition = builder
+        Condition condition = builder
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
-            .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationResistant)
+            .WithHSDMResult(
+                HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationResistant)
             .AddFactEvidence(_sampleFacts)
             .WithSummary("Patient has progressed to castration-resistant disease")
             .Build();
@@ -168,13 +181,15 @@ public class HsdmAssessmentConditionBuilderTests
         condition.Code.Coding.Count.ShouldBe(2); // SNOMED + Z19.2
 
         // Check SNOMED code for castration-resistant
-        var snomedCoding = condition.Code.Coding.FirstOrDefault(c => c.System == FhirCodingHelper.Systems.SNOMED_SYSTEM);
+        Coding? snomedCoding
+            = condition.Code.Coding.FirstOrDefault(c =>
+                c.System == FhirCodingHelper.Systems.SNOMED_SYSTEM);
         snomedCoding.ShouldNotBeNull();
         snomedCoding.Code.ShouldBe("445848006");
         snomedCoding.Display.ShouldBe("Castration resistant prostate cancer");
 
         // Check ICD-10 Z19.2 code
-        var icd10Coding = condition.Code.Coding.FirstOrDefault(c =>
+        Coding? icd10Coding = condition.Code.Coding.FirstOrDefault(c =>
             c.System == "http://hl7.org/fhir/sid/icd-10-cm");
         icd10Coding.ShouldNotBeNull();
         icd10Coding.Code.ShouldBe("Z19.2");
@@ -190,11 +205,12 @@ public class HsdmAssessmentConditionBuilderTests
         var builder = new HsdmAssessmentConditionBuilder(_configuration);
 
         // Act
-        var condition = builder
+        Condition condition = builder
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
-            .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
+            .WithHSDMResult(
+                HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
             .AddFactEvidence(_sampleFacts)
             .WithSummary("Assessment with high confidence")
             .WithConfidence(0.95f)
@@ -202,7 +218,7 @@ public class HsdmAssessmentConditionBuilderTests
 
         // Assert
         condition.Extension.ShouldNotBeNull();
-        var confidenceExtension = condition.Extension.FirstOrDefault(e =>
+        Extension? confidenceExtension = condition.Extension.FirstOrDefault(e =>
             e.Url == "http://thirdopinion.ai/fhir/StructureDefinition/confidence");
         confidenceExtension.ShouldNotBeNull();
         var confidenceValue = (FhirDecimal)confidenceExtension.Value;
@@ -216,33 +232,38 @@ public class HsdmAssessmentConditionBuilderTests
         var builder = new HsdmAssessmentConditionBuilder(_configuration);
 
         // Act
-        var condition = builder
+        Condition condition = builder
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
-            .WithCriteria("HSDM-001", "HSDM Assessment Criteria", "Detailed criteria for HSDM classification")
-            .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
+            .WithCriteria("HSDM-001", "HSDM Assessment Criteria",
+                "Detailed criteria for HSDM classification")
+            .WithHSDMResult(
+                HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
             .AddFactEvidence(_sampleFacts)
             .WithSummary("Assessment using specific criteria")
             .Build();
 
         // Assert
         condition.Extension.ShouldNotBeNull();
-        var criteriaExtension = condition.Extension.FirstOrDefault(e =>
+        Extension? criteriaExtension = condition.Extension.FirstOrDefault(e =>
             e.Url == "http://thirdopinion.ai/fhir/StructureDefinition/assessment-criteria");
         criteriaExtension.ShouldNotBeNull();
 
-        var idExtension = criteriaExtension.Extension.FirstOrDefault(e => e.Url == "id");
+        Extension? idExtension = criteriaExtension.Extension.FirstOrDefault(e => e.Url == "id");
         idExtension.ShouldNotBeNull();
         ((FhirString)idExtension.Value).Value.ShouldBe("HSDM-001");
 
-        var displayExtension = criteriaExtension.Extension.FirstOrDefault(e => e.Url == "display");
+        Extension? displayExtension
+            = criteriaExtension.Extension.FirstOrDefault(e => e.Url == "display");
         displayExtension.ShouldNotBeNull();
         ((FhirString)displayExtension.Value).Value.ShouldBe("HSDM Assessment Criteria");
 
-        var descriptionExtension = criteriaExtension.Extension.FirstOrDefault(e => e.Url == "description");
+        Extension? descriptionExtension
+            = criteriaExtension.Extension.FirstOrDefault(e => e.Url == "description");
         descriptionExtension.ShouldNotBeNull();
-        ((FhirString)descriptionExtension.Value).Value.ShouldBe("Detailed criteria for HSDM classification");
+        ((FhirString)descriptionExtension.Value).Value.ShouldBe(
+            "Detailed criteria for HSDM classification");
     }
 
     [Fact]
@@ -271,18 +292,20 @@ public class HsdmAssessmentConditionBuilderTests
         };
 
         // Act
-        var condition = builder
+        Condition condition = builder
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
-            .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
+            .WithHSDMResult(
+                HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
             .AddFactEvidence(multipleFacts)
             .WithSummary("Assessment based on multiple facts")
             .Build();
 
         // Assert
         condition.Extension.ShouldNotBeNull();
-        var factExtensions = condition.Extension.Where(e => e.Url == ClinicalFactExtension.ExtensionUrl);
+        IEnumerable<Extension> factExtensions
+            = condition.Extension.Where(e => e.Url == ClinicalFactExtension.ExtensionUrl);
         factExtensions.Count().ShouldBe(2);
 
         // Check evidence count (should include document references from facts)
@@ -321,7 +344,8 @@ public class HsdmAssessmentConditionBuilderTests
             builder
                 .WithFocus(_conditionReference)
                 .WithDevice(_deviceReference)
-                .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
+                .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults
+                    .MetastaticCastrationSensitive)
                 .AddFactEvidence(_sampleFacts)
                 .WithSummary("Test summary")
                 .Build());
@@ -340,7 +364,8 @@ public class HsdmAssessmentConditionBuilderTests
             builder
                 .WithFocus(_conditionReference)
                 .WithPatient(_patientReference)
-                .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
+                .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults
+                    .MetastaticCastrationSensitive)
                 .AddFactEvidence(_sampleFacts)
                 .WithSummary("Test summary")
                 .Build());
@@ -359,7 +384,8 @@ public class HsdmAssessmentConditionBuilderTests
             builder
                 .WithPatient(_patientReference)
                 .WithDevice(_deviceReference)
-                .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
+                .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults
+                    .MetastaticCastrationSensitive)
                 .AddFactEvidence(_sampleFacts)
                 .WithSummary("Test summary")
                 .Build());
@@ -398,7 +424,8 @@ public class HsdmAssessmentConditionBuilderTests
                 .WithFocus(_conditionReference)
                 .WithPatient(_patientReference)
                 .WithDevice(_deviceReference)
-                .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
+                .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults
+                    .MetastaticCastrationSensitive)
                 .WithSummary("Test summary")
                 .Build());
 
@@ -417,7 +444,8 @@ public class HsdmAssessmentConditionBuilderTests
                 .WithFocus(_conditionReference)
                 .WithPatient(_patientReference)
                 .WithDevice(_deviceReference)
-                .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
+                .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults
+                    .MetastaticCastrationSensitive)
                 .AddFactEvidence(_sampleFacts)
                 .Build());
 

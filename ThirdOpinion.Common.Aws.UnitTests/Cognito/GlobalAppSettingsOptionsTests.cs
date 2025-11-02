@@ -48,13 +48,16 @@ public class GlobalAppSettingsOptionsTests
     public void ConfigurationBinding_BindsCorrectly()
     {
         // Arrange
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "TablePrefix", "TestPrefix_" },
                 { "Cognito:Region", "us-east-1" },
                 { "Cognito:ClientId", "test-client-id" },
-                { "Cognito:Authority", "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_TestPool" },
+                {
+                    "Cognito:Authority",
+                    "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_TestPool"
+                },
                 { "Tenants:TenantGroups:tenant1:0", "Admin" },
                 { "Tenants:TenantGroups:tenant1:1", "User" },
                 { "Tenants:TenantGroups:tenant2:0", "Manager" }
@@ -63,16 +66,18 @@ public class GlobalAppSettingsOptionsTests
 
         var services = new ServiceCollection();
         services.Configure<GlobalAppSettingsOptions>(configuration);
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Act
-        var options = serviceProvider.GetRequiredService<IOptions<GlobalAppSettingsOptions>>().Value;
+        var options = serviceProvider.GetRequiredService<IOptions<GlobalAppSettingsOptions>>()
+            .Value;
 
         // Assert
         options.TablePrefix.ShouldBe("TestPrefix_");
         options.Cognito.Region.ShouldBe("us-east-1");
         options.Cognito.ClientId.ShouldBe("test-client-id");
-        options.Cognito.Authority.ShouldBe("https://cognito-idp.us-east-1.amazonaws.com/us-east-1_TestPool");
+        options.Cognito.Authority.ShouldBe(
+            "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_TestPool");
         options.Tenants.TenantGroups.Count.ShouldBe(2);
         options.Tenants.TenantGroups.Keys.ShouldContain("tenant1");
         options.Tenants.TenantGroups.Keys.ShouldContain("tenant2");
@@ -87,16 +92,17 @@ public class GlobalAppSettingsOptionsTests
     public void ConfigurationBinding_WithMissingValues_UsesDefaults()
     {
         // Arrange
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>())
             .Build();
 
         var services = new ServiceCollection();
         services.Configure<GlobalAppSettingsOptions>(configuration);
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Act
-        var options = serviceProvider.GetRequiredService<IOptions<GlobalAppSettingsOptions>>().Value;
+        var options = serviceProvider.GetRequiredService<IOptions<GlobalAppSettingsOptions>>()
+            .Value;
 
         // Assert
         options.TablePrefix.ShouldBe(string.Empty);
@@ -110,7 +116,7 @@ public class GlobalAppSettingsOptionsTests
     public void ConfigurationBinding_WithPartialValues_BindsAvailableValues()
     {
         // Arrange
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "TablePrefix", "Partial_" },
@@ -121,10 +127,11 @@ public class GlobalAppSettingsOptionsTests
 
         var services = new ServiceCollection();
         services.Configure<GlobalAppSettingsOptions>(configuration);
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Act
-        var options = serviceProvider.GetRequiredService<IOptions<GlobalAppSettingsOptions>>().Value;
+        var options = serviceProvider.GetRequiredService<IOptions<GlobalAppSettingsOptions>>()
+            .Value;
 
         // Assert
         options.TablePrefix.ShouldBe("Partial_");
@@ -161,12 +168,14 @@ public class GlobalAppSettingsOptionsTests
         options.Tenants.TenantGroups[tenantId] = groups;
 
         // Act & Assert - Existing tenant
-        var foundExisting = options.Tenants.TenantGroups.TryGetValue(tenantId, out var existingGroups);
+        var foundExisting
+            = options.Tenants.TenantGroups.TryGetValue(tenantId, out var existingGroups);
         foundExisting.ShouldBeTrue();
         existingGroups.ShouldBe(groups);
 
         // Act & Assert - Non-existing tenant
-        var foundNonExisting = options.Tenants.TenantGroups.TryGetValue("non-existing", out var nonExistingGroups);
+        var foundNonExisting
+            = options.Tenants.TenantGroups.TryGetValue("non-existing", out var nonExistingGroups);
         foundNonExisting.ShouldBeFalse();
         nonExistingGroups.ShouldBeNull();
     }

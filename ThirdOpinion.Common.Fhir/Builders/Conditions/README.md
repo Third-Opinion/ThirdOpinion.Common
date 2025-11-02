@@ -1,18 +1,21 @@
 # HSDM Assessment Condition Builder
 
-The `HsdmAssessmentConditionBuilder` creates FHIR Condition resources for **H**ormone **S**ensitivity **D**iagnosis **M**odifier (HSDM) assessments of Castration-Sensitive Prostate Cancer (CSPC).
+The `HsdmAssessmentConditionBuilder` creates FHIR Condition resources for **H**ormone **S**ensitivity **D**iagnosis **M
+**odifier (HSDM) assessments of Castration-Sensitive Prostate Cancer (CSPC).
 
 ## Overview
 
-This builder generates FHIR Condition resources that classify prostate cancer hormone sensitivity status using standardized SNOMED and ICD-10 codes. It supports three classification types with proper clinical fact evidence integration.
+This builder generates FHIR Condition resources that classify prostate cancer hormone sensitivity status using
+standardized SNOMED and ICD-10 codes. It supports three classification types with proper clinical fact evidence
+integration.
 
 ## Supported HSDM Result Types
 
-| Result Type | Description | SNOMED Code | ICD-10 Codes |
-|-------------|-------------|-------------|---------------|
-| `nmCSPC_biochemical_relapse` | Non-metastatic with biochemical relapse | 1197209002 | Z19.1 + R97.21 |
-| `mCSPC` | Metastatic castration-sensitive | 1197209002 | Z19.1 |
-| `mCRPC` | Metastatic castration-resistant | 445848006 | Z19.2 |
+| Result Type                  | Description                             | SNOMED Code | ICD-10 Codes   |
+|------------------------------|-----------------------------------------|-------------|----------------|
+| `nmCSPC_biochemical_relapse` | Non-metastatic with biochemical relapse | 1197209002  | Z19.1 + R97.21 |
+| `mCSPC`                      | Metastatic castration-sensitive         | 1197209002  | Z19.1          |
+| `mCRPC`                      | Metastatic castration-resistant         | 445848006   | Z19.2          |
 
 ## Required Dependencies
 
@@ -347,7 +350,9 @@ catch (InvalidOperationException ex)
 
 ## Clinical Fact Extensions
 
-The builder automatically converts `Fact` objects into FHIR extensions using the URL `https://thirdopinion.io/clinical-fact`. Each fact becomes a complex extension with sub-extensions for all fact properties.
+The builder automatically converts `Fact` objects into FHIR extensions using the URL
+`https://thirdopinion.io/clinical-fact`. Each fact becomes a complex extension with sub-extensions for all fact
+properties.
 
 ## Integration Notes
 

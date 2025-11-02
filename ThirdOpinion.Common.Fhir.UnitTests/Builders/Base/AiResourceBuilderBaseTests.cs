@@ -14,66 +14,6 @@ public class AiResourceBuilderBaseTests
         _configuration = AiInferenceConfiguration.CreateDefault();
     }
 
-    // Test implementation of the abstract class
-    private class TestObservationBuilder : AiResourceBuilderBase<Observation>
-    {
-        private string? _code;
-        private string? _value;
-
-        public TestObservationBuilder(AiInferenceConfiguration configuration)
-            : base(configuration)
-        {
-        }
-
-        public TestObservationBuilder WithCode(string code)
-        {
-            _code = code;
-            return this;
-        }
-
-        public TestObservationBuilder WithValue(string value)
-        {
-            _value = value;
-            return this;
-        }
-
-        protected override void ValidateRequiredFields()
-        {
-            if (string.IsNullOrWhiteSpace(_code))
-            {
-                throw new InvalidOperationException("Code is required");
-            }
-        }
-
-        protected override Observation BuildCore()
-        {
-            var observation = new Observation
-            {
-                Status = ObservationStatus.Final,
-                Code = new CodeableConcept
-                {
-                    Coding = new List<Coding>
-                    {
-                        new Coding { System = "http://example.org", Code = _code }
-                    }
-                }
-            };
-
-            if (!string.IsNullOrWhiteSpace(_value))
-            {
-                observation.Value = new FhirString(_value);
-            }
-
-            // Add derived from references if any
-            if (DerivedFromReferences.Any())
-            {
-                observation.DerivedFrom = DerivedFromReferences;
-            }
-
-            return observation;
-        }
-    }
-
     [Fact]
     public void Constructor_RequiresConfiguration()
     {
@@ -89,7 +29,7 @@ public class AiResourceBuilderBaseTests
 
         // Act
         builder.WithInferenceId("custom-inference-id");
-        var observation = builder.WithCode("test").Build();
+        Observation observation = builder.WithCode("test").Build();
 
         // Assert
         observation.Id.ShouldBe("custom-inference-id");
@@ -102,7 +42,8 @@ public class AiResourceBuilderBaseTests
         var builder = new TestObservationBuilder(_configuration);
 
         // Act
-        var result = builder.WithCriteria("criteria-123", "Test Criteria", "http://custom.system");
+        AiResourceBuilderBase<Observation> result
+            = builder.WithCriteria("criteria-123", "Test Criteria", "http://custom.system");
 
         // Assert
         result.ShouldBe(builder); // Fluent interface returns same instance
@@ -118,7 +59,7 @@ public class AiResourceBuilderBaseTests
 
         // Act
         builder.AddDerivedFrom(reference);
-        var observation = builder.WithCode("test").Build();
+        Observation observation = builder.WithCode("test").Build();
 
         // Assert
         observation.DerivedFrom.ShouldNotBeNull();
@@ -136,7 +77,7 @@ public class AiResourceBuilderBaseTests
         // Act
         builder.AddDerivedFrom("DocumentReference/456", "Clinical Note");
         builder.AddDerivedFrom("Observation/789");
-        var observation = builder.WithCode("test").Build();
+        Observation observation = builder.WithCode("test").Build();
 
         // Assert
         observation.DerivedFrom.Count.ShouldBe(2);
@@ -153,7 +94,7 @@ public class AiResourceBuilderBaseTests
         var builder = new TestObservationBuilder(_configuration);
 
         // Act
-        var observation = builder.WithCode("test").Build();
+        Observation observation = builder.WithCode("test").Build();
 
         // Assert
         observation.Id.ShouldNotBeNullOrEmpty();
@@ -168,14 +109,14 @@ public class AiResourceBuilderBaseTests
         var builder = new TestObservationBuilder(_configuration);
 
         // Act
-        var observation = builder.WithCode("test").Build();
+        Observation observation = builder.WithCode("test").Build();
 
         // Assert
         observation.Meta.ShouldNotBeNull();
         observation.Meta.Security.ShouldNotBeNull();
         observation.Meta.Security.Count.ShouldBeGreaterThan(0);
 
-        var aiastLabel = observation.Meta.Security.FirstOrDefault(s => s.Code == "AIAST");
+        Coding? aiastLabel = observation.Meta.Security.FirstOrDefault(s => s.Code == "AIAST");
         aiastLabel.ShouldNotBeNull();
         aiastLabel.System.ShouldBe("http://terminology.hl7.org/CodeSystem/v3-ActCode");
         aiastLabel.Display.ShouldBe("AI Assisted");
@@ -189,7 +130,7 @@ public class AiResourceBuilderBaseTests
         builder.WithCode("test");
 
         // Build twice
-        var observation1 = builder.Build();
+        Observation observation1 = builder.Build();
 
         // Manually add another AIAST label
         observation1.Meta.Security.Add(new Coding
@@ -201,10 +142,11 @@ public class AiResourceBuilderBaseTests
 
         // Act - Build again with existing AIAST
         var builder2 = new TestObservationBuilder(_configuration);
-        var observation2 = builder2.WithCode("test2").Build();
+        Observation observation2 = builder2.WithCode("test2").Build();
 
         // Assert
-        var aiastLabels = observation2.Meta.Security.Where(s => s.Code == "AIAST").ToList();
+        List<Coding> aiastLabels
+            = observation2.Meta.Security.Where(s => s.Code == "AIAST").ToList();
         aiastLabels.Count.ShouldBe(1);
     }
 
@@ -227,7 +169,7 @@ public class AiResourceBuilderBaseTests
         var builder = new TestObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithCode("test-code")
             .WithValue("test-value")
             .Build();
@@ -256,7 +198,7 @@ public class AiResourceBuilderBaseTests
             .AddDerivedFrom("Patient/123")
             .AddDerivedFrom("DocumentReference/456", "Document");
 
-        var observation = builder
+        Observation observation = builder
             .WithCode("test-code")
             .WithValue("test-value")
             .Build();
@@ -274,21 +216,17 @@ public class AiResourceBuilderBaseTests
         var tasks = new List<Task<Observation>>();
         var builders = new List<TestObservationBuilder>();
 
-        for (int i = 0; i < 100; i++)
-        {
+        for (var i = 0; i < 100; i++)
             builders.Add(new TestObservationBuilder(_configuration).WithCode($"code-{i}"));
-        }
 
         // Act
-        foreach (var builder in builders)
-        {
+        foreach (TestObservationBuilder builder in builders)
             tasks.Add(Task.Run(() => builder.Build()));
-        }
 
-        var observations = await Task.WhenAll(tasks);
+        Observation[] observations = await Task.WhenAll(tasks);
 
         // Assert
-        var ids = observations.Select(o => o.Id).ToList();
+        List<string> ids = observations.Select(o => o.Id).ToList();
         ids.Distinct().Count().ShouldBe(100); // All IDs should be unique
         ids.All(id => id.StartsWith("to.ai-inference-")).ShouldBeTrue();
     }
@@ -305,7 +243,7 @@ public class AiResourceBuilderBaseTests
         // We need to modify our test to handle this scenario
         // Since BuildCore creates a new observation, we'll test with inference ID
         builder.WithInferenceId("my-inference-id");
-        var result = builder.WithCode("test").Build();
+        Observation result = builder.WithCode("test").Build();
 
         // Assert
         result.Id.ShouldBe("my-inference-id");
@@ -321,12 +259,61 @@ public class AiResourceBuilderBaseTests
         builder.AddDerivedFrom(null!);
         builder.AddDerivedFrom("", "display"); // Empty string should be ignored
         builder.AddDerivedFrom("   "); // Whitespace should be ignored
-        var observation = builder.WithCode("test").Build();
+        Observation observation = builder.WithCode("test").Build();
 
         // Assert
-        if (observation.DerivedFrom != null)
+        if (observation.DerivedFrom != null) observation.DerivedFrom.Count.ShouldBe(0);
+    }
+
+    // Test implementation of the abstract class
+    private class TestObservationBuilder : AiResourceBuilderBase<Observation>
+    {
+        private string? _code;
+        private string? _value;
+
+        public TestObservationBuilder(AiInferenceConfiguration configuration)
+            : base(configuration)
         {
-            observation.DerivedFrom.Count.ShouldBe(0);
+        }
+
+        public TestObservationBuilder WithCode(string code)
+        {
+            _code = code;
+            return this;
+        }
+
+        public TestObservationBuilder WithValue(string value)
+        {
+            _value = value;
+            return this;
+        }
+
+        protected override void ValidateRequiredFields()
+        {
+            if (string.IsNullOrWhiteSpace(_code))
+                throw new InvalidOperationException("Code is required");
+        }
+
+        protected override Observation BuildCore()
+        {
+            var observation = new Observation
+            {
+                Status = ObservationStatus.Final,
+                Code = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new() { System = "http://example.org", Code = _code }
+                    }
+                }
+            };
+
+            if (!string.IsNullOrWhiteSpace(_value)) observation.Value = new FhirString(_value);
+
+            // Add derived from references if any
+            if (DerivedFromReferences.Any()) observation.DerivedFrom = DerivedFromReferences;
+
+            return observation;
         }
     }
 }

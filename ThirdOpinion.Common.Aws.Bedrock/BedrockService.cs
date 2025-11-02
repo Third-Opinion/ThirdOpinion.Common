@@ -37,9 +37,13 @@ public class BedrockService : IBedrockService, IDisposable
     private readonly ILangfuseService? _langfuseService;
     private readonly ILogger<BedrockService> _logger;
     private readonly IBedrockPricingService _pricingService;
+    #pragma warning disable CS0649 // Field is never assigned to
     private readonly IRateLimiterService? _rateLimiterService;
+    #pragma warning restore CS0649
     private readonly IAsyncPolicy _retryPolicy;
+    #pragma warning disable CS0169 // Field is never used
     private readonly IRetryPolicyService? _retryPolicyService;
+    #pragma warning restore CS0169
 
     /// <summary>
     ///     Initializes a new instance of the BedrockService
@@ -360,7 +364,7 @@ public class BedrockService : IBedrockService, IDisposable
             if (!string.IsNullOrWhiteSpace(byProvider)) request.ByProvider = byProvider;
 
             Amazon.Bedrock.Model.ListFoundationModelsResponse? response
-                = await _bedrockClient.ListFoundationModelsAsync(request, cancellationToken);
+                = await _bedrockClient!.ListFoundationModelsAsync(request, cancellationToken);
             var models = new List<BedrockFoundationModel>();
 
             foreach (FoundationModelSummary? model in response.ModelSummaries)
@@ -419,7 +423,7 @@ public class BedrockService : IBedrockService, IDisposable
             };
 
             GetFoundationModelResponse? response
-                = await _bedrockClient.GetFoundationModelAsync(request, cancellationToken);
+                = await _bedrockClient!.GetFoundationModelAsync(request, cancellationToken);
             FoundationModelDetails? model = response.ModelDetails;
 
             if (model == null) return null;

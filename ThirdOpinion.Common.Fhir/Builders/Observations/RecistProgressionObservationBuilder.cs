@@ -8,36 +8,36 @@ using ThirdOpinion.Common.Fhir.Models;
 namespace ThirdOpinion.Common.Fhir.Builders.Observations;
 
 /// <summary>
-/// Builder for creating FHIR Observations for RECIST 1.1 radiographic progression with imaging references
+///     Builder for creating FHIR Observations for RECIST 1.1 radiographic progression with imaging references
 /// </summary>
 public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observation>
 {
-    private ResourceReference? _patientReference;
-    private ResourceReference? _deviceReference;
+    private readonly List<Observation.ComponentComponent> _components;
+    private readonly List<Fact> _conflictingFacts;
     private readonly List<ResourceReference> _focusReferences;
-    private string? _criteriaVersion;
     private readonly List<ResourceReference> _imagingStudies;
     private readonly List<ResourceReference> _radiologyReports;
-    private CodeableConcept? _bodySite;
-    private readonly List<Observation.ComponentComponent> _components;
-    private CodeableConcept? _recistResponse;
-    private float? _confidence;
-
-    // New fields for enhanced JSON structure support
-    private string? _measurementChange;
-    private string? _imagingType;
-    private DateTime? _confirmationDate;
     private readonly List<Fact> _supportingFacts;
+    private CodeableConcept? _bodySite;
+    private float? _confidence;
+    private string? _confidenceRationale;
+    private DateTime? _confirmationDate;
+    private string? _criteriaVersion;
 
     // Latest version fields
     private string? _determination;
-    private string? _confidenceRationale;
-    private string? _summary;
+    private ResourceReference? _deviceReference;
     private DateTime? _imagingDate;
-    private readonly List<Fact> _conflictingFacts;
+    private string? _imagingType;
+
+    // New fields for enhanced JSON structure support
+    private string? _measurementChange;
+    private ResourceReference? _patientReference;
+    private CodeableConcept? _recistResponse;
+    private string? _summary;
 
     /// <summary>
-    /// Creates a new RECIST Progression Observation builder
+    ///     Creates a new RECIST Progression Observation builder
     /// </summary>
     /// <param name="configuration">The AI inference configuration</param>
     public RecistProgressionObservationBuilder(AiInferenceConfiguration configuration)
@@ -52,7 +52,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
     public new RecistProgressionObservationBuilder WithInferenceId(string id)
     {
@@ -61,16 +61,18 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
-    public new RecistProgressionObservationBuilder WithCriteria(string id, string display, string? system = null)
+    public new RecistProgressionObservationBuilder WithCriteria(string id,
+        string display,
+        string? system = null)
     {
         base.WithCriteria(id, display, system);
         return this;
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
     public new RecistProgressionObservationBuilder AddDerivedFrom(ResourceReference reference)
     {
@@ -79,16 +81,17 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
-    public new RecistProgressionObservationBuilder AddDerivedFrom(string reference, string? display = null)
+    public new RecistProgressionObservationBuilder AddDerivedFrom(string reference,
+        string? display = null)
     {
         base.AddDerivedFrom(reference, display);
         return this;
     }
 
     /// <summary>
-    /// Sets the patient reference for this observation
+    ///     Sets the patient reference for this observation
     /// </summary>
     /// <param name="patient">The patient resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -99,7 +102,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Sets the patient reference for this observation
+    ///     Sets the patient reference for this observation
     /// </summary>
     /// <param name="patientId">The patient ID</param>
     /// <param name="display">Optional display text</param>
@@ -118,7 +121,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Sets the device reference that performed the assessment
+    ///     Sets the device reference that performed the assessment
     /// </summary>
     /// <param name="device">The device resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -129,7 +132,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Sets the device reference that performed the assessment
+    ///     Sets the device reference that performed the assessment
     /// </summary>
     /// <param name="deviceId">The device ID</param>
     /// <param name="display">Optional display text</param>
@@ -148,14 +151,15 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Sets the focus references for this observation (tumors/lesions being assessed)
+    ///     Sets the focus references for this observation (tumors/lesions being assessed)
     /// </summary>
     /// <param name="focuses">The focus resource references</param>
     /// <returns>This builder instance for method chaining</returns>
     public RecistProgressionObservationBuilder WithFocus(params ResourceReference[] focuses)
     {
         if (focuses == null || focuses.Length == 0)
-            throw new ArgumentException("At least one focus reference is required", nameof(focuses));
+            throw new ArgumentException("At least one focus reference is required",
+                nameof(focuses));
 
         _focusReferences.Clear();
         _focusReferences.AddRange(focuses.Where(f => f != null));
@@ -163,7 +167,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Sets the RECIST criteria version for this assessment
+    ///     Sets the RECIST criteria version for this assessment
     /// </summary>
     /// <param name="criteria">The RECIST criteria version (e.g., "1.1")</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -177,7 +181,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Adds a component with a Quantity value (for numeric measurements)
+    ///     Adds a component with a Quantity value (for numeric measurements)
     /// </summary>
     /// <param name="code">The LOINC or SNOMED code for the component</param>
     /// <param name="value">The quantity value</param>
@@ -200,7 +204,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Adds a component with a boolean value (for yes/no indicators)
+    ///     Adds a component with a boolean value (for yes/no indicators)
     /// </summary>
     /// <param name="code">The LOINC or SNOMED code for the component</param>
     /// <param name="value">The boolean value</param>
@@ -221,7 +225,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Adds a component with a CodeableConcept value (for coded responses)
+    ///     Adds a component with a CodeableConcept value (for coded responses)
     /// </summary>
     /// <param name="code">The LOINC or SNOMED code for the component</param>
     /// <param name="value">The CodeableConcept value</param>
@@ -244,7 +248,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Adds an imaging study reference to derivedFrom
+    ///     Adds an imaging study reference to derivedFrom
     /// </summary>
     /// <param name="imagingStudy">The imaging study resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -258,7 +262,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Adds a radiology report reference to derivedFrom
+    ///     Adds a radiology report reference to derivedFrom
     /// </summary>
     /// <param name="report">The radiology report resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -272,7 +276,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Sets the overall RECIST 1.1 response category using NCI terminology
+    ///     Sets the overall RECIST 1.1 response category using NCI terminology
     /// </summary>
     /// <param name="nciCode">The NCI code (e.g., "C35571" for Progressive Disease)</param>
     /// <param name="display">The display text</param>
@@ -289,7 +293,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Sets the body site for tumor location using SNOMED codes
+    ///     Sets the body site for tumor location using SNOMED codes
     /// </summary>
     /// <param name="snomedCode">The SNOMED code for the body site</param>
     /// <param name="display">The display text for the body site</param>
@@ -306,21 +310,22 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Sets the AI confidence score for this observation
+    ///     Sets the AI confidence score for this observation
     /// </summary>
     /// <param name="confidence">The confidence score (0.0 to 1.0)</param>
     /// <returns>This builder instance for method chaining</returns>
     public RecistProgressionObservationBuilder WithConfidence(float confidence)
     {
         if (confidence < 0.0f || confidence > 1.0f)
-            throw new ArgumentOutOfRangeException(nameof(confidence), "Confidence must be between 0.0 and 1.0");
+            throw new ArgumentOutOfRangeException(nameof(confidence),
+                "Confidence must be between 0.0 and 1.0");
 
         _confidence = confidence;
         return this;
     }
 
     /// <summary>
-    /// Sets the measurement change description
+    ///     Sets the measurement change description
     /// </summary>
     /// <param name="measurementChange">Description of measurement changes</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -331,7 +336,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Sets the imaging type used for assessment
+    ///     Sets the imaging type used for assessment
     /// </summary>
     /// <param name="imagingType">Type of imaging (e.g., "CT", "MRI")</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -342,7 +347,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Sets the confirmation date for progression
+    ///     Sets the confirmation date for progression
     /// </summary>
     /// <param name="confirmationDate">Date when progression was confirmed</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -353,7 +358,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Adds supporting clinical facts as evidence
+    ///     Adds supporting clinical facts as evidence
     /// </summary>
     /// <param name="facts">Array of supporting clinical facts</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -364,31 +369,33 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
             _supportingFacts.AddRange(facts.Where(f => f != null));
 
             // Add document references as evidence
-            foreach (var fact in facts.Where(f => f != null && !string.IsNullOrWhiteSpace(f.factDocumentReference)))
-            {
-                AddRadiologyReport(new ResourceReference(fact.factDocumentReference, $"Supporting fact: {fact.type}"));
-            }
+            foreach (Fact fact in facts.Where(f =>
+                         f != null && !string.IsNullOrWhiteSpace(f.factDocumentReference)))
+                AddRadiologyReport(new ResourceReference(fact.factDocumentReference,
+                    $"Supporting fact: {fact.type}"));
         }
+
         return this;
     }
 
     /// <summary>
-    /// Sets the determination result ("True", "False", or "Inconclusive")
+    ///     Sets the determination result ("True", "False", or "Inconclusive")
     /// </summary>
     /// <param name="determination">The determination value: "True", "False", or "Inconclusive"</param>
     /// <returns>This builder instance for method chaining</returns>
     public RecistProgressionObservationBuilder WithDetermination(string? determination)
     {
-        if (determination != null && !new[] { "True", "False", "Inconclusive" }.Contains(determination))
-        {
-            throw new ArgumentException($"Invalid determination value: {determination}. Must be 'True', 'False', or 'Inconclusive'.", nameof(determination));
-        }
+        if (determination != null &&
+            !new[] { "True", "False", "Inconclusive" }.Contains(determination))
+            throw new ArgumentException(
+                $"Invalid determination value: {determination}. Must be 'True', 'False', or 'Inconclusive'.",
+                nameof(determination));
         _determination = determination;
         return this;
     }
 
     /// <summary>
-    /// Sets the confidence rationale explaining the confidence score reasoning
+    ///     Sets the confidence rationale explaining the confidence score reasoning
     /// </summary>
     /// <param name="confidenceRationale">The confidence rationale text</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -399,7 +406,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Sets the detailed summary of the RECIST assessment
+    ///     Sets the detailed summary of the RECIST assessment
     /// </summary>
     /// <param name="summary">The assessment summary</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -410,7 +417,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Sets the imaging date when the assessment was performed
+    ///     Sets the imaging date when the assessment was performed
     /// </summary>
     /// <param name="imagingDate">The imaging date</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -421,37 +428,33 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Adds conflicting clinical facts that may contradict the assessment
+    ///     Adds conflicting clinical facts that may contradict the assessment
     /// </summary>
     /// <param name="facts">Array of conflicting clinical facts</param>
     /// <returns>This builder instance for method chaining</returns>
     public RecistProgressionObservationBuilder WithConflictingFacts(params Fact[] facts)
     {
         if (facts != null && facts.Length > 0)
-        {
             _conflictingFacts.AddRange(facts.Where(f => f != null));
-        }
         return this;
     }
 
     /// <summary>
-    /// Validates that required fields are set before building
+    ///     Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
     {
         if (_patientReference == null)
-        {
-            throw new InvalidOperationException("Patient reference is required. Call WithPatient() before Build().");
-        }
+            throw new InvalidOperationException(
+                "Patient reference is required. Call WithPatient() before Build().");
 
         if (_deviceReference == null)
-        {
-            throw new InvalidOperationException("Device reference is required. Call WithDevice() before Build().");
-        }
+            throw new InvalidOperationException(
+                "Device reference is required. Call WithDevice() before Build().");
     }
 
     /// <summary>
-    /// Builds the RECIST Progression Observation
+    ///     Builds the RECIST Progression Observation
     /// </summary>
     /// <returns>The completed Observation resource</returns>
     protected override Observation BuildCore()
@@ -463,11 +466,11 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
             // Category: imaging
             Category = new List<CodeableConcept>
             {
-                new CodeableConcept
+                new()
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://terminology.hl7.org/CodeSystem/observation-category",
                             Code = "imaging",
@@ -482,13 +485,13 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
             {
                 Coding = new List<Coding>
                 {
-                    new Coding
+                    new()
                     {
                         System = FhirCodingHelper.Systems.LOINC_SYSTEM,
                         Code = "21976-6",
                         Display = "Cancer disease status"
                     },
-                    new Coding
+                    new()
                     {
                         System = FhirCodingHelper.Systems.NCI_SYSTEM,
                         Code = "C111544",
@@ -515,10 +518,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
         };
 
         // Add body site if set
-        if (_bodySite != null)
-        {
-            observation.BodySite = _bodySite;
-        }
+        if (_bodySite != null) observation.BodySite = _bodySite;
 
         // Add derivedFrom references (imaging studies and reports, plus base derivedFrom)
         if (_imagingStudies.Any() || _radiologyReports.Any() || DerivedFromReferences.Any())
@@ -531,14 +531,13 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
 
         // Add confidence component if specified
         if (_confidence.HasValue)
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://loinc.org",
                             Code = "LA11892-6",
@@ -555,28 +554,26 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
                     Code = "1"
                 }
             });
-        }
 
         // Add new components for enhanced data
         AddEnhancedComponents();
 
         // Add components
-        if (_components.Any())
-        {
-            observation.Component = _components;
-        }
+        if (_components.Any()) observation.Component = _components;
 
         // Add supporting facts as extensions
         if (_supportingFacts.Any())
         {
-            var factExtensions = ClinicalFactExtension.CreateExtensions(_supportingFacts);
+            List<Extension> factExtensions
+                = ClinicalFactExtension.CreateExtensions(_supportingFacts);
             observation.Extension.AddRange(factExtensions);
         }
 
         // Add conflicting facts as extensions
         if (_conflictingFacts.Any())
         {
-            var conflictingFactExtensions = CreateConflictingFactExtensions(_conflictingFacts);
+            List<Extension> conflictingFactExtensions
+                = CreateConflictingFactExtensions(_conflictingFacts);
             observation.Extension.AddRange(conflictingFactExtensions);
         }
 
@@ -584,20 +581,19 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Adds enhanced components for new JSON structure fields
+    ///     Adds enhanced components for new JSON structure fields
     /// </summary>
     private void AddEnhancedComponents()
     {
         // Add determination component
         if (!string.IsNullOrWhiteSpace(_determination))
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
                             Code = "determination",
@@ -607,18 +603,16 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
                 },
                 Value = new FhirString(_determination)
             });
-        }
 
         // Add measurement change component
         if (!string.IsNullOrWhiteSpace(_measurementChange))
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
                             Code = "measurement-change",
@@ -628,18 +622,16 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
                 },
                 Value = new FhirString(_measurementChange)
             });
-        }
 
         // Add imaging type component
         if (!string.IsNullOrWhiteSpace(_imagingType))
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
                             Code = "imaging-type",
@@ -649,18 +641,16 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
                 },
                 Value = new FhirString(_imagingType)
             });
-        }
 
         // Add confirmation date component
         if (_confirmationDate.HasValue)
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
                             Code = "confirmation-date",
@@ -670,18 +660,16 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
                 },
                 Value = new FhirDateTime(_confirmationDate.Value)
             });
-        }
 
         // Add determination component
         if (!string.IsNullOrWhiteSpace(_determination))
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
                             Code = "determination",
@@ -691,18 +679,16 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
                 },
                 Value = new FhirString(_determination)
             });
-        }
 
         // Add confidence rationale component
         if (!string.IsNullOrWhiteSpace(_confidenceRationale))
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
                             Code = "confidence-rationale",
@@ -712,18 +698,16 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
                 },
                 Value = new FhirString(_confidenceRationale)
             });
-        }
 
         // Add summary component
         if (!string.IsNullOrWhiteSpace(_summary))
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
                             Code = "summary",
@@ -733,18 +717,16 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
                 },
                 Value = new FhirString(_summary)
             });
-        }
 
         // Add imaging date component
         if (_imagingDate.HasValue)
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
                             Code = "imaging-date",
@@ -754,11 +736,10 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
                 },
                 Value = new FhirDateTime(_imagingDate.Value)
             });
-        }
     }
 
     /// <summary>
-    /// Creates a CodeableConcept for component codes, using appropriate system based on code format
+    ///     Creates a CodeableConcept for component codes, using appropriate system based on code format
     /// </summary>
     /// <param name="code">The code value</param>
     /// <returns>A CodeableConcept with appropriate system</returns>
@@ -766,39 +747,34 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     {
         // Determine system based on code format/content
         if (code.Contains("-") && char.IsDigit(code[0])) // LOINC format
-        {
             return GetLoincComponentCode(code);
-        }
-        else if (char.IsDigit(code[0])) // SNOMED format
-        {
+
+        if (char.IsDigit(code[0])) // SNOMED format
             return FhirCodingHelper.CreateSnomedConcept(code, GetSnomedDisplayForCode(code));
-        }
-        else
+
+        // Default to custom system for other codes
+        return new CodeableConcept
         {
-            // Default to custom system for other codes
-            return new CodeableConcept
+            Coding = new List<Coding>
             {
-                Coding = new List<Coding>
+                new()
                 {
-                    new Coding
-                    {
-                        System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
-                        Code = code,
-                        Display = GetDefaultDisplayForCode(code)
-                    }
+                    System = "http://thirdopinion.ai/fhir/CodeSystem/recist-components",
+                    Code = code,
+                    Display = GetDefaultDisplayForCode(code)
                 }
-            };
-        }
+            }
+        };
     }
 
     /// <summary>
-    /// Gets LOINC component codes with appropriate display text
+    ///     Gets LOINC component codes with appropriate display text
     /// </summary>
     /// <param name="code">The LOINC code</param>
     /// <returns>A LOINC CodeableConcept</returns>
     private CodeableConcept GetLoincComponentCode(string code)
     {
-        var display = code switch
+        string display = code switch
         {
             "33359-2" => "Percent change",
             "33728-8" => "Sum of longest diameters",
@@ -810,7 +786,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Gets display text for SNOMED codes
+    ///     Gets display text for SNOMED codes
     /// </summary>
     /// <param name="code">The SNOMED code</param>
     /// <returns>Display text</returns>
@@ -825,7 +801,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Gets default display text for custom codes
+    ///     Gets default display text for custom codes
     /// </summary>
     /// <param name="code">The code</param>
     /// <returns>Display text</returns>
@@ -842,7 +818,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    /// Creates FHIR Extensions for conflicting clinical facts
+    ///     Creates FHIR Extensions for conflicting clinical facts
     /// </summary>
     /// <param name="facts">The conflicting clinical facts</param>
     /// <returns>List of FHIR Extensions for conflicting facts</returns>
@@ -850,7 +826,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     {
         var extensions = new List<Extension>();
 
-        foreach (var fact in facts.Where(f => f != null))
+        foreach (Fact fact in facts.Where(f => f != null))
         {
             var extension = new Extension
             {
@@ -859,48 +835,33 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
 
             // Add fact GUID
             if (!string.IsNullOrWhiteSpace(fact.factGuid))
-            {
                 extension.Extension.Add(new Extension("factGuid", new FhirString(fact.factGuid)));
-            }
 
             // Add document reference
             if (!string.IsNullOrWhiteSpace(fact.factDocumentReference))
-            {
-                extension.Extension.Add(new Extension("factDocumentReference", new FhirString(fact.factDocumentReference)));
-            }
+                extension.Extension.Add(new Extension("factDocumentReference",
+                    new FhirString(fact.factDocumentReference)));
 
             // Add fact type
             if (!string.IsNullOrWhiteSpace(fact.type))
-            {
                 extension.Extension.Add(new Extension("type", new FhirString(fact.type)));
-            }
 
             // Add fact text
             if (!string.IsNullOrWhiteSpace(fact.fact))
-            {
                 extension.Extension.Add(new Extension("fact", new FhirString(fact.fact)));
-            }
 
             // Add references
             if (fact.@ref != null && fact.@ref.Any())
-            {
-                foreach (var reference in fact.@ref)
-                {
+                foreach (string reference in fact.@ref)
                     extension.Extension.Add(new Extension("ref", new FhirString(reference)));
-                }
-            }
 
             // Add time reference
             if (!string.IsNullOrWhiteSpace(fact.timeRef))
-            {
                 extension.Extension.Add(new Extension("timeRef", new FhirString(fact.timeRef)));
-            }
 
             // Add relevance
             if (!string.IsNullOrWhiteSpace(fact.relevance))
-            {
                 extension.Extension.Add(new Extension("relevance", new FhirString(fact.relevance)));
-            }
 
             extensions.Add(extension);
         }

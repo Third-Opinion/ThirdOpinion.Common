@@ -1,29 +1,27 @@
-using Amazon.Extensions.NETCore.Setup;
 using Amazon.HealthLake;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ThirdOpinion.Common.Aws.HealthLake.Configuration;
-using ThirdOpinion.Common.Sample.Services;
-using ThirdOpinion.Common.Logging;
 using ThirdOpinion.Common.Aws.HealthLake.Http;
-using ThirdOpinion.Common.Aws.HealthLake;
+using ThirdOpinion.Common.Logging;
+using ThirdOpinion.Common.Sample.Services;
 
 namespace ThirdOpinion.Common.Sample;
 
-class Program
+internal class Program
 {
-    static async Task<int> Main(string[] args)
+    private static async Task<int> Main(string[] args)
     {
         // Build configuration
-        var configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+        IConfigurationRoot configuration = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json", false, true)
             .AddEnvironmentVariables()
             .AddCommandLine(args)
             .Build();
 
         // Build service provider
-        var serviceProvider = BuildServiceProvider(configuration);
+        ServiceProvider serviceProvider = BuildServiceProvider(configuration);
 
         // Get logger
         var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
@@ -38,56 +36,64 @@ class Program
             if (args.Length > 0)
             {
                 documentReferenceId = args[0];
-                logger.LogInformation("Using DocumentReference ID from command line: {DocumentReferenceId}", documentReferenceId);
+                logger.LogInformation(
+                    "Using DocumentReference ID from command line: {DocumentReferenceId}",
+                    documentReferenceId);
             }
             else
             {
                 documentReferenceId = configuration["Sample:DocumentReferenceId"];
                 if (!string.IsNullOrEmpty(documentReferenceId))
-                {
-                    logger.LogInformation("Using DocumentReference ID from configuration: {DocumentReferenceId}", documentReferenceId);
-                }
+                    logger.LogInformation(
+                        "Using DocumentReference ID from configuration: {DocumentReferenceId}",
+                        documentReferenceId);
             }
 
             if (string.IsNullOrEmpty(documentReferenceId))
             {
-                logger.LogError("No DocumentReference ID provided. Please provide it as a command line argument or set Sample:DocumentReferenceId in appsettings.json");
+                logger.LogError(
+                    "No DocumentReference ID provided. Please provide it as a command line argument or set Sample:DocumentReferenceId in appsettings.json");
                 Console.WriteLine("Usage: ThirdOpinion.Common.Sample <DocumentReference-ID>");
                 Console.WriteLine("   or: Set Sample:DocumentReferenceId in appsettings.json");
                 return 1;
             }
 
             // Get the HealthLakeReaderService
-            var healthLakeReaderService = serviceProvider.GetRequiredService<HealthLakeReaderService>();
+            var healthLakeReaderService
+                = serviceProvider.GetRequiredService<HealthLakeReaderService>();
 
             // Test HealthLake connectivity first
             logger.LogInformation("Testing HealthLake connectivity...");
 
             // Retrieve the DocumentReference and extract content
-            logger.LogInformation("Retrieving DocumentReference {DocumentReferenceId}...", documentReferenceId);
+            logger.LogInformation("Retrieving DocumentReference {DocumentReferenceId}...",
+                documentReferenceId);
 
-            var documentContent = await healthLakeReaderService.GetDocumentReferenceContentAsync(documentReferenceId);
+            DocumentContent? documentContent
+                = await healthLakeReaderService.GetDocumentReferenceContentAsync(
+                    documentReferenceId);
 
             if (documentContent == null)
             {
-                logger.LogError("Failed to retrieve or extract content from DocumentReference {DocumentReferenceId}", documentReferenceId);
+                logger.LogError(
+                    "Failed to retrieve or extract content from DocumentReference {DocumentReferenceId}",
+                    documentReferenceId);
                 return 1;
             }
 
             // Determine output filename
-            var outputDirectory = configuration["Sample:OutputDirectory"] ?? "./output";
+            string outputDirectory = configuration["Sample:OutputDirectory"] ?? "./output";
             Directory.CreateDirectory(outputDirectory);
 
-            var outputFilename = documentContent.Filename ?? $"document_{documentReferenceId}";
+            string outputFilename = documentContent.Filename ?? $"document_{documentReferenceId}";
             if (!Path.HasExtension(outputFilename))
-            {
                 outputFilename += documentContent.GetFileExtension();
-            }
 
-            var outputPath = Path.Combine(outputDirectory, outputFilename);
+            string outputPath = Path.Combine(outputDirectory, outputFilename);
 
             // Save the decoded document
-            logger.LogInformation("Saving decoded document to {OutputPath} ({DataSize} bytes)", outputPath, documentContent.Data.Length);
+            logger.LogInformation("Saving decoded document to {OutputPath} ({DataSize} bytes)",
+                outputPath, documentContent.Data.Length);
 
             await File.WriteAllBytesAsync(outputPath, documentContent.Data);
 
@@ -116,7 +122,7 @@ class Program
         var services = new ServiceCollection();
 
         // Add configuration
-        services.AddSingleton<IConfiguration>(configuration);
+        services.AddSingleton(configuration);
 
         // Add logging
         services.AddLogging(builder =>
@@ -148,7 +154,7 @@ class Program
 }
 
 /// <summary>
-/// Simple correlation ID provider for tracking requests
+///     Simple correlation ID provider for tracking requests
 /// </summary>
 public class CorrelationIdProvider : ICorrelationIdProvider
 {
@@ -159,7 +165,10 @@ public class CorrelationIdProvider : ICorrelationIdProvider
         _correlationId = Guid.NewGuid().ToString("N")[..8]; // Short correlation ID
     }
 
-    public string GetCorrelationId() => _correlationId;
+    public string GetCorrelationId()
+    {
+        return _correlationId;
+    }
 
     public void SetCorrelationId(string correlationId)
     {
@@ -168,11 +177,8 @@ public class CorrelationIdProvider : ICorrelationIdProvider
 
     public IDisposable BeginScope(string? correlationId = null)
     {
-        var previousId = _correlationId;
-        if (!string.IsNullOrEmpty(correlationId))
-        {
-            _correlationId = correlationId;
-        }
+        string previousId = _correlationId;
+        if (!string.IsNullOrEmpty(correlationId)) _correlationId = correlationId;
 
         return new CorrelationScope(() => _correlationId = previousId);
     }

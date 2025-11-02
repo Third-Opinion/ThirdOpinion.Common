@@ -33,6 +33,8 @@
     <ItemGroup>
         <ProjectReference Include="..\src\ThirdOpinion.Common.Misc\ThirdOpinion.Common.Misc.csproj"/>
         <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.Misc\ThirdOpinion.Common.Aws.Misc.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.Misc\ThirdOpinion.Common.Aws.Misc.csproj" />
+        <ProjectReference Include="..\ThirdOpinion.Common.Misc\ThirdOpinion.Common.Misc.csproj" />
     </ItemGroup>
 
 </Project>

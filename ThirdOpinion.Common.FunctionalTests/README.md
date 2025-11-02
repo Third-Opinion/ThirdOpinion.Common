@@ -2,14 +2,15 @@
 
 **Status: ✅ Functional tests are now working and run against AWS Dev Account (615299752206)**
 
-This project provides comprehensive functional and integration tests for ThirdOpinion.Common AWS services libraries. Tests run against real AWS services using the development account.
+This project provides comprehensive functional and integration tests for ThirdOpinion.Common AWS services libraries.
+Tests run against real AWS services using the development account.
 
 ## Overview
 
 This test project provides end-to-end testing for:
 
 - **AWS Cognito** - User authentication and management
-- **AWS DynamoDB** - NoSQL database operations  
+- **AWS DynamoDB** - NoSQL database operations
 - **AWS S3** - Object storage operations
 - **AWS SQS** - Message queue operations
 - **Cross-Service Integration** - Multi-service workflows
@@ -75,8 +76,9 @@ ThirdOpinion.Common.FunctionalTests/
    # Alternative: Use the provided helper script
    ./run-tests.sh
    ```
-   
-   **Note:** AWS access keys (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY) are not supported. This project requires SSO authentication only.
+
+   **Note:** AWS access keys (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY) are not supported. This project requires SSO
+   authentication only.
 
 3. **Run functional tests:**
    ```bash
@@ -110,10 +112,12 @@ ThirdOpinion.Common.FunctionalTests/
 ### Authentication Requirements
 
 The tests require AWS SSO authentication:
+
 1. **AWS_PROFILE environment variable** (default: to-dev-admin)
 2. **SSO profile configured in ~/.aws/config**
 
-**Important:** AWS access keys (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) are explicitly rejected. Only SSO authentication is supported for enhanced security.
+**Important:** AWS access keys (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) are explicitly rejected. Only SSO
+authentication is supported for enhanced security.
 
 ## Configuration
 
@@ -142,12 +146,14 @@ All tests now run against the AWS Dev Account with the following settings:
 ### Authentication Configuration
 
 #### Local Development
+
 - Uses AWS_PROFILE environment variable (default: to-dev-admin)
 - Requires SSO profile configured in ~/.aws/config
 - Supports multiple SSO profiles for different environments
 - AWS access keys are not supported - SSO only
 
 #### CI/CD (GitHub Actions)
+
 - Uses IAM role assumption with OIDC tokens
 - Role: `arn:aws:iam::615299752206:role/dev-cdk-role-ue2-github-actions`
 - No long-lived credentials stored in secrets
@@ -155,12 +161,14 @@ All tests now run against the AWS Dev Account with the following settings:
 ## Test Categories
 
 ### Cognito Tests
+
 - User pool creation and management
 - User registration and authentication
 - Token refresh workflows
 - User listing and management operations
 
 ### DynamoDB Tests
+
 - Table creation and management
 - CRUD operations (Create, Read, Update, Delete)
 - Batch operations and transactions
@@ -169,6 +177,7 @@ All tests now run against the AWS Dev Account with the following settings:
 - Conditional updates
 
 ### S3 Tests
+
 - Bucket creation and management
 - Object upload, download, and metadata
 - Multipart uploads for large files
@@ -177,6 +186,7 @@ All tests now run against the AWS Dev Account with the following settings:
 - Binary and text content handling
 
 ### SQS Tests
+
 - Queue creation and configuration
 - Message sending and receiving
 - Batch operations
@@ -185,6 +195,7 @@ All tests now run against the AWS Dev Account with the following settings:
 - FIFO queue operations (when supported)
 
 ### Cross-Service Integration Tests
+
 - **User Registration Workflow**: Cognito → DynamoDB → S3 → SQS
 - **Document Processing Pipeline**: Authentication → Upload → Processing → Notification
 - **Data Backup and Restore**: DynamoDB → S3 → SQS → DynamoDB
@@ -207,16 +218,19 @@ var binaryData = TestDataBuilder.CreateBinaryTestData(1024);
 ## Resource Management
 
 ### Automatic Cleanup
+
 - All tests automatically clean up created resources
 - Base test class handles cleanup in `CleanupTestResourcesAsync()`
 - Failed tests still attempt cleanup to prevent resource leaks
 
 ### Resource Naming
+
 - Test resources use unique, timestamped names
 - Format: `{prefix}-{testname}-{timestamp}-{random}`
 - Easy identification and cleanup of orphaned resources
 
 ### Cost Management
+
 - LocalStack is free and recommended for development
 - Real AWS tests use minimal resources
 - Automatic cleanup prevents accumulating costs
@@ -288,14 +302,14 @@ The project includes a comprehensive GitHub Actions workflow:
    ```
 
 3. **Test timeouts**
-   - Increase `TestSettings:TestTimeout` in configuration
-   - Check AWS service availability
-   - Verify network connectivity
+    - Increase `TestSettings:TestTimeout` in configuration
+    - Check AWS service availability
+    - Verify network connectivity
 
 4. **Resource cleanup failures**
-   - Check AWS permissions
-   - Review CloudTrail logs for errors
-   - Manually clean up orphaned resources
+    - Check AWS permissions
+    - Review CloudTrail logs for errors
+    - Manually clean up orphaned resources
 
 ### Debug Mode
 
@@ -342,12 +356,14 @@ Enable verbose logging for troubleshooting:
 ## Security
 
 ### Credentials Management
+
 - Never commit real AWS credentials
 - Use environment variables or AWS profiles
 - Leverage IAM roles in CI/CD environments
 - Rotate test credentials regularly
 
 ### Test Data Security
+
 - Use fake data for all tests
 - Avoid PII in test datasets
 - Ensure test resources are properly isolated
@@ -356,12 +372,14 @@ Enable verbose logging for troubleshooting:
 ## Monitoring and Metrics
 
 ### Test Metrics
+
 - Test execution time per category
 - Success/failure rates
 - Resource creation/cleanup success
 - AWS API call patterns
 
 ### Alerting
+
 - Failed test notifications
 - Resource cleanup failures
 - Unusual test execution patterns

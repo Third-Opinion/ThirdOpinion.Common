@@ -1,32 +1,36 @@
+using System.Text.Json;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
 using Microsoft.Extensions.Configuration;
+using Polly;
+using Polly.Retry;
 using ThirdOpinion.Common.FunctionalTests.Infrastructure;
 using Xunit.Abstractions;
-using Shouldly;
-using ThirdOpinion.Common.Aws.Misc.SecretsManager;
-using Polly;
-using System.Text.Json;
 
 namespace ThirdOpinion.Common.FunctionalTests.Tests;
 
 [Collection("AwsMisc")]
 public class AwsMiscFunctionalTests : BaseIntegrationTest
 {
-    private readonly string _testSecretName;
-    private readonly string _testSecretValue;
+    private readonly List<string> _createdSecrets = new();
     private readonly int _rateLimitMaxRequests;
     private readonly TimeSpan _rateLimitTimeWindow;
     private readonly int _retryMaxAttempts;
-    private readonly List<string> _createdSecrets = new();
+    private readonly string _testSecretName;
+    private readonly string _testSecretValue;
 
     public AwsMiscFunctionalTests(ITestOutputHelper output) : base(output)
     {
-        _testSecretName = Configuration.GetValue<string>("AwsMisc:SecretsManager:TestSecretName") ?? "functest/test-secret";
-        _testSecretValue = Configuration.GetValue<string>("AwsMisc:SecretsManager:TestSecretValue") ?? "test-secret-value-for-functional-testing";
-        _rateLimitMaxRequests = Configuration.GetValue<int>("AwsMisc:RateLimit:MaxRequests", 5);
-        _rateLimitTimeWindow = TimeSpan.Parse(Configuration.GetValue<string>("AwsMisc:RateLimit:TimeWindow") ?? "00:00:10");
-        _retryMaxAttempts = Configuration.GetValue<int>("AwsMisc:Retry:MaxAttempts", 3);
+        _testSecretName = Configuration.GetValue<string>("AwsMisc:SecretsManager:TestSecretName") ??
+                          "functest/test-secret";
+        _testSecretValue
+            = Configuration.GetValue<string>("AwsMisc:SecretsManager:TestSecretValue") ??
+              "test-secret-value-for-functional-testing";
+        _rateLimitMaxRequests = Configuration.GetValue("AwsMisc:RateLimit:MaxRequests", 5);
+        _rateLimitTimeWindow
+            = TimeSpan.Parse(Configuration.GetValue<string>("AwsMisc:RateLimit:TimeWindow") ??
+                             "00:00:10");
+        _retryMaxAttempts = Configuration.GetValue("AwsMisc:Retry:MaxAttempts", 3);
     }
 
     [Fact]
@@ -77,7 +81,8 @@ public class AwsMiscFunctionalTests : BaseIntegrationTest
         {
             var exception = await Should.ThrowAsync<Exception>(async () =>
             {
-                await SecretsManagerService.GetSecretAsync("invalid-secret-name", "invalid-region");
+                await SecretsManagerService.GetSecretAsync("invalid-secret-name",
+                    "invalid-region");
             });
 
             WriteOutput($"Expected exception caught: {exception.GetType().Name}");
@@ -112,14 +117,15 @@ public class AwsMiscFunctionalTests : BaseIntegrationTest
         WriteOutput($"Testing retry policy - {_retryMaxAttempts} max attempts...");
 
         var attemptCount = 0;
-        var retryPolicy = Policy
+        AsyncRetryPolicy? retryPolicy = Policy
             .Handle<InvalidOperationException>()
             .WaitAndRetryAsync(
                 _retryMaxAttempts,
                 retryAttempt => TimeSpan.FromMilliseconds(100 * retryAttempt),
-                onRetry: (outcome, timespan, retryCount, context) =>
+                (outcome, timespan, retryCount, context) =>
                 {
-                    WriteOutput($"Retry attempt {retryCount} after {timespan.TotalMilliseconds}ms delay");
+                    WriteOutput(
+                        $"Retry attempt {retryCount} after {timespan.TotalMilliseconds}ms delay");
                 });
 
         var exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
@@ -147,25 +153,23 @@ public class AwsMiscFunctionalTests : BaseIntegrationTest
         WriteOutput("Testing retry policy - eventual success...");
 
         var attemptCount = 0;
-        var retryPolicy = Policy
+        AsyncRetryPolicy? retryPolicy = Policy
             .Handle<InvalidOperationException>()
             .WaitAndRetryAsync(
                 3,
                 retryAttempt => TimeSpan.FromMilliseconds(50),
-                onRetry: (outcome, timespan, retryCount, context) =>
+                (outcome, timespan, retryCount, context) =>
                 {
                     WriteOutput($"Retry attempt {retryCount}");
                 });
 
-        var result = await retryPolicy.ExecuteAsync(async () =>
+        string? result = await retryPolicy.ExecuteAsync(async () =>
         {
             attemptCount++;
             WriteOutput($"Attempt {attemptCount}");
 
             if (attemptCount < 3)
-            {
                 throw new InvalidOperationException($"Simulated failure on attempt {attemptCount}");
-            }
 
             return "Success!";
         });
@@ -185,17 +189,19 @@ public class AwsMiscFunctionalTests : BaseIntegrationTest
         WriteOutput("Testing retry policy with exponential backoff...");
 
         var attemptTimes = new List<DateTime>();
-        var retryPolicy = Policy
+        AsyncRetryPolicy? retryPolicy = Policy
             .Handle<InvalidOperationException>()
             .WaitAndRetryAsync(
                 3,
-                retryAttempt => TimeSpan.FromMilliseconds(Math.Pow(2, retryAttempt) * 100), // Exponential backoff
-                onRetry: (outcome, timespan, retryCount, context) =>
+                retryAttempt =>
+                    TimeSpan.FromMilliseconds(Math.Pow(2, retryAttempt) *
+                                              100), // Exponential backoff
+                (outcome, timespan, retryCount, context) =>
                 {
                     WriteOutput($"Retry {retryCount} after {timespan.TotalMilliseconds}ms delay");
                 });
 
-        var startTime = DateTime.UtcNow;
+        DateTime startTime = DateTime.UtcNow;
 
         var exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
         {
@@ -207,7 +213,7 @@ public class AwsMiscFunctionalTests : BaseIntegrationTest
             });
         });
 
-        var totalDuration = DateTime.UtcNow - startTime;
+        TimeSpan totalDuration = DateTime.UtcNow - startTime;
         WriteOutput($"Total duration: {totalDuration.TotalMilliseconds}ms");
 
         attemptTimes.Count.ShouldBe(4); // Initial + 3 retries
@@ -221,8 +227,8 @@ public class AwsMiscFunctionalTests : BaseIntegrationTest
     {
         WriteOutput("Testing AWS Secrets Manager client directly...");
 
-        var secretName = GenerateTestResourceName("direct-sdk-test");
-        var secretValue = JsonSerializer.Serialize(new
+        string secretName = GenerateTestResourceName("direct-sdk-test");
+        string secretValue = JsonSerializer.Serialize(new
         {
             username = "test-user",
             password = "test-password-" + Guid.NewGuid().ToString("N")[..8],
@@ -238,14 +244,17 @@ public class AwsMiscFunctionalTests : BaseIntegrationTest
                 Description = "Functional test secret created via direct SDK call"
             };
 
-            var secretsManagerClient = ServiceProvider.GetService(typeof(IAmazonSecretsManager)) as IAmazonSecretsManager;
+            var secretsManagerClient
+                = ServiceProvider.GetService(
+                    typeof(IAmazonSecretsManager)) as IAmazonSecretsManager;
             if (secretsManagerClient == null)
             {
                 WriteOutput("⚠️ Direct SecretsManager client not available, skipping SDK test");
                 return;
             }
 
-            var createResponse = await secretsManagerClient.CreateSecretAsync(createRequest);
+            CreateSecretResponse? createResponse
+                = await secretsManagerClient.CreateSecretAsync(createRequest);
             _createdSecrets.Add(secretName);
 
             WriteOutput($"Created secret via SDK: {createResponse.Name}");
@@ -273,10 +282,11 @@ public class AwsMiscFunctionalTests : BaseIntegrationTest
 
         WriteOutput($"Cleaning up {_createdSecrets.Count} created secrets...");
 
-        var secretsManagerClient = ServiceProvider.GetService(typeof(IAmazonSecretsManager)) as IAmazonSecretsManager;
+        var secretsManagerClient
+            = ServiceProvider.GetService(typeof(IAmazonSecretsManager)) as IAmazonSecretsManager;
         if (secretsManagerClient != null)
         {
-            var cleanupTasks = _createdSecrets.Select(async secretName =>
+            IEnumerable<Task> cleanupTasks = _createdSecrets.Select(async secretName =>
             {
                 try
                 {

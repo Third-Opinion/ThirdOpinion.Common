@@ -45,25 +45,15 @@ echo -e "${YELLOW}🧪 Running unit tests...${NC}"
 dotnet test ThirdOpinion.Common.Aws.UnitTests/ --configuration $CONFIGURATION --no-build --verbosity normal
 dotnet test ThirdOpinion.Common.UnitTests/ --configuration $CONFIGURATION --no-build --verbosity normal
 
-# Package projects
-echo -e "${YELLOW}📦 Creating NuGet packages...${NC}"
+# Package main project (includes all sub-projects)
+echo -e "${YELLOW}📦 Creating NuGet package (combined)...${NC}"
 
-PROJECTS=(
-    "ThirdOpinion.Common.Aws.Cognito"
-    "ThirdOpinion.Common.Aws.DynamoDb"
-    "ThirdOpinion.Common.Aws.S3"
-    "ThirdOpinion.Common.Aws.SQS"
-    "ThirdOpinion.Common.Misc"
-)
-
-for project in "${PROJECTS[@]}"; do
-    echo "  📦 Packing $project..."
-    dotnet pack "$project/$project.csproj" \
-        --configuration $CONFIGURATION \
-        --no-build \
-        --output $OUTPUT_DIR \
-        -p:PackageVersion=$VERSION
-done
+echo "  📦 Packing ThirdOpinion.Common (includes all sub-projects)..."
+dotnet pack "src/ThirdOpinion.Common.csproj" \
+    --configuration $CONFIGURATION \
+    --no-build \
+    --output $OUTPUT_DIR \
+    -p:PackageVersion=$VERSION
 
 # List generated packages
 echo ""

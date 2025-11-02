@@ -1,36 +1,33 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Text.Json;
 using Amazon.HealthLake;
-using ThirdOpinion.Common.Aws.HealthLake;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Moq.Protected;
+using Polly;
 using ThirdOpinion.Common.Aws.HealthLake.Configuration;
 using ThirdOpinion.Common.Aws.HealthLake.Exceptions;
 using ThirdOpinion.Common.Aws.HealthLake.Http;
-using ThirdOpinion.Common.Logging;
-using ThirdOpinion.Common.Misc.RateLimiting;
-using ThirdOpinion.Common.Misc.Retry;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Moq;
-using Moq.Protected;
-using Shouldly;
+using ThirdOpinion.Common.Aws.HealthLake.Logging;
+using ThirdOpinion.Common.Aws.HealthLake.RateLimiting;
+using ThirdOpinion.Common.Aws.HealthLake.Retry;
 
 namespace ThirdOpinion.Common.Aws.HealthLake.Tests;
 
 public class HealthLakeFhirServiceTests
 {
-    private readonly Mock<IAmazonHealthLake> _healthLakeClientMock;
-    private readonly Mock<IOptions<HealthLakeConfig>> _configMock;
-    private readonly Mock<ILogger<HealthLakeFhirService>> _loggerMock;
-    private readonly Mock<ICorrelationIdProvider> _correlationIdProviderMock;
-    private readonly Mock<IRateLimiterService> _rateLimiterServiceMock;
-    private readonly Mock<IRateLimiter> _rateLimiterMock;
-    private readonly Mock<IRetryPolicyService> _retryPolicyServiceMock;
-    private readonly Mock<IHealthLakeHttpService> _healthLakeHttpServiceMock;
-    private readonly Mock<HttpMessageHandler> _httpMessageHandlerMock;
-    private readonly HttpClient _httpClient;
     private readonly HealthLakeConfig _config;
+    private readonly Mock<IOptions<HealthLakeConfig>> _configMock;
+    private readonly Mock<ICorrelationIdProvider> _correlationIdProviderMock;
+    private readonly Mock<IAmazonHealthLake> _healthLakeClientMock;
+    private readonly Mock<IHealthLakeHttpService> _healthLakeHttpServiceMock;
+    private readonly HttpClient _httpClient;
+    private readonly Mock<HttpMessageHandler> _httpMessageHandlerMock;
+    private readonly Mock<ILogger<HealthLakeFhirService>> _loggerMock;
+    private readonly Mock<IRateLimiter> _rateLimiterMock;
+    private readonly Mock<IRateLimiterService> _rateLimiterServiceMock;
+    private readonly Mock<IRetryPolicyService> _retryPolicyServiceMock;
     private readonly HealthLakeFhirService _service;
 
     public HealthLakeFhirServiceTests()
@@ -58,21 +55,24 @@ public class HealthLakeFhirServiceTests
         _correlationIdProviderMock.Setup(x => x.GetCorrelationId()).Returns("test-correlation-id");
 
         // Setup rate limiter mocks
-        _rateLimiterServiceMock.Setup(x => x.GetRateLimiter("HealthLake")).Returns(_rateLimiterMock.Object);
-        _rateLimiterMock.Setup(x => x.WaitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _rateLimiterServiceMock.Setup(x => x.GetRateLimiter("HealthLake"))
+            .Returns(_rateLimiterMock.Object);
+        _rateLimiterMock.Setup(x => x.WaitAsync(It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         // Setup retry policy mocks
         _retryPolicyServiceMock.Setup(x => x.GetCombinedPolicy(It.IsAny<string>()))
-            .Returns(Polly.Policy.NoOpAsync<HttpResponseMessage>());
+            .Returns(Policy.NoOpAsync<HttpResponseMessage>());
 
         // Setup HealthLake HTTP service mock
         _healthLakeHttpServiceMock.Setup(x => x.SendSignedRequestAsync(
-            It.IsAny<HttpRequestMessage>(),
-            It.IsAny<CancellationToken>()))
-            .ReturnsAsync((HttpRequestMessage req, CancellationToken ct) => new HttpResponseMessage(HttpStatusCode.Created));
+                It.IsAny<HttpRequestMessage>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((HttpRequestMessage req, CancellationToken ct) =>
+                new HttpResponseMessage(HttpStatusCode.Created));
 
         _healthLakeHttpServiceMock.Setup(x => x.CloneHttpRequestAsync(
-            It.IsAny<HttpRequestMessage>()))
+                It.IsAny<HttpRequestMessage>()))
             .ReturnsAsync((HttpRequestMessage req) => req);
 
         _service = new HealthLakeFhirService(
@@ -88,7 +88,8 @@ public class HealthLakeFhirServiceTests
         // Arrange
         var resourceType = "Patient";
         var resourceId = "12345";
-        var resourceJson = """{"resourceType":"Patient","id":"12345","name":[{"family":"Smith","given":["John"]}]}""";
+        var resourceJson
+            = """{"resourceType":"Patient","id":"12345","name":[{"family":"Smith","given":["John"]}]}""";
 
         SetupHttpResponse(HttpStatusCode.Created, "");
 
@@ -98,7 +99,8 @@ public class HealthLakeFhirServiceTests
         // Assert
         _rateLimiterServiceMock.Verify(x => x.GetRateLimiter("HealthLake"), Times.Once);
         _rateLimiterMock.Verify(x => x.WaitAsync(It.IsAny<CancellationToken>()), Times.Once);
-        VerifyHttpRequest(HttpMethod.Put, $"datastore/{_config.DatastoreId}/r4/{resourceType}/{resourceId}");
+        VerifyHttpRequest(HttpMethod.Put,
+            $"datastore/{_config.DatastoreId}/r4/{resourceType}/{resourceId}");
     }
 
     [Fact]
@@ -110,8 +112,8 @@ public class HealthLakeFhirServiceTests
         var resourceJson = """{"resourceType":"InvalidType","id":"12345"}""";
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<ArgumentException>(
-            async () => await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
+        var exception = await Should.ThrowAsync<ArgumentException>(async () =>
+            await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
 
         exception.Message.ShouldContain("not supported");
         exception.ParamName.ShouldBe("resourceType");
@@ -126,8 +128,8 @@ public class HealthLakeFhirServiceTests
         var resourceJson = """{"resourceType":"Patient","id":""}""";
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<ArgumentException>(
-            async () => await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
+        var exception = await Should.ThrowAsync<ArgumentException>(async () =>
+            await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
 
         exception.Message.ShouldContain("cannot be null or empty");
         exception.ParamName.ShouldBe("resourceId");
@@ -142,8 +144,8 @@ public class HealthLakeFhirServiceTests
         var invalidJson = "not valid json";
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<ArgumentException>(
-            async () => await _service.PutResourceAsync(resourceType, resourceId, invalidJson));
+        var exception = await Should.ThrowAsync<ArgumentException>(async () =>
+            await _service.PutResourceAsync(resourceType, resourceId, invalidJson));
 
         exception.Message.ShouldContain("Invalid JSON format");
         exception.ParamName.ShouldBe("resourceJson");
@@ -160,8 +162,8 @@ public class HealthLakeFhirServiceTests
         SetupHttpResponse(HttpStatusCode.BadRequest, "Invalid resource format");
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<HealthLakeException>(
-            async () => await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
+        var exception = await Should.ThrowAsync<HealthLakeException>(async () =>
+            await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
 
         exception.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
         exception.ResourceType.ShouldBe(resourceType);
@@ -180,8 +182,8 @@ public class HealthLakeFhirServiceTests
         SetupHttpResponse(HttpStatusCode.Unauthorized, "");
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<HealthLakeException>(
-            async () => await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
+        var exception = await Should.ThrowAsync<HealthLakeException>(async () =>
+            await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
 
         exception.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         exception.Message.ShouldContain("Authentication failed");
@@ -198,8 +200,8 @@ public class HealthLakeFhirServiceTests
         SetupHttpResponse(HttpStatusCode.Forbidden, "");
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<HealthLakeAccessDeniedException>(
-            async () => await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
+        var exception = await Should.ThrowAsync<HealthLakeAccessDeniedException>(async () =>
+            await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
 
         exception.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
         exception.Message.ShouldContain("Access denied");
@@ -216,8 +218,8 @@ public class HealthLakeFhirServiceTests
         SetupHttpResponse(HttpStatusCode.Conflict, "");
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<HealthLakeConflictException>(
-            async () => await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
+        var exception = await Should.ThrowAsync<HealthLakeConflictException>(async () =>
+            await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
 
         exception.StatusCode.ShouldBe(HttpStatusCode.Conflict);
         exception.ResourceType.ShouldBe(resourceType);
@@ -225,7 +227,8 @@ public class HealthLakeFhirServiceTests
     }
 
     [Fact]
-    public async Task PutResourceAsync_WithTooManyRequests_ShouldThrowHealthLakeThrottlingException()
+    public async Task
+        PutResourceAsync_WithTooManyRequests_ShouldThrowHealthLakeThrottlingException()
     {
         // Arrange
         var resourceType = "Patient";
@@ -237,13 +240,13 @@ public class HealthLakeFhirServiceTests
         response.Headers.RetryAfter = new RetryConditionHeaderValue(TimeSpan.FromSeconds(60));
 
         _healthLakeHttpServiceMock.Setup(x => x.SendSignedRequestAsync(
-            It.IsAny<HttpRequestMessage>(),
-            It.IsAny<CancellationToken>()))
+                It.IsAny<HttpRequestMessage>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<HealthLakeThrottlingException>(
-            async () => await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
+        var exception = await Should.ThrowAsync<HealthLakeThrottlingException>(async () =>
+            await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
 
         exception.StatusCode.ShouldBe(HttpStatusCode.TooManyRequests);
         exception.RetryAfter.ShouldNotBeNull();
@@ -260,8 +263,8 @@ public class HealthLakeFhirServiceTests
         SetupHttpResponse(HttpStatusCode.InternalServerError, "Internal server error");
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<HealthLakeException>(
-            async () => await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
+        var exception = await Should.ThrowAsync<HealthLakeException>(async () =>
+            await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
 
         exception.StatusCode.ShouldBe(HttpStatusCode.InternalServerError);
         exception.Message.ShouldContain("HealthLake service error");
@@ -273,7 +276,8 @@ public class HealthLakeFhirServiceTests
         // Arrange
         var resourceType = "Patient";
         var resourceId = "12345";
-        var patient = new TestPatientResource { ResourceType = "Patient", Id = "12345", Active = true };
+        var patient = new TestPatientResource
+            { ResourceType = "Patient", Id = "12345", Active = true };
 
         SetupHttpResponse(HttpStatusCode.Created, "");
 
@@ -281,7 +285,8 @@ public class HealthLakeFhirServiceTests
         await _service.PutResourceAsync(resourceType, resourceId, patient);
 
         // Assert
-        VerifyHttpRequest(HttpMethod.Put, $"datastore/{_config.DatastoreId}/r4/{resourceType}/{resourceId}");
+        VerifyHttpRequest(HttpMethod.Put,
+            $"datastore/{_config.DatastoreId}/r4/{resourceType}/{resourceId}");
     }
 
     [Fact]
@@ -425,7 +430,8 @@ public class HealthLakeFhirServiceTests
         _healthLakeHttpServiceMock.Verify(x => x.SendSignedRequestAsync(
             It.Is<HttpRequestMessage>(req =>
                 req.Method == HttpMethod.Put &&
-                req.RequestUri.ToString().Contains($"datastore/{_config.DatastoreId}/r4/{resourceType}/{resourceId}")),
+                req.RequestUri.ToString()
+                    .Contains($"datastore/{_config.DatastoreId}/r4/{resourceType}/{resourceId}")),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -439,8 +445,8 @@ public class HealthLakeFhirServiceTests
         HttpRequestMessage capturedRequest = null!;
 
         _healthLakeHttpServiceMock.Setup(x => x.CloneHttpRequestAsync(
-            It.IsAny<HttpRequestMessage>()))
-            .Callback<HttpRequestMessage>((req) => capturedRequest = req)
+                It.IsAny<HttpRequestMessage>()))
+            .Callback<HttpRequestMessage>(req => capturedRequest = req)
             .ReturnsAsync((HttpRequestMessage req) => req);
 
         SetupHttpResponse(HttpStatusCode.Created, "");
@@ -457,7 +463,8 @@ public class HealthLakeFhirServiceTests
 
         // Verify correlation ID header
         capturedRequest.Headers.Contains("X-Correlation-ID").ShouldBeTrue();
-        capturedRequest.Headers.GetValues("X-Correlation-ID").First().ShouldBe("test-correlation-id");
+        capturedRequest.Headers.GetValues("X-Correlation-ID").First()
+            .ShouldBe("test-correlation-id");
 
         // Verify validation level header
         capturedRequest.Headers.Contains("x-amz-fhir-validation-level").ShouldBeTrue();
@@ -478,8 +485,8 @@ public class HealthLakeFhirServiceTests
         HttpRequestMessage capturedRequest = null!;
 
         _healthLakeHttpServiceMock.Setup(x => x.CloneHttpRequestAsync(
-            It.IsAny<HttpRequestMessage>()))
-            .Callback<HttpRequestMessage>((req) => capturedRequest = req)
+                It.IsAny<HttpRequestMessage>()))
+            .Callback<HttpRequestMessage>(req => capturedRequest = req)
             .ReturnsAsync((HttpRequestMessage req) => req);
 
         SetupHttpResponse(HttpStatusCode.OK, "");
@@ -506,8 +513,8 @@ public class HealthLakeFhirServiceTests
         response.Headers.ETag = new EntityTagHeaderValue($"\"{expectedVersion}\"", true); // W/"3"
 
         _healthLakeHttpServiceMock.Setup(x => x.SendSignedRequestAsync(
-            It.IsAny<HttpRequestMessage>(),
-            It.IsAny<CancellationToken>()))
+                It.IsAny<HttpRequestMessage>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
 
         // Act
@@ -526,23 +533,23 @@ public class HealthLakeFhirServiceTests
         var resourceJson = """{"resourceType":"Patient","id":"12345"}""";
 
         var operationOutcome = """
-        {
-            "resourceType": "OperationOutcome",
-            "issue": [
-                {
-                    "severity": "error",
-                    "code": "invalid",
-                    "diagnostics": "Missing required field: birthDate"
-                }
-            ]
-        }
-        """;
+                               {
+                                   "resourceType": "OperationOutcome",
+                                   "issue": [
+                                       {
+                                           "severity": "error",
+                                           "code": "invalid",
+                                           "diagnostics": "Missing required field: birthDate"
+                                       }
+                                   ]
+                               }
+                               """;
 
         SetupHttpResponse(HttpStatusCode.BadRequest, operationOutcome);
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<HealthLakeException>(
-            async () => await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
+        var exception = await Should.ThrowAsync<HealthLakeException>(async () =>
+            await _service.PutResourceAsync(resourceType, resourceId, resourceJson));
 
         exception.Message.ShouldContain("Missing required field: birthDate");
     }
@@ -551,13 +558,11 @@ public class HealthLakeFhirServiceTests
     {
         var response = new HttpResponseMessage(statusCode);
         if (!string.IsNullOrEmpty(content))
-        {
             response.Content = new StringContent(content, Encoding.UTF8, "application/fhir+json");
-        }
 
         _healthLakeHttpServiceMock.Setup(x => x.SendSignedRequestAsync(
-            It.IsAny<HttpRequestMessage>(),
-            It.IsAny<CancellationToken>()))
+                It.IsAny<HttpRequestMessage>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
     }
 

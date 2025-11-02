@@ -1,6 +1,7 @@
 # ThirdOpinion.Common.Sample
 
-A console application for smoke testing AWS HealthLake integration. This application retrieves a FHIR DocumentReference resource, extracts and decodes base64-encoded document content, and saves it to a file.
+A console application for smoke testing AWS HealthLake integration. This application retrieves a FHIR DocumentReference
+resource, extracts and decodes base64-encoded document content, and saves it to a file.
 
 ## Features
 
@@ -14,14 +15,14 @@ A console application for smoke testing AWS HealthLake integration. This applica
 ## Prerequisites
 
 1. **AWS Credentials**: Configure AWS credentials using one of these methods:
-   - AWS CLI: `aws configure`
-   - Environment variables: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
-   - IAM roles (when running on EC2/ECS)
-   - AWS SSO profiles
+    - AWS CLI: `aws configure`
+    - Environment variables: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+    - IAM roles (when running on EC2/ECS)
+    - AWS SSO profiles
 
 2. **HealthLake Access**: Ensure you have permission to read from the HealthLake datastore:
-   - `healthlake:ReadResource` permission
-   - Access to the specific HealthLake datastore
+    - `healthlake:ReadResource` permission
+    - Access to the specific HealthLake datastore
 
 3. **DocumentReference ID**: A valid DocumentReference resource ID that exists in your HealthLake datastore
 
@@ -87,7 +88,8 @@ The application automatically detects file extensions based on MIME type:
 
 - **PDF**: `application/pdf` → `.pdf`
 - **Images**: `image/jpeg` → `.jpg`, `image/png` → `.png`
-- **Documents**: `application/msword` → `.doc`, `application/vnd.openxmlformats-officedocument.wordprocessingml.document` → `.docx`
+- **Documents**: `application/msword` → `.doc`,
+  `application/vnd.openxmlformats-officedocument.wordprocessingml.document` → `.docx`
 - **Text**: `text/plain` → `.txt`
 - **Binary**: Unknown types → `.bin`
 
@@ -124,16 +126,19 @@ The application expects DocumentReference resources with this structure:
 ## Troubleshooting
 
 ### AWS Authentication Issues
+
 - Verify AWS credentials: `aws sts get-caller-identity`
 - Check IAM permissions for HealthLake access
 - Ensure the correct AWS region is configured
 
 ### HealthLake Issues
+
 - Verify the datastore ID exists and is active
 - Check the datastore endpoint URL
 - Ensure the DocumentReference ID exists in the datastore
 
 ### Document Extraction Issues
+
 - Verify the DocumentReference has a `content` array with `attachment.data`
 - Check that the base64 content is valid
 - Ensure sufficient disk space for output files
@@ -147,6 +152,7 @@ The application uses these key components:
 - **DocumentContent**: Data model for extracted document content
 
 To extend the application:
+
 1. Modify `HealthLakeReaderService` to support additional FHIR resource types
 2. Add new MIME type mappings in `DocumentContent.GetFileExtension()`
 3. Extend configuration options in `appsettings.json`

@@ -3,10 +3,6 @@ using Amazon.HealthLake.Model;
 using Microsoft.Extensions.Configuration;
 using ThirdOpinion.Common.FunctionalTests.Infrastructure;
 using Xunit.Abstractions;
-using Shouldly;
-using Hl7.Fhir.Model;
-using Hl7.Fhir.Serialization;
-using System.Text.Json;
 using Task = System.Threading.Tasks.Task;
 
 namespace ThirdOpinion.Common.FunctionalTests.Tests;
@@ -14,19 +10,20 @@ namespace ThirdOpinion.Common.FunctionalTests.Tests;
 [Collection("HealthLake")]
 public class HealthLakeFunctionalTests : BaseIntegrationTest
 {
-    private readonly string? _datastoreId;
+    private readonly List<string> _createdResourceIds = new();
     private readonly string? _datastoreEndpoint;
+    private readonly string? _datastoreId;
     private readonly bool _isConfigured;
     private readonly int _testPatientCount;
-    private readonly List<string> _createdResourceIds = new();
 
     public HealthLakeFunctionalTests(ITestOutputHelper output) : base(output)
     {
         _datastoreId = Configuration.GetValue<string>("HealthLake:DatastoreId");
         _datastoreEndpoint = Configuration.GetValue<string>("HealthLake:DatastoreEndpoint");
-        _testPatientCount = Configuration.GetValue<int>("HealthLake:TestPatientResourceCount", 5);
+        _testPatientCount = Configuration.GetValue("HealthLake:TestPatientResourceCount", 5);
 
-        _isConfigured = !string.IsNullOrEmpty(_datastoreId) && !string.IsNullOrEmpty(_datastoreEndpoint);
+        _isConfigured = !string.IsNullOrEmpty(_datastoreId) &&
+                        !string.IsNullOrEmpty(_datastoreEndpoint);
     }
 
     [Fact]
@@ -39,7 +36,8 @@ public class HealthLakeFunctionalTests : BaseIntegrationTest
             MaxResults = 10
         };
 
-        var response = await HealthLakeClient.ListFHIRDatastoresAsync(request);
+        ListFHIRDatastoresResponse? response
+            = await HealthLakeClient.ListFHIRDatastoresAsync(request);
 
         WriteOutput($"Found {response.DatastorePropertiesList.Count} data stores");
 
@@ -48,9 +46,11 @@ public class HealthLakeFunctionalTests : BaseIntegrationTest
 
         if (response.DatastorePropertiesList.Any())
         {
-            var firstDatastore = response.DatastorePropertiesList[0];
-            WriteOutput($"First datastore: {firstDatastore.DatastoreName} (ID: {firstDatastore.DatastoreId})");
-            WriteOutput($"Status: {firstDatastore.DatastoreStatus}, Type: {firstDatastore.DatastoreTypeVersion}");
+            DatastoreProperties? firstDatastore = response.DatastorePropertiesList[0];
+            WriteOutput(
+                $"First datastore: {firstDatastore.DatastoreName} (ID: {firstDatastore.DatastoreId})");
+            WriteOutput(
+                $"Status: {firstDatastore.DatastoreStatus}, Type: {firstDatastore.DatastoreTypeVersion}");
         }
 
         WriteOutput("✓ Successfully listed HealthLake data stores");
@@ -62,7 +62,8 @@ public class HealthLakeFunctionalTests : BaseIntegrationTest
         if (!_isConfigured)
         {
             WriteOutput("⚠️ HealthLake datastore not configured, skipping describe test");
-            WriteOutput("To test HealthLake, set HealthLake:DatastoreId and HealthLake:DatastoreEndpoint in appsettings.Test.json");
+            WriteOutput(
+                "To test HealthLake, set HealthLake:DatastoreId and HealthLake:DatastoreEndpoint in appsettings.Test.json");
             return;
         }
 
@@ -73,7 +74,8 @@ public class HealthLakeFunctionalTests : BaseIntegrationTest
             DatastoreId = _datastoreId
         };
 
-        var response = await HealthLakeClient.DescribeFHIRDatastoreAsync(request);
+        DescribeFHIRDatastoreResponse? response
+            = await HealthLakeClient.DescribeFHIRDatastoreAsync(request);
 
         WriteOutput($"Datastore name: {response.DatastoreProperties.DatastoreName}");
         WriteOutput($"Status: {response.DatastoreProperties.DatastoreStatus}");
@@ -92,7 +94,8 @@ public class HealthLakeFunctionalTests : BaseIntegrationTest
     {
         if (!_isConfigured)
         {
-            WriteOutput("⚠️ HealthLake datastore not configured, skipping datastore operations test");
+            WriteOutput(
+                "⚠️ HealthLake datastore not configured, skipping datastore operations test");
             WriteOutput("This test requires a configured HealthLake datastore for FHIR operations");
             return;
         }

@@ -51,26 +51,16 @@ try {
     dotnet test ThirdOpinion.Common.UnitTests/ --configuration $Configuration --no-build --verbosity normal
     if ($LASTEXITCODE -ne 0) { throw "Common unit tests failed" }
 
-    # Package projects
-    Write-Host "📦 Creating NuGet packages..." -ForegroundColor Yellow
+    # Package main project (includes all sub-projects)
+    Write-Host "📦 Creating NuGet package (combined)..." -ForegroundColor Yellow
 
-    $Projects = @(
-        "ThirdOpinion.Common.Aws.Cognito",
-        "ThirdOpinion.Common.Aws.DynamoDb",
-        "ThirdOpinion.Common.Aws.S3",
-        "ThirdOpinion.Common.Aws.SQS",
-        "ThirdOpinion.Common.Misc"
-    )
-
-    foreach ($project in $Projects) {
-        Write-Host "  📦 Packing $project..." -ForegroundColor Cyan
-        dotnet pack "$project/$project.csproj" `
-            --configuration $Configuration `
-            --no-build `
-            --output $OutputDir `
-            -p:PackageVersion=$Version
-        if ($LASTEXITCODE -ne 0) { throw "Packing $project failed" }
-    }
+    Write-Host "  📦 Packing ThirdOpinion.Common (includes all sub-projects)..." -ForegroundColor Cyan
+    dotnet pack "src/ThirdOpinion.Common.csproj" `
+        --configuration $Configuration `
+        --no-build `
+        --output $OutputDir `
+        -p:PackageVersion=$Version
+    if ($LASTEXITCODE -ne 0) { throw "Packing ThirdOpinion.Common failed" }
 
     # List generated packages
     Write-Host ""

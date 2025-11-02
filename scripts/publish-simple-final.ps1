@@ -1,6 +1,6 @@
 param(
     [string]$AwsProfile = "to-prod-admin",
-    [string]$Version = "1.0.0-alpha.1",
+    [string]$Version = "1.0.0-alpha.8",
     [string]$Configuration = "Release"
 )
 
@@ -25,7 +25,12 @@ try {
     dotnet clean --configuration $Configuration
     dotnet restore
     dotnet build --configuration $Configuration --no-restore
+
+    Write-Host "  Packing ThirdOpinion.Common (combined package)..." -ForegroundColor Cyan
     dotnet pack src/ThirdOpinion.Common.csproj --configuration $Configuration --no-build --output packages -p:PackageVersion=$Version
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to pack ThirdOpinion.Common"
+    }
 
     # Configure NuGet source with CodeArtifact credential provider
     Write-Host "Configuring NuGet source..." -ForegroundColor Cyan
@@ -45,8 +50,9 @@ try {
     # Cleanup
     dotnet nuget remove source aws-codeartifact 2>$null
 
+    Write-Host ""
     Write-Host "Package published successfully!" -ForegroundColor Green
-    Write-Host "Package: ThirdOpinion.Common" -ForegroundColor White
+    Write-Host "Package: ThirdOpinion.Common (combined package with all sub-projects)" -ForegroundColor White
     Write-Host "Version: $Version" -ForegroundColor White
     Write-Host "Repository: $sourceUrl" -ForegroundColor White
 
@@ -54,5 +60,3 @@ try {
     Write-Host "Publishing failed: $($_.Exception.Message)" -ForegroundColor Red
     exit 1
 }
-
-

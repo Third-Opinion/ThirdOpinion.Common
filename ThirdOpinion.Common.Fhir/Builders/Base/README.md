@@ -1,21 +1,25 @@
 # Base Infrastructure
 
-Core infrastructure classes that provide the foundation for all FHIR resource builders in the ThirdOpinion.Common.Fhir library.
+Core infrastructure classes that provide the foundation for all FHIR resource builders in the ThirdOpinion.Common.Fhir
+library.
 
 ## AiResourceBuilderBase&lt;T&gt;
 
 Abstract base class providing common functionality for all AI resource builders.
 
 ### Purpose
+
 - Standardizes AI metadata application (AIAST security labels, inference IDs)
 - Provides fluent interface patterns
 - Handles common validation logic
 - Manages derivedFrom relationships
 
 ### Generic Type Parameter
+
 - `T` - Constrained to `Hl7.Fhir.Model.Resource`
 
 ### Core Properties
+
 ```csharp
 protected string? InferenceId { get; set; }
 protected string? CriteriaId { get; set; }
@@ -28,6 +32,7 @@ protected AiInferenceConfiguration Configuration { get; }
 ### Common Methods
 
 #### WithInferenceId(string id)
+
 Sets the inference ID for this resource. If not provided, a unique ID is auto-generated.
 
 ```csharp
@@ -37,6 +42,7 @@ var builder = new SomeBuilder(config)
 ```
 
 #### WithCriteria(string id, string display, string? system)
+
 Sets assessment criteria information used by the AI system.
 
 ```csharp
@@ -47,6 +53,7 @@ var builder = new SomeBuilder(config)
 ```
 
 #### AddDerivedFrom(ResourceReference reference)
+
 Adds resources that this inference was derived from.
 
 ```csharp
@@ -59,7 +66,9 @@ var builder = new SomeBuilder(config)
 ### Automatic Features
 
 #### AIAST Security Label
+
 All resources automatically receive the AI Assisted security label:
+
 ```json
 {
   "meta": {
@@ -75,13 +84,17 @@ All resources automatically receive the AI Assisted security label:
 ```
 
 #### Inference ID Generation
+
 If no inference ID is provided, one is automatically generated using the pattern:
+
 ```
 to.io-{GUID}
 ```
 
 #### Validation Framework
+
 The base class provides:
+
 - **EnsureInferenceId()** - Ensures an inference ID exists
 - **ValidateRequiredFields()** - Virtual method for derived class validation
 - **ApplyAiastSecurityLabel()** - Applies AI security metadata
@@ -91,6 +104,7 @@ The base class provides:
 To create a new builder:
 
 1. **Extend the base class:**
+
 ```csharp
 public class MyCustomBuilder : AiResourceBuilderBase<Observation>
 {
@@ -100,6 +114,7 @@ public class MyCustomBuilder : AiResourceBuilderBase<Observation>
 ```
 
 2. **Override fluent methods:**
+
 ```csharp
 public new MyCustomBuilder WithInferenceId(string id)
 {
@@ -115,6 +130,7 @@ public new MyCustomBuilder WithCriteria(string id, string display, string? syste
 ```
 
 3. **Add resource-specific methods:**
+
 ```csharp
 public MyCustomBuilder WithSpecificProperty(string value)
 {
@@ -124,6 +140,7 @@ public MyCustomBuilder WithSpecificProperty(string value)
 ```
 
 4. **Implement validation:**
+
 ```csharp
 protected override void ValidateRequiredFields()
 {
@@ -135,6 +152,7 @@ protected override void ValidateRequiredFields()
 ```
 
 5. **Implement build logic:**
+
 ```csharp
 protected override Observation BuildCore()
 {
@@ -211,14 +229,17 @@ var observation = new ExampleObservationBuilder(config)
 ## Helper Classes
 
 ### FhirIdGenerator
+
 Provides standardized ID generation for FHIR resources.
 
 #### Methods
+
 - `GenerateInferenceId()` - Creates unique inference IDs
 - `GenerateResourceId(string prefix)` - Creates prefixed resource IDs
 - `IsValidFhirId(string id)` - Validates FHIR ID format
 
 #### Examples
+
 ```csharp
 var inferenceId = FhirIdGenerator.GenerateInferenceId();
 // Result: "to.io-a1b2c3d4-e5f6-7890-abcd-ef1234567890"
@@ -231,9 +252,11 @@ bool isValid = FhirIdGenerator.IsValidFhirId("patient-123");
 ```
 
 ### FhirCodingHelper
+
 Provides standardized clinical codes and coding utilities.
 
 #### Code Systems
+
 ```csharp
 public static class Systems
 {
@@ -244,6 +267,7 @@ public static class Systems
 ```
 
 #### SNOMED Codes
+
 ```csharp
 public static class SnomedCodes
 {
@@ -256,6 +280,7 @@ public static class SnomedCodes
 ```
 
 #### LOINC Codes
+
 ```csharp
 public static class LoincCodes
 {
@@ -266,6 +291,7 @@ public static class LoincCodes
 ```
 
 #### Utility Methods
+
 ```csharp
 // Create SNOMED concept
 var concept = FhirCodingHelper.CreateSnomedConcept(
@@ -288,6 +314,7 @@ var multiConcept = FhirCodingHelper.CreateMultiSystemConcept(
 ## Best Practices
 
 ### Builder Implementation
+
 1. **Always call base methods** in overridden fluent methods
 2. **Validate required fields** in `ValidateRequiredFields()`
 3. **Use meaningful error messages** for validation failures
@@ -295,6 +322,7 @@ var multiConcept = FhirCodingHelper.CreateMultiSystemConcept(
 5. **Include usage examples** in method documentation
 
 ### Error Handling
+
 ```csharp
 // Good: Specific error messages
 if (string.IsNullOrWhiteSpace(_patientId))
@@ -306,6 +334,7 @@ if (_patientId == null)
 ```
 
 ### Testing
+
 ```csharp
 [Fact]
 public void Build_WithoutPatient_ThrowsInvalidOperationException()
@@ -338,7 +367,8 @@ public void Build_WithValidData_CreatesResource()
 
 ## Thread Safety
 
-The base builder classes are **not thread-safe**. Each builder instance should be used by a single thread. For concurrent scenarios, create separate builder instances:
+The base builder classes are **not thread-safe**. Each builder instance should be used by a single thread. For
+concurrent scenarios, create separate builder instances:
 
 ```csharp
 // Good: One builder per thread

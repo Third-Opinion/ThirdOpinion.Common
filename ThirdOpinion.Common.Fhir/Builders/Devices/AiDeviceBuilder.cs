@@ -6,18 +6,18 @@ using ThirdOpinion.Common.Fhir.Helpers;
 namespace ThirdOpinion.Common.Fhir.Builders.Devices;
 
 /// <summary>
-/// Builder for creating FHIR Device resources representing AI inference engines
+///     Builder for creating FHIR Device resources representing AI inference engines
 /// </summary>
 public class AiDeviceBuilder : AiResourceBuilderBase<Device>
 {
+    private readonly List<Device.PropertyComponent> _properties;
+    private readonly List<string> _versions;
+    private string? _manufacturer;
     private string? _modelName;
     private string? _typeCode;
-    private string? _manufacturer;
-    private readonly List<string> _versions;
-    private readonly List<Device.PropertyComponent> _properties;
 
     /// <summary>
-    /// Creates a new AI Device builder
+    ///     Creates a new AI Device builder
     /// </summary>
     /// <param name="configuration">The AI inference configuration</param>
     public AiDeviceBuilder(AiInferenceConfiguration configuration)
@@ -28,7 +28,7 @@ public class AiDeviceBuilder : AiResourceBuilderBase<Device>
     }
 
     /// <summary>
-    /// Sets the model name with an optional type code
+    ///     Sets the model name with an optional type code
     /// </summary>
     /// <param name="name">The model name</param>
     /// <param name="typeCode">The type code for the device name</param>
@@ -44,35 +44,33 @@ public class AiDeviceBuilder : AiResourceBuilderBase<Device>
     }
 
     /// <summary>
-    /// Sets the manufacturer of the AI system
+    ///     Sets the manufacturer of the AI system
     /// </summary>
     /// <param name="manufacturer">The manufacturer name</param>
     /// <returns>This builder instance for method chaining</returns>
     public AiDeviceBuilder WithManufacturer(string manufacturer)
     {
         if (string.IsNullOrWhiteSpace(manufacturer))
-            throw new ArgumentException("Manufacturer cannot be null or empty", nameof(manufacturer));
+            throw new ArgumentException("Manufacturer cannot be null or empty",
+                nameof(manufacturer));
 
         _manufacturer = manufacturer;
         return this;
     }
 
     /// <summary>
-    /// Adds a version to the device
+    ///     Adds a version to the device
     /// </summary>
     /// <param name="version">The version string</param>
     /// <returns>This builder instance for method chaining</returns>
     public AiDeviceBuilder WithVersion(string version)
     {
-        if (!string.IsNullOrWhiteSpace(version))
-        {
-            _versions.Add(version);
-        }
+        if (!string.IsNullOrWhiteSpace(version)) _versions.Add(version);
         return this;
     }
 
     /// <summary>
-    /// Adds a property to the device with a Quantity value
+    ///     Adds a property to the device with a Quantity value
     /// </summary>
     /// <param name="name">The property name</param>
     /// <param name="value">The quantity value</param>
@@ -91,7 +89,7 @@ public class AiDeviceBuilder : AiResourceBuilderBase<Device>
                 Text = name,
                 Coding = new List<Coding>
                 {
-                    new Coding
+                    new()
                     {
                         Display = name
                     }
@@ -105,7 +103,7 @@ public class AiDeviceBuilder : AiResourceBuilderBase<Device>
     }
 
     /// <summary>
-    /// Adds a property to the device with a decimal value and unit
+    ///     Adds a property to the device with a decimal value and unit
     /// </summary>
     /// <param name="name">The property name</param>
     /// <param name="value">The decimal value</param>
@@ -130,7 +128,7 @@ public class AiDeviceBuilder : AiResourceBuilderBase<Device>
     }
 
     /// <summary>
-    /// Overrides methods from base class to maintain fluent interface
+    ///     Overrides methods from base class to maintain fluent interface
     /// </summary>
     public new AiDeviceBuilder WithInferenceId(string id)
     {
@@ -139,7 +137,7 @@ public class AiDeviceBuilder : AiResourceBuilderBase<Device>
     }
 
     /// <summary>
-    /// Overrides methods from base class to maintain fluent interface
+    ///     Overrides methods from base class to maintain fluent interface
     /// </summary>
     public new AiDeviceBuilder WithCriteria(string id, string display, string? system = null)
     {
@@ -148,7 +146,7 @@ public class AiDeviceBuilder : AiResourceBuilderBase<Device>
     }
 
     /// <summary>
-    /// Overrides methods from base class to maintain fluent interface
+    ///     Overrides methods from base class to maintain fluent interface
     /// </summary>
     public new AiDeviceBuilder AddDerivedFrom(ResourceReference reference)
     {
@@ -157,7 +155,7 @@ public class AiDeviceBuilder : AiResourceBuilderBase<Device>
     }
 
     /// <summary>
-    /// Overrides methods from base class to maintain fluent interface
+    ///     Overrides methods from base class to maintain fluent interface
     /// </summary>
     public new AiDeviceBuilder AddDerivedFrom(string reference, string? display = null)
     {
@@ -166,7 +164,7 @@ public class AiDeviceBuilder : AiResourceBuilderBase<Device>
     }
 
     /// <summary>
-    /// Validates that required fields are set before building
+    ///     Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
     {
@@ -175,7 +173,7 @@ public class AiDeviceBuilder : AiResourceBuilderBase<Device>
     }
 
     /// <summary>
-    /// Builds the AI Device resource
+    ///     Builds the AI Device resource
     /// </summary>
     /// <returns>The completed Device resource</returns>
     protected override Device BuildCore()
@@ -193,73 +191,57 @@ public class AiDeviceBuilder : AiResourceBuilderBase<Device>
 
         // Add model name if provided
         if (!string.IsNullOrWhiteSpace(_modelName))
-        {
             device.DeviceName = new List<Device.DeviceNameComponent>
             {
-                new Device.DeviceNameComponent
+                new()
                 {
                     Name = _modelName,
                     Type = _typeCode != null
-                        ? new DeviceNameType?(_typeCode switch
+                        ? _typeCode switch
                         {
                             "manufacturer" => DeviceNameType.ManufacturerName,
                             "model" => DeviceNameType.ModelName,
                             "user-friendly" => DeviceNameType.UserFriendlyName,
                             _ => DeviceNameType.Other
-                        })
+                        }
                         : DeviceNameType.ModelName
                 }
             };
-        }
 
         // Set manufacturer
-        if (!string.IsNullOrWhiteSpace(_manufacturer))
-        {
-            device.Manufacturer = _manufacturer;
-        }
+        if (!string.IsNullOrWhiteSpace(_manufacturer)) device.Manufacturer = _manufacturer;
 
         // Add versions
         if (_versions.Any())
-        {
             device.Version = _versions.Select(v => new Device.VersionComponent
             {
                 Value = v
             }).ToList();
-        }
 
         // Add identifier with model version from configuration
         var identifiers = new List<Identifier>();
 
         // Add model version identifier
         if (!string.IsNullOrWhiteSpace(Configuration.DefaultModelVersion))
-        {
             identifiers.Add(new Identifier
             {
-                System = Configuration.ModelSystem ?? "https://thirdopinion.ai/device-model-version",
+                System = Configuration.ModelSystem ??
+                         "https://thirdopinion.ai/device-model-version",
                 Value = Configuration.DefaultModelVersion
             });
-        }
 
         // Add inference ID as identifier if available
         if (!string.IsNullOrWhiteSpace(InferenceId))
-        {
             identifiers.Add(new Identifier
             {
                 System = Configuration.InferenceSystem,
                 Value = InferenceId
             });
-        }
 
-        if (identifiers.Any())
-        {
-            device.Identifier = identifiers;
-        }
+        if (identifiers.Any()) device.Identifier = identifiers;
 
         // Add properties
-        if (_properties.Any())
-        {
-            device.Property = _properties;
-        }
+        if (_properties.Any()) device.Property = _properties;
 
         return device;
     }

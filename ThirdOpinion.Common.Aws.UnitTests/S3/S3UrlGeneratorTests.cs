@@ -21,11 +21,12 @@ public class S3UrlGeneratorTests
     {
         // Arrange
         var s3Arn = "arn:aws:s3:us-east-1:123456789012:test-bucket/test-file.txt";
-        var expiration = TimeSpan.FromHours(1);
-        var expectedUrl = "https://test-bucket.s3.amazonaws.com/test-file.txt?AWSAccessKeyId=AKIAIOSFODNN7EXAMPLE&Expires=1234567890&Signature=abcdef123456";
+        TimeSpan expiration = TimeSpan.FromHours(1);
+        var expectedUrl
+            = "https://test-bucket.s3.amazonaws.com/test-file.txt?AWSAccessKeyId=AKIAIOSFODNN7EXAMPLE&Expires=1234567890&Signature=abcdef123456";
 
         _s3ClientMock.Setup(x => x.GetPreSignedURLAsync(It.IsAny<GetPreSignedUrlRequest>()))
-                    .ReturnsAsync(expectedUrl);
+            .ReturnsAsync(expectedUrl);
 
         // Act
         var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
@@ -33,7 +34,7 @@ public class S3UrlGeneratorTests
         // Assert
         result.ShouldBe(expectedUrl);
         _s3ClientMock.Verify(x => x.GetPreSignedURLAsync(
-            It.Is<GetPreSignedUrlRequest>(r => 
+            It.Is<GetPreSignedUrlRequest>(r =>
                 r.BucketName == "test-bucket" &&
                 r.Key == "test-file.txt")), Times.Once);
     }
@@ -43,11 +44,12 @@ public class S3UrlGeneratorTests
     {
         // Arrange
         var s3Arn = "arn:aws:s3:us-west-2:123456789012:my-bucket/folder/subfolder/document.pdf";
-        var expiration = TimeSpan.FromMinutes(30);
-        var expectedUrl = "https://my-bucket.s3.amazonaws.com/folder/subfolder/document.pdf?AWSAccessKeyId=EXAMPLE&Expires=1234567890&Signature=signature";
+        TimeSpan expiration = TimeSpan.FromMinutes(30);
+        var expectedUrl
+            = "https://my-bucket.s3.amazonaws.com/folder/subfolder/document.pdf?AWSAccessKeyId=EXAMPLE&Expires=1234567890&Signature=signature";
 
         _s3ClientMock.Setup(x => x.GetPreSignedURLAsync(It.IsAny<GetPreSignedUrlRequest>()))
-                    .ReturnsAsync(expectedUrl);
+            .ReturnsAsync(expectedUrl);
 
         // Act
         var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
@@ -55,7 +57,7 @@ public class S3UrlGeneratorTests
         // Assert
         result.ShouldBe(expectedUrl);
         _s3ClientMock.Verify(x => x.GetPreSignedURLAsync(
-            It.Is<GetPreSignedUrlRequest>(r => 
+            It.Is<GetPreSignedUrlRequest>(r =>
                 r.BucketName == "my-bucket" &&
                 r.Key == "folder/subfolder/document.pdf")), Times.Once);
     }
@@ -65,12 +67,12 @@ public class S3UrlGeneratorTests
     {
         // Arrange
         var s3Arn = "arn:aws:s3:eu-west-1:123456789012:test-bucket/test-file.txt";
-        var expiration = TimeSpan.FromHours(24);
+        TimeSpan expiration = TimeSpan.FromHours(24);
         var expectedUrl = "https://test-bucket.s3.amazonaws.com/test-file.txt?expires=tomorrow";
-        var utcNow = DateTime.UtcNow;
+        DateTime utcNow = DateTime.UtcNow;
 
         _s3ClientMock.Setup(x => x.GetPreSignedURLAsync(It.IsAny<GetPreSignedUrlRequest>()))
-                    .ReturnsAsync(expectedUrl);
+            .ReturnsAsync(expectedUrl);
 
         // Act
         var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
@@ -78,7 +80,7 @@ public class S3UrlGeneratorTests
         // Assert
         result.ShouldBe(expectedUrl);
         _s3ClientMock.Verify(x => x.GetPreSignedURLAsync(
-            It.Is<GetPreSignedUrlRequest>(r => 
+            It.Is<GetPreSignedUrlRequest>(r =>
                 r.Expires > utcNow.Add(TimeSpan.FromHours(23)) &&
                 r.Expires < utcNow.Add(TimeSpan.FromHours(25)))), Times.Once);
     }
@@ -88,10 +90,10 @@ public class S3UrlGeneratorTests
     {
         // Arrange
         var invalidArn = "not-a-valid-arn";
-        var expiration = TimeSpan.FromHours(1);
+        TimeSpan expiration = TimeSpan.FromHours(1);
 
         // Act & Assert
-        await Should.ThrowAsync<ArgumentException>(() => 
+        await Should.ThrowAsync<ArgumentException>(() =>
             _urlGenerator.GeneratePreSignedUrl(invalidArn, expiration));
     }
 
@@ -100,10 +102,10 @@ public class S3UrlGeneratorTests
     {
         // Arrange
         var emptyArn = "";
-        var expiration = TimeSpan.FromHours(1);
+        TimeSpan expiration = TimeSpan.FromHours(1);
 
         // Act & Assert
-        await Should.ThrowAsync<ArgumentException>(() => 
+        await Should.ThrowAsync<ArgumentException>(() =>
             _urlGenerator.GeneratePreSignedUrl(emptyArn, expiration));
     }
 
@@ -112,10 +114,10 @@ public class S3UrlGeneratorTests
     {
         // Arrange
         string nullArn = null!;
-        var expiration = TimeSpan.FromHours(1);
+        TimeSpan expiration = TimeSpan.FromHours(1);
 
         // Act & Assert
-        await Should.ThrowAsync<ArgumentException>(() => 
+        await Should.ThrowAsync<ArgumentException>(() =>
             _urlGenerator.GeneratePreSignedUrl(nullArn, expiration));
     }
 
@@ -124,10 +126,10 @@ public class S3UrlGeneratorTests
     {
         // Arrange
         var arnWithoutKey = "arn:aws:s3:us-east-1:123456789012:test-bucket";
-        var expiration = TimeSpan.FromHours(1);
+        TimeSpan expiration = TimeSpan.FromHours(1);
 
         // Act & Assert
-        await Should.ThrowAsync<ArgumentException>(() => 
+        await Should.ThrowAsync<ArgumentException>(() =>
             _urlGenerator.GeneratePreSignedUrl(arnWithoutKey, expiration));
     }
 
@@ -135,12 +137,14 @@ public class S3UrlGeneratorTests
     public async Task GeneratePreSignedUrl_ArnWithSpecialCharacters_HandlesCorrectly()
     {
         // Arrange
-        var s3Arn = "arn:aws:s3:ap-southeast-1:987654321098:test-bucket/folder/file%20with%20spaces.txt";
-        var expiration = TimeSpan.FromHours(2);
-        var expectedUrl = "https://test-bucket.s3.amazonaws.com/folder/file%20with%20spaces.txt?encoded=url";
+        var s3Arn
+            = "arn:aws:s3:ap-southeast-1:987654321098:test-bucket/folder/file%20with%20spaces.txt";
+        TimeSpan expiration = TimeSpan.FromHours(2);
+        var expectedUrl
+            = "https://test-bucket.s3.amazonaws.com/folder/file%20with%20spaces.txt?encoded=url";
 
         _s3ClientMock.Setup(x => x.GetPreSignedURLAsync(It.IsAny<GetPreSignedUrlRequest>()))
-                    .ReturnsAsync(expectedUrl);
+            .ReturnsAsync(expectedUrl);
 
         // Act
         var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
@@ -148,7 +152,7 @@ public class S3UrlGeneratorTests
         // Assert
         result.ShouldBe(expectedUrl);
         _s3ClientMock.Verify(x => x.GetPreSignedURLAsync(
-            It.Is<GetPreSignedUrlRequest>(r => 
+            It.Is<GetPreSignedUrlRequest>(r =>
                 r.BucketName == "test-bucket" &&
                 r.Key == "folder/file%20with%20spaces.txt")), Times.Once);
     }
@@ -158,16 +162,16 @@ public class S3UrlGeneratorTests
     {
         // Arrange
         var s3Arn = "arn:aws:s3:us-east-1:123456789012:test-bucket/test-file.txt";
-        var expiration = TimeSpan.FromHours(1);
+        TimeSpan expiration = TimeSpan.FromHours(1);
         var expectedException = new AmazonS3Exception("S3 service error");
 
         _s3ClientMock.Setup(x => x.GetPreSignedURLAsync(It.IsAny<GetPreSignedUrlRequest>()))
-                    .ThrowsAsync(expectedException);
+            .ThrowsAsync(expectedException);
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<AmazonS3Exception>(() => 
+        var exception = await Should.ThrowAsync<AmazonS3Exception>(() =>
             _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration));
-        
+
         exception.ShouldBe(expectedException);
     }
 
@@ -176,11 +180,11 @@ public class S3UrlGeneratorTests
     {
         // Arrange
         var s3Arn = "arn:aws:s3:us-east-1:123456789012:test-bucket/test-file.txt";
-        var expiration = TimeSpan.Zero;
+        TimeSpan expiration = TimeSpan.Zero;
         var expectedUrl = "https://test-bucket.s3.amazonaws.com/test-file.txt?expires=now";
 
         _s3ClientMock.Setup(x => x.GetPreSignedURLAsync(It.IsAny<GetPreSignedUrlRequest>()))
-                    .ReturnsAsync(expectedUrl);
+            .ReturnsAsync(expectedUrl);
 
         // Act
         var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
@@ -194,12 +198,12 @@ public class S3UrlGeneratorTests
     {
         // Arrange
         var s3Arn = "arn:aws:s3:us-east-1:123456789012:test-bucket/test-file.txt";
-        var expiration = TimeSpan.FromHours(-1);
+        TimeSpan expiration = TimeSpan.FromHours(-1);
         var expectedUrl = "https://test-bucket.s3.amazonaws.com/test-file.txt?expires=past";
-        var utcNow = DateTime.UtcNow;
+        DateTime utcNow = DateTime.UtcNow;
 
         _s3ClientMock.Setup(x => x.GetPreSignedURLAsync(It.IsAny<GetPreSignedUrlRequest>()))
-                    .ReturnsAsync(expectedUrl);
+            .ReturnsAsync(expectedUrl);
 
         // Act
         var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
@@ -214,12 +218,13 @@ public class S3UrlGeneratorTests
     public async Task GeneratePreSignedUrl_CrossRegionArn_ParsesBucketAndKeyCorrectly()
     {
         // Arrange
-        var s3Arn = "arn:aws:s3:eu-central-1:555666777888:cross-region-bucket/data/analytics/report.json";
-        var expiration = TimeSpan.FromMinutes(15);
+        var s3Arn
+            = "arn:aws:s3:eu-central-1:555666777888:cross-region-bucket/data/analytics/report.json";
+        TimeSpan expiration = TimeSpan.FromMinutes(15);
         var expectedUrl = "https://cross-region-bucket.s3.amazonaws.com/data/analytics/report.json";
 
         _s3ClientMock.Setup(x => x.GetPreSignedURLAsync(It.IsAny<GetPreSignedUrlRequest>()))
-                    .ReturnsAsync(expectedUrl);
+            .ReturnsAsync(expectedUrl);
 
         // Act
         var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
@@ -227,7 +232,7 @@ public class S3UrlGeneratorTests
         // Assert
         result.ShouldBe(expectedUrl);
         _s3ClientMock.Verify(x => x.GetPreSignedURLAsync(
-            It.Is<GetPreSignedUrlRequest>(r => 
+            It.Is<GetPreSignedUrlRequest>(r =>
                 r.BucketName == "cross-region-bucket" &&
                 r.Key == "data/analytics/report.json")), Times.Once);
     }
@@ -236,12 +241,14 @@ public class S3UrlGeneratorTests
     public async Task GeneratePreSignedUrl_DeepNestedPath_ParsesCorrectly()
     {
         // Arrange
-        var s3Arn = "arn:aws:s3:us-west-1:111222333444:deep-bucket/level1/level2/level3/level4/level5/deep-file.txt";
-        var expiration = TimeSpan.FromHours(1);
-        var expectedUrl = "https://deep-bucket.s3.amazonaws.com/level1/level2/level3/level4/level5/deep-file.txt";
+        var s3Arn
+            = "arn:aws:s3:us-west-1:111222333444:deep-bucket/level1/level2/level3/level4/level5/deep-file.txt";
+        TimeSpan expiration = TimeSpan.FromHours(1);
+        var expectedUrl
+            = "https://deep-bucket.s3.amazonaws.com/level1/level2/level3/level4/level5/deep-file.txt";
 
         _s3ClientMock.Setup(x => x.GetPreSignedURLAsync(It.IsAny<GetPreSignedUrlRequest>()))
-                    .ReturnsAsync(expectedUrl);
+            .ReturnsAsync(expectedUrl);
 
         // Act
         var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
@@ -249,7 +256,7 @@ public class S3UrlGeneratorTests
         // Assert
         result.ShouldBe(expectedUrl);
         _s3ClientMock.Verify(x => x.GetPreSignedURLAsync(
-            It.Is<GetPreSignedUrlRequest>(r => 
+            It.Is<GetPreSignedUrlRequest>(r =>
                 r.BucketName == "deep-bucket" &&
                 r.Key == "level1/level2/level3/level4/level5/deep-file.txt")), Times.Once);
     }

@@ -1,21 +1,28 @@
 # FHIR R4 AI-Generated Prostate Cancer Clinical Inferences - Implementation PRD
 
 ## Overview
-This PRD defines the implementation requirements for C# helper classes using Firely SDK to construct FHIR R4 resources for AI-generated clinical inferences in prostate cancer trial eligibility assessments.
+
+This PRD defines the implementation requirements for C# helper classes using Firely SDK to construct FHIR R4 resources
+for AI-generated clinical inferences in prostate cancer trial eligibility assessments.
 
 ## Technology Stack
+
 - **Language**: C# (.NET 6+)
 - **FHIR SDK**: Firely SDK (formerly FHIR .NET API)
 - **Package**: `Hl7.Fhir.R4` NuGet package
 - **Deployment**: AWS
-- **Projects** : In the solution ThirdOpinion.Common create a library project ThirdOpinion.Common.Fhir and ThirdOpinion.Common.Fhir.UnitTests(xunit and shoudly)
+- **Projects** : In the solution ThirdOpinion.Common create a library project ThirdOpinion.Common.Fhir and
+  ThirdOpinion.Common.Fhir.UnitTests(xunit and shoudly)
 
 ## Core Design Principles
 
 ### Builder Pattern Architecture
-All helper classes follow the Builder pattern to provide fluent, type-safe construction of FHIR resources. Think of builders like LINQ's fluent API - each method returns the builder instance for chaining.
+
+All helper classes follow the Builder pattern to provide fluent, type-safe construction of FHIR resources. Think of
+builders like LINQ's fluent API - each method returns the builder instance for chaining.
 
 **Example usage pattern:**
+
 ```csharp
 var observation = new AdtStatusObservationBuilder()
     .WithInferenceGuid("abc12345-6789-4def-0123-456789abcdef")
@@ -28,13 +35,17 @@ var observation = new AdtStatusObservationBuilder()
 ```
 
 ### Resource Reference Handling
+
 All builders accept `ResourceReference` objects from Firely SDK. The implementation must support:
+
 - Pre-constructed references: `new ResourceReference("Patient/example")`
 - References with display text: `new ResourceReference("Patient/example", "John Doe")`
 - Type-safe reference construction from existing FHIR resources
 
 ### Mandatory Metadata Pattern
+
 Every AI-generated resource requires three core elements automatically added by builders:
+
 1. **AI Security Label** (`AIAST` code)
 2. **Inference GUID** (using `to.io-{GUID}` format)
 3. **Model Version Tag** (configurable per AI model)
@@ -44,9 +55,11 @@ Every AI-generated resource requires three core elements automatically added by 
 ### 1. Base Infrastructure
 
 #### `AiResourceBuilderBase<T>` Abstract Class
+
 Provides common functionality for all AI resource builders.
 
 **Requirements:**
+
 - Generic type parameter `T` constrained to `Resource`
 - Auto-generates inference IDs if not explicitly provided
 - Applies AIAST security label automatically
@@ -54,6 +67,7 @@ Provides common functionality for all AI resource builders.
 - Validation before Build() returns resource
 
 **Properties:**
+
 ```csharp
 protected string InferenceId { get; set; }  // Auto-generated if not set
 protected string CriteriaId { get; set; }   // Criteria ID like "adt-therapy-1234455-v1.0"
@@ -62,6 +76,7 @@ protected List<ResourceReference> DerivedFromReferences { get; set; }
 ```
 
 **Methods:**
+
 ```csharp
 public TBuilder WithInferenceId(string id)  // Optional - auto-generates if not called
 public TBuilder WithCriteria(string criteriaId, string display)  // Method coding
@@ -70,13 +85,16 @@ public abstract T Build()
 ```
 
 **Auto-generation behavior:**
-- If `WithInferenceId()` is not called, the builder automatically generates an ID using `FhirIdGenerator.GenerateInferenceId()`
+
+- If `WithInferenceId()` is not called, the builder automatically generates an ID using
+  `FhirIdGenerator.GenerateInferenceId()`
 - Format: `to.ai-inference-{GUID}` (e.g., `to.ai-inference-a1b2c3d4-e5f6-7890-abcd-ef1234567890`)
 - For documents: `to.ai-inference-doc-{GUID}` or `to.ai-inference-facts-{GUID}`
 - For provenance: `to.io-prov-{GUID}`
 - IDs are generated at Build() time to ensure uniqueness
 
 **Example usage with explicit ID:**
+
 ```csharp
 var obs = new AdtStatusObservationBuilder()
     .WithInferenceId("to.ai-inference-1")  // Explicit ID
@@ -85,6 +103,7 @@ var obs = new AdtStatusObservationBuilder()
 ```
 
 **Example usage with auto-generated ID:**
+
 ```csharp
 var obs = new AdtStatusObservationBuilder()
     // WithInferenceId() omitted - will auto-generate
@@ -94,14 +113,17 @@ var obs = new AdtStatusObservationBuilder()
 ```
 
 #### `FhirIdGenerator` Static Helper
+
 Generates consistent IDs following simplified patterns with auto-generation support.
 
 **Requirements:**
+
 - Static methods for generating IDs with standard prefixes
 - GUID-based ID generation for uniqueness
 - Support for custom ID prefixes
 
 **Methods:**
+
 ```csharp
 public static string GenerateInferenceId() // Returns "to.ai-inference-{GUID}"
 public static string GenerateInferenceId(int sequenceNumber) // Returns "to.ai-inference-{n}" for sequential IDs
@@ -111,6 +133,7 @@ public static string GenerateDocumentId(string type) // Returns "to.ai-inference
 ```
 
 **ID Format Examples:**
+
 ```
 Observations:        to.ai-inference-a1b2c3d4-e5f6-7890-abcd-ef1234567890
 Provenance:          to.io-prov-a1b2c3d4-e5f6-7890-abcd-ef1234567890
@@ -119,6 +142,7 @@ Documents (Facts):   to.ai-inference-facts-a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ```
 
 **Usage:**
+
 ```csharp
 // Auto-generate ID
 var id = FhirIdGenerator.GenerateInferenceId(); // "to.ai-inference-{GUID}"
@@ -131,14 +155,17 @@ var id = FhirIdGenerator.GenerateDocumentId("ocr"); // "to.ai-inference-ocr-{GUI
 ```
 
 #### `FhirCodingHelper` Static Helper
+
 Provides strongly-typed coding constants and factory methods.
 
 **Requirements:**
+
 - Constants for all SNOMED, ICD-10, LOINC codes in schema
 - Factory methods for CodeableConcept construction
 - Validation of code systems
 
 **Example constants:**
+
 ```csharp
 public static class SnomedCodes
 {
@@ -160,15 +187,18 @@ public static class Icd10Codes
 ### 2. AI Device Builder
 
 #### `AiDeviceBuilder` Class
+
 Constructs Device resources representing AI inference engines.
 
 **Requirements:**
+
 - Inherits from `AiResourceBuilderBase<Device>`
 - Support for flexible property additions (any key-value pairs)
 - Simplified device naming with type code
 - Manufacturer and version configuration
 
 **Key methods:**
+
 ```csharp
 public AiDeviceBuilder WithModelName(string name, string typeCode)  // typeCode like "trail-match-ai"
 public AiDeviceBuilder WithManufacturer(string manufacturer)
@@ -178,6 +208,7 @@ public AiDeviceBuilder AddProperty(string propertyName, decimal value, string un
 ```
 
 **Example usage:**
+
 ```csharp
 var device = new AiDeviceBuilder()
     .WithModelName("Trial Eligibility AI", "trail-match-ai")
@@ -190,9 +221,11 @@ var device = new AiDeviceBuilder()
 ### 3. ADT Therapy Detection Builder
 
 #### `AdtStatusObservationBuilder` Class
+
 Constructs Observation resources for ADT therapy status detection.
 
 **Requirements:**
+
 - Observation.status = "final"
 - Observation.category = "therapy"
 - SNOMED code 413712001 (ADT therapy)
@@ -202,6 +235,7 @@ Constructs Observation resources for ADT therapy status detection.
 - Auto-generates inference ID if not provided
 
 **Key methods:**
+
 ```csharp
 public AdtStatusObservationBuilder WithInferenceId(string id)  // OPTIONAL - auto-generates if omitted
 public AdtStatusObservationBuilder WithPatient(ResourceReference patientRef)
@@ -215,14 +249,18 @@ public AdtStatusObservationBuilder AddNote(string noteText)
 ```
 
 **WithTreatmentStartDate Method:**
-The `WithTreatmentStartDate` method adds a specialized component to track when ADT treatment began, including medication reference information.
+The `WithTreatmentStartDate` method adds a specialized component to track when ADT treatment began, including medication
+reference information.
 
 **Parameters:**
+
 - `treatmentStartDate` (DateTime): The date when ADT treatment started
 - `medicationReferenceId` (string): Reference to the MedicationReference resource (e.g., "MedicationReference/med-123")
-- `displayText` (string): Human-readable description of the treatment start (e.g., "ADT treatment started on 2025-01-01 with Zoladex 20 mg")
+- `displayText` (string): Human-readable description of the treatment start (e.g., "ADT treatment started on 2025-01-01
+  with Zoladex 20 mg")
 
 **Generated FHIR Component:**
+
 ```json
 {
   "component": [
@@ -253,6 +291,7 @@ The `WithTreatmentStartDate` method adds a specialized component to track when A
 ```
 
 **Example usage with explicit ID:**
+
 ```csharp
 var observation = new AdtStatusObservationBuilder()
     .WithInferenceId("to.ai-inference-1")
@@ -269,6 +308,7 @@ var observation = new AdtStatusObservationBuilder()
 ```
 
 **Example usage with auto-generated ID:**
+
 ```csharp
 var observation = new AdtStatusObservationBuilder()
     // WithInferenceId() omitted - auto-generates to.ai-inference-{GUID}
@@ -286,11 +326,14 @@ var observation = new AdtStatusObservationBuilder()
 ### 4. CSPC Assessment Builder (UPDATED)
 
 #### `CspcAssessmentObservationBuilder` Class
+
 Constructs Observation resources for castration sensitivity assessment.
 
-**CRITICAL CHANGE**: This builder creates an **Observation** that references an existing Condition via the `focus` field, NOT a new Condition resource.
+**CRITICAL CHANGE**: This builder creates an **Observation** that references an existing Condition via the `focus`
+field, NOT a new Condition resource.
 
 **Requirements:**
+
 - Observation.status = "final"
 - Observation.category = "exam"
 - LOINC code 21889-1 (Cancer disease status)
@@ -301,6 +344,7 @@ Constructs Observation resources for castration sensitivity assessment.
 - Multiple evidence types (testosterone, PSA, ADT status)
 
 **Key methods:**
+
 ```csharp
 public CspcAssessmentObservationBuilder WithInferenceId(string id)
 public CspcAssessmentObservationBuilder WithPatient(ResourceReference patientRef)
@@ -315,6 +359,7 @@ public CspcAssessmentObservationBuilder AddNote(string noteText)
 ```
 
 **Example usage:**
+
 ```csharp
 var assessment = new CspcAssessmentObservationBuilder()
     .WithInferenceId("to.ai-inference-1")
@@ -335,6 +380,7 @@ var assessment = new CspcAssessmentObservationBuilder()
 ```
 
 **Validation requirements:**
+
 - Build() must throw `InvalidOperationException` if focus is not set
 - Build() must validate that focus references a Condition resource
 - Must apply both SNOMED 1197209002 AND ICD-10 Z19.1 codes in valueCodeableConcept
@@ -342,9 +388,11 @@ var assessment = new CspcAssessmentObservationBuilder()
 ### 5. PSA Progression Assessment Builder
 
 #### `PsaProgressionObservationBuilder` Class
+
 Constructs Observation resources for PSA progression using either ThirdOpinion.io or PCWG3 criteria.
 
 **Requirements:**
+
 - Support for custom ThirdOpinion.io criteria
 - Support for PCWG3 criteria
 - Component elements for measurements and validity periods
@@ -352,6 +400,7 @@ Constructs Observation resources for PSA progression using either ThirdOpinion.i
 - Detailed clinical analysis notes
 
 **Key methods:**
+
 ```csharp
 public PsaProgressionObservationBuilder WithInferenceId(string id)
 public PsaProgressionObservationBuilder WithPatient(ResourceReference patientRef)
@@ -367,6 +416,7 @@ public PsaProgressionObservationBuilder AddNote(string noteText)
 ```
 
 **Example usage:**
+
 ```csharp
 var progression = new PsaProgressionObservationBuilder()
     .WithInferenceId("to.ai-inference-1")
@@ -393,9 +443,11 @@ Treatment Response: PSA decreased to 0.1 ng/mL (>99% reduction)
 ### 6. RECIST 1.1 Progression Builder
 
 #### `RecistProgressionObservationBuilder` Class
+
 Constructs Observation resources for radiographic progression per RECIST 1.1.
 
 **Requirements:**
+
 - LOINC code 21976-6 (Tumor response)
 - NCI Thesaurus codes for RECIST 1.1
 - Component elements for SLD, nadir, percent change
@@ -404,6 +456,7 @@ Constructs Observation resources for radiographic progression per RECIST 1.1.
 - Criteria-based method coding
 
 **Key methods:**
+
 ```csharp
 public RecistProgressionObservationBuilder WithInferenceId(string id)
 public RecistProgressionObservationBuilder WithPatient(ResourceReference patientRef)
@@ -421,6 +474,7 @@ public RecistProgressionObservationBuilder AddNote(string noteText)
 ```
 
 **Example usage:**
+
 ```csharp
 var recist = new RecistProgressionObservationBuilder()
     .WithInferenceId("to.ai-inference-1")
@@ -444,9 +498,12 @@ var recist = new RecistProgressionObservationBuilder()
 ### 7. Provenance Builder
 
 #### `AiProvenanceBuilder` Class
-Constructs Provenance resources for audit trails of AI-generated resources. Supports optional log file references stored in S3.
+
+Constructs Provenance resources for audit trails of AI-generated resources. Supports optional log file references stored
+in S3.
 
 **Requirements:**
+
 - References target resource with version if available
 - AI Device as "assembler" agent
 - Organization as "author" agent
@@ -456,6 +513,7 @@ Constructs Provenance resources for audit trails of AI-generated resources. Supp
 - Optional log file S3 reference for detailed audit trails
 
 **Key methods:**
+
 ```csharp
 public AiProvenanceBuilder WithProvenanceId(string id)  // e.g., "to.io-prov-1"
 public AiProvenanceBuilder ForTarget(ResourceReference targetRef, string version = null)
@@ -469,6 +527,7 @@ public AiProvenanceBuilder WithLogFileUrl(string s3Url)  // S3 reference to deta
 ```
 
 **Example usage with log file:**
+
 ```csharp
 var provenance = new AiProvenanceBuilder()
     .WithProvenanceId("to.io-prov-1")
@@ -485,18 +544,23 @@ var provenance = new AiProvenanceBuilder()
 ```
 
 **Implementation notes:**
+
 - Log file URL should be added as an entity with role "derivation"
 - The entity should reference a DocumentReference that points to the S3 log file
 - Alternatively, add as a signature element with reference to the log location
 - S3 URLs should follow pattern: `s3://bucket-name/path/to/logfile.log`
-- Log files typically contain: model parameters, input data checksums, processing timestamps, confidence scores, and decision traces
+- Log files typically contain: model parameters, input data checksums, processing timestamps, confidence scores, and
+  decision traces
 
 ### 8. DocumentReference Builders
 
 #### `OcrDocumentReferenceBuilder` Class
-Creates DocumentReference for OCR-extracted text with relatesTo linking. Supports both inline text and S3 URL references for AWS Textract integration.
+
+Creates DocumentReference for OCR-extracted text with relatesTo linking. Supports both inline text and S3 URL references
+for AWS Textract integration.
 
 **Requirements:**
+
 - Transforms relationship to original document
 - AI Device as author
 - Support for inline Base64-encoded text content OR S3 URL references
@@ -504,6 +568,7 @@ Creates DocumentReference for OCR-extracted text with relatesTo linking. Support
 - MIME type: text/plain;charset=utf-8 for inline text, or application/json for Textract outputs
 
 **Key methods:**
+
 ```csharp
 public OcrDocumentReferenceBuilder WithInferenceId(string id)
 public OcrDocumentReferenceBuilder WithOriginalDocument(ResourceReference originalDocRef)
@@ -517,6 +582,7 @@ public OcrDocumentReferenceBuilder WithDescription(string description)
 ```
 
 **Example usage with inline text:**
+
 ```csharp
 var ocrDoc = new OcrDocumentReferenceBuilder()
     .WithInferenceId("to.ai-inference-doc-1")
@@ -529,6 +595,7 @@ var ocrDoc = new OcrDocumentReferenceBuilder()
 ```
 
 **Example usage with S3 URLs:**
+
 ```csharp
 var ocrDoc = new OcrDocumentReferenceBuilder()
     .WithInferenceId("to.ai-inference-doc-1")
@@ -543,21 +610,26 @@ var ocrDoc = new OcrDocumentReferenceBuilder()
 ```
 
 **Implementation notes:**
+
 - When using S3 URLs, set `attachment.url` instead of `attachment.data`
 - Textract outputs should be added as separate content entries
 - Builder should validate that either inline text OR URL is provided, not both
 - S3 URLs should follow pattern: `s3://bucket-name/path/to/file`
 
 #### `FactExtractionDocumentReferenceBuilder` Class
-Creates DocumentReference for AI-extracted structured facts in JSON. Supports both inline JSON and S3 URL references for large fact sets.
+
+Creates DocumentReference for AI-extracted structured facts in JSON. Supports both inline JSON and S3 URL references for
+large fact sets.
 
 **Requirements:**
+
 - Transforms relationships to both OCR and original documents
 - AI Device as author
 - Support for inline Base64-encoded JSON content OR S3 URL references
 - MIME type: application/json
 
 **Key methods:**
+
 ```csharp
 public FactExtractionDocumentReferenceBuilder WithInferenceId(string id)
 public FactExtractionDocumentReferenceBuilder WithOriginalDocument(ResourceReference originalDocRef)
@@ -571,6 +643,7 @@ public FactExtractionDocumentReferenceBuilder WithDescription(string description
 ```
 
 **Example usage with inline JSON:**
+
 ```csharp
 var factsObject = new
 {
@@ -593,6 +666,7 @@ var factsDoc = new FactExtractionDocumentReferenceBuilder()
 ```
 
 **Example usage with S3 URL:**
+
 ```csharp
 var factsDoc = new FactExtractionDocumentReferenceBuilder()
     .WithInferenceId("to.ai-inference-facts-1")
@@ -606,6 +680,7 @@ var factsDoc = new FactExtractionDocumentReferenceBuilder()
 ```
 
 **Implementation notes:**
+
 - When using S3 URL, set `attachment.url` instead of `attachment.data`
 - Builder should validate that either inline JSON OR URL is provided, not both
 - For inline JSON, auto-serialize objects to JSON string then Base64-encode
@@ -614,21 +689,25 @@ var factsDoc = new FactExtractionDocumentReferenceBuilder()
 ## Validation Requirements
 
 ### Pre-Build Validation
+
 All builders must validate required fields before Build() returns:
 
 **Common validations:**
+
 - Inference GUID is set (auto-generate if missing)
 - Patient reference is set
 - Device reference is set
 - Status/effective dates are valid
 
 **Resource-specific validations:**
+
 - `CspcAssessmentObservationBuilder`: Focus reference MUST be set
 - `PsaProgressionObservationBuilder`: Must have nadir and current PSA values
 - `RecistProgressionObservationBuilder`: Must have nadir and current SLD
 - `AiProvenanceBuilder`: Must have at least one target and one agent
 
 **Validation exceptions:**
+
 ```csharp
 throw new InvalidOperationException("Patient reference is required");
 throw new ArgumentException("Inference GUID must follow to.io-{GUID} format");
@@ -638,9 +717,11 @@ throw new InvalidOperationException("CSPC assessment requires focus reference to
 ## Configuration and Extensibility
 
 ### `AiInferenceConfiguration` Class
+
 Provides configuration for AI model metadata and system URIs.
 
 **Properties:**
+
 ```csharp
 public string InferenceSystem { get; set; } = "https://thirdopinion.io/ai-inference";
 public string CriteriaSystem { get; set; } = "https://thirdopinion.io/criteria";
@@ -652,6 +733,7 @@ public string OrganizationReference { get; set; } = "Organization/thirdopinion-a
 ```
 
 **Usage:**
+
 ```csharp
 var config = new AiInferenceConfiguration
 {
@@ -665,15 +747,18 @@ var builder = new AdtStatusObservationBuilder(config);
 ## Error Handling
 
 ### Builder Exception Strategy
+
 All builders follow consistent error handling:
 
 **Exception types:**
+
 - `ArgumentNullException`: Required reference parameter is null
 - `ArgumentException`: Invalid value format (e.g., malformed GUID)
 - `InvalidOperationException`: Missing required builder state (e.g., Build() before required methods called)
 - `FhirResourceValidationException`: Firely SDK validation failures
 
 **Example error messages:**
+
 ```csharp
 // Good error messages
 throw new InvalidOperationException(
@@ -688,6 +773,7 @@ throw new Exception("Invalid state");  // ❌ Too vague
 ## Testing Requirements
 
 ### Unit Test Coverage
+
 All builders require unit tests for:
 
 1. **Happy path construction**: Valid resources with all required fields
@@ -698,6 +784,7 @@ All builders require unit tests for:
 6. **Component calculation**: PSA progression auto-calculates components correctly
 
 ### Integration Test Scenarios
+
 Test complete workflow scenarios:
 
 1. **ADT Detection + CSPC Assessment + PSA Progression**: Full inference pipeline
@@ -708,6 +795,7 @@ Test complete workflow scenarios:
 ## Code Organization
 
 ### Namespace Structure
+
 ```
 ThirdOpinion.Fhir.AiInference
 ├── Builders
@@ -768,6 +856,7 @@ public const string NCI_PROGRESSIVE_DISEASE = "C35571";
 ## AWS Deployment Considerations
 
 ### Lambda Integration Pattern
+
 Builders designed for serverless Lambda functions:
 
 **Input:** FHIR Bundle of patient data from S3/DynamoDB
@@ -775,25 +864,30 @@ Builders designed for serverless Lambda functions:
 **Output:** FHIR Bundle with AI-generated resources
 
 **Memory optimization:**
+
 - Builders are lightweight (no heavy caching)
 - Lazy evaluation where possible
 - Dispose of resources after Build()
 
 **Cold start optimization:**
+
 - Static helpers for code constants
 - Minimal constructor work
 - Configuration injectable
 
 ### S3 URL Support for Large Content
 
-All document-related builders support both inline content (Base64-encoded) and S3 URL references for optimal storage and performance.
+All document-related builders support both inline content (Base64-encoded) and S3 URL references for optimal storage and
+performance.
 
 **When to use inline content:**
+
 - Small documents (<100 KB)
 - Frequently accessed content
 - Content needed for immediate display
 
 **When to use S3 URLs:**
+
 - Large documents (>100 KB)
 - OCR outputs from AWS Textract
 - Detailed AI inference logs
@@ -801,6 +895,7 @@ All document-related builders support both inline content (Base64-encoded) and S
 - Content accessed infrequently
 
 **S3 URL patterns:**
+
 ```
 OCR text:              s3://thirdopinion-ocr/patient-{id}/reports/{filename}.txt
 Textract raw:          s3://thirdopinion-ocr/patient-{id}/reports/{filename}-textract-raw.json
@@ -810,6 +905,7 @@ Inference logs:        s3://thirdopinion-logs/inference/{yyyy}/{mm}/{dd}/{infere
 ```
 
 **Security considerations:**
+
 - All S3 buckets should be private with appropriate IAM roles
 - Use pre-signed URLs for temporary access if needed
 - Consider encryption at rest (S3 SSE-KMS)
@@ -817,6 +913,7 @@ Inference logs:        s3://thirdopinion-logs/inference/{yyyy}/{mm}/{dd}/{infere
 - Set lifecycle policies for log retention
 
 **FHIR resource patterns:**
+
 - Inline: Set `attachment.data` with Base64-encoded content
 - S3 URL: Set `attachment.url` with S3 URI
 - Never set both data and url in the same attachment
@@ -825,6 +922,7 @@ Inference logs:        s3://thirdopinion-logs/inference/{yyyy}/{mm}/{dd}/{infere
 ## Implementation Phases
 
 ### Phase 1: Core Infrastructure
+
 - AiResourceBuilderBase
 - FhirIdGenerator
 - FhirCodingHelper
@@ -832,18 +930,21 @@ Inference logs:        s3://thirdopinion-logs/inference/{yyyy}/{mm}/{dd}/{infere
 - Unit tests for base classes
 
 ### Phase 2: Observation Builders
+
 - AdtStatusObservationBuilder
 - CspcAssessmentObservationBuilder (with focus validation)
 - PsaProgressionObservationBuilder
 - Integration tests for observation workflow
 
 ### Phase 3: Advanced Builders
+
 - RecistProgressionObservationBuilder
 - AiDeviceBuilder
 - AiProvenanceBuilder
 - End-to-end integration tests
 
 ### Phase 4: Document Processing
+
 - OcrDocumentReferenceBuilder
 - FactExtractionDocumentReferenceBuilder
 - Document transformation workflow tests
@@ -851,6 +952,7 @@ Inference logs:        s3://thirdopinion-logs/inference/{yyyy}/{mm}/{dd}/{infere
 ## Acceptance Criteria
 
 ### Definition of Done
+
 A builder is complete when:
 
 1. ✅ All required methods implemented
@@ -862,6 +964,7 @@ A builder is complete when:
 7. ✅ Tested with real Firely SDK serialization/deserialization
 
 ### Quality Gates
+
 - All FHIR resources validate against R4 schema
 - Inference GUIDs follow `to.io-{GUID}` pattern
 - AIAST security label present on all AI resources
@@ -870,7 +973,8 @@ A builder is complete when:
 
 ## Example FHIR Resources
 
-This section provides complete JSON examples of all FHIR resources that the builders should produce. Use these as reference implementations and test fixtures.
+This section provides complete JSON examples of all FHIR resources that the builders should produce. Use these as
+reference implementations and test fixtures.
 
 ### Example 1: AI Device Resource
 
@@ -916,6 +1020,7 @@ This section provides complete JSON examples of all FHIR resources that the buil
 **Note:** The `property` array allows adding arbitrary properties as needed.
 
 **Builder usage:**
+
 ```csharp
 var device = new AiDeviceBuilder()
     .WithModelName("Trial Eligibility AI", "trail-match-ai")
@@ -1014,6 +1119,7 @@ var device = new AiDeviceBuilder()
 ```
 
 **Builder usage:**
+
 ```csharp
 var observation = new AdtStatusObservationBuilder()
     .WithInferenceId("to.ai-inference-1")
@@ -1150,6 +1256,7 @@ var observation = new AdtStatusObservationBuilder()
 ```
 
 **Builder usage:**
+
 ```csharp
 var assessment = new CspcAssessmentObservationBuilder()
     .WithInferenceId("to.ai-inference-1")
@@ -1295,6 +1402,7 @@ var assessment = new CspcAssessmentObservationBuilder()
 ```
 
 **Builder usage:**
+
 ```csharp
 var progression = new PsaProgressionObservationBuilder()
     .WithInferenceId("to.ai-inference-1")
@@ -1532,6 +1640,7 @@ The rest of the resource structure follows Example 4.
 ```
 
 **Builder usage:**
+
 ```csharp
 var recist = new RecistProgressionObservationBuilder()
     .WithInferenceId("to.ai-inference-1")
@@ -1555,6 +1664,7 @@ var recist = new RecistProgressionObservationBuilder()
 ### Example 7: Provenance Resource for Audit Trail
 
 **With optional log file S3 reference:**
+
 ```json
 {
     "resourceType": "Provenance",
@@ -1661,6 +1771,7 @@ var recist = new RecistProgressionObservationBuilder()
 ```
 
 **Associated DocumentReference for log file:**
+
 ```json
 {
     "resourceType": "DocumentReference",
@@ -1717,6 +1828,7 @@ var recist = new RecistProgressionObservationBuilder()
 ```
 
 **Builder usage:**
+
 ```csharp
 var provenance = new AiProvenanceBuilder()
     .WithProvenanceId("to.io-prov-1")
@@ -1735,6 +1847,7 @@ var provenance = new AiProvenanceBuilder()
 
 **Log file contents example:**
 The S3 log file typically contains:
+
 ```json
 {
   "inferenceId": "to.ai-inference-1",
@@ -1827,6 +1940,7 @@ The S3 log file typically contains:
 ### Example 9: OCR Text DocumentReference
 
 **Option A: Inline text content**
+
 ```json
 {
     "resourceType": "DocumentReference",
@@ -1905,6 +2019,7 @@ The S3 log file typically contains:
 ```
 
 **Option B: S3 URL references with Textract outputs**
+
 ```json
 {
     "resourceType": "DocumentReference",
@@ -2008,6 +2123,7 @@ The S3 log file typically contains:
 ```
 
 **Builder usage - Option A (inline text):**
+
 ```csharp
 var ocrDoc = new OcrDocumentReferenceBuilder()
     .WithInferenceId("to.ai-inference-doc-1")
@@ -2020,6 +2136,7 @@ var ocrDoc = new OcrDocumentReferenceBuilder()
 ```
 
 **Builder usage - Option B (S3 URLs with Textract):**
+
 ```csharp
 var ocrDoc = new OcrDocumentReferenceBuilder()
     .WithInferenceId("to.ai-inference-doc-2")
@@ -2036,6 +2153,7 @@ var ocrDoc = new OcrDocumentReferenceBuilder()
 ### Example 10: Fact Extraction JSON DocumentReference
 
 **Option A: Inline JSON content**
+
 ```json
 {
     "resourceType": "DocumentReference",
@@ -2120,6 +2238,7 @@ var ocrDoc = new OcrDocumentReferenceBuilder()
 ```
 
 **Option B: S3 URL reference**
+
 ```json
 {
     "resourceType": "DocumentReference",
@@ -2204,6 +2323,7 @@ var ocrDoc = new OcrDocumentReferenceBuilder()
 ```
 
 **Decoded JSON content (Option A):**
+
 ```json
 {
   "findings": [
@@ -2227,6 +2347,7 @@ var ocrDoc = new OcrDocumentReferenceBuilder()
 ```
 
 **Builder usage - Option A (inline JSON):**
+
 ```csharp
 var factsObject = new
 {
@@ -2264,6 +2385,7 @@ var factsDoc = new FactExtractionDocumentReferenceBuilder()
 ```
 
 **Builder usage - Option B (S3 URL):**
+
 ```csharp
 var factsDoc = new FactExtractionDocumentReferenceBuilder()
     .WithInferenceId("to.ai-inference-facts-2")
@@ -2292,6 +2414,7 @@ Structured Facts JSON (DocumentReference C)
 ```
 
 **Key points:**
+
 - Use `relatesTo` with code "transforms" to link derived documents to originals
 - AI-generated documents get AIAST security label
 - Use simplified identifier system: `https://thirdopinion.io/ai-inference`
@@ -2303,6 +2426,7 @@ Structured Facts JSON (DocumentReference C)
 ### Analogies for Design Patterns
 
 **Builder Pattern = LINQ Query Composition**
+
 ```csharp
 // Like building a LINQ query
 var query = patients
@@ -2319,10 +2443,13 @@ var obs = new AdtStatusObservationBuilder()
 ```
 
 **derivedFrom = SQL JOIN**
-Think of derivedFrom references like SQL joins - they link the AI inference back to the source data rows (other FHIR resources) that were "joined" to create this result.
+Think of derivedFrom references like SQL joins - they link the AI inference back to the source data rows (other FHIR
+resources) that were "joined" to create this result.
 
 **Provenance = Git Commit Metadata**
-Just like Git tracks who made a change, when, and what files were involved, Provenance tracks which AI system created a resource, when, and what source data it used.
+Just like Git tracks who made a change, when, and what files were involved, Provenance tracks which AI system created a
+resource, when, and what source data it used.
 
 **focus Field = Foreign Key to Primary Diagnosis**
-The focus field is like a foreign key in a database - it points to the "parent record" (existing Condition) that this assessment is about.
+The focus field is like a foreign key in a database - it points to the "parent record" (existing Condition) that this
+assessment is about.

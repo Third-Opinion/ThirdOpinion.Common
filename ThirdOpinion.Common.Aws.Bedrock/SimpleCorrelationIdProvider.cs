@@ -18,7 +18,7 @@ internal class SimpleCorrelationIdProvider : ICorrelationIdProvider
     {
         string? previousValue = _correlationId.Value;
         _correlationId.Value = correlationId ?? GetCorrelationId();
-        return new CorrelationScope(() => _correlationId.Value = previousValue);
+        return new CorrelationScope(() => _correlationId.Value = previousValue!);
     }
 
     public void SetCorrelationId(string correlationId)

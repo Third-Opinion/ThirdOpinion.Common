@@ -8,15 +8,16 @@ namespace ThirdOpinion.Common.Fhir.UnitTests.Builders.Observations;
 
 public class CspcAssessmentObservationBuilderTests
 {
-    private readonly AiInferenceConfiguration _configuration;
     private readonly ResourceReference _conditionReference;
-    private readonly ResourceReference _patientReference;
+    private readonly AiInferenceConfiguration _configuration;
     private readonly ResourceReference _deviceReference;
+    private readonly ResourceReference _patientReference;
 
     public CspcAssessmentObservationBuilderTests()
     {
         _configuration = AiInferenceConfiguration.CreateDefault();
-        _conditionReference = new ResourceReference("Condition/prostate-cancer-001", "Prostate Cancer");
+        _conditionReference
+            = new ResourceReference("Condition/prostate-cancer-001", "Prostate Cancer");
         _patientReference = new ResourceReference("Patient/test-patient", "Test Patient");
         _deviceReference = new ResourceReference("Device/ai-device", "AI Assessment Device");
     }
@@ -28,7 +29,7 @@ public class CspcAssessmentObservationBuilderTests
         var builder = new CspcAssessmentObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
@@ -43,7 +44,8 @@ public class CspcAssessmentObservationBuilderTests
         // Check category
         observation.Category.ShouldHaveSingleItem();
         observation.Category[0].Coding[0].Code.ShouldBe("exam");
-        observation.Category[0].Coding[0].System.ShouldBe("http://terminology.hl7.org/CodeSystem/observation-category");
+        observation.Category[0].Coding[0].System
+            .ShouldBe("http://terminology.hl7.org/CodeSystem/observation-category");
 
         // Check LOINC code
         observation.Code.Coding[0].System.ShouldBe(FhirCodingHelper.Systems.LOINC_SYSTEM);
@@ -65,13 +67,17 @@ public class CspcAssessmentObservationBuilderTests
         valueCodeableConcept.Coding.Count.ShouldBe(2);
 
         // Check SNOMED code
-        var snomedCoding = valueCodeableConcept.Coding.FirstOrDefault(c => c.System == FhirCodingHelper.Systems.SNOMED_SYSTEM);
+        Coding? snomedCoding
+            = valueCodeableConcept.Coding.FirstOrDefault(c =>
+                c.System == FhirCodingHelper.Systems.SNOMED_SYSTEM);
         snomedCoding.ShouldNotBeNull();
         snomedCoding.Code.ShouldBe("1197209002");
         snomedCoding.Display.ShouldBe("Castration sensitive prostate cancer");
 
         // Check ICD-10 code
-        var icd10Coding = valueCodeableConcept.Coding.FirstOrDefault(c => c.System == "http://hl7.org/fhir/sid/icd-10-cm");
+        Coding? icd10Coding
+            = valueCodeableConcept.Coding.FirstOrDefault(c =>
+                c.System == "http://hl7.org/fhir/sid/icd-10-cm");
         icd10Coding.ShouldNotBeNull();
         icd10Coding.Code.ShouldBe("Z19.1");
         icd10Coding.Display.ShouldBe("Hormone sensitive status");
@@ -88,7 +94,7 @@ public class CspcAssessmentObservationBuilderTests
         var builder = new CspcAssessmentObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithFocus("condition-456", "Advanced Prostate Cancer")
             .WithPatient("patient-123", "John Doe")
             .WithDevice("device-789", "Assessment AI")
@@ -101,13 +107,17 @@ public class CspcAssessmentObservationBuilderTests
         valueCodeableConcept.Coding.Count.ShouldBe(2);
 
         // Check SNOMED code for resistant
-        var snomedCoding = valueCodeableConcept.Coding.FirstOrDefault(c => c.System == FhirCodingHelper.Systems.SNOMED_SYSTEM);
+        Coding? snomedCoding
+            = valueCodeableConcept.Coding.FirstOrDefault(c =>
+                c.System == FhirCodingHelper.Systems.SNOMED_SYSTEM);
         snomedCoding.ShouldNotBeNull();
         snomedCoding.Code.ShouldBe("445848006");
         snomedCoding.Display.ShouldBe("Castration resistant prostate cancer");
 
         // Check ICD-10 code for resistant
-        var icd10Coding = valueCodeableConcept.Coding.FirstOrDefault(c => c.System == "http://hl7.org/fhir/sid/icd-10-cm");
+        Coding? icd10Coding
+            = valueCodeableConcept.Coding.FirstOrDefault(c =>
+                c.System == "http://hl7.org/fhir/sid/icd-10-cm");
         icd10Coding.ShouldNotBeNull();
         icd10Coding.Code.ShouldBe("Z19.2");
         icd10Coding.Display.ShouldBe("Hormone resistant status");
@@ -146,7 +156,7 @@ public class CspcAssessmentObservationBuilderTests
         var builder = new CspcAssessmentObservationBuilder(_configuration);
 
         // Act & Assert
-        var ex = Should.Throw<ArgumentNullException>(() => builder.WithFocus((ResourceReference)null!));
+        var ex = Should.Throw<ArgumentNullException>(() => builder.WithFocus(null!));
         ex.ParamName.ShouldBe("focus");
     }
 
@@ -227,7 +237,7 @@ public class CspcAssessmentObservationBuilderTests
         var interpretation = "High confidence assessment based on PSA levels and imaging";
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
@@ -248,7 +258,7 @@ public class CspcAssessmentObservationBuilderTests
         var builder = new CspcAssessmentObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
@@ -274,7 +284,7 @@ public class CspcAssessmentObservationBuilderTests
         var builder = new CspcAssessmentObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
@@ -300,12 +310,13 @@ public class CspcAssessmentObservationBuilderTests
         var builder = new CspcAssessmentObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithCastrationSensitive(true)
-            .WithCriteria("cspc-criteria-v2", "CSPC Assessment Criteria Version 2.0", "http://example.org/criteria")
+            .WithCriteria("cspc-criteria-v2", "CSPC Assessment Criteria Version 2.0",
+                "http://example.org/criteria")
             .Build();
 
         // Assert
@@ -324,7 +335,7 @@ public class CspcAssessmentObservationBuilderTests
         var customId = "cspc-assessment-12345";
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithInferenceId(customId)
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
@@ -343,7 +354,7 @@ public class CspcAssessmentObservationBuilderTests
         var builder = new CspcAssessmentObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
@@ -359,7 +370,7 @@ public class CspcAssessmentObservationBuilderTests
     public void FluentInterface_SupportsCompleteChaining()
     {
         // Arrange & Act
-        var observation = new CspcAssessmentObservationBuilder(_configuration)
+        Observation observation = new CspcAssessmentObservationBuilder(_configuration)
             .WithInferenceId("test-cspc-001")
             .WithFocus("Condition/cancer-123", "Prostate Cancer Diagnosis")
             .WithPatient("Patient/p456", "Jane Smith")
@@ -382,7 +393,8 @@ public class CspcAssessmentObservationBuilderTests
         observation.DerivedFrom.Count.ShouldBe(3); // 2 evidence + 1 derivedFrom
         observation.Note.Count.ShouldBe(1);
         observation.Method.ShouldNotBeNull();
-        observation.Interpretation[0].Text.ShouldBe("Assessment indicates castration-sensitive disease");
+        observation.Interpretation[0].Text
+            .ShouldBe("Assessment indicates castration-sensitive disease");
     }
 
     [Fact]
@@ -392,7 +404,7 @@ public class CspcAssessmentObservationBuilderTests
         var builder = new CspcAssessmentObservationBuilder(_configuration);
 
         // Act & Assert
-        Should.Throw<ArgumentNullException>(() => builder.WithPatient((ResourceReference)null!));
+        Should.Throw<ArgumentNullException>(() => builder.WithPatient(null!));
         Should.Throw<ArgumentException>(() => builder.WithPatient(""));
         Should.Throw<ArgumentException>(() => builder.WithPatient("   "));
     }
@@ -404,7 +416,7 @@ public class CspcAssessmentObservationBuilderTests
         var builder = new CspcAssessmentObservationBuilder(_configuration);
 
         // Act & Assert
-        Should.Throw<ArgumentNullException>(() => builder.WithDevice((ResourceReference)null!));
+        Should.Throw<ArgumentNullException>(() => builder.WithDevice(null!));
         Should.Throw<ArgumentException>(() => builder.WithDevice(""));
         Should.Throw<ArgumentException>(() => builder.WithDevice("   "));
     }
@@ -416,7 +428,7 @@ public class CspcAssessmentObservationBuilderTests
         var builder = new CspcAssessmentObservationBuilder(_configuration);
 
         // Act - with prefix
-        var obs1 = builder
+        Observation obs1 = builder
             .WithFocus("Condition/123", "Test Condition")
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
@@ -425,7 +437,7 @@ public class CspcAssessmentObservationBuilderTests
 
         // Act - without prefix
         var builder2 = new CspcAssessmentObservationBuilder(_configuration);
-        var obs2 = builder2
+        Observation obs2 = builder2
             .WithFocus("456", "Another Condition")
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
@@ -447,7 +459,7 @@ public class CspcAssessmentObservationBuilderTests
         var dateTimeOffset = new DateTimeOffset(2024, 3, 15, 14, 30, 0, TimeSpan.FromHours(-5));
 
         // Act
-        var observation1 = builder1
+        Observation observation1 = builder1
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
@@ -455,7 +467,7 @@ public class CspcAssessmentObservationBuilderTests
             .WithEffectiveDate(dateTime)
             .Build();
 
-        var observation2 = builder2
+        Observation observation2 = builder2
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
@@ -473,7 +485,7 @@ public class CspcAssessmentObservationBuilderTests
     {
         // Arrange
         var builder = new CspcAssessmentObservationBuilder(_configuration);
-        var observation = builder
+        Observation observation = builder
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
@@ -486,7 +498,7 @@ public class CspcAssessmentObservationBuilderTests
 
         // Act
         var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
-        var json = serializer.SerializeToString(observation);
+        string json = serializer.SerializeToString(observation);
 
         // Assert
         json.ShouldNotBeNullOrEmpty();
@@ -515,7 +527,7 @@ public class CspcAssessmentObservationBuilderTests
         var builder = new CspcAssessmentObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
@@ -536,7 +548,7 @@ public class CspcAssessmentObservationBuilderTests
         var builder = new CspcAssessmentObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
@@ -557,7 +569,7 @@ public class CspcAssessmentObservationBuilderTests
         var builder = new CspcAssessmentObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithFocus(_conditionReference)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)

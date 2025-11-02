@@ -8,35 +8,37 @@ using ThirdOpinion.Common.Fhir.Models;
 namespace ThirdOpinion.Common.Fhir.Builders.Observations;
 
 /// <summary>
-/// Builder for creating FHIR Observations for PCWG3 bone scan progression assessment
+///     Builder for creating FHIR Observations for PCWG3 bone scan progression assessment
 /// </summary>
 public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observation>
 {
-    private ResourceReference? _patientReference;
-    private ResourceReference? _deviceReference;
-    private readonly List<ResourceReference> _focusReferences;
-    // Replaced _identified with _determination which is already declared below
-    private string? _initialLesions;
-    private DateTime? _confirmationDate;
-    private string? _additionalLesions;
-    private string? _timeBetweenScans;
-    private readonly List<Fact> _supportingFacts;
-    private float? _confidence;
-    private FhirDateTime? _effectiveDate;
-    private readonly List<ResourceReference> _evidenceReferences;
     private readonly List<Observation.ComponentComponent> _components;
+    private readonly List<Fact> _conflictingFacts;
+    private readonly List<ResourceReference> _evidenceReferences;
+    private readonly List<ResourceReference> _focusReferences;
     private readonly List<string> _notes;
+    private readonly List<Fact> _supportingFacts;
+    private string? _additionalLesions;
+    private float? _confidence;
+    private string? _confidenceRationale;
+    private DateTime? _confirmationDate;
+    private string? _confirmationLesions;
 
     // Latest version fields
     private string? _determination;
-    private string? _confidenceRationale;
-    private string? _summary;
+    private ResourceReference? _deviceReference;
+
+    private FhirDateTime? _effectiveDate;
+
+    // Replaced _identified with _determination which is already declared below
+    private string? _initialLesions;
     private DateTime? _initialScanDate;
-    private string? _confirmationLesions;
-    private readonly List<Fact> _conflictingFacts;
+    private ResourceReference? _patientReference;
+    private string? _summary;
+    private string? _timeBetweenScans;
 
     /// <summary>
-    /// Creates a new PCWG3 Progression Observation builder
+    ///     Creates a new PCWG3 Progression Observation builder
     /// </summary>
     /// <param name="configuration">The AI inference configuration</param>
     public Pcwg3ProgressionObservationBuilder(AiInferenceConfiguration configuration)
@@ -51,7 +53,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
     public new Pcwg3ProgressionObservationBuilder WithInferenceId(string id)
     {
@@ -60,16 +62,18 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
-    public new Pcwg3ProgressionObservationBuilder WithCriteria(string id, string display, string? system = null)
+    public new Pcwg3ProgressionObservationBuilder WithCriteria(string id,
+        string display,
+        string? system = null)
     {
         base.WithCriteria(id, display, system);
         return this;
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
     public new Pcwg3ProgressionObservationBuilder AddDerivedFrom(ResourceReference reference)
     {
@@ -78,16 +82,17 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
-    public new Pcwg3ProgressionObservationBuilder AddDerivedFrom(string reference, string? display = null)
+    public new Pcwg3ProgressionObservationBuilder AddDerivedFrom(string reference,
+        string? display = null)
     {
         base.AddDerivedFrom(reference, display);
         return this;
     }
 
     /// <summary>
-    /// Sets the patient reference for this observation
+    ///     Sets the patient reference for this observation
     /// </summary>
     /// <param name="patient">The patient resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -98,7 +103,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Sets the patient reference for this observation
+    ///     Sets the patient reference for this observation
     /// </summary>
     /// <param name="patientId">The patient ID</param>
     /// <param name="display">Optional display text</param>
@@ -117,7 +122,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Sets the device reference that performed the assessment
+    ///     Sets the device reference that performed the assessment
     /// </summary>
     /// <param name="device">The device resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -128,7 +133,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Sets the device reference that performed the assessment
+    ///     Sets the device reference that performed the assessment
     /// </summary>
     /// <param name="deviceId">The device ID</param>
     /// <param name="display">Optional display text</param>
@@ -147,7 +152,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Sets the focus references for this observation (conditions/tumors being assessed)
+    ///     Sets the focus references for this observation (conditions/tumors being assessed)
     /// </summary>
     /// <param name="focus">The focus resource references</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -162,7 +167,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Sets the description of initial lesions detected
+    ///     Sets the description of initial lesions detected
     /// </summary>
     /// <param name="initialLesions">Description of initial lesions (e.g., "new lesions")</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -173,7 +178,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Sets the confirmation date for progression (per PCWG3 confirmation requirement)
+    ///     Sets the confirmation date for progression (per PCWG3 confirmation requirement)
     /// </summary>
     /// <param name="confirmationDate">Date when progression was confirmed</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -184,7 +189,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Sets the description of additional lesions detected in confirmation scan
+    ///     Sets the description of additional lesions detected in confirmation scan
     /// </summary>
     /// <param name="additionalLesions">Description of additional lesions</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -195,7 +200,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Sets the time between initial and confirmation scans
+    ///     Sets the time between initial and confirmation scans
     /// </summary>
     /// <param name="timeBetweenScans">Time interval description (e.g., "12 weeks")</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -206,7 +211,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Adds supporting clinical facts as evidence
+    ///     Adds supporting clinical facts as evidence
     /// </summary>
     /// <param name="facts">Array of supporting clinical facts</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -217,40 +222,41 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
             _supportingFacts.AddRange(facts.Where(f => f != null));
 
             // Add document references as evidence
-            foreach (var fact in facts.Where(f => f != null && !string.IsNullOrWhiteSpace(f.factDocumentReference)))
-            {
+            foreach (Fact fact in facts.Where(f =>
+                         f != null && !string.IsNullOrWhiteSpace(f.factDocumentReference)))
                 AddEvidence(fact.factDocumentReference, $"Supporting fact: {fact.type}");
-            }
         }
+
         return this;
     }
 
     /// <summary>
-    /// Adds evidence supporting this observation
+    ///     Adds evidence supporting this observation
     /// </summary>
     /// <param name="reference">The evidence resource reference</param>
     /// <param name="display">Optional display text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public Pcwg3ProgressionObservationBuilder AddEvidence(ResourceReference reference, string? display = null)
+    public Pcwg3ProgressionObservationBuilder AddEvidence(ResourceReference reference,
+        string? display = null)
     {
         if (reference != null)
         {
             if (!string.IsNullOrWhiteSpace(display) && string.IsNullOrWhiteSpace(reference.Display))
-            {
                 reference.Display = display;
-            }
             _evidenceReferences.Add(reference);
         }
+
         return this;
     }
 
     /// <summary>
-    /// Adds evidence supporting this observation
+    ///     Adds evidence supporting this observation
     /// </summary>
     /// <param name="referenceString">The evidence reference string</param>
     /// <param name="display">Optional display text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public Pcwg3ProgressionObservationBuilder AddEvidence(string referenceString, string? display = null)
+    public Pcwg3ProgressionObservationBuilder AddEvidence(string referenceString,
+        string? display = null)
     {
         if (!string.IsNullOrWhiteSpace(referenceString))
         {
@@ -261,25 +267,27 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
             };
             _evidenceReferences.Add(reference);
         }
+
         return this;
     }
 
     /// <summary>
-    /// Sets the AI confidence score for this observation
+    ///     Sets the AI confidence score for this observation
     /// </summary>
     /// <param name="confidence">The confidence score (0.0 to 1.0)</param>
     /// <returns>This builder instance for method chaining</returns>
     public Pcwg3ProgressionObservationBuilder WithConfidence(float confidence)
     {
         if (confidence < 0.0f || confidence > 1.0f)
-            throw new ArgumentOutOfRangeException(nameof(confidence), "Confidence must be between 0.0 and 1.0");
+            throw new ArgumentOutOfRangeException(nameof(confidence),
+                "Confidence must be between 0.0 and 1.0");
 
         _confidence = confidence;
         return this;
     }
 
     /// <summary>
-    /// Sets the effective date/time of this observation
+    ///     Sets the effective date/time of this observation
     /// </summary>
     /// <param name="effectiveDate">The effective date/time</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -290,7 +298,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Sets the effective date/time of this observation
+    ///     Sets the effective date/time of this observation
     /// </summary>
     /// <param name="effectiveDate">The effective date/time as DateTimeOffset</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -301,36 +309,34 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Adds a note to this observation
+    ///     Adds a note to this observation
     /// </summary>
     /// <param name="noteText">The note text</param>
     /// <returns>This builder instance for method chaining</returns>
     public Pcwg3ProgressionObservationBuilder AddNote(string noteText)
     {
-        if (!string.IsNullOrWhiteSpace(noteText))
-        {
-            _notes.Add(noteText);
-        }
+        if (!string.IsNullOrWhiteSpace(noteText)) _notes.Add(noteText);
         return this;
     }
 
     /// <summary>
-    /// Sets the determination result ("True", "False", or "Inconclusive")
+    ///     Sets the determination result ("True", "False", or "Inconclusive")
     /// </summary>
     /// <param name="determination">The determination value: "True", "False", or "Inconclusive"</param>
     /// <returns>This builder instance for method chaining</returns>
     public Pcwg3ProgressionObservationBuilder WithDetermination(string? determination)
     {
-        if (determination != null && !new[] { "True", "False", "Inconclusive" }.Contains(determination))
-        {
-            throw new ArgumentException($"Invalid determination value: {determination}. Must be 'True', 'False', or 'Inconclusive'.", nameof(determination));
-        }
+        if (determination != null &&
+            !new[] { "True", "False", "Inconclusive" }.Contains(determination))
+            throw new ArgumentException(
+                $"Invalid determination value: {determination}. Must be 'True', 'False', or 'Inconclusive'.",
+                nameof(determination));
         _determination = determination;
         return this;
     }
 
     /// <summary>
-    /// Sets the confidence rationale explaining the confidence score reasoning
+    ///     Sets the confidence rationale explaining the confidence score reasoning
     /// </summary>
     /// <param name="confidenceRationale">The confidence rationale text</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -341,7 +347,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Sets the detailed summary of the PCWG3 assessment
+    ///     Sets the detailed summary of the PCWG3 assessment
     /// </summary>
     /// <param name="summary">The assessment summary</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -352,7 +358,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Sets the initial scan date when baseline bone lesions were identified
+    ///     Sets the initial scan date when baseline bone lesions were identified
     /// </summary>
     /// <param name="initialScanDate">The initial scan date</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -363,7 +369,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Sets the number/description of confirmation lesions
+    ///     Sets the number/description of confirmation lesions
     /// </summary>
     /// <param name="confirmationLesions">Description of confirmation lesions</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -374,37 +380,33 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    /// Adds conflicting clinical facts that may contradict the assessment
+    ///     Adds conflicting clinical facts that may contradict the assessment
     /// </summary>
     /// <param name="facts">Array of conflicting clinical facts</param>
     /// <returns>This builder instance for method chaining</returns>
     public Pcwg3ProgressionObservationBuilder WithConflictingFacts(params Fact[] facts)
     {
         if (facts != null && facts.Length > 0)
-        {
             _conflictingFacts.AddRange(facts.Where(f => f != null));
-        }
         return this;
     }
 
     /// <summary>
-    /// Validates that required fields are set before building
+    ///     Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
     {
         if (_patientReference == null)
-        {
-            throw new InvalidOperationException("Patient reference is required. Call WithPatient() before Build().");
-        }
+            throw new InvalidOperationException(
+                "Patient reference is required. Call WithPatient() before Build().");
 
         if (_deviceReference == null)
-        {
-            throw new InvalidOperationException("Device reference is required. Call WithDevice() before Build().");
-        }
+            throw new InvalidOperationException(
+                "Device reference is required. Call WithDevice() before Build().");
     }
 
     /// <summary>
-    /// Builds the PCWG3 Progression Observation
+    ///     Builds the PCWG3 Progression Observation
     /// </summary>
     /// <returns>The completed Observation resource</returns>
     protected override Observation BuildCore()
@@ -416,11 +418,11 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
             // Category: imaging
             Category = new List<CodeableConcept>
             {
-                new CodeableConcept
+                new()
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://terminology.hl7.org/CodeSystem/observation-category",
                             Code = "imaging",
@@ -435,7 +437,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
             {
                 Coding = new List<Coding>
                 {
-                    new Coding
+                    new()
                     {
                         System = FhirCodingHelper.Systems.LOINC_SYSTEM,
                         Code = "44667-7",
@@ -474,22 +476,21 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
 
         // Add components
         AddComponents();
-        if (_components.Any())
-        {
-            observation.Component = _components;
-        }
+        if (_components.Any()) observation.Component = _components;
 
         // Add supporting facts as extensions
         if (_supportingFacts.Any())
         {
-            var factExtensions = ClinicalFactExtension.CreateExtensions(_supportingFacts);
+            List<Extension> factExtensions
+                = ClinicalFactExtension.CreateExtensions(_supportingFacts);
             observation.Extension.AddRange(factExtensions);
         }
 
         // Add conflicting facts as extensions
         if (_conflictingFacts.Any())
         {
-            var conflictingFactExtensions = CreateConflictingFactExtensions(_conflictingFacts);
+            List<Extension> conflictingFactExtensions
+                = CreateConflictingFactExtensions(_conflictingFacts);
             observation.Extension.AddRange(conflictingFactExtensions);
         }
 
@@ -510,43 +511,37 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     private CodeableConcept? CreateProgressionValue()
     {
         if (string.IsNullOrWhiteSpace(_determination))
-        {
             return null; // No value if determination not set
-        }
 
         if (_determination == "True")
-        {
             // Progressive disease
             return FhirCodingHelper.CreateSnomedConcept(
                 "277022003",
                 "Progressive disease");
-        }
-        else if (_determination == "False")
-        {
+
+        if (_determination == "False")
             // Stable disease
             return FhirCodingHelper.CreateSnomedConcept(
                 "359746009",
                 "Stable disease");
-        }
-        else // "Inconclusive"
-        {
-            // Inconclusive
-            return FhirCodingHelper.CreateSnomedConcept(
-                "373067005",
-                "Inconclusive");
-        }
+
+        // "Inconclusive"
+        // Inconclusive
+        return FhirCodingHelper.CreateSnomedConcept(
+            "373067005",
+            "Inconclusive");
     }
 
     private CodeableConcept CreatePcwg3Method()
     {
-        string code = $"pcwg3-bone-progression-{InferenceId ?? Guid.NewGuid().ToString()}";
-        string display = "PCWG3 Bone Scan Progression Criteria";
+        var code = $"pcwg3-bone-progression-{InferenceId ?? Guid.NewGuid().ToString()}";
+        var display = "PCWG3 Bone Scan Progression Criteria";
 
         return new CodeableConcept
         {
             Coding = new List<Coding>
             {
-                new Coding
+                new()
                 {
                     System = Configuration.CriteriaSystem,
                     Code = code,
@@ -561,14 +556,13 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     {
         // Add initial lesions component
         if (!string.IsNullOrWhiteSpace(_initialLesions))
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/pcwg3-components",
                             Code = "initial-lesions",
@@ -578,18 +572,16 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
                 },
                 Value = new FhirString(_initialLesions)
             });
-        }
 
         // Add confirmation date component
         if (_confirmationDate.HasValue)
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/pcwg3-components",
                             Code = "confirmation-date",
@@ -599,18 +591,16 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
                 },
                 Value = new FhirDateTime(_confirmationDate.Value)
             });
-        }
 
         // Add additional lesions component
         if (!string.IsNullOrWhiteSpace(_additionalLesions))
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/pcwg3-components",
                             Code = "additional-lesions",
@@ -620,18 +610,16 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
                 },
                 Value = new FhirString(_additionalLesions)
             });
-        }
 
         // Add time between scans component
         if (!string.IsNullOrWhiteSpace(_timeBetweenScans))
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/pcwg3-components",
                             Code = "time-between-scans",
@@ -641,18 +629,16 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
                 },
                 Value = new FhirString(_timeBetweenScans)
             });
-        }
 
         // Add confidence component if specified
         if (_confidence.HasValue)
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://loinc.org",
                             Code = "LA11892-6",
@@ -669,18 +655,16 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
                     Code = "1"
                 }
             });
-        }
 
         // Add determination component
         if (!string.IsNullOrWhiteSpace(_determination))
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/pcwg3-components",
                             Code = "determination",
@@ -690,18 +674,16 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
                 },
                 Value = new FhirString(_determination)
             });
-        }
 
         // Add confidence rationale component
         if (!string.IsNullOrWhiteSpace(_confidenceRationale))
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/pcwg3-components",
                             Code = "confidence-rationale",
@@ -711,18 +693,16 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
                 },
                 Value = new FhirString(_confidenceRationale)
             });
-        }
 
         // Add summary component
         if (!string.IsNullOrWhiteSpace(_summary))
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/pcwg3-components",
                             Code = "summary",
@@ -732,18 +712,16 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
                 },
                 Value = new FhirString(_summary)
             });
-        }
 
         // Add initial scan date component
         if (_initialScanDate.HasValue)
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/pcwg3-components",
                             Code = "initial-scan-date",
@@ -753,18 +731,16 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
                 },
                 Value = new FhirDateTime(_initialScanDate.Value)
             });
-        }
 
         // Add confirmation lesions component
         if (!string.IsNullOrWhiteSpace(_confirmationLesions))
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/pcwg3-components",
                             Code = "confirmation-lesions",
@@ -774,11 +750,10 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
                 },
                 Value = new FhirString(_confirmationLesions)
             });
-        }
     }
 
     /// <summary>
-    /// Creates FHIR Extensions for conflicting clinical facts
+    ///     Creates FHIR Extensions for conflicting clinical facts
     /// </summary>
     /// <param name="facts">The conflicting clinical facts</param>
     /// <returns>List of FHIR Extensions for conflicting facts</returns>
@@ -786,7 +761,7 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     {
         var extensions = new List<Extension>();
 
-        foreach (var fact in facts.Where(f => f != null))
+        foreach (Fact fact in facts.Where(f => f != null))
         {
             var extension = new Extension
             {
@@ -795,48 +770,33 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
 
             // Add fact GUID
             if (!string.IsNullOrWhiteSpace(fact.factGuid))
-            {
                 extension.Extension.Add(new Extension("factGuid", new FhirString(fact.factGuid)));
-            }
 
             // Add document reference
             if (!string.IsNullOrWhiteSpace(fact.factDocumentReference))
-            {
-                extension.Extension.Add(new Extension("factDocumentReference", new FhirString(fact.factDocumentReference)));
-            }
+                extension.Extension.Add(new Extension("factDocumentReference",
+                    new FhirString(fact.factDocumentReference)));
 
             // Add fact type
             if (!string.IsNullOrWhiteSpace(fact.type))
-            {
                 extension.Extension.Add(new Extension("type", new FhirString(fact.type)));
-            }
 
             // Add fact text
             if (!string.IsNullOrWhiteSpace(fact.fact))
-            {
                 extension.Extension.Add(new Extension("fact", new FhirString(fact.fact)));
-            }
 
             // Add references
             if (fact.@ref != null && fact.@ref.Any())
-            {
-                foreach (var reference in fact.@ref)
-                {
+                foreach (string reference in fact.@ref)
                     extension.Extension.Add(new Extension("ref", new FhirString(reference)));
-                }
-            }
 
             // Add time reference
             if (!string.IsNullOrWhiteSpace(fact.timeRef))
-            {
                 extension.Extension.Add(new Extension("timeRef", new FhirString(fact.timeRef)));
-            }
 
             // Add relevance
             if (!string.IsNullOrWhiteSpace(fact.relevance))
-            {
                 extension.Extension.Add(new Extension("relevance", new FhirString(fact.relevance)));
-            }
 
             extensions.Add(extension);
         }

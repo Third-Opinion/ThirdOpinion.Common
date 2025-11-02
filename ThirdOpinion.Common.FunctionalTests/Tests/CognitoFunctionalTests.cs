@@ -9,23 +9,24 @@ namespace ThirdOpinion.Common.FunctionalTests.Tests;
 [Collection("Cognito")]
 public class CognitoFunctionalTests : BaseIntegrationTest
 {
-    private string? _userPoolId;
-    private string? _clientId;
     private readonly string _testPrefix;
-    
+    private string? _clientId;
+    private string? _userPoolId;
+
     public CognitoFunctionalTests(ITestOutputHelper output) : base(output)
     {
-        _testPrefix = Configuration.GetValue<string>("TestSettings:TestResourcePrefix") ?? "functest";
+        _testPrefix = Configuration.GetValue<string>("TestSettings:TestResourcePrefix") ??
+                      "functest";
     }
 
     protected override async Task SetupTestResourcesAsync()
     {
         await base.SetupTestResourcesAsync();
-        
+
         // Create test user pool
         var userPoolName = $"{_testPrefix}-{GenerateTestResourceName("pool")}";
         await CreateTestUserPoolAsync(userPoolName);
-        
+
         WriteOutput($"Created test user pool: {userPoolName}");
     }
 
@@ -46,7 +47,7 @@ public class CognitoFunctionalTests : BaseIntegrationTest
         {
             WriteOutput($"Warning: Failed to cleanup user pool {_userPoolId}: {ex.Message}");
         }
-        
+
         await base.CleanupTestResourcesAsync();
     }
 
@@ -54,8 +55,8 @@ public class CognitoFunctionalTests : BaseIntegrationTest
     public async Task CreateUserPool_WithValidConfiguration_ShouldSucceed()
     {
         // Arrange
-        var poolName = GenerateTestResourceName("test-pool");
-        
+        string poolName = GenerateTestResourceName("test-pool");
+
         // Act
         var createRequest = new CreateUserPoolRequest
         {
@@ -74,20 +75,20 @@ public class CognitoFunctionalTests : BaseIntegrationTest
             UsernameAttributes = new List<string> { "email" },
             AutoVerifiedAttributes = new List<string> { "email" }
         };
-        
-        var response = await CognitoClient.CreateUserPoolAsync(createRequest);
-        
+
+        CreateUserPoolResponse? response = await CognitoClient.CreateUserPoolAsync(createRequest);
+
         // Assert
         response.UserPool.ShouldNotBeNull();
         response.UserPool.Name.ShouldBe(poolName);
         response.UserPool.Id.ShouldNotBeNullOrEmpty();
-        
+
         // Cleanup
         await CognitoClient.DeleteUserPoolAsync(new DeleteUserPoolRequest
         {
             UserPoolId = response.UserPool.Id
         });
-        
+
         WriteOutput($"Successfully created and deleted user pool: {poolName}");
     }
 
@@ -96,8 +97,9 @@ public class CognitoFunctionalTests : BaseIntegrationTest
     {
         // Arrange
         _userPoolId.ShouldNotBeNullOrEmpty();
-        var (email, password, attributes) = TestDataBuilder.CreateTestUser();
-        
+        (string email, string password, Dictionary<string, string> attributes)
+            = TestDataBuilder.CreateTestUser();
+
         // Act
         var createUserRequest = new AdminCreateUserRequest
         {
@@ -111,9 +113,10 @@ public class CognitoFunctionalTests : BaseIntegrationTest
                 Value = attr.Value
             }).ToList()
         };
-        
-        var createResponse = await CognitoClient.AdminCreateUserAsync(createUserRequest);
-        
+
+        AdminCreateUserResponse? createResponse
+            = await CognitoClient.AdminCreateUserAsync(createUserRequest);
+
         // Set permanent password
         await CognitoClient.AdminSetUserPasswordAsync(new AdminSetUserPasswordRequest
         {
@@ -122,27 +125,30 @@ public class CognitoFunctionalTests : BaseIntegrationTest
             Password = password,
             Permanent = true
         });
-        
+
         // Assert
         createResponse.User.ShouldNotBeNull();
-        createResponse.User.Username.ShouldNotBeNullOrEmpty(); // Username will be a UUID when email is used as username attribute
+        createResponse.User.Username
+            .ShouldNotBeNullOrEmpty(); // Username will be a UUID when email is used as username attribute
         createResponse.User.UserStatus.ShouldBe(UserStatusType.FORCE_CHANGE_PASSWORD);
-        
+
         // Verify user can be retrieved using the generated username
-        var getUserResponse = await CognitoClient.AdminGetUserAsync(new AdminGetUserRequest
-        {
-            UserPoolId = _userPoolId,
-            Username = createResponse.User.Username // Use the actual generated username
-        });
-        
+        AdminGetUserResponse? getUserResponse = await CognitoClient.AdminGetUserAsync(
+            new AdminGetUserRequest
+            {
+                UserPoolId = _userPoolId,
+                Username = createResponse.User.Username // Use the actual generated username
+            });
+
         getUserResponse.Username.ShouldBe(createResponse.User.Username);
         getUserResponse.UserAttributes.ShouldNotBeEmpty();
-        
+
         // Verify email is in the user attributes
-        var emailAttribute = getUserResponse.UserAttributes.FirstOrDefault(attr => attr.Name == "email");
+        AttributeType? emailAttribute
+            = getUserResponse.UserAttributes.FirstOrDefault(attr => attr.Name == "email");
         emailAttribute.ShouldNotBeNull();
         emailAttribute.Value.ShouldBe(email);
-        
+
         WriteOutput($"Successfully created user: {email}");
     }
 
@@ -152,23 +158,25 @@ public class CognitoFunctionalTests : BaseIntegrationTest
         // Arrange
         _userPoolId.ShouldNotBeNullOrEmpty();
         _clientId.ShouldNotBeNullOrEmpty();
-        
-        var (email, password, attributes) = TestDataBuilder.CreateTestUser();
-        
+
+        (string email, string password, Dictionary<string, string> attributes)
+            = TestDataBuilder.CreateTestUser();
+
         // Create user
-        var createResponse = await CognitoClient.AdminCreateUserAsync(new AdminCreateUserRequest
-        {
-            UserPoolId = _userPoolId,
-            Username = email,
-            MessageAction = MessageActionType.SUPPRESS,
-            TemporaryPassword = password,
-            UserAttributes = attributes.Select(attr => new AttributeType
+        AdminCreateUserResponse? createResponse = await CognitoClient.AdminCreateUserAsync(
+            new AdminCreateUserRequest
             {
-                Name = attr.Key,
-                Value = attr.Value
-            }).ToList()
-        });
-        
+                UserPoolId = _userPoolId,
+                Username = email,
+                MessageAction = MessageActionType.SUPPRESS,
+                TemporaryPassword = password,
+                UserAttributes = attributes.Select(attr => new AttributeType
+                {
+                    Name = attr.Key,
+                    Value = attr.Value
+                }).ToList()
+            });
+
         // Set permanent password
         await CognitoClient.AdminSetUserPasswordAsync(new AdminSetUserPasswordRequest
         {
@@ -177,7 +185,7 @@ public class CognitoFunctionalTests : BaseIntegrationTest
             Password = password,
             Permanent = true
         });
-        
+
         // Act
         var authRequest = new AdminInitiateAuthRequest
         {
@@ -190,9 +198,10 @@ public class CognitoFunctionalTests : BaseIntegrationTest
                 ["PASSWORD"] = password
             }
         };
-        
-        var authResponse = await CognitoClient.AdminInitiateAuthAsync(authRequest);
-        
+
+        AdminInitiateAuthResponse? authResponse
+            = await CognitoClient.AdminInitiateAuthAsync(authRequest);
+
         // Assert
         authResponse.AuthenticationResult.ShouldNotBeNull();
         authResponse.AuthenticationResult.AccessToken.ShouldNotBeNullOrEmpty();
@@ -201,7 +210,7 @@ public class CognitoFunctionalTests : BaseIntegrationTest
         authResponse.AuthenticationResult.TokenType.ShouldBe("Bearer");
         authResponse.AuthenticationResult.ExpiresIn.ShouldNotBeNull();
         authResponse.AuthenticationResult.ExpiresIn.Value.ShouldBeGreaterThan(0);
-        
+
         WriteOutput($"Successfully authenticated user: {email}");
     }
 
@@ -211,26 +220,28 @@ public class CognitoFunctionalTests : BaseIntegrationTest
         // Arrange
         _userPoolId.ShouldNotBeNullOrEmpty();
         _clientId.ShouldNotBeNullOrEmpty();
-        
-        var (email, password, attributes) = TestDataBuilder.CreateTestUser();
-        
+
+        (string email, string password, Dictionary<string, string> attributes)
+            = TestDataBuilder.CreateTestUser();
+
         // Create and authenticate user
-        var username = await CreateAndAuthenticateUserAsync(email, password, attributes);
-        
-        var authResponse = await CognitoClient.AdminInitiateAuthAsync(new AdminInitiateAuthRequest
-        {
-            UserPoolId = _userPoolId,
-            ClientId = _clientId,
-            AuthFlow = AuthFlowType.ADMIN_USER_PASSWORD_AUTH,
-            AuthParameters = new Dictionary<string, string>
+        string username = await CreateAndAuthenticateUserAsync(email, password, attributes);
+
+        AdminInitiateAuthResponse? authResponse = await CognitoClient.AdminInitiateAuthAsync(
+            new AdminInitiateAuthRequest
             {
-                ["USERNAME"] = username, // Use generated username
-                ["PASSWORD"] = password
-            }
-        });
-        
-        var refreshToken = authResponse.AuthenticationResult.RefreshToken;
-        
+                UserPoolId = _userPoolId,
+                ClientId = _clientId,
+                AuthFlow = AuthFlowType.ADMIN_USER_PASSWORD_AUTH,
+                AuthParameters = new Dictionary<string, string>
+                {
+                    ["USERNAME"] = username, // Use generated username
+                    ["PASSWORD"] = password
+                }
+            });
+
+        string? refreshToken = authResponse.AuthenticationResult.RefreshToken;
+
         // Act
         var refreshRequest = new AdminInitiateAuthRequest
         {
@@ -242,15 +253,17 @@ public class CognitoFunctionalTests : BaseIntegrationTest
                 ["REFRESH_TOKEN"] = refreshToken
             }
         };
-        
-        var refreshResponse = await CognitoClient.AdminInitiateAuthAsync(refreshRequest);
-        
+
+        AdminInitiateAuthResponse? refreshResponse
+            = await CognitoClient.AdminInitiateAuthAsync(refreshRequest);
+
         // Assert
         refreshResponse.AuthenticationResult.ShouldNotBeNull();
         refreshResponse.AuthenticationResult.AccessToken.ShouldNotBeNullOrEmpty();
         refreshResponse.AuthenticationResult.IdToken.ShouldNotBeNullOrEmpty();
-        refreshResponse.AuthenticationResult.AccessToken.ShouldNotBe(authResponse.AuthenticationResult.AccessToken);
-        
+        refreshResponse.AuthenticationResult.AccessToken.ShouldNotBe(authResponse
+            .AuthenticationResult.AccessToken);
+
         WriteOutput($"Successfully refreshed tokens for user: {email}");
     }
 
@@ -259,41 +272,39 @@ public class CognitoFunctionalTests : BaseIntegrationTest
     {
         // Arrange
         _userPoolId.ShouldNotBeNullOrEmpty();
-        
+
         var userCount = 3;
         var createdUsernames = new List<string>();
         var createdEmails = new List<string>();
-        
-        for (int i = 0; i < userCount; i++)
+
+        for (var i = 0; i < userCount; i++)
         {
-            var (email, password, attributes) = TestDataBuilder.CreateTestUser();
-            var username = await CreateAndAuthenticateUserAsync(email, password, attributes);
+            (string email, string password, Dictionary<string, string> attributes)
+                = TestDataBuilder.CreateTestUser();
+            string username = await CreateAndAuthenticateUserAsync(email, password, attributes);
             createdUsernames.Add(username);
             createdEmails.Add(email);
         }
-        
+
         // Act
-        var listResponse = await CognitoClient.ListUsersAsync(new ListUsersRequest
+        ListUsersResponse? listResponse = await CognitoClient.ListUsersAsync(new ListUsersRequest
         {
             UserPoolId = _userPoolId
         });
-        
+
         // Assert
         listResponse.Users.ShouldNotBeEmpty();
         listResponse.Users.Count.ShouldBeGreaterThanOrEqualTo(userCount);
-        
+
         // Check that all created users are in the list (by username)
-        foreach (var username in createdUsernames)
-        {
+        foreach (string username in createdUsernames)
             listResponse.Users.ShouldContain(u => u.Username == username);
-        }
-        
+
         // Also verify emails are in the user attributes
-        foreach (var email in createdEmails)
-        {
-            listResponse.Users.ShouldContain(u => u.Attributes.Any(attr => attr.Name == "email" && attr.Value == email));
-        }
-        
+        foreach (string email in createdEmails)
+            listResponse.Users.ShouldContain(u =>
+                u.Attributes.Any(attr => attr.Name == "email" && attr.Value == email));
+
         WriteOutput($"Successfully listed {listResponse.Users.Count} users in user pool");
     }
 
@@ -316,10 +327,11 @@ public class CognitoFunctionalTests : BaseIntegrationTest
             UsernameAttributes = new List<string> { "email" },
             AutoVerifiedAttributes = new List<string> { "email" }
         };
-        
-        var poolResponse = await CognitoClient.CreateUserPoolAsync(createRequest);
+
+        CreateUserPoolResponse? poolResponse
+            = await CognitoClient.CreateUserPoolAsync(createRequest);
         _userPoolId = poolResponse.UserPool.Id;
-        
+
         // Create user pool client
         var clientRequest = new CreateUserPoolClientRequest
         {
@@ -332,26 +344,30 @@ public class CognitoFunctionalTests : BaseIntegrationTest
             },
             GenerateSecret = false
         };
-        
-        var clientResponse = await CognitoClient.CreateUserPoolClientAsync(clientRequest);
+
+        CreateUserPoolClientResponse? clientResponse
+            = await CognitoClient.CreateUserPoolClientAsync(clientRequest);
         _clientId = clientResponse.UserPoolClient.ClientId;
     }
 
-    private async Task<string> CreateAndAuthenticateUserAsync(string email, string password, Dictionary<string, string> attributes)
+    private async Task<string> CreateAndAuthenticateUserAsync(string email,
+        string password,
+        Dictionary<string, string> attributes)
     {
-        var createResponse = await CognitoClient.AdminCreateUserAsync(new AdminCreateUserRequest
-        {
-            UserPoolId = _userPoolId,
-            Username = email,
-            MessageAction = MessageActionType.SUPPRESS,
-            TemporaryPassword = password,
-            UserAttributes = attributes.Select(attr => new AttributeType
+        AdminCreateUserResponse? createResponse = await CognitoClient.AdminCreateUserAsync(
+            new AdminCreateUserRequest
             {
-                Name = attr.Key,
-                Value = attr.Value
-            }).ToList()
-        });
-        
+                UserPoolId = _userPoolId,
+                Username = email,
+                MessageAction = MessageActionType.SUPPRESS,
+                TemporaryPassword = password,
+                UserAttributes = attributes.Select(attr => new AttributeType
+                {
+                    Name = attr.Key,
+                    Value = attr.Value
+                }).ToList()
+            });
+
         await CognitoClient.AdminSetUserPasswordAsync(new AdminSetUserPasswordRequest
         {
             UserPoolId = _userPoolId,
@@ -359,7 +375,7 @@ public class CognitoFunctionalTests : BaseIntegrationTest
             Password = password,
             Permanent = true
         });
-        
+
         return createResponse.User.Username; // Return the generated username
     }
 }

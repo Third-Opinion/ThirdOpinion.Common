@@ -1,10 +1,13 @@
 # AI Provenance Builder
 
-The `AiProvenanceBuilder` creates FHIR Provenance resources that track the audit trail, lineage, and accountability for AI-generated clinical resources and inferences.
+The `AiProvenanceBuilder` creates FHIR Provenance resources that track the audit trail, lineage, and accountability for
+AI-generated clinical resources and inferences.
 
 ## Overview
 
-The AI Provenance builder generates FHIR R4 Provenance resources that provide comprehensive audit trails for AI-generated clinical content. These resources establish accountability, traceability, and lineage for AI inferences, supporting regulatory compliance and clinical governance requirements.
+The AI Provenance builder generates FHIR R4 Provenance resources that provide comprehensive audit trails for
+AI-generated clinical content. These resources establish accountability, traceability, and lineage for AI inferences,
+supporting regulatory compliance and clinical governance requirements.
 
 ## Purpose
 
@@ -259,20 +262,24 @@ These methods **must** be called before `Build()`:
 ### Optional Methods
 
 #### Basic Information
+
 - `WithInferenceId(string)` - Custom provenance ID (auto-generated if not provided)
 - `WithRecordedTime(DateTime)` - When provenance was recorded (defaults to now)
 - `WithLocation(ResourceReference)` - Where the activity occurred
 - `WithReason(string)` - Why the activity was performed
 
 #### Agents and Participants
+
 - `WithAgent(ResourceReference, string, string)` - Add participant (device, person, organization)
 - Multiple agents can be added with different roles
 
 #### Source Data and Entities
+
 - `AddSourceEntity(ResourceReference, string, string)` - Add source data or intermediate results
 - Support for source, intermediary, and derived entity roles
 
 #### Quality and Validation
+
 - `WithConfidence(float)` - Overall confidence in the provenance (0.0-1.0)
 - `WithValidationStatus(string)` - Validation or review status
 - `AddNote(string)` - Add explanatory notes
@@ -280,6 +287,7 @@ These methods **must** be called before `Build()`:
 ### Predefined Constants
 
 #### Activity Types
+
 ```csharp
 public static class Activities
 {
@@ -293,6 +301,7 @@ public static class Activities
 ```
 
 #### Agent Roles
+
 ```csharp
 public static class AgentRoles
 {
@@ -307,6 +316,7 @@ public static class AgentRoles
 ```
 
 #### Entity Roles
+
 ```csharp
 public static class EntityRoles
 {
@@ -512,24 +522,28 @@ public class BatchProvenanceService
 ## Best Practices
 
 ### Comprehensive Documentation
+
 1. **Always record AI system details** including version and capabilities
 2. **Include human oversight** when clinicians review AI outputs
 3. **Document all input sources** that influenced the AI decision
 4. **Track temporal information** accurately for audit purposes
 
 ### Regulatory Preparedness
+
 1. **Maintain detailed audit trails** for all AI-generated content
 2. **Document validation workflows** and human review processes
 3. **Track device compliance status** and regulatory clearances
 4. **Record post-market surveillance** activities and outcomes
 
 ### Performance Optimization
+
 1. **Batch provenance creation** for high-volume AI workflows
 2. **Use appropriate detail levels** based on regulatory requirements
 3. **Implement efficient querying** for audit trail retrieval
 4. **Archive old provenance** records per data retention policies
 
 ### Clinical Integration
+
 1. **Make provenance accessible** to clinicians for transparency
 2. **Integrate with EHR systems** for seamless workflow
 3. **Provide audit trail views** for quality assurance

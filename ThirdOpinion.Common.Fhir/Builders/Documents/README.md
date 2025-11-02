@@ -1,10 +1,12 @@
 # Document Reference Builders
 
-The Document Reference builders create FHIR DocumentReference resources for various document processing workflows including OCR text extraction and clinical fact extraction.
+The Document Reference builders create FHIR DocumentReference resources for various document processing workflows
+including OCR text extraction and clinical fact extraction.
 
 ## Overview
 
-Document builders handle the creation of FHIR R4 DocumentReference resources that represent clinical documents and their processed outputs. These builders support:
+Document builders handle the creation of FHIR R4 DocumentReference resources that represent clinical documents and their
+processed outputs. These builders support:
 
 - **OCR text extraction** from scanned documents
 - **Clinical fact extraction** from processed text
@@ -35,7 +37,8 @@ using ThirdOpinion.Common.Fhir.Helpers;
 
 ### Purpose
 
-The `OcrDocumentReferenceBuilder` creates FHIR DocumentReference resources for OCR (Optical Character Recognition) processed documents. It captures both the source document information and the extracted text content.
+The `OcrDocumentReferenceBuilder` creates FHIR DocumentReference resources for OCR (Optical Character Recognition)
+processed documents. It captures both the source document information and the extracted text content.
 
 ### Basic Usage Example
 
@@ -103,7 +106,8 @@ var ocrDocument = new OcrDocumentReferenceBuilder(config)
 
 ### Purpose
 
-The `FactExtractionDocumentReferenceBuilder` creates FHIR DocumentReference resources for clinical fact extraction results. It represents the structured clinical facts extracted from processed text using AI/NLP systems.
+The `FactExtractionDocumentReferenceBuilder` creates FHIR DocumentReference resources for clinical fact extraction
+results. It represents the structured clinical facts extracted from processed text using AI/NLP systems.
 
 ### Basic Usage Example
 
@@ -506,18 +510,21 @@ foreach (var fact in extractedFacts.Where(f => f.Type == "diagnosis"))
 ## Best Practices
 
 ### Content Storage
+
 1. **Large content** should be stored in S3 with URL references
 2. **Small content** can be embedded directly in the resource
 3. **Always specify content type** correctly (text/plain, application/json, etc.)
 4. **Include size information** for content management
 
 ### Processing Metadata
+
 1. **Always set confidence scores** for AI-processed content
 2. **Add processing notes** to explain quality or limitations
 3. **Include processing timestamps** for audit trails
 4. **Reference source documents** to maintain lineage
 
 ### Error Recovery
+
 1. **Validate inputs** before processing expensive operations
 2. **Log processing details** for debugging failed extractions
 3. **Handle partial failures** gracefully in batch processing

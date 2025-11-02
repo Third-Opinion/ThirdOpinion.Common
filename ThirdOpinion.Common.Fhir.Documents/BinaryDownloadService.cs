@@ -29,7 +29,9 @@ public class BinaryDownloadService : IBinaryDownloadService
     private readonly INotFoundBinaryTracker _notFoundTracker;
     private readonly IRateLimiterService _rateLimiterService;
     private readonly IRetryPolicyService _retryPolicyService;
+    #pragma warning disable CS0414 // Field is assigned but never used
     private readonly string _s3BucketName;
+    #pragma warning restore CS0414
     private readonly IAmazonS3 _s3Client;
 
     public BinaryDownloadService(

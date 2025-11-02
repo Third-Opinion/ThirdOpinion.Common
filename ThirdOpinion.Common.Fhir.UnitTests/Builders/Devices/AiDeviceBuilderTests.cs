@@ -22,7 +22,7 @@ public class AiDeviceBuilderTests
         var builder = new AiDeviceBuilder(_configuration);
 
         // Act
-        var device = builder.Build();
+        Device device = builder.Build();
 
         // Assert
         device.ShouldNotBeNull();
@@ -44,7 +44,7 @@ public class AiDeviceBuilderTests
         var builder = new AiDeviceBuilder(_configuration);
 
         // Act
-        var device = builder
+        Device device = builder
             .WithModelName("GPT-4 Vision", "model")
             .Build();
 
@@ -62,7 +62,7 @@ public class AiDeviceBuilderTests
         var builder = new AiDeviceBuilder(_configuration);
 
         // Act
-        var device = builder
+        Device device = builder
             .WithModelName("Claude 3 Opus")
             .Build();
 
@@ -77,15 +77,15 @@ public class AiDeviceBuilderTests
     public void WithModelName_HandlesVariousTypeCodes()
     {
         // Arrange & Act
-        var manufacturerDevice = new AiDeviceBuilder(_configuration)
+        Device manufacturerDevice = new AiDeviceBuilder(_configuration)
             .WithModelName("Test Model", "manufacturer")
             .Build();
 
-        var userFriendlyDevice = new AiDeviceBuilder(_configuration)
+        Device userFriendlyDevice = new AiDeviceBuilder(_configuration)
             .WithModelName("Test Model", "user-friendly")
             .Build();
 
-        var unknownDevice = new AiDeviceBuilder(_configuration)
+        Device unknownDevice = new AiDeviceBuilder(_configuration)
             .WithModelName("Test Model", "custom-type")
             .Build();
 
@@ -102,7 +102,7 @@ public class AiDeviceBuilderTests
         var builder = new AiDeviceBuilder(_configuration);
 
         // Act
-        var device = builder
+        Device device = builder
             .WithManufacturer("OpenAI")
             .Build();
 
@@ -117,7 +117,7 @@ public class AiDeviceBuilderTests
         var builder = new AiDeviceBuilder(_configuration);
 
         // Act
-        var device = builder
+        Device device = builder
             .WithVersion("1.0.0")
             .WithVersion("1.0.1-beta")
             .Build();
@@ -143,7 +143,7 @@ public class AiDeviceBuilderTests
         };
 
         // Act
-        var device = builder
+        Device device = builder
             .AddProperty("Confidence Score", quantity)
             .Build();
 
@@ -153,7 +153,7 @@ public class AiDeviceBuilderTests
         device.Property[0].Type.Text.ShouldBe("Confidence Score");
         device.Property[0].ValueQuantity.ShouldNotBeNull();
         device.Property[0].ValueQuantity.Count.ShouldBe(1);
-        var propValue = device.Property[0].ValueQuantity[0];
+        Quantity? propValue = device.Property[0].ValueQuantity[0];
         propValue.ShouldNotBeNull();
         propValue.Value.ShouldBe(0.95m);
     }
@@ -165,7 +165,7 @@ public class AiDeviceBuilderTests
         var builder = new AiDeviceBuilder(_configuration);
 
         // Act
-        var device = builder
+        Device device = builder
             .AddProperty("Processing Time", 1.234m, "ms")
             .AddProperty("Accuracy", 98.5m, "%")
             .Build();
@@ -178,7 +178,7 @@ public class AiDeviceBuilderTests
         device.Property[0].Type.Text.ShouldBe("Processing Time");
         device.Property[0].ValueQuantity.ShouldNotBeNull();
         device.Property[0].ValueQuantity.Count.ShouldBe(1);
-        var time = device.Property[0].ValueQuantity[0];
+        Quantity? time = device.Property[0].ValueQuantity[0];
         time.ShouldNotBeNull();
         time.Value.ShouldBe(1.234m);
         time.Unit.ShouldBe("ms");
@@ -188,7 +188,7 @@ public class AiDeviceBuilderTests
         device.Property[1].Type.Text.ShouldBe("Accuracy");
         device.Property[1].ValueQuantity.ShouldNotBeNull();
         device.Property[1].ValueQuantity.Count.ShouldBe(1);
-        var accuracy = device.Property[1].ValueQuantity[0];
+        Quantity? accuracy = device.Property[1].ValueQuantity[0];
         accuracy.ShouldNotBeNull();
         accuracy.Value.ShouldBe(98.5m);
         accuracy.Unit.ShouldBe("%");
@@ -201,7 +201,7 @@ public class AiDeviceBuilderTests
         var builder = new AiDeviceBuilder(_configuration);
 
         // Act
-        var device = builder.Build();
+        Device device = builder.Build();
 
         // Assert
         device.Identifier.ShouldNotBeNull();
@@ -218,7 +218,7 @@ public class AiDeviceBuilderTests
         var inferenceId = "test-inference-123";
 
         // Act
-        var device = builder
+        Device device = builder
             .WithInferenceId(inferenceId)
             .Build();
 
@@ -237,7 +237,7 @@ public class AiDeviceBuilderTests
         var builder = new AiDeviceBuilder(_configuration);
 
         // Act
-        var device = builder.Build();
+        Device device = builder.Build();
 
         // Assert
         device.Meta.ShouldNotBeNull();
@@ -249,7 +249,7 @@ public class AiDeviceBuilderTests
     public void FluentInterface_SupportsCompleteChaining()
     {
         // Arrange & Act
-        var device = new AiDeviceBuilder(_configuration)
+        Device device = new AiDeviceBuilder(_configuration)
             .WithInferenceId("inf-001")
             .WithModelName("Test AI Model", "model")
             .WithManufacturer("Test Corp")
@@ -329,7 +329,7 @@ public class AiDeviceBuilderTests
     {
         // Arrange
         var builder = new AiDeviceBuilder(_configuration);
-        var device = builder
+        Device device = builder
             .WithModelName("GPT-4", "model")
             .WithManufacturer("OpenAI")
             .WithVersion("4.0")
@@ -338,7 +338,7 @@ public class AiDeviceBuilderTests
 
         // Act
         var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
-        var json = serializer.SerializeToString(device);
+        string json = serializer.SerializeToString(device);
 
         // Assert
         json.ShouldNotBeNullOrEmpty();
@@ -362,7 +362,7 @@ public class AiDeviceBuilderTests
         var builder = new AiDeviceBuilder(_configuration);
 
         // Act
-        var device = builder
+        Device device = builder
             .WithManufacturer("Anonymous AI Corp")
             .WithVersion("1.0.0")
             .Build();
@@ -382,7 +382,7 @@ public class AiDeviceBuilderTests
         var builder = new AiDeviceBuilder(_configuration);
 
         // Act
-        var device = builder
+        Device device = builder
             .WithVersion("")
             .WithVersion("   ")
             .WithVersion("1.0.0")
@@ -407,7 +407,7 @@ public class AiDeviceBuilderTests
         };
 
         // Act
-        var device = builder
+        Device device = builder
             .AddProperty("MaxTokens", 2048m, "tokens")
             .AddProperty("Temperature", 0.8m, "1")
             .AddProperty("Iterations", customQuantity)
@@ -422,7 +422,7 @@ public class AiDeviceBuilderTests
         // Check the custom quantity maintains its system
         device.Property[2].ValueQuantity.ShouldNotBeNull();
         device.Property[2].ValueQuantity.Count.ShouldBe(1);
-        var iterationsProp = device.Property[2].ValueQuantity[0];
+        Quantity? iterationsProp = device.Property[2].ValueQuantity[0];
         iterationsProp.ShouldNotBeNull();
         iterationsProp.System.ShouldBe("http://example.org/units");
     }

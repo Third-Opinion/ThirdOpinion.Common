@@ -2,7 +2,9 @@
 
 ## Overview
 
-ThirdOpinion.Common uses a hybrid versioning system that supports both manual version control and automatic pre-release versioning. This approach provides flexibility for different development workflows while maintaining semantic versioning standards.
+ThirdOpinion.Common uses a hybrid versioning system that supports both manual version control and automatic pre-release
+versioning. This approach provides flexibility for different development workflows while maintaining semantic versioning
+standards.
 
 ## Versioning Rules
 
@@ -16,6 +18,7 @@ For stable releases, update the version manually in the project file:
 ```
 
 **Process:**
+
 1. Update the `<Version>` in `src/ThirdOpinion.Common.csproj`
 2. Commit the version change
 3. Create a git tag: `git tag v2.1.0`
@@ -26,12 +29,12 @@ For stable releases, update the version manually in the project file:
 
 The CI/CD system automatically generates pre-release versions based on the branch:
 
-| Branch Type | Version Pattern | Example | Use Case |
-|-------------|----------------|---------|----------|
-| `develop` | `{base}-beta.{build}` | `2.0.0-beta.123` | Development builds |
-| `feature/*` | `{base}-alpha.{build}.{branch}` | `2.0.0-alpha.124.new-auth` | Feature development |
-| `main`/`master` | `{base}` or auto-increment | `2.0.0` or `1.0.{build}` | Stable releases |
-| Other branches | `{base}-{branch}.{build}` | `2.0.0-hotfix.125` | Custom branches |
+| Branch Type     | Version Pattern                 | Example                    | Use Case            |
+|-----------------|---------------------------------|----------------------------|---------------------|
+| `develop`       | `{base}-beta.{build}`           | `2.0.0-beta.123`           | Development builds  |
+| `feature/*`     | `{base}-alpha.{build}.{branch}` | `2.0.0-alpha.124.new-auth` | Feature development |
+| `main`/`master` | `{base}` or auto-increment      | `2.0.0` or `1.0.{build}`   | Stable releases     |
+| Other branches  | `{base}-{branch}.{build}`       | `2.0.0-hotfix.125`         | Custom branches     |
 
 ## Version Sources
 
@@ -153,7 +156,8 @@ The system validates versions for semantic versioning compliance:
 ### Common Issues
 
 **Issue**: Version not updating in CI/CD
-**Solution**: Ensure the version in `src/ThirdOpinion.Common.csproj` follows the exact format: `<Version>X.Y.Z</Version>`
+**Solution**: Ensure the version in `src/ThirdOpinion.Common.csproj` follows the exact format:
+`<Version>X.Y.Z</Version>`
 
 **Issue**: Pre-release not detected
 **Solution**: Check branch naming convention and ensure it matches the patterns in CI/CD
@@ -176,20 +180,22 @@ inputs:
 
 ## Examples
 
-| Scenario | Branch | Project Version | CI/CD Output | Package Name |
-|----------|--------|----------------|--------------|--------------|
-| Stable release | `main` | `2.0.0` | `2.0.0` | `ThirdOpinion.Common.2.0.0.nupkg` |
-| Beta testing | `develop` | `2.0.0` | `2.0.0-beta.123` | `ThirdOpinion.Common.2.0.0-beta.123.nupkg` |
-| Feature dev | `feature/auth` | `2.0.0` | `2.0.0-alpha.124.auth` | `ThirdOpinion.Common.2.0.0-alpha.124.auth.nupkg` |
-| GitHub release | `main` | `2.0.0` | `2.1.0` (from tag) | `ThirdOpinion.Common.2.1.0.nupkg` |
+| Scenario       | Branch         | Project Version | CI/CD Output           | Package Name                                     |
+|----------------|----------------|-----------------|------------------------|--------------------------------------------------|
+| Stable release | `main`         | `2.0.0`         | `2.0.0`                | `ThirdOpinion.Common.2.0.0.nupkg`                |
+| Beta testing   | `develop`      | `2.0.0`         | `2.0.0-beta.123`       | `ThirdOpinion.Common.2.0.0-beta.123.nupkg`       |
+| Feature dev    | `feature/auth` | `2.0.0`         | `2.0.0-alpha.124.auth` | `ThirdOpinion.Common.2.0.0-alpha.124.auth.nupkg` |
+| GitHub release | `main`         | `2.0.0`         | `2.1.0` (from tag)     | `ThirdOpinion.Common.2.1.0.nupkg`                |
 
 ## Migration from Old System
 
 The old system used:
+
 - `1.0.{build}` for main/master
 - `1.0.{build}-beta` for develop
 
 The new system:
+
 - Reads base version from project file
 - Applies semantic versioning
 - Supports manual version control
@@ -206,4 +212,5 @@ The new system:
 
 ---
 
-For questions or issues with versioning, please see the [CI/CD documentation](CICD.md) or create an issue in the repository.
+For questions or issues with versioning, please see the [CI/CD documentation](CICD.md) or create an issue in the
+repository.

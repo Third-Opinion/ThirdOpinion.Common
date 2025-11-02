@@ -243,7 +243,7 @@ public class AthenaFhirService : IFhirSourceService
             throw new FhirResourceException(
                 $"Failed to search FHIR resources from Athena: {ex.Message}",
                 resourceType,
-                null,
+                string.Empty,
                 ex);
         }
         finally
@@ -277,7 +277,7 @@ public class AthenaFhirService : IFhirSourceService
                 throw new FhirResourceException(
                     $"Athena API error: {response.StatusCode} - {content}",
                     resourceType,
-                    resourceId,
+                    resourceId ?? string.Empty,
                     response.StatusCode);
         }
     }

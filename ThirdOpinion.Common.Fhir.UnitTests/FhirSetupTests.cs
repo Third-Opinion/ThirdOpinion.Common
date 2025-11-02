@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 
@@ -70,7 +69,7 @@ public class FhirSetupTests
 
         // Act - Serialize to JSON
         var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
-        var json = serializer.SerializeToString(patient);
+        string json = serializer.SerializeToString(patient);
 
         // Deserialize back to Patient object
         var parser = new FhirJsonParser();
@@ -103,7 +102,7 @@ public class FhirSetupTests
             {
                 Coding = new List<Coding>
                 {
-                    new Coding
+                    new()
                     {
                         System = "http://loinc.org",
                         Code = "8867-4",
@@ -153,7 +152,7 @@ public class FhirSetupTests
             {
                 Coding = new List<Coding>
                 {
-                    new Coding
+                    new()
                     {
                         System = "http://loinc.org",
                         Code = "34108-1",
@@ -176,7 +175,8 @@ public class FhirSetupTests
         docReference.Content.Add(content);
 
         // Add date
-        docReference.Date = new FhirDateTime("2024-01-15T14:00:00Z").ToDateTimeOffset(TimeSpan.Zero);
+        docReference.Date
+            = new FhirDateTime("2024-01-15T14:00:00Z").ToDateTimeOffset(TimeSpan.Zero);
 
         // Assert
         docReference.ShouldNotBeNull();

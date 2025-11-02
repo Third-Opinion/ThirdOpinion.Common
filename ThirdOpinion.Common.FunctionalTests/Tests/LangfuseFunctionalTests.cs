@@ -1,20 +1,20 @@
 using Microsoft.Extensions.Configuration;
 using ThirdOpinion.Common.FunctionalTests.Infrastructure;
-using Xunit.Abstractions;
-using Shouldly;
 using ThirdOpinion.Common.Langfuse;
+using Xunit.Abstractions;
 
 namespace ThirdOpinion.Common.FunctionalTests.Tests;
 
 [Collection("Langfuse")]
 public class LangfuseFunctionalTests : BaseIntegrationTest
 {
-    private readonly string _projectName;
     private readonly bool _isConfigured;
+    private readonly string _projectName;
 
     public LangfuseFunctionalTests(ITestOutputHelper output) : base(output)
     {
-        _projectName = Configuration.GetValue<string>("Langfuse:ProjectName") ?? "third-opinion-test";
+        _projectName = Configuration.GetValue<string>("Langfuse:ProjectName") ??
+                       "third-opinion-test";
 
         var publicKey = Configuration.GetValue<string>("Langfuse:PublicKey");
         var secretKey = Configuration.GetValue<string>("Langfuse:SecretKey");
@@ -27,13 +27,15 @@ public class LangfuseFunctionalTests : BaseIntegrationTest
         if (!_isConfigured)
         {
             WriteOutput("⚠️ Langfuse keys not configured - expected for functional tests");
-            WriteOutput("To test Langfuse integration, set Langfuse:PublicKey and Langfuse:SecretKey in appsettings.Test.json");
+            WriteOutput(
+                "To test Langfuse integration, set Langfuse:PublicKey and Langfuse:SecretKey in appsettings.Test.json");
             return;
         }
 
         WriteOutput("Testing Langfuse service configuration...");
 
-        LangfuseService.ShouldNotBeNull("LangfuseService should be registered when keys are configured");
+        LangfuseService.ShouldNotBeNull(
+            "LangfuseService should be registered when keys are configured");
 
         WriteOutput("✓ LangfuseService properly configured and registered");
     }
@@ -59,7 +61,8 @@ public class LangfuseFunctionalTests : BaseIntegrationTest
             { "session_id", "test-session" }
         };
 
-        var response = await LangfuseService.CreateTraceAsync(traceId, "functional-test-trace", metadata);
+        var response
+            = await LangfuseService.CreateTraceAsync(traceId, "functional-test-trace", metadata);
 
         WriteOutput($"Created trace with ID: {traceId}");
 
@@ -225,9 +228,8 @@ public class LangfuseFunctionalTests : BaseIntegrationTest
 
         var batchEnabled = Configuration.GetValue<bool>("Langfuse:EnableBatchMode");
         if (!batchEnabled)
-        {
-            WriteOutput("⚠️ Batch mode not enabled in configuration, test will still work but won't test batching");
-        }
+            WriteOutput(
+                "⚠️ Batch mode not enabled in configuration, test will still work but won't test batching");
 
         WriteOutput("Testing Langfuse service batch operations...");
 
@@ -238,7 +240,7 @@ public class LangfuseFunctionalTests : BaseIntegrationTest
         await LangfuseService.CreateTraceAsync(traceId, "batch-test-trace");
 
         // Create multiple events rapidly to test batching
-        for (int i = 0; i < 5; i++)
+        for (var i = 0; i < 5; i++)
         {
             var eventId = Guid.NewGuid().ToString();
 
@@ -266,7 +268,7 @@ public class LangfuseFunctionalTests : BaseIntegrationTest
             return;
         }
 
-        var dataMaskingEnabled = Configuration.GetValue<bool>("Langfuse:EnableDataMasking", true);
+        var dataMaskingEnabled = Configuration.GetValue("Langfuse:EnableDataMasking", true);
         WriteOutput($"Data masking configuration: {dataMaskingEnabled}");
 
         WriteOutput("Testing Langfuse with potentially sensitive data...");
@@ -298,7 +300,8 @@ public class LangfuseFunctionalTests : BaseIntegrationTest
         var response = await LangfuseService.CreateGenerationAsync(generationRequest);
 
         response.ShouldNotBeNull();
-        WriteOutput("✓ Successfully handled potentially sensitive data (data masking applied per configuration)");
+        WriteOutput(
+            "✓ Successfully handled potentially sensitive data (data masking applied per configuration)");
     }
 
     protected override Task CleanupTestResourcesAsync()

@@ -1,6 +1,7 @@
+using System.Text;
+using System.Text.Json;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
-using System.Text.Json;
 using ThirdOpinion.Common.Fhir.Builders.Documents;
 using ThirdOpinion.Common.Fhir.Configuration;
 using ThirdOpinion.Common.Fhir.Helpers;
@@ -10,17 +11,19 @@ namespace ThirdOpinion.Common.Fhir.UnitTests.Builders.Documents;
 public class FactExtractionDocumentReferenceBuilderTests
 {
     private readonly AiInferenceConfiguration _configuration;
-    private readonly ResourceReference _patientReference;
     private readonly ResourceReference _deviceReference;
-    private readonly ResourceReference _originalDocumentReference;
     private readonly ResourceReference _ocrDocumentReference;
+    private readonly ResourceReference _originalDocumentReference;
+    private readonly ResourceReference _patientReference;
 
     public FactExtractionDocumentReferenceBuilderTests()
     {
         _configuration = AiInferenceConfiguration.CreateDefault();
         _patientReference = new ResourceReference("Patient/test-patient", "Test Patient");
-        _deviceReference = new ResourceReference("Device/extraction-device", "Fact Extraction Device");
-        _originalDocumentReference = new ResourceReference("DocumentReference/original-doc", "Original Document");
+        _deviceReference
+            = new ResourceReference("Device/extraction-device", "Fact Extraction Device");
+        _originalDocumentReference
+            = new ResourceReference("DocumentReference/original-doc", "Original Document");
         _ocrDocumentReference = new ResourceReference("DocumentReference/ocr-doc", "OCR Document");
     }
 
@@ -38,7 +41,7 @@ public class FactExtractionDocumentReferenceBuilderTests
         };
 
         // Act
-        var document = builder
+        DocumentReference document = builder
             .WithPatient(_patientReference)
             .WithExtractionDevice(_deviceReference)
             .WithOriginalDocument(_originalDocumentReference)
@@ -73,13 +76,13 @@ public class FactExtractionDocumentReferenceBuilderTests
         // Check content
         document.Content.ShouldNotBeNull();
         document.Content.Count.ShouldBe(1);
-        var content = document.Content[0];
+        DocumentReference.ContentComponent? content = document.Content[0];
         content.Attachment.ContentType.ShouldBe("application/json");
         content.Attachment.Title.ShouldBe("Extracted Medical Facts");
         content.Attachment.Data.ShouldNotBeNull();
 
         // Verify JSON content
-        var jsonString = System.Text.Encoding.UTF8.GetString(content.Attachment.Data);
+        string jsonString = Encoding.UTF8.GetString(content.Attachment.Data);
         var deserializedFacts = JsonSerializer.Deserialize<JsonElement>(jsonString);
         deserializedFacts.GetProperty("PatientName").GetString().ShouldBe("John Doe");
         deserializedFacts.GetProperty("Diagnosis").GetString().ShouldBe("Hypertension");
@@ -99,7 +102,7 @@ public class FactExtractionDocumentReferenceBuilderTests
         }";
 
         // Act
-        var document = builder
+        DocumentReference document = builder
             .WithPatient(_patientReference)
             .WithExtractionDevice(_deviceReference)
             .WithFactsJson(jsonString)
@@ -107,12 +110,12 @@ public class FactExtractionDocumentReferenceBuilderTests
 
         // Assert
         document.Content.Count.ShouldBe(1);
-        var content = document.Content[0];
+        DocumentReference.ContentComponent? content = document.Content[0];
         content.Attachment.ContentType.ShouldBe("application/json");
         content.Attachment.Title.ShouldBe("Extracted Facts");
 
         // Verify JSON content is preserved
-        var storedJson = System.Text.Encoding.UTF8.GetString(content.Attachment.Data);
+        string storedJson = Encoding.UTF8.GetString(content.Attachment.Data);
         var parsedJson = JsonSerializer.Deserialize<JsonElement>(storedJson);
         parsedJson.GetProperty("confidence").GetDouble().ShouldBe(0.95);
     }
@@ -125,7 +128,7 @@ public class FactExtractionDocumentReferenceBuilderTests
         var s3Url = "https://bucket.s3.amazonaws.com/extracted-facts.json";
 
         // Act
-        var document = builder
+        DocumentReference document = builder
             .WithPatient(_patientReference)
             .WithExtractionDevice(_deviceReference)
             .WithFactsJsonUrl(s3Url, "Large Facts Dataset")
@@ -133,7 +136,7 @@ public class FactExtractionDocumentReferenceBuilderTests
 
         // Assert
         document.Content.Count.ShouldBe(1);
-        var content = document.Content[0];
+        DocumentReference.ContentComponent? content = document.Content[0];
         content.Attachment.ContentType.ShouldBe("application/json");
         content.Attachment.Url.ShouldBe(s3Url);
         content.Attachment.Title.ShouldBe("Large Facts Dataset");
@@ -147,7 +150,7 @@ public class FactExtractionDocumentReferenceBuilderTests
         var builder = new FactExtractionDocumentReferenceBuilder(_configuration);
 
         // Act
-        var document = builder
+        DocumentReference document = builder
             .WithPatient(_patientReference)
             .WithExtractionDevice(_deviceReference)
             .WithOriginalDocument(_originalDocumentReference)
@@ -166,7 +169,7 @@ public class FactExtractionDocumentReferenceBuilderTests
         var builder = new FactExtractionDocumentReferenceBuilder(_configuration);
 
         // Act
-        var document = builder
+        DocumentReference document = builder
             .WithPatient(_patientReference)
             .WithExtractionDevice(_deviceReference)
             .WithOcrDocument(_ocrDocumentReference)
@@ -192,7 +195,8 @@ public class FactExtractionDocumentReferenceBuilderTests
                 .WithFactsJsonUrl("https://example.com/facts.json")
                 .WithFactsJson("{\"test\": true}"));
 
-        exception.Message.ShouldContain("Cannot add inline content when URL content has already been set");
+        exception.Message.ShouldContain(
+            "Cannot add inline content when URL content has already been set");
     }
 
     [Fact]
@@ -209,7 +213,8 @@ public class FactExtractionDocumentReferenceBuilderTests
                 .WithFactsJson("{\"test\": true}")
                 .WithFactsJsonUrl("https://example.com/facts.json"));
 
-        exception.Message.ShouldContain("Cannot add URL content when inline content has already been set");
+        exception.Message.ShouldContain(
+            "Cannot add URL content when inline content has already been set");
     }
 
     [Fact]
@@ -325,7 +330,7 @@ public class FactExtractionDocumentReferenceBuilderTests
     {
         // Arrange & Act
         var facts = new { condition = "diabetes", medication = "insulin" };
-        var document = new FactExtractionDocumentReferenceBuilder(_configuration)
+        DocumentReference document = new FactExtractionDocumentReferenceBuilder(_configuration)
             .WithInferenceId("fact-001")
             .WithPatient("Patient/p123", "Jane Smith")
             .WithExtractionDevice("Device/d456", "AI Fact Extractor")
@@ -359,7 +364,7 @@ public class FactExtractionDocumentReferenceBuilderTests
             }
         };
 
-        var document = builder
+        DocumentReference document = builder
             .WithPatient(_patientReference)
             .WithExtractionDevice(_deviceReference)
             .WithOriginalDocument(_originalDocumentReference)
@@ -369,7 +374,7 @@ public class FactExtractionDocumentReferenceBuilderTests
 
         // Act
         var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
-        var json = serializer.SerializeToString(document);
+        string json = serializer.SerializeToString(document);
 
         // Assert
         json.ShouldNotBeNullOrEmpty();
@@ -396,7 +401,7 @@ public class FactExtractionDocumentReferenceBuilderTests
         var builder = new FactExtractionDocumentReferenceBuilder(_configuration);
 
         // Act
-        var document = builder
+        DocumentReference document = builder
             .WithPatient(_patientReference)
             .WithExtractionDevice(_deviceReference)
             .WithFactsJsonUrl("https://example.com/facts.json")
@@ -410,30 +415,35 @@ public class FactExtractionDocumentReferenceBuilderTests
     public void IntegrationTest_DocumentProcessingPipeline()
     {
         // Arrange - Simulate a complete document processing pipeline
-        var originalDocRef = new ResourceReference("DocumentReference/original-123", "Original Medical Report");
+        var originalDocRef
+            = new ResourceReference("DocumentReference/original-123", "Original Medical Report");
         var ocrDocRef = new ResourceReference("DocumentReference/ocr-456", "OCR Extracted Text");
         var patientRef = new ResourceReference("Patient/patient-789", "John Doe");
         var ocrDeviceRef = new ResourceReference("Device/ocr-device-001", "AWS Textract");
-        var extractionDeviceRef = new ResourceReference("Device/extraction-device-002", "Medical Fact Extractor");
+        var extractionDeviceRef
+            = new ResourceReference("Device/extraction-device-002", "Medical Fact Extractor");
 
         // Step 1: Create OCR document
-        var ocrDocument = new OcrDocumentReferenceBuilder(_configuration)
+        DocumentReference ocrDocument = new OcrDocumentReferenceBuilder(_configuration)
             .WithPatient(patientRef)
             .WithOcrDevice(ocrDeviceRef)
             .WithOriginalDocument(originalDocRef)
-            .WithExtractedText("Patient John Doe presents with Type 2 Diabetes. Current medication: Metformin 500mg twice daily.")
+            .WithExtractedText(
+                "Patient John Doe presents with Type 2 Diabetes. Current medication: Metformin 500mg twice daily.")
             .Build();
 
         // Step 2: Create fact extraction document
         var extractedFacts = new
         {
             patient = new { name = "John Doe", id = "patient-789" },
-            conditions = new[] { new { name = "Type 2 Diabetes", code = "E11", system = "ICD-10" } },
-            medications = new[] { new { name = "Metformin", dose = "500mg", frequency = "twice daily" } },
+            conditions
+                = new[] { new { name = "Type 2 Diabetes", code = "E11", system = "ICD-10" } },
+            medications = new[]
+                { new { name = "Metformin", dose = "500mg", frequency = "twice daily" } },
             extractionMetadata = new { confidence = 0.92, model = "medical-nlp-v2.1" }
         };
 
-        var factDocument = new FactExtractionDocumentReferenceBuilder(_configuration)
+        DocumentReference factDocument = new FactExtractionDocumentReferenceBuilder(_configuration)
             .WithPatient(patientRef)
             .WithExtractionDevice(extractionDeviceRef)
             .WithOriginalDocument(originalDocRef)
@@ -461,10 +471,11 @@ public class FactExtractionDocumentReferenceBuilderTests
         factDocument.Content[0].Attachment.ContentType.ShouldBe("application/json");
 
         // Verify extracted facts content
-        var factsJson = System.Text.Encoding.UTF8.GetString(factDocument.Content[0].Attachment.Data);
+        string factsJson = Encoding.UTF8.GetString(factDocument.Content[0].Attachment.Data);
         var parsedFacts = JsonSerializer.Deserialize<JsonElement>(factsJson);
         parsedFacts.GetProperty("patient").GetProperty("name").GetString().ShouldBe("John Doe");
-        parsedFacts.GetProperty("extractionMetadata").GetProperty("confidence").GetDouble().ShouldBe(0.92);
+        parsedFacts.GetProperty("extractionMetadata").GetProperty("confidence").GetDouble()
+            .ShouldBe(0.92);
     }
 
     private class TestObjectWithCycle

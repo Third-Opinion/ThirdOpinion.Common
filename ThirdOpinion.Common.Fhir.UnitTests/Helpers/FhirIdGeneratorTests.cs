@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 using ThirdOpinion.Common.Fhir.Helpers;
 
@@ -9,24 +10,25 @@ public class FhirIdGeneratorTests
     public void GenerateInferenceId_WithoutParameter_ReturnsCorrectFormat()
     {
         // Act
-        var id = FhirIdGenerator.GenerateInferenceId();
+        string id = FhirIdGenerator.GenerateInferenceId();
 
         // Assert
         id.ShouldNotBeNullOrEmpty();
         id.ShouldStartWith("to.ai-inference-");
 
         // Check GUID format (lowercase)
-        var guidPart = id.Substring("to.ai-inference-".Length);
-        Regex.IsMatch(guidPart, @"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$").ShouldBeTrue();
+        string guidPart = id.Substring("to.ai-inference-".Length);
+        Regex.IsMatch(guidPart, @"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$")
+            .ShouldBeTrue();
     }
 
     [Fact]
     public void GenerateInferenceId_WithSequenceNumber_ReturnsCorrectFormat()
     {
         // Arrange & Act
-        var id1 = FhirIdGenerator.GenerateInferenceId(1);
-        var id999 = FhirIdGenerator.GenerateInferenceId(999);
-        var id100000 = FhirIdGenerator.GenerateInferenceId(100000);
+        string id1 = FhirIdGenerator.GenerateInferenceId(1);
+        string id999 = FhirIdGenerator.GenerateInferenceId(999);
+        string id100000 = FhirIdGenerator.GenerateInferenceId(100000);
 
         // Assert
         id1.ShouldBe("to.ai-inference-000001");
@@ -38,23 +40,24 @@ public class FhirIdGeneratorTests
     public void GenerateProvenanceId_ReturnsCorrectFormat()
     {
         // Act
-        var id = FhirIdGenerator.GenerateProvenanceId();
+        string id = FhirIdGenerator.GenerateProvenanceId();
 
         // Assert
         id.ShouldNotBeNullOrEmpty();
         id.ShouldStartWith("to.ai-provenance-");
 
-        var guidPart = id.Substring("to.ai-provenance-".Length);
-        Regex.IsMatch(guidPart, @"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$").ShouldBeTrue();
+        string guidPart = id.Substring("to.ai-provenance-".Length);
+        Regex.IsMatch(guidPart, @"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$")
+            .ShouldBeTrue();
     }
 
     [Fact]
     public void GenerateDocumentId_ReturnsCorrectFormat()
     {
         // Arrange & Act
-        var id1 = FhirIdGenerator.GenerateDocumentId("report");
-        var id2 = FhirIdGenerator.GenerateDocumentId("Clinical Note");
-        var id3 = FhirIdGenerator.GenerateDocumentId("X-Ray");
+        string id1 = FhirIdGenerator.GenerateDocumentId("report");
+        string id2 = FhirIdGenerator.GenerateDocumentId("Clinical Note");
+        string id3 = FhirIdGenerator.GenerateDocumentId("X-Ray");
 
         // Assert
         id1.ShouldStartWith("to.ai-document-report-");
@@ -62,8 +65,9 @@ public class FhirIdGeneratorTests
         id3.ShouldStartWith("to.ai-document-x-ray-");
 
         // Check GUID format in each
-        var guidPart1 = id1.Substring("to.ai-document-report-".Length);
-        Regex.IsMatch(guidPart1, @"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$").ShouldBeTrue();
+        string guidPart1 = id1.Substring("to.ai-document-report-".Length);
+        Regex.IsMatch(guidPart1, @"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$")
+            .ShouldBeTrue();
     }
 
     [Fact]
@@ -78,12 +82,13 @@ public class FhirIdGeneratorTests
     public void GenerateResourceId_WithPrefix_ReturnsCorrectFormat()
     {
         // Act
-        var id = FhirIdGenerator.GenerateResourceId("custom-prefix");
+        string id = FhirIdGenerator.GenerateResourceId("custom-prefix");
 
         // Assert
         id.ShouldStartWith("custom-prefix-");
-        var guidPart = id.Substring("custom-prefix-".Length);
-        Regex.IsMatch(guidPart, @"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$").ShouldBeTrue();
+        string guidPart = id.Substring("custom-prefix-".Length);
+        Regex.IsMatch(guidPart, @"^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$")
+            .ShouldBeTrue();
     }
 
     [Fact]
@@ -93,7 +98,7 @@ public class FhirIdGeneratorTests
         var providedGuid = "550e8400-e29b-41d4-a716-446655440000";
 
         // Act
-        var id = FhirIdGenerator.GenerateResourceId("test", providedGuid);
+        string id = FhirIdGenerator.GenerateResourceId("test", providedGuid);
 
         // Assert
         id.ShouldBe("test-550e8400-e29b-41d4-a716-446655440000");
@@ -106,9 +111,9 @@ public class FhirIdGeneratorTests
         FhirIdGenerator.ResetSequenceCounter();
 
         // Act
-        var id1 = FhirIdGenerator.GenerateSequentialId("test");
-        var id2 = FhirIdGenerator.GenerateSequentialId("test");
-        var id3 = FhirIdGenerator.GenerateSequentialId("other");
+        string id1 = FhirIdGenerator.GenerateSequentialId("test");
+        string id2 = FhirIdGenerator.GenerateSequentialId("test");
+        string id3 = FhirIdGenerator.GenerateSequentialId("other");
 
         // Assert
         id1.ShouldBe("test-000001");
@@ -120,9 +125,9 @@ public class FhirIdGeneratorTests
     public void GenerateSequentialId_WithSpecifiedSequence_UsesProvidedNumber()
     {
         // Act
-        var id1 = FhirIdGenerator.GenerateSequentialId("test", 42);
-        var id2 = FhirIdGenerator.GenerateSequentialId("test", 999999);
-        var id3 = FhirIdGenerator.GenerateSequentialId("test", null);
+        string id1 = FhirIdGenerator.GenerateSequentialId("test", 42);
+        string id2 = FhirIdGenerator.GenerateSequentialId("test", 999999);
+        string id3 = FhirIdGenerator.GenerateSequentialId("test", null);
 
         // Assert
         id1.ShouldBe("test-000042");
@@ -138,7 +143,7 @@ public class FhirIdGeneratorTests
         const int count = 1000;
 
         // Act
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
             ids.Add(FhirIdGenerator.GenerateInferenceId());
             ids.Add(FhirIdGenerator.GenerateProvenanceId());
@@ -155,20 +160,16 @@ public class FhirIdGeneratorTests
     {
         // Arrange
         FhirIdGenerator.ResetSequenceCounter();
-        var ids = new System.Collections.Concurrent.ConcurrentBag<string>();
+        var ids = new ConcurrentBag<string>();
         var tasks = new List<Task>();
 
         // Act
-        for (int i = 0; i < 10; i++)
-        {
+        for (var i = 0; i < 10; i++)
             tasks.Add(Task.Run(() =>
             {
-                for (int j = 0; j < 100; j++)
-                {
+                for (var j = 0; j < 100; j++)
                     ids.Add(FhirIdGenerator.GenerateSequentialId("concurrent"));
-                }
             }));
-        }
 
         await Task.WhenAll(tasks);
 

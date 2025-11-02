@@ -34,6 +34,7 @@
         <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.Misc\ThirdOpinion.Common.Aws.Misc.csproj"/>
         <ProjectReference Include="..\src\ThirdOpinion.Common.Logging\ThirdOpinion.Common.Logging.csproj"/>
         <ProjectReference Include="..\src\ThirdOpinion.Common.Misc\ThirdOpinion.Common.Misc.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.HealthLake\ThirdOpinion.Common.Aws.HealthLake.csproj" />
     </ItemGroup>
 
 </Project>

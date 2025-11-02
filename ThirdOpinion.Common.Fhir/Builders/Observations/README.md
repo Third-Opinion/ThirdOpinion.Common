@@ -4,23 +4,30 @@ FHIR Observation resource builders for AI-generated clinical assessments in pros
 
 ## Overview
 
-These builders create FHIR Observation resources that represent AI-generated clinical inferences. Each builder specializes in a specific type of clinical assessment while maintaining consistency through the shared base class architecture.
+These builders create FHIR Observation resources that represent AI-generated clinical inferences. Each builder
+specializes in a specific type of clinical assessment while maintaining consistency through the shared base class
+architecture.
 
 ## Available Builders
 
 ### AdtStatusObservationBuilder
+
 Creates observations for Androgen Deprivation Therapy (ADT) status detection.
 
 #### Purpose
-Generates FHIR Observations that indicate whether a patient is currently receiving ADT therapy based on AI analysis of clinical data.
+
+Generates FHIR Observations that indicate whether a patient is currently receiving ADT therapy based on AI analysis of
+clinical data.
 
 #### Key Features
+
 - **Category**: `exam` (Clinical examination)
 - **Code**: LOINC `LA4633-1` (Treatment status)
 - **Value**: Boolean indicating ADT status
 - **Evidence**: References to medication statements, prescriptions, and clinical notes
 
 #### Basic Usage
+
 ```csharp
 var config = AiInferenceConfiguration.CreateDefault();
 
@@ -37,6 +44,7 @@ var adtObservation = new AdtStatusObservationBuilder(config)
 ```
 
 #### Example Output
+
 ```json
 {
   "resourceType": "Observation",
@@ -92,6 +100,7 @@ var adtObservation = new AdtStatusObservationBuilder(config)
 ```
 
 #### API Reference
+
 ```csharp
 public AdtStatusObservationBuilder WithInferenceId(string id)
 public AdtStatusObservationBuilder WithPatient(ResourceReference patientRef)
@@ -107,6 +116,7 @@ public AdtStatusObservationBuilder AddNote(string noteText)
 ```
 
 #### Validation Requirements
+
 - Patient reference is required
 - Device reference is required
 - ADT status (boolean) must be set
@@ -115,12 +125,16 @@ public AdtStatusObservationBuilder AddNote(string noteText)
 ---
 
 ### PsaProgressionObservationBuilder
+
 Creates observations for PSA (Prostate-Specific Antigen) progression analysis.
 
 #### Purpose
-Generates FHIR Observations that assess PSA progression using either ThirdOpinion.io or PCWG3 (Prostate Cancer Working Group 3) criteria.
+
+Generates FHIR Observations that assess PSA progression using either ThirdOpinion.io or PCWG3 (Prostate Cancer Working
+Group 3) criteria.
 
 #### Key Features
+
 - **Category**: `laboratory` (Laboratory study)
 - **Code**: LOINC `97509-4` (PSA progression)
 - **Value**: Progressive disease vs. Stable disease (SNOMED codes)
@@ -129,6 +143,7 @@ Generates FHIR Observations that assess PSA progression using either ThirdOpinio
 - **Evidence**: PSA measurement references with roles
 
 #### CriteriaType Enum
+
 ```csharp
 public enum CriteriaType
 {
@@ -138,6 +153,7 @@ public enum CriteriaType
 ```
 
 #### Basic Usage
+
 ```csharp
 var psaObservation = new PsaProgressionObservationBuilder(config)
     .WithInferenceId("psa-progression-001")
@@ -156,6 +172,7 @@ var psaObservation = new PsaProgressionObservationBuilder(config)
 ```
 
 #### Example with ThirdOpinion.io Criteria
+
 ```csharp
 var psaObservation = new PsaProgressionObservationBuilder(config)
     .WithPatient("Patient/patient-789")
@@ -168,18 +185,22 @@ var psaObservation = new PsaProgressionObservationBuilder(config)
 ```
 
 #### PSA Evidence Roles
+
 - **baseline** - Initial PSA before treatment
 - **nadir** - Lowest PSA achieved during treatment
 - **current** - Most recent PSA measurement
 - **latest** - Alias for current
 
 #### Automatic Calculations
+
 The builder automatically calculates:
+
 - **Percentage change** from baseline/nadir
 - **Absolute change** in ng/mL
 - **Threshold analysis** for PCWG3 (25% rule)
 
 #### API Reference
+
 ```csharp
 public PsaProgressionObservationBuilder WithInferenceId(string id)
 public PsaProgressionObservationBuilder WithPatient(ResourceReference patientRef)
@@ -198,6 +219,7 @@ public PsaProgressionObservationBuilder AddNote(string noteText)
 ```
 
 #### Validation Requirements
+
 - Patient reference is required
 - Device reference is required
 - Progression status must be set
@@ -206,12 +228,16 @@ public PsaProgressionObservationBuilder AddNote(string noteText)
 ---
 
 ### RecistProgressionObservationBuilder
+
 Creates observations for RECIST 1.1 radiographic progression analysis.
 
 #### Purpose
-Generates FHIR Observations that assess radiographic progression using RECIST 1.1 (Response Evaluation Criteria in Solid Tumors) methodology.
+
+Generates FHIR Observations that assess radiographic progression using RECIST 1.1 (Response Evaluation Criteria in Solid
+Tumors) methodology.
 
 #### Key Features
+
 - **Category**: `imaging` (Imaging study)
 - **Code**: LOINC `33717-0` (Tumor response)
 - **Value**: RECIST response codes (Complete Response, Partial Response, Progressive Disease, Stable Disease)
@@ -220,12 +246,14 @@ Generates FHIR Observations that assess radiographic progression using RECIST 1.
 - **Body Sites**: Anatomical locations using SNOMED codes
 
 #### RECIST Response Types
+
 - **CR** (Complete Response) - `C25197` - No evidence of disease
 - **PR** (Partial Response) - `C25206` - ≥30% decrease in SLD
 - **PD** (Progressive Disease) - `C35571` - ≥20% increase in SLD or new lesions
 - **SD** (Stable Disease) - `C85553` - Neither PR nor PD criteria met
 
 #### Basic Usage
+
 ```csharp
 var recistObservation = new RecistProgressionObservationBuilder(config)
     .WithInferenceId("recist-assessment-001")
@@ -248,7 +276,9 @@ var recistObservation = new RecistProgressionObservationBuilder(config)
 ```
 
 #### Component Types
+
 The builder supports various component measurements:
+
 ```csharp
 // Quantity measurements
 .AddComponent("Target lesion SLD", new Quantity(42.5m, "mm"))
@@ -263,6 +293,7 @@ The builder supports various component measurements:
 ```
 
 #### API Reference
+
 ```csharp
 public RecistProgressionObservationBuilder WithInferenceId(string id)
 public RecistProgressionObservationBuilder WithPatient(ResourceReference patientRef)
@@ -281,6 +312,7 @@ public RecistProgressionObservationBuilder AddNote(string noteText)
 ```
 
 #### Validation Requirements
+
 - Patient reference is required
 - Device reference is required
 - RECIST response must be set
@@ -290,12 +322,16 @@ public RecistProgressionObservationBuilder AddNote(string noteText)
 ---
 
 ### Pcwg3ProgressionObservationBuilder
+
 Creates observations for PCWG3 bone scan progression analysis in prostate cancer.
 
 #### Purpose
-Generates FHIR Observations that assess bone scan progression using PCWG3 (Prostate Cancer Working Group 3) criteria for bone metastases progression.
+
+Generates FHIR Observations that assess bone scan progression using PCWG3 (Prostate Cancer Working Group 3) criteria for
+bone metastases progression.
 
 #### Key Features
+
 - **Category**: `imaging` (Imaging study)
 - **Code**: LOINC `44667-7` (Bone scan findings)
 - **Value**: Progressive disease vs. Stable disease (SNOMED codes)
@@ -304,11 +340,13 @@ Generates FHIR Observations that assess bone scan progression using PCWG3 (Prost
 - **PCWG3 Criteria**: Specialized bone scan progression assessment
 
 #### PCWG3 Progression Logic
+
 - **Progression**: New bone lesions or unequivocal progression of existing lesions
 - **Stable**: No new lesions and no unequivocal progression
 - **Confirmation**: Requires confirmation scan ≥6 weeks after initial detection
 
 #### Basic Usage
+
 ```csharp
 var pcwg3Observation = new Pcwg3ProgressionObservationBuilder(config)
     .WithInferenceId("pcwg3-assessment-001")
@@ -328,7 +366,9 @@ var pcwg3Observation = new Pcwg3ProgressionObservationBuilder(config)
 ```
 
 #### Supporting Facts Integration
+
 The builder accepts clinical facts that provide evidence for progression:
+
 ```csharp
 var supportingFacts = new[]
 {
@@ -360,7 +400,9 @@ var observation = builder
 ```
 
 #### Component Structure
+
 The builder creates structured components for:
+
 - **Initial Lesions**: Description of newly identified lesions
 - **Confirmation Date**: Date progression was confirmed
 - **Time Between Scans**: Interval between initial and confirmation scans
@@ -368,6 +410,7 @@ The builder creates structured components for:
 - **Confidence Score**: AI assessment confidence (0.0-1.0)
 
 #### API Reference
+
 ```csharp
 public Pcwg3ProgressionObservationBuilder WithInferenceId(string id)
 public Pcwg3ProgressionObservationBuilder WithPatient(ResourceReference patientRef)
@@ -387,6 +430,7 @@ public Pcwg3ProgressionObservationBuilder AddNote(string noteText)
 ```
 
 #### Progressive Disease Example
+
 ```csharp
 var progressionObservation = new Pcwg3ProgressionObservationBuilder(config)
     .WithPatient("Patient/pc-patient-001")
@@ -404,6 +448,7 @@ var progressionObservation = new Pcwg3ProgressionObservationBuilder(config)
 ```
 
 #### Stable Disease Example
+
 ```csharp
 var stableObservation = new Pcwg3ProgressionObservationBuilder(config)
     .WithPatient("Patient/pc-patient-002")
@@ -417,9 +462,11 @@ var stableObservation = new Pcwg3ProgressionObservationBuilder(config)
 ```
 
 #### Enhanced RecistProgressionObservationBuilder Features
+
 The RecistProgressionObservationBuilder has been enhanced with new capabilities:
 
 ##### New Methods for Enhanced JSON Support
+
 ```csharp
 public RecistProgressionObservationBuilder WithIdentified(bool identified)
 public RecistProgressionObservationBuilder WithMeasurementChange(string? measurementChange)
@@ -430,6 +477,7 @@ public RecistProgressionObservationBuilder WithConfidence(float confidence)
 ```
 
 ##### Enhanced Usage Example
+
 ```csharp
 var enhancedRecistObservation = new RecistProgressionObservationBuilder(config)
     .WithPatient("Patient/patient-123")
@@ -446,6 +494,7 @@ var enhancedRecistObservation = new RecistProgressionObservationBuilder(config)
 ```
 
 #### Validation Requirements
+
 - Patient reference is required
 - Device reference is required
 - Identified status (boolean) must be set
@@ -455,6 +504,7 @@ var enhancedRecistObservation = new RecistProgressionObservationBuilder(config)
 ## Common Patterns
 
 ### Error Handling
+
 ```csharp
 try
 {
@@ -473,7 +523,9 @@ catch (InvalidOperationException ex) when (ex.Message.Contains("progression"))
 ```
 
 ### Confidence Scoring
+
 All observation builders support AI confidence scoring:
+
 ```csharp
 var observation = builder
     .WithConfidence(0.92f) // 92% confidence
@@ -490,7 +542,9 @@ var observation = builder
 ```
 
 ### Evidence References
+
 Link observations to supporting evidence:
+
 ```csharp
 var observation = builder
     .AddEvidence("Observation/psa-123", "PSA measurement")
@@ -500,7 +554,9 @@ var observation = builder
 ```
 
 ### Multi-Criteria Assessments
+
 For complex cases requiring multiple assessment methods:
+
 ```csharp
 // PCWG3 PSA Assessment
 var pcwg3Assessment = new PsaProgressionObservationBuilder(config)
@@ -520,7 +576,9 @@ var thirdOpinionAssessment = new PsaProgressionObservationBuilder(config)
 ```
 
 ### Temporal Analysis
+
 Track assessments over time:
+
 ```csharp
 var followUpObservation = builder
     .AddValidUntilComponent(DateTime.UtcNow.AddMonths(3)) // Valid for 3 months
@@ -532,6 +590,7 @@ var followUpObservation = builder
 ## Integration Examples
 
 ### Lambda Function Integration
+
 ```csharp
 public class PsaAnalysisFunction
 {
@@ -567,6 +626,7 @@ public class PsaAnalysisFunction
 ```
 
 ### Batch Processing
+
 ```csharp
 public async Task ProcessPatientsAsync(IEnumerable<string> patientIds)
 {
@@ -591,17 +651,20 @@ public async Task ProcessPatientsAsync(IEnumerable<string> patientIds)
 ## Best Practices
 
 ### Builder Selection
+
 - **AdtStatusObservationBuilder** - For treatment status detection
 - **PsaProgressionObservationBuilder** - For biochemical progression analysis
 - **RecistProgressionObservationBuilder** - For radiographic progression analysis
 
 ### Performance Tips
+
 - Reuse `AiInferenceConfiguration` instances
 - Cache frequently used ResourceReferences
 - Use batch operations for multiple patients
 - Consider async patterns for I/O operations
 
 ### Testing
+
 ```csharp
 [Fact]
 public void PsaBuilder_WithPCWG3Criteria_CalculatesCorrectly()

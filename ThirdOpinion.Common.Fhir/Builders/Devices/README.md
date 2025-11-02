@@ -1,14 +1,18 @@
 # AI Device Builder
 
-The `AiDeviceBuilder` creates FHIR Device resources representing AI/ML systems, algorithms, and software devices used in clinical inference and assessment workflows.
+The `AiDeviceBuilder` creates FHIR Device resources representing AI/ML systems, algorithms, and software devices used in
+clinical inference and assessment workflows.
 
 ## Overview
 
-The AI Device builder generates FHIR R4 Device resources that represent artificial intelligence systems, machine learning models, and clinical decision support software. These devices are referenced by other FHIR resources (Observations, Conditions, DocumentReferences) to indicate which AI system performed specific clinical inferences.
+The AI Device builder generates FHIR R4 Device resources that represent artificial intelligence systems, machine
+learning models, and clinical decision support software. These devices are referenced by other FHIR resources (
+Observations, Conditions, DocumentReferences) to indicate which AI system performed specific clinical inferences.
 
 ## Purpose
 
 AI Device resources serve several critical functions:
+
 - **Attribution**: Identify which AI system generated clinical inferences
 - **Traceability**: Enable audit trails for AI-generated content
 - **Version Control**: Track different versions of AI models and algorithms
@@ -214,23 +218,27 @@ These methods **must** be called before `Build()`:
 ### Optional Methods
 
 #### Basic Information
+
 - `WithInferenceId(string)` - Custom device ID (auto-generated if not provided)
 - `WithDescription(string)` - Detailed description of the AI system
 - `WithModelType(string)` - Type of ML model (neural-network, ensemble, rule-based, etc.)
 - `WithAlgorithmName(string)` - Specific algorithm or architecture name
 
 #### Technical Specifications
+
 - `WithTrainingData(string)` - Description of training dataset
 - `WithValidationAccuracy(float)` - Model validation accuracy (0.0-1.0)
 - `WithProcessingSpeed(string)` - Performance characteristics
 - `AddCapability(string, string)` - Add specific clinical capabilities
 
 #### Regulatory and Compliance
+
 - `WithRegulationStatus(string, string)` - Regulatory clearance status and details
 - `WithCertification(string, string)` - Quality certifications
 - `WithManufacturer(string, string)` - Manufacturer with optional URL
 
 #### Operational Details
+
 - `WithLastCalibration(DateTime)` - Last calibration/validation date
 - `WithMaintenanceSchedule(string)` - Maintenance and update schedule
 - `WithSupportContact(string, string)` - Support contact information
@@ -238,6 +246,7 @@ These methods **must** be called before `Build()`:
 ### Device Types and Standards
 
 #### Model Types
+
 - `"neural-network"` - Deep learning, CNN, RNN, transformer models
 - `"ensemble"` - Combination of multiple models
 - `"rule-based"` - Expert system with predefined rules
@@ -246,6 +255,7 @@ These methods **must** be called before `Build()`:
 - `"hybrid"` - Combination of AI and traditional approaches
 
 #### Common Capabilities
+
 - `"HSDM Assessment"` - Hormone Sensitivity Diagnosis Modifier
 - `"PSA Progression"` - PSA biochemical progression
 - `"RECIST Assessment"` - Radiographic progression per RECIST 1.1
@@ -448,24 +458,28 @@ var mdrCompliantDevice = new AiDeviceBuilder(config)
 ## Best Practices
 
 ### Version Management
+
 1. **Use semantic versioning** (major.minor.patch) for model versions
 2. **Document breaking changes** between major versions
 3. **Track model performance** across versions for comparison
 4. **Maintain backward compatibility** when possible
 
 ### Capability Documentation
+
 1. **Be specific** about what the AI system can and cannot do
 2. **Include limitations** and edge cases in descriptions
 3. **Reference clinical guidelines** that the AI implements
 4. **Document training data characteristics** and potential biases
 
 ### Regulatory Preparation
+
 1. **Keep detailed records** of model development and validation
 2. **Document data sources** and patient population characteristics
 3. **Track model performance** in production environments
 4. **Maintain audit trails** for model updates and changes
 
 ### Clinical Integration
+
 1. **Verify device capabilities** before using in clinical workflows
 2. **Check calibration dates** to ensure models are current
 3. **Monitor performance** and report issues to manufacturers

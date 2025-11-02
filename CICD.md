@@ -2,7 +2,9 @@
 
 ## Overview
 
-This document describes the complete CI/CD pipeline setup for the ThirdOpinion.Common library packages. The pipeline is designed to provide automated testing, security scanning, and NuGet package publishing with both automatic and manual triggers.
+This document describes the complete CI/CD pipeline setup for the ThirdOpinion.Common library packages. The pipeline is
+designed to provide automated testing, security scanning, and NuGet package publishing with both automatic and manual
+triggers.
 
 ## Repository Structure
 
@@ -24,25 +26,28 @@ ThirdOpinion.Common/
 ## Pipeline Features
 
 ### 🚀 Automatic CI/CD
+
 - **Triggers**: Push to main branches, pull requests, releases
 - **Testing**: Unit tests with coverage reporting
 - **Security**: Vulnerability scanning and CodeQL analysis
 - **Publishing**: Automatic package publishing on releases
 
 ### 🎛️ Manual Controls
+
 - **Functional Tests**: Optional AWS integration testing with LocalStack
 - **Development Publishing**: Manual package publishing for testing
 - **Environment Protection**: Production environment with approval gates
 
 ### 📦 Package Management
+
 - **Single Package**: One unified NuGet package
 - **Versioning**: Semantic versioning with development builds
 - **Distribution**: GitHub Packages + NuGet.org
 
 ## Package Published
 
-| Package | Description | Dependencies |
-|---------|-------------|--------------|
+| Package               | Description                                                                                                                             | Dependencies                    |
+|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
 | `ThirdOpinion.Common` | Complete package including AWS services integration (S3, DynamoDB, SQS, Cognito), FHIR R4 healthcare integration, and utility functions | .NET 8.0, AWS SDKs, Hl7.Fhir.R4 |
 
 ## Getting Started
@@ -50,6 +55,7 @@ ThirdOpinion.Common/
 ### 1. Repository Setup
 
 #### Required Secrets
+
 Add these to your GitHub repository settings:
 
 ```
@@ -57,6 +63,7 @@ NUGET_API_KEY          # NuGet.org API key for publishing packages
 ```
 
 #### Environment Setup
+
 1. Create a `production` environment in repository settings
 2. Add required reviewers for production deployments
 3. Configure branch protection rules for main/master
@@ -64,6 +71,7 @@ NUGET_API_KEY          # NuGet.org API key for publishing packages
 ### 2. First-Time Setup
 
 #### Local Development
+
 ```bash
 # Clone and build
 git clone <repository-url>
@@ -79,6 +87,7 @@ dotnet test
 ```
 
 #### Verify CI/CD
+
 1. Create a test branch and push changes
 2. Open a pull request to trigger the pipeline
 3. Verify all checks pass
@@ -88,6 +97,7 @@ dotnet test
 ### Main CI/CD Pipeline (`ci-cd.yml`)
 
 #### Build and Test Job
+
 ```yaml
 runs-on: ubuntu-latest
 steps:
@@ -103,6 +113,7 @@ steps:
 **Triggers**: All pushes and PRs
 
 #### Functional Tests Job
+
 ```yaml
 services:
   localstack:
@@ -115,12 +126,14 @@ services:
 **Triggers**: Manual workflow dispatch only
 
 **Features**:
+
 - Full AWS service emulation with LocalStack
 - Integration testing across all AWS services
 - Environment variable configuration
 - Comprehensive test coverage
 
 #### Package Creation Job
+
 ```yaml
 strategy:
   matrix:
@@ -130,27 +143,30 @@ strategy:
 **Triggers**: Releases or manual dispatch
 
 **Features**:
+
 - Semantic versioning
 - Development build versioning
 - Multi-package support
 - Artifact preservation
 
 #### Publishing Job
+
 ```yaml
 environment: production
 needs: [build-and-test, package]
 ```
 
 **Targets**:
+
 - GitHub Packages (always)
 - NuGet.org (releases only)
-
 
 ## Usage Scenarios
 
 ### 1. Development Workflow
 
 #### Feature Development
+
 ```bash
 # Create feature branch
 git checkout -b feature/new-awesome-feature
@@ -164,6 +180,7 @@ git push origin feature/new-awesome-feature
 ```
 
 #### Code Review Process
+
 1. Automated CI runs on PR creation
 2. All tests must pass
 3. Code review approval required
@@ -172,6 +189,7 @@ git push origin feature/new-awesome-feature
 ### 2. Testing Scenarios
 
 #### Unit Testing
+
 ```bash
 # Run all unit tests
 dotnet test
@@ -184,6 +202,7 @@ dotnet test --collect:"XPlat Code Coverage"
 ```
 
 #### Functional Testing (Manual)
+
 1. Go to GitHub Actions
 2. Select "CI/CD Pipeline"
 3. Click "Run workflow"
@@ -191,6 +210,7 @@ dotnet test --collect:"XPlat Code Coverage"
 5. Click "Run workflow"
 
 #### Local Functional Testing
+
 ```bash
 # Start LocalStack
 docker run --rm -p 4566:4566 -e SERVICES=cognito-idp,dynamodb,s3,sqs localstack/localstack
@@ -204,6 +224,7 @@ dotnet test ThirdOpinion.Common.FunctionalTests/ \
 ### 3. Publishing Scenarios
 
 #### Development Package Testing
+
 ```bash
 # Manual publish for testing
 # Go to GitHub Actions → CI/CD Pipeline → Run workflow
@@ -212,6 +233,7 @@ dotnet test ThirdOpinion.Common.FunctionalTests/ \
 ```
 
 #### Production Release
+
 ```bash
 # Create release through GitHub UI
 # Version format: v1.2.3
@@ -223,12 +245,14 @@ dotnet test ThirdOpinion.Common.FunctionalTests/ \
 ### Environment Variables
 
 #### CI/CD Pipeline
+
 ```yaml
 DOTNET_VERSION: '8.0.x'
 SOLUTION_PATH: './ThirdOpinion.Common.sln'
 ```
 
 #### Functional Tests
+
 ```yaml
 AWS__UseLocalStack: true
 AWS__LocalStackEndpoint: http://localhost:4566
@@ -241,6 +265,7 @@ TestSettings__TestResourcePrefix: gh-actions
 ### Project Configuration
 
 #### Package Metadata (Example)
+
 ```xml
 <PropertyGroup>
   <PackageId>ThirdOpinion.Common.Aws.DynamoDb</PackageId>
@@ -256,11 +281,13 @@ TestSettings__TestResourcePrefix: gh-actions
 ### Versioning Strategy
 
 #### Release Versions
+
 - Format: `Major.Minor.Patch` (e.g., `1.2.3`)
 - Source: GitHub release tags
 - Distribution: NuGet.org + GitHub Packages
 
-#### Development Versions  
+#### Development Versions
+
 - Format: `1.0.0-dev.YYYYMMDD.{commit-hash}`
 - Source: Manual workflow dispatch
 - Distribution: GitHub Packages only
@@ -270,25 +297,30 @@ TestSettings__TestResourcePrefix: gh-actions
 ### Health Checks
 
 #### Automated Monitoring
+
 - **Build Status**: GitHub Actions status badges
 - **Test Coverage**: Coverage reports in artifacts
 
 #### Manual Monitoring
+
 - Monthly dependency update reviews
 - Quarterly pipeline performance analysis
 
 ### Maintenance Tasks
 
 #### Weekly
+
 - [ ] Monitor test coverage trends
 - [ ] Review dependency updates manually
 
 #### Monthly
+
 - [ ] Review package download metrics
 - [ ] Update documentation
 - [ ] Performance optimization review
 
 #### Quarterly
+
 - [ ] Pipeline configuration review
 - [ ] Security policy updates
 - [ ] Tool and action updates
@@ -298,6 +330,7 @@ TestSettings__TestResourcePrefix: gh-actions
 ### Common Issues
 
 #### Build Failures
+
 ```bash
 # Check build logs in GitHub Actions
 # Common causes:
@@ -310,6 +343,7 @@ dotnet build --verbosity diagnostic
 ```
 
 #### Test Failures
+
 ```bash
 # Unit test failures:
 dotnet test --logger "console;verbosity=detailed"
@@ -321,6 +355,7 @@ dotnet test --logger "console;verbosity=detailed"
 ```
 
 #### Publishing Issues
+
 ```bash
 # Common causes:
 # - Missing API keys
@@ -336,16 +371,19 @@ dotnet test --logger "console;verbosity=detailed"
 ### Support Resources
 
 #### Documentation
+
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
 - [.NET CLI Documentation](https://docs.microsoft.com/en-us/dotnet/core/tools/)
 - [NuGet Publishing Guide](https://docs.microsoft.com/en-us/nuget/nuget-org/publish-a-package)
 
 #### Tools
+
 - [LocalStack Documentation](https://docs.localstack.cloud/)
 
 ## Best Practices
 
 ### Security
+
 - ✅ Never commit secrets or API keys
 - ✅ Use environment protection for production
 - ✅ Regular security scanning
@@ -353,6 +391,7 @@ dotnet test --logger "console;verbosity=detailed"
 - ✅ Principle of least privilege for tokens
 
 ### Quality
+
 - ✅ Comprehensive test coverage
 - ✅ Automated code analysis
 - ✅ Consistent code formatting
@@ -360,6 +399,7 @@ dotnet test --logger "console;verbosity=detailed"
 - ✅ Clear documentation
 
 ### Performance
+
 - ✅ Parallel job execution
 - ✅ Dependency caching
 - ✅ Incremental builds
@@ -367,6 +407,7 @@ dotnet test --logger "console;verbosity=detailed"
 - ✅ Resource cleanup
 
 ### Maintenance
+
 - ✅ Manual dependency updates
 - ✅ Regular pipeline reviews
 - ✅ Documentation updates
@@ -376,6 +417,7 @@ dotnet test --logger "console;verbosity=detailed"
 ## Future Enhancements
 
 ### Planned Improvements
+
 - [ ] Multi-target framework support (.NET 6, 8, 9)
 - [ ] Automated changelog generation
 - [ ] Performance benchmarking
@@ -383,6 +425,7 @@ dotnet test --logger "console;verbosity=detailed"
 - [ ] Slack/Teams notifications
 
 ### Considerations
+
 - [ ] Multi-repository support
 - [ ] Advanced caching strategies
 - [ ] Blue/green deployments

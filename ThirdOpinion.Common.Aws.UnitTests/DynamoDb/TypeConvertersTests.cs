@@ -50,7 +50,8 @@ public class TypeConvertersTests
         var invalidValue = "not an enum";
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.ToEntry(invalidValue));
+        ArgumentException? exception
+            = Should.Throw<ArgumentException>(() => converter.ToEntry(invalidValue));
         exception.Message.ShouldBe("Value must be an enum or null");
     }
 
@@ -117,7 +118,8 @@ public class TypeConvertersTests
         var primitive = new Primitive { Value = 123 };
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.FromEntry(primitive));
+        ArgumentException? exception
+            = Should.Throw<ArgumentException>(() => converter.FromEntry(primitive));
         exception.Message.ShouldBe("Value must be a string");
     }
 
@@ -129,7 +131,8 @@ public class TypeConvertersTests
         var primitive = new Primitive { Value = "InvalidEnum" };
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentOutOfRangeException>(() => converter.FromEntry(primitive));
+        ArgumentOutOfRangeException? exception
+            = Should.Throw<ArgumentOutOfRangeException>(() => converter.FromEntry(primitive));
         exception.Message.ShouldContain("Value InvalidEnum is not a valid enum");
     }
 
@@ -311,7 +314,8 @@ public class TypeConvertersTests
         var invalidValue = "not a datetime";
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.ToEntry(invalidValue));
+        ArgumentException? exception
+            = Should.Throw<ArgumentException>(() => converter.ToEntry(invalidValue));
         exception.Message.ShouldBe("Value must be a DateTime (Parameter 'value')");
     }
 
@@ -339,8 +343,10 @@ public class TypeConvertersTests
         var primitive = new Primitive { Value = "invalid-date" };
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.FromEntry(primitive));
-        exception.Message.ShouldBe("Entry must be a string primitive containing a valid DateTime (Parameter 'entry')");
+        ArgumentException? exception
+            = Should.Throw<ArgumentException>(() => converter.FromEntry(primitive));
+        exception.Message.ShouldBe(
+            "Entry must be a string primitive containing a valid DateTime (Parameter 'entry')");
     }
 
     [Fact]
@@ -351,8 +357,10 @@ public class TypeConvertersTests
         var document = new Document();
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.FromEntry(document));
-        exception.Message.ShouldBe("Entry must be a string primitive containing a valid DateTime (Parameter 'entry')");
+        ArgumentException? exception
+            = Should.Throw<ArgumentException>(() => converter.FromEntry(document));
+        exception.Message.ShouldBe(
+            "Entry must be a string primitive containing a valid DateTime (Parameter 'entry')");
     }
 
     [Fact]
@@ -377,7 +385,7 @@ public class TypeConvertersTests
     {
         // Arrange
         var converter = new GuidTypeConverter();
-        var guid = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
+        Guid guid = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
 
         // Act
         var result = converter.ToEntry(guid);
@@ -410,7 +418,8 @@ public class TypeConvertersTests
         var invalidValue = "not a guid";
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.ToEntry(invalidValue));
+        ArgumentException? exception
+            = Should.Throw<ArgumentException>(() => converter.ToEntry(invalidValue));
         exception.Message.ShouldBe("Value must be a Guid (Parameter 'value')");
     }
 
@@ -422,8 +431,10 @@ public class TypeConvertersTests
         var primitive = new Primitive { Value = "invalid-guid" };
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.FromEntry(primitive));
-        exception.Message.ShouldBe("Entry must be a string primitive containing a valid Guid (Parameter 'entry')");
+        ArgumentException? exception
+            = Should.Throw<ArgumentException>(() => converter.FromEntry(primitive));
+        exception.Message.ShouldBe(
+            "Entry must be a string primitive containing a valid Guid (Parameter 'entry')");
     }
 
     [Fact]
@@ -434,8 +445,10 @@ public class TypeConvertersTests
         var document = new Document();
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.FromEntry(document));
-        exception.Message.ShouldBe("Entry must be a string primitive containing a valid Guid (Parameter 'entry')");
+        ArgumentException? exception
+            = Should.Throw<ArgumentException>(() => converter.FromEntry(document));
+        exception.Message.ShouldBe(
+            "Entry must be a string primitive containing a valid Guid (Parameter 'entry')");
     }
 
     [Fact]
