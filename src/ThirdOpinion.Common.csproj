@@ -11,6 +11,7 @@
         <PackageId>ThirdOpinion.Common</PackageId>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+        <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
 
         <!--
         Version Configuration:
@@ -97,11 +98,18 @@
         <ProjectReference Include="..\ThirdOpinion.Common.Langfuse\ThirdOpinion.Common.Langfuse.csproj" PrivateAssets="all"/>
     </ItemGroup>
 
-    <!-- Custom target to include project reference DLLs in the NuGet package -->
+    <!-- Custom target to include project reference DLLs and PDBs in the NuGet package -->
     <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
         <ItemGroup>
             <!-- Include all project reference DLLs -->
-            <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))"/>
+            <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
+
+            <!-- Manually include PDB files for each referenced project -->
+            <_ProjectReferenceDlls Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')->WithMetadataValue('Extension', '.dll'))" />
+            <_ProjectReferencePdbs Include="@(_ProjectReferenceDlls->'%(RootDir)%(Directory)%(Filename).pdb')" Condition="Exists('%(RootDir)%(Directory)%(Filename).pdb')" />
+            <BuildOutputInPackage Include="@(_ProjectReferencePdbs)">
+                <TargetPath>%(Filename)%(Extension)</TargetPath>
+            </BuildOutputInPackage>
         </ItemGroup>
     </Target>
 

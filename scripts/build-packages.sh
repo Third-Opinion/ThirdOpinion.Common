@@ -42,8 +42,7 @@ dotnet build --configuration $CONFIGURATION --no-restore
 
 # Run unit tests
 echo -e "${YELLOW}🧪 Running unit tests...${NC}"
-dotnet test ThirdOpinion.Common.Aws.UnitTests/ --configuration $CONFIGURATION --no-build --verbosity normal
-dotnet test ThirdOpinion.Common.UnitTests/ --configuration $CONFIGURATION --no-build --verbosity normal
+dotnet test --configuration $CONFIGURATION --no-build --verbosity normal --filter "FullyQualifiedName!~IntegrationTests&FullyQualifiedName!~FunctionalTests"
 
 # Package main project (includes all sub-projects)
 echo -e "${YELLOW}📦 Creating NuGet package (combined)...${NC}"
@@ -51,7 +50,6 @@ echo -e "${YELLOW}📦 Creating NuGet package (combined)...${NC}"
 echo "  📦 Packing ThirdOpinion.Common (includes all sub-projects)..."
 dotnet pack "src/ThirdOpinion.Common.csproj" \
     --configuration $CONFIGURATION \
-    --no-build \
     --output $OUTPUT_DIR \
     -p:PackageVersion=$VERSION
 

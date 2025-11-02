@@ -48,6 +48,9 @@
   &lt;Or&gt;
     &lt;ProjectFile&gt;B9A4B802-FC87-46B4-8DFD-80CA41BA89E0/d:Tests/f:BedrockFunctionalTests.cs&lt;/ProjectFile&gt;
     &lt;ProjectFile&gt;B9A4B802-FC87-46B4-8DFD-80CA41BA89E0/d:Tests/f:LangfuseFunctionalTests.cs&lt;/ProjectFile&gt;
+    &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.UnitTests" Presentation="&amp;lt;ThirdOpinion.Common.Aws.UnitTests&amp;gt;" /&gt;
+    &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Fhir.UnitTests" Presentation="&amp;lt;ThirdOpinion.Common.Fhir.UnitTests&amp;gt;" /&gt;
+    &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.FunctionalTests" Presentation="&amp;lt;ThirdOpinion.Common.FunctionalTests&amp;gt;" /&gt;
   &lt;/Or&gt;
 &lt;/SessionState&gt;</s:String>
     <s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=fbbe0165_002De816_002D456a_002Db9f1_002D578fffa57821/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="SendMessageAsync_WithStringMessage_SendsDirectly" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
