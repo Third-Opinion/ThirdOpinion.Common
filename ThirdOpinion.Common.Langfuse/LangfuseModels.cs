@@ -389,15 +389,40 @@ public class
     /// </summary>
     public string? ToolDescription { get; set; }
 
-    // TODO: Implement provider-agnostic tool configuration
-    // Removed AWS-specific ToolConfiguration implementation
-    /*
-    public ToolConfiguration? BuildToolConfiguration()
+    /// <summary>
+    ///     Converts this prompt with schema to a Bedrock ToolConfiguration
+    /// </summary>
+    public Amazon.BedrockRuntime.Model.ToolConfiguration? BuildToolConfiguration()
     {
-        // Implementation removed - AWS-specific
-        return null;
+        if (Schema == null)
+            return null;
+
+        try
+        {
+            var tool = new Amazon.BedrockRuntime.Model.Tool
+            {
+                ToolSpec = new Amazon.BedrockRuntime.Model.ToolSpecification
+                {
+                    Name = ToolName ?? GenerateToolName(),
+                    Description = ToolDescription ?? GenerateToolDescription(),
+                    InputSchema = new Amazon.BedrockRuntime.Model.ToolInputSchema
+                    {
+                        Json = new Amazon.Runtime.Documents.Document(Schema.RootElement.GetRawText())
+                    }
+                }
+            };
+
+            return new Amazon.BedrockRuntime.Model.ToolConfiguration
+            {
+                Tools = new List<Amazon.BedrockRuntime.Model.Tool> { tool }
+            };
+        }
+        catch (Exception)
+        {
+            // If schema parsing fails, return null to fall back to non-tool mode
+            return null;
+        }
     }
-    */
 
     /// <summary>
     ///     Generates a tool name from the prompt name

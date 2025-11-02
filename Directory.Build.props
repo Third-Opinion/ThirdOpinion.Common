@@ -1,0 +1,26 @@
+<Project>
+    <PropertyGroup>
+        <!-- Enable portable debug symbols for all configurations -->
+        <DebugType>portable</DebugType>
+        <DebugSymbols>true</DebugSymbols>
+
+        <!-- Include symbols in NuGet packages -->
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+        <!-- Embed source files in the PDB for better debugging experience -->
+        <EmbedAllSources>true</EmbedAllSources>
+
+        <!-- Enable deterministic builds for reproducibility -->
+        <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+        <Deterministic>true</Deterministic>
+
+        <!-- Publish repository URL in the NuGet package -->
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    </PropertyGroup>
+
+    <!-- Add SourceLink for GitHub repositories -->
+    <ItemGroup Condition="'$(IsPackable)' == 'true'">
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+    </ItemGroup>
+</Project>

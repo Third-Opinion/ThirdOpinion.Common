@@ -309,6 +309,41 @@
                 Converts Bedrock ToolInputSchema to Claude input schema format
             </summary>
         </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.LlmRecord">
+            <summary>
+                Represents a simplified LLM processing record without document downloads
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.LlmRecord.PatientId">
+            <summary>
+                Patient ID for context (required)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.LlmRecord.PracticeId">
+            <summary>
+                Practice/Organization ID for context (required)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.LlmRecord.Metadata">
+            <summary>
+                Optional metadata as key-value pairs (format: "key1=value1;key2=value2")
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.LlmRecord.SequenceNumber">
+            <summary>
+                Sequence number for tracking
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.LlmRecord.ParseMetadata">
+            <summary>
+                Parse metadata string into dictionary
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.LlmRecord.ToString">
+            <summary>
+                Returns a string representation of the record
+            </summary>
+        </member>
         <member name="T:ThirdOpinion.Common.Aws.Bedrock.IBedrockPricingService">
             <summary>
                 Service for managing Bedrock model pricing and cost calculations
@@ -358,13 +393,17 @@
                 Service for invoking AI models via AWS Bedrock runtime
             </summary>
         </member>
-        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.#ctor(Amazon.BedrockRuntime.IAmazonBedrockRuntime,Microsoft.Extensions.Logging.ILogger{ThirdOpinion.Common.Aws.Bedrock.BedrockService},ThirdOpinion.Common.Logging.ICorrelationIdProvider,ThirdOpinion.Common.Langfuse.ILangfuseService,ThirdOpinion.Common.Aws.Bedrock.IBedrockPricingService)">
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.#ctor(Amazon.BedrockRuntime.IAmazonBedrockRuntime,Amazon.Bedrock.IAmazonBedrock,ThirdOpinion.Common.Misc.RateLimiting.IRateLimiterService,ThirdOpinion.Common.Misc.Retry.IRetryPolicyService,Microsoft.Extensions.Logging.ILogger{ThirdOpinion.Common.Aws.Bedrock.BedrockService},ThirdOpinion.Common.Logging.ICorrelationIdProvider,Microsoft.Extensions.Options.IOptions{ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig},ThirdOpinion.Common.Langfuse.ILangfuseService,ThirdOpinion.Common.Aws.Bedrock.IBedrockPricingService)">
             <summary>
                 Initializes a new instance of the BedrockService
             </summary>
             <param name="bedrockRuntimeClient">The AWS Bedrock runtime client</param>
+            <param name="bedrockClient">The AWS Bedrock client</param>
+            <param name="rateLimiterService">Rate limiter service</param>
+            <param name="retryPolicyService">Retry policy service</param>
             <param name="logger">Logger instance</param>
-            <param name="correlationIdProvider">Optional correlation ID provider</param>
+            <param name="correlationIdProvider">Correlation ID provider</param>
+            <param name="config">Bedrock configuration</param>
             <param name="langfuseService">Optional Langfuse service for tracing</param>
             <param name="pricingService">Optional pricing service for cost calculation</param>
         </member>
@@ -385,6 +424,47 @@
         </member>
         <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.GetModelInfoAsync(System.String,System.Threading.CancellationToken)">
             <inheritdoc />
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.SubstitutePromptVariables(System.String,ThirdOpinion.Common.Aws.Bedrock.LlmRecord)">
+            <summary>
+                Substitutes variables in a prompt template using values from an LlmRecord
+            </summary>
+            <param name="promptTemplate">The prompt template with {{variable}} placeholders</param>
+            <param name="record">The LlmRecord containing variable values</param>
+            <returns>The prompt with all variables substituted</returns>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.SubstitutePromptVariables(System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+                Substitutes variables in a prompt template using values from a provided dictionary
+            </summary>
+            <param name="promptTemplate">The prompt template with {{variable}} placeholders</param>
+            <param name="variableValues">Dictionary of variable names to values</param>
+            <returns>The prompt with all variables substituted</returns>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.ExtractPromptVariables(System.String)">
+            <summary>
+                Extracts variable names from a prompt template
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.GetVariableValue(System.String,ThirdOpinion.Common.Aws.Bedrock.LlmRecord,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+                Gets the value for a variable from the record or metadata
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.ReplaceIgnoreCase(System.String,System.String,System.String)">
+            <summary>
+                Replaces a string with another string (case-insensitive)
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.ExtractLangfuseConfig(System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>
+                Extracts configuration values from a Langfuse config dictionary
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.GetModelConfiguration(System.String)">
+            <summary>
+                Gets model configuration for a specific model ID
+            </summary>
         </member>
         <member name="T:ThirdOpinion.Common.Aws.Bedrock.BedrockServiceException">
             <summary>
@@ -411,6 +491,11 @@
                 Timeout in seconds for API calls
             </summary>
         </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.RequestTimeoutSeconds">
+            <summary>
+                Request timeout in seconds (alias for TimeoutSeconds)
+            </summary>
+        </member>
         <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.DefaultModelId">
             <summary>
                 Default model ID to use if none specified
@@ -429,6 +514,76 @@
         <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.EnableDebugLogging">
             <summary>
                 Enable debug logging
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.RateLimitPerMinute">
+            <summary>
+                Rate limit for Bedrock API calls per minute
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.ModelConfigurations">
+            <summary>
+                Model-specific configurations
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.Enabled">
+            <summary>
+                Whether the service is enabled
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.IsValid">
+            <summary>
+                Validates that the configuration is properly set up
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig">
+            <summary>
+                Configuration for specific models
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.ModelId">
+            <summary>
+                The actual model ID to use with Bedrock (e.g., "anthropic.claude-opus-4-1-20250805-v1:0")
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.DisplayName">
+            <summary>
+                Human-readable display name for this model
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.MaxTokens">
+            <summary>
+                Maximum tokens for this model
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.Temperature">
+            <summary>
+                Default temperature for this model
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.Enabled">
+            <summary>
+                Whether this model is enabled
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.RateLimitPerMinute">
+            <summary>
+                Custom rate limit for this model
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.CostPer1KInputTokens">
+            <summary>
+                Cost per 1000 input tokens (for monitoring)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.CostPer1KOutputTokens">
+            <summary>
+                Cost per 1000 output tokens (for monitoring)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.SearchTermsDocument">
+            <summary>
+                Search terms for document processing (from Langfuse configuration)
             </summary>
         </member>
         <member name="T:ThirdOpinion.Common.Aws.Bedrock.IBedrockService">

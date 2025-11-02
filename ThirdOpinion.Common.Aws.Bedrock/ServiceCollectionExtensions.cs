@@ -3,9 +3,12 @@ using Amazon.BedrockRuntime;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using ThirdOpinion.Common.Aws.Bedrock.Configuration;
 using ThirdOpinion.Common.Langfuse;
 using ThirdOpinion.Common.Logging;
+using ThirdOpinion.Common.Misc.RateLimiting;
+using ThirdOpinion.Common.Misc.Retry;
 
 namespace ThirdOpinion.Common.Aws.Bedrock;
 
@@ -28,8 +31,8 @@ public static class ServiceCollectionExtensions
         services.Configure<BedrockConfig>(configuration.GetSection("Bedrock"));
 
         // Register AWS Bedrock clients
-        services.AddSingleton(typeof(IAmazonBedrockRuntime), typeof(AmazonBedrockRuntimeClient));
-        services.AddSingleton(typeof(IAmazonBedrock), typeof(AmazonBedrockClient));
+        services.AddSingleton<IAmazonBedrockRuntime, AmazonBedrockRuntimeClient>();
+        services.AddSingleton<IAmazonBedrock, AmazonBedrockClient>();
 
         // Register Bedrock pricing service
         services.AddSingleton<IBedrockPricingService, BedrockPricingService>();
@@ -45,22 +48,26 @@ public static class ServiceCollectionExtensions
         // Register Bedrock service
         services.AddSingleton<IBedrockService>(serviceProvider =>
         {
-            var bedrockRuntimeClient
-                = serviceProvider.GetRequiredService(typeof(IAmazonBedrockRuntime)) as
-                    IAmazonBedrockRuntime;
+            var bedrockRuntimeClient = serviceProvider.GetRequiredService<IAmazonBedrockRuntime>();
+            var bedrockClient = serviceProvider.GetRequiredService<IAmazonBedrock>();
+            var rateLimiter = serviceProvider.GetRequiredService<IRateLimiterService>();
+            var retryPolicy = serviceProvider.GetRequiredService<IRetryPolicyService>();
             var logger = serviceProvider.GetRequiredService<ILogger<BedrockService>>();
-            var correlationIdProvider = serviceProvider.GetService<ICorrelationIdProvider>();
+            var correlationIdProvider = serviceProvider.GetRequiredService<ICorrelationIdProvider>();
+            var config = serviceProvider.GetRequiredService<IOptions<BedrockConfig>>();
 
             // Optional services for tracing
             var langfuseService = serviceProvider.GetService<ILangfuseService>();
-            IBedrockPricingService pricingService
-                = serviceProvider.GetService<IBedrockPricingService>() ??
-                  new BedrockPricingService();
+            var pricingService = serviceProvider.GetRequiredService<IBedrockPricingService>();
 
             return new BedrockService(
-                bedrockRuntimeClient!,
+                bedrockRuntimeClient,
+                bedrockClient,
+                rateLimiter,
+                retryPolicy,
                 logger,
                 correlationIdProvider,
+                config,
                 langfuseService,
                 pricingService);
         });

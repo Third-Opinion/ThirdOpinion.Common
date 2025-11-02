@@ -48,6 +48,9 @@ public static class ServiceCollectionExtensions
         // Add memory cache if not already added
         services.AddMemoryCache();
 
+        // Register Langfuse schema service
+        services.AddSingleton<ILangfuseSchemaService, LangfuseSchemaService>();
+
         return services;
     }
 }

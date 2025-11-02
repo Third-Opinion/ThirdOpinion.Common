@@ -54,22 +54,18 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.Cognito\ThirdOpinion.Common.Aws.Cognito.csproj"/>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.DynamoDb\ThirdOpinion.Common.Aws.DynamoDb.csproj"/>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.S3\ThirdOpinion.Common.Aws.S3.csproj"/>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.SQS\ThirdOpinion.Common.Aws.SQS.csproj"/>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.HealthLake\ThirdOpinion.Common.Aws.HealthLake.csproj"/>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.Bedrock\ThirdOpinion.Common.Aws.Bedrock.csproj"/>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.AthenaEhr\ThirdOpinion.Common.AthenaEhr.csproj"/>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Misc\ThirdOpinion.Common.Misc.csproj"/>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Logging\ThirdOpinion.Common.Logging.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.AthenaEhr\ThirdOpinion.Common.AthenaEhr.csproj"/>
         <ProjectReference Include="..\ThirdOpinion.Common.Aws.Bedrock\ThirdOpinion.Common.Aws.Bedrock.csproj" />
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.Cognito\ThirdOpinion.Common.Aws.Cognito.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.DynamoDb\ThirdOpinion.Common.Aws.DynamoDb.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.HealthLake\ThirdOpinion.Common.Aws.HealthLake.csproj"/>
         <ProjectReference Include="..\ThirdOpinion.Common.Aws.Misc\ThirdOpinion.Common.Aws.Misc.csproj" />
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.S3\ThirdOpinion.Common.Aws.S3.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.SQS\ThirdOpinion.Common.Aws.SQS.csproj"/>
         <ProjectReference Include="..\ThirdOpinion.Common.Fhir\ThirdOpinion.Common.Fhir.csproj"/>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Fhir.Documents\ThirdOpinion.Common.Fhir.Documents.csproj"/>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Langfuse\ThirdOpinion.Common.Langfuse.csproj"/>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.Misc\ThirdOpinion.Common.Aws.Misc.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Fhir.Documents\ThirdOpinion.Common.Fhir.Documents.csproj"/>
         <ProjectReference Include="..\ThirdOpinion.Common.Langfuse\ThirdOpinion.Common.Langfuse.csproj" />
+        <ProjectReference Include="..\ThirdOpinion.Common.Logging\ThirdOpinion.Common.Logging.csproj"/>
         <ProjectReference Include="..\ThirdOpinion.Common.Misc\ThirdOpinion.Common.Misc.csproj" />
     </ItemGroup>
 

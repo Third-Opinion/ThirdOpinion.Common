@@ -547,3 +547,53 @@ public static class ToolConfigurationHelper
         }
     }
 }
+
+/// <summary>
+///     Represents a simplified LLM processing record without document downloads
+/// </summary>
+public class LlmRecord
+{
+    /// <summary>
+    ///     Patient ID for context (required)
+    /// </summary>
+    public required string PatientId { get; set; }
+
+    /// <summary>
+    ///     Practice/Organization ID for context (required)
+    /// </summary>
+    public required string PracticeId { get; set; }
+
+    /// <summary>
+    ///     Optional metadata as key-value pairs (format: "key1=value1;key2=value2")
+    /// </summary>
+    public string? Metadata { get; set; }
+
+    /// <summary>
+    ///     Sequence number for tracking
+    /// </summary>
+    public int SequenceNumber { get; set; }
+
+    /// <summary>
+    ///     Parse metadata string into dictionary
+    /// </summary>
+    public Dictionary<string, string> ParseMetadata()
+    {
+        if (string.IsNullOrWhiteSpace(Metadata))
+            return new Dictionary<string, string>();
+
+        return Metadata
+            .Split(';', StringSplitOptions.RemoveEmptyEntries)
+            .Select(pair => pair.Split('=', 2))
+            .Where(parts => parts.Length == 2)
+            .ToDictionary(parts => parts[0].Trim(), parts => parts[1].Trim());
+    }
+
+    /// <summary>
+    ///     Returns a string representation of the record
+    /// </summary>
+    public override string ToString()
+    {
+        return $"Sequence {SequenceNumber}: Patient {PatientId}, Practice {PracticeId}" +
+               (Metadata != null ? $" (Metadata: {Metadata})" : "");
+    }
+}

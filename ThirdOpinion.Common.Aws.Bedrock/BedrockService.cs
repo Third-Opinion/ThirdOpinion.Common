@@ -3,11 +3,13 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using Amazon.Bedrock;
 using Amazon.Bedrock.Model;
 using Amazon.BedrockRuntime;
 using Amazon.BedrockRuntime.Model;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Polly;
 using ThirdOpinion.Common.Aws.Bedrock.Configuration;
 using ThirdOpinion.Common.Langfuse;
@@ -30,44 +32,49 @@ public class BedrockService : IBedrockService, IDisposable
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    private readonly IAmazonBedrock? _bedrockClient;
+    private readonly IAmazonBedrock _bedrockClient;
     private readonly IAmazonBedrockRuntime _bedrockRuntimeClient;
     private readonly BedrockConfig _config;
     private readonly ICorrelationIdProvider _correlationIdProvider;
     private readonly ILangfuseService? _langfuseService;
     private readonly ILogger<BedrockService> _logger;
     private readonly IBedrockPricingService _pricingService;
-    #pragma warning disable CS0649 // Field is never assigned to
-    private readonly IRateLimiterService? _rateLimiterService;
-    #pragma warning restore CS0649
+    private readonly IRateLimiterService _rateLimiterService;
     private readonly IAsyncPolicy _retryPolicy;
-    #pragma warning disable CS0169 // Field is never used
-    private readonly IRetryPolicyService? _retryPolicyService;
-    #pragma warning restore CS0169
+    private readonly IRetryPolicyService _retryPolicyService;
 
     /// <summary>
     ///     Initializes a new instance of the BedrockService
     /// </summary>
     /// <param name="bedrockRuntimeClient">The AWS Bedrock runtime client</param>
+    /// <param name="bedrockClient">The AWS Bedrock client</param>
+    /// <param name="rateLimiterService">Rate limiter service</param>
+    /// <param name="retryPolicyService">Retry policy service</param>
     /// <param name="logger">Logger instance</param>
-    /// <param name="correlationIdProvider">Optional correlation ID provider</param>
+    /// <param name="correlationIdProvider">Correlation ID provider</param>
+    /// <param name="config">Bedrock configuration</param>
     /// <param name="langfuseService">Optional Langfuse service for tracing</param>
     /// <param name="pricingService">Optional pricing service for cost calculation</param>
     public BedrockService(
         IAmazonBedrockRuntime bedrockRuntimeClient,
+        IAmazonBedrock bedrockClient,
+        IRateLimiterService rateLimiterService,
+        IRetryPolicyService retryPolicyService,
         ILogger<BedrockService> logger,
-        ICorrelationIdProvider? correlationIdProvider = null,
+        ICorrelationIdProvider correlationIdProvider,
+        IOptions<BedrockConfig> config,
         ILangfuseService? langfuseService = null,
         IBedrockPricingService? pricingService = null)
     {
-        _bedrockRuntimeClient = bedrockRuntimeClient ??
-                                throw new ArgumentNullException(nameof(bedrockRuntimeClient));
+        _bedrockRuntimeClient = bedrockRuntimeClient ?? throw new ArgumentNullException(nameof(bedrockRuntimeClient));
+        _bedrockClient = bedrockClient ?? throw new ArgumentNullException(nameof(bedrockClient));
+        _rateLimiterService = rateLimiterService ?? throw new ArgumentNullException(nameof(rateLimiterService));
+        _retryPolicyService = retryPolicyService ?? throw new ArgumentNullException(nameof(retryPolicyService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _correlationIdProvider = correlationIdProvider ?? new SimpleCorrelationIdProvider();
+        _correlationIdProvider = correlationIdProvider ?? throw new ArgumentNullException(nameof(correlationIdProvider));
+        _config = config?.Value ?? throw new ArgumentNullException(nameof(config));
         _langfuseService = langfuseService;
         _pricingService = pricingService ?? new BedrockPricingService();
-        _config = new BedrockConfig();
-        _bedrockClient = new AmazonBedrockClient();
 
         _retryPolicy = CreateRetryPolicy();
     }
@@ -651,6 +658,200 @@ public class BedrockService : IBedrockService, IDisposable
             };
 
         return exception is TimeoutException or TaskCanceledException or HttpRequestException;
+    }
+
+    /// <summary>
+    ///     Substitutes variables in a prompt template using values from an LlmRecord
+    /// </summary>
+    /// <param name="promptTemplate">The prompt template with {{variable}} placeholders</param>
+    /// <param name="record">The LlmRecord containing variable values</param>
+    /// <returns>The prompt with all variables substituted</returns>
+    private string SubstitutePromptVariables(string promptTemplate, LlmRecord record)
+    {
+        string correlationId = _correlationIdProvider.GetCorrelationId();
+        Dictionary<string, string> metadata = record.ParseMetadata();
+
+        // Extract all variables to substitute
+        List<string> variables = ExtractPromptVariables(promptTemplate);
+        string prompt = promptTemplate;
+
+        _logger.LogDebug("Substituting {VariableCount} variables in prompt: {Variables} [CorrelationId: {CorrelationId}]",
+            variables.Count, string.Join(", ", variables), correlationId);
+
+        // Replace each variable with its value
+        foreach (string variable in variables)
+        {
+            string value = GetVariableValue(variable, record, metadata);
+            string placeholder = $"{{{{{variable}}}}}";
+
+            // Use case-insensitive replacement
+            prompt = ReplaceIgnoreCase(prompt, placeholder, value);
+
+            _logger.LogDebug("Substituted variable '{Variable}' with value of length {ValueLength} [CorrelationId: {CorrelationId}]",
+                variable, value.Length, correlationId);
+        }
+
+        return prompt;
+    }
+
+    /// <summary>
+    ///     Substitutes variables in a prompt template using values from a provided dictionary
+    /// </summary>
+    /// <param name="promptTemplate">The prompt template with {{variable}} placeholders</param>
+    /// <param name="variableValues">Dictionary of variable names to values</param>
+    /// <returns>The prompt with all variables substituted</returns>
+    public string SubstitutePromptVariables(string promptTemplate, Dictionary<string, string> variableValues)
+    {
+        string correlationId = _correlationIdProvider.GetCorrelationId();
+
+        // Extract all variables to substitute
+        List<string> variables = ExtractPromptVariables(promptTemplate);
+        string prompt = promptTemplate;
+
+        _logger.LogDebug("Substituting {VariableCount} variables in prompt: {Variables} [CorrelationId: {CorrelationId}]",
+            variables.Count, string.Join(", ", variables), correlationId);
+
+        // Replace each variable with its value
+        foreach (string variable in variables)
+        {
+            // Try case-sensitive lookup first, then case-insensitive
+            if (!variableValues.TryGetValue(variable, out string? value))
+            {
+                string? key = variableValues.Keys.FirstOrDefault(k =>
+                    string.Equals(k, variable, StringComparison.OrdinalIgnoreCase));
+
+                value = key != null ? variableValues[key] : "";
+            }
+
+            string placeholder = $"{{{{{variable}}}}}";
+
+            // Use case-insensitive replacement
+            prompt = ReplaceIgnoreCase(prompt, placeholder, value);
+
+            _logger.LogDebug("Substituted variable '{Variable}' with value of length {ValueLength} [CorrelationId: {CorrelationId}]",
+                variable, value.Length, correlationId);
+        }
+
+        return prompt;
+    }
+
+    /// <summary>
+    ///     Extracts variable names from a prompt template
+    /// </summary>
+    private static List<string> ExtractPromptVariables(string promptTemplate)
+    {
+        if (string.IsNullOrWhiteSpace(promptTemplate))
+            return new List<string>();
+
+        string pattern = @"\{\{\s*([a-zA-Z][a-zA-Z0-9_]*)\s*\}\}";
+        Regex regex = new(pattern, RegexOptions.IgnoreCase);
+
+        var variables = new List<string>();
+        MatchCollection matches = regex.Matches(promptTemplate);
+
+        foreach (Match match in matches)
+        {
+            if (match.Groups.Count > 1)
+            {
+                string variableName = match.Groups[1].Value.Trim();
+                if (!variables.Contains(variableName, StringComparer.OrdinalIgnoreCase))
+                {
+                    variables.Add(variableName);
+                }
+            }
+        }
+
+        return variables;
+    }
+
+    /// <summary>
+    ///     Gets the value for a variable from the record or metadata
+    /// </summary>
+    private static string GetVariableValue(string variableName, LlmRecord record, Dictionary<string, string> metadata)
+    {
+        // Check built-in record field variables
+        string? value = variableName.ToLowerInvariant() switch
+        {
+            "practice_id" or "practiceid" => record.PracticeId,
+            "patient_id" or "patientid" => record.PatientId,
+            _ => null
+        };
+
+        if (value != null)
+            return value;
+
+        // Check metadata (case-sensitive lookup first, then case-insensitive)
+        if (metadata.TryGetValue(variableName, out string? metadataValue))
+            return metadataValue;
+
+        // Try case-insensitive lookup for metadata
+        string? metadataKey = metadata.Keys.FirstOrDefault(k =>
+            string.Equals(k, variableName, StringComparison.OrdinalIgnoreCase));
+
+        if (metadataKey != null)
+            return metadata[metadataKey];
+
+        return "";
+    }
+
+    /// <summary>
+    ///     Replaces a string with another string (case-insensitive)
+    /// </summary>
+    private static string ReplaceIgnoreCase(string source, string oldValue, string newValue)
+    {
+        if (string.IsNullOrEmpty(source) || string.IsNullOrEmpty(oldValue))
+            return source;
+
+        string pattern = Regex.Escape(oldValue);
+        return Regex.Replace(source, pattern, newValue, RegexOptions.IgnoreCase);
+    }
+
+    /// <summary>
+    ///     Extracts configuration values from a Langfuse config dictionary
+    /// </summary>
+    private (string? Model, double? Temperature, double? TopP, int? MaxTokens) ExtractLangfuseConfig(Dictionary<string, object>? config)
+    {
+        if (config == null)
+            return (null, null, null, null);
+
+        string? model = null;
+        double? temperature = null;
+        double? topP = null;
+        int? maxTokens = null;
+
+        if (config.TryGetValue("model", out object? modelValue) && modelValue is string modelStr)
+        {
+            model = modelStr;
+        }
+
+        if (config.TryGetValue("temperature", out object? tempValue))
+        {
+            temperature = Convert.ToDouble(tempValue);
+        }
+
+        if (config.TryGetValue("top_p", out object? topPValue))
+        {
+            topP = Convert.ToDouble(topPValue);
+        }
+
+        if (config.TryGetValue("max_tokens", out object? maxTokensValue))
+        {
+            maxTokens = Convert.ToInt32(maxTokensValue);
+        }
+
+        return (model, temperature, topP, maxTokens);
+    }
+
+    /// <summary>
+    ///     Gets model configuration for a specific model ID
+    /// </summary>
+    private ModelConfig? GetModelConfiguration(string modelId)
+    {
+        if (_config.ModelConfigurations == null)
+            return null;
+
+        return _config.ModelConfigurations.Values
+            .FirstOrDefault(m => string.Equals(m.ModelId, modelId, StringComparison.OrdinalIgnoreCase));
     }
 }
 
