@@ -642,6 +642,14 @@
             <param name="cancellationToken">Cancellation token</param>
             <returns>True if service is accessible, false otherwise</returns>
         </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.IBedrockService.SubstitutePromptVariables(System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+                Substitutes variables in a prompt template using {{variable}} syntax
+            </summary>
+            <param name="promptTemplate">The prompt template with {{variable}} placeholders</param>
+            <param name="variableValues">Dictionary of variable names to values</param>
+            <returns>The prompt with all variables substituted</returns>
+        </member>
         <member name="T:ThirdOpinion.Common.Aws.Bedrock.ServiceCollectionExtensions">
             <summary>
                 Extension methods for registering Bedrock services in the dependency injection container

@@ -265,7 +265,7 @@ var recistObservation = new RecistProgressionObservationBuilder(config)
     .WithRecistResponse("C35571", "Progressive Disease") // PD
     .AddImagingStudy("ImagingStudy/ct-chest-abdomen-001", "CT Chest/Abdomen/Pelvis")
     .AddRadiologyReport("DocumentReference/radiology-report-001", "Radiology interpretation")
-    .AddComponent("Nadir SLD", new Quantity(45.2m, "mm"))
+
     .AddComponent("Current SLD", new Quantity(58.7m, "mm"))  // 30% increase
     .AddComponent("New lesion detected", true)
     .AddBodySite("10200004", "Liver structure") // New liver lesion

@@ -8,7 +8,7 @@ public class BedrockConfig
     /// <summary>
     ///     AWS region for Bedrock service
     /// </summary>
-    public string Region { get; set; } = "us-east-1";
+    public string Region { get; set; } = "us-east-2";
 
     /// <summary>
     ///     Maximum number of retries for API calls
@@ -18,7 +18,7 @@ public class BedrockConfig
     /// <summary>
     ///     Timeout in seconds for API calls
     /// </summary>
-    public int TimeoutSeconds { get; set; } = 30;
+    public int TimeoutSeconds { get; set; } = 120;
 
     /// <summary>
     ///     Request timeout in seconds (alias for TimeoutSeconds)
@@ -37,12 +37,12 @@ public class BedrockConfig
     /// <summary>
     ///     Default maximum tokens for completions
     /// </summary>
-    public int DefaultMaxTokens { get; set; } = 1024;
+    public int DefaultMaxTokens { get; set; } = 4096;
 
     /// <summary>
     ///     Default temperature for model responses
     /// </summary>
-    public double DefaultTemperature { get; set; } = 0.7;
+    public double DefaultTemperature { get; set; } = 0.0;
 
     /// <summary>
     ///     Enable debug logging
@@ -52,7 +52,7 @@ public class BedrockConfig
     /// <summary>
     ///     Rate limit for Bedrock API calls per minute
     /// </summary>
-    public int RateLimitPerMinute { get; set; } = 100;
+    public int RateLimitPerMinute { get; set; } = 20;
 
     /// <summary>
     ///     Model-specific configurations

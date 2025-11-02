@@ -34,6 +34,7 @@ public abstract class BaseIntegrationTest : IAsyncLifetime
     protected readonly IAmazonDynamoDB DynamoDbClient;
     protected readonly IAmazonHealthLake HealthLakeClient;
     protected readonly ILangfuseService? LangfuseService;
+    protected readonly ILangfuseSchemaService? LangfuseSchemaService;
     protected readonly ILogger Logger;
     protected readonly ITestOutputHelper Output;
     protected readonly IAmazonS3 S3Client;
@@ -83,6 +84,7 @@ public abstract class BaseIntegrationTest : IAsyncLifetime
         // Get service clients (optional - may not be configured)
         BedrockService = ServiceProvider.GetService<IBedrockService>();
         LangfuseService = ServiceProvider.GetService<ILangfuseService>();
+        LangfuseSchemaService = ServiceProvider.GetService<ILangfuseSchemaService>();
         SecretsManagerService = ServiceProvider.GetService<ISecretsManagerService>();
     }
 

@@ -154,8 +154,8 @@ public class BedrockFunctionalTests : BaseIntegrationTest
             ModelId = _defaultModelId,
             Prompt = _testPrompt,
             MaxTokens = _maxTokens,
-            Temperature = 0.1,
-            TopP = 0.9
+            Temperature = 0.1
+            // Note: Claude 4.x models don't allow both Temperature and TopP to be set
         };
 
         ModelInvocationResponse response
@@ -194,8 +194,8 @@ public class BedrockFunctionalTests : BaseIntegrationTest
             ModelId = _defaultModelId,
             Prompt = _testPrompt,
             MaxTokens = _maxTokens,
-            Temperature = 0.1,
-            TopP = 0.9
+            Temperature = 0.1
+            // Note: Claude 4.x models don't allow both Temperature and TopP to be set
         };
 
         ModelInvocationResponse response
@@ -207,6 +207,82 @@ public class BedrockFunctionalTests : BaseIntegrationTest
         // Note: We can't easily verify the trace was sent to Langfuse in a functional test
         // without additional infrastructure, but we can verify the request succeeded
         WriteOutput("✓ Request completed successfully with Langfuse integration available");
+    }
+
+    [Fact]
+    public async Task BedrockService_WithLangfusePromptSubstitution_ShouldSubstituteVariables()
+    {
+        if (BedrockService == null)
+        {
+            WriteOutput("⚠️ BedrockService not configured, skipping test");
+            return;
+        }
+
+        if (LangfuseSchemaService == null)
+        {
+            WriteOutput("⚠️ LangfuseSchemaService not configured, skipping test");
+            return;
+        }
+
+        WriteOutput("Testing BedrockService with Langfuse prompt variable substitution...");
+
+        // Retrieve the 'Smoke_Test' prompt from Langfuse
+        WriteOutput("Fetching 'Smoke_Test' prompt from Langfuse...");
+        var promptWithSchema = await LangfuseSchemaService.GetPromptWithSchema("Smoke_Test");
+
+        if (promptWithSchema == null)
+        {
+            WriteOutput("⚠️ 'Smoke_Test' prompt not found in Langfuse, skipping test");
+            return;
+        }
+
+        WriteOutput($"✓ Retrieved prompt: {promptWithSchema.Name} (Version: {promptWithSchema.Version})");
+
+        // Get the prompt template
+        string promptTemplate = promptWithSchema.Prompt;
+        WriteOutput($"Original prompt template: {promptTemplate.Substring(0, Math.Min(100, promptTemplate.Length))}...");
+
+        // Prepare variable substitution
+        var variables = new Dictionary<string, string>
+        {
+            { "DATE_TIME", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") }
+        };
+
+        WriteOutput($"Substituting DATE_TIME with: {variables["DATE_TIME"]}");
+
+        // Substitute variables in the prompt
+        string substitutedPrompt = BedrockService.SubstitutePromptVariables(promptTemplate, variables);
+        WriteOutput($"Substituted prompt: {substitutedPrompt.Substring(0, Math.Min(100, substitutedPrompt.Length))}...");
+
+        // Extract configuration from Langfuse if available
+        string? modelId = promptWithSchema.Config?.ContainsKey("model") == true
+            ? promptWithSchema.Config["model"]?.ToString()
+            : _defaultModelId;
+
+        WriteOutput($"Using model: {modelId}");
+
+        // Invoke the model with the substituted prompt
+        var request = new ModelInvocationRequest
+        {
+            ModelId = modelId ?? _defaultModelId,
+            Prompt = substitutedPrompt,
+            MaxTokens = _maxTokens,
+            Temperature = 0.1
+        };
+
+        WriteOutput("Invoking Bedrock model with substituted prompt...");
+        ModelInvocationResponse response
+            = await BedrockService.InvokeModelAsync(request, "prompt-substitution-test", "1.0");
+
+        // Verify the response
+        response.ShouldNotBeNull();
+        response.Content.ShouldNotBeNullOrEmpty();
+        response.Usage.ShouldNotBeNull();
+
+        WriteOutput($"✓ Response received: {response.Content?.Length ?? 0} characters");
+        WriteOutput($"  Input tokens: {response.Usage.InputTokens}");
+        WriteOutput($"  Output tokens: {response.Usage.OutputTokens}");
+        WriteOutput("✓ Successfully completed prompt variable substitution test");
     }
 
     [Fact]

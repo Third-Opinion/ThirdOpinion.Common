@@ -68,4 +68,12 @@ public interface IBedrockService
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>True if service is accessible, false otherwise</returns>
     Task<bool> TestConnectivityAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Substitutes variables in a prompt template using {{variable}} syntax
+    /// </summary>
+    /// <param name="promptTemplate">The prompt template with {{variable}} placeholders</param>
+    /// <param name="variableValues">Dictionary of variable names to values</param>
+    /// <returns>The prompt with all variables substituted</returns>
+    string SubstitutePromptVariables(string promptTemplate, Dictionary<string, string> variableValues);
 }
