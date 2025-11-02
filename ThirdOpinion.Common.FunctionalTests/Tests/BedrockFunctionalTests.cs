@@ -280,6 +280,7 @@ public class BedrockFunctionalTests : BaseIntegrationTest
         response.Usage.ShouldNotBeNull();
 
         WriteOutput($"✓ Response received: {response.Content?.Length ?? 0} characters");
+        WriteOutput($"✓ Response: {response.Content}");
         WriteOutput($"  Input tokens: {response.Usage.InputTokens}");
         WriteOutput($"  Output tokens: {response.Usage.OutputTokens}");
         WriteOutput("✓ Successfully completed prompt variable substitution test");

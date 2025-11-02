@@ -100,6 +100,7 @@ public static class TestCollectionSetupHelper
         {
             services.Configure<LangfuseConfiguration>(configuration.GetSection("Langfuse"));
             services.AddSingleton<ILangfuseService, LangfuseService>();
+            services.AddSingleton<ILangfuseSchemaService, LangfuseSchemaService>();
         }
 
         // Configure Bedrock pricing service
