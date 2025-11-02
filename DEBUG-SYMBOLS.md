@@ -16,20 +16,20 @@ The ThirdOpinion.Common projects are now configured to generate debug symbols wi
 To enable stepping into ThirdOpinion.Common code in Visual Studio:
 
 1. **Disable "Just My Code"**
-   - Go to Tools → Options → Debugging → General
-   - Uncheck "Enable Just My Code"
+    - Go to Tools → Options → Debugging → General
+    - Uncheck "Enable Just My Code"
 
 2. **Enable Source Link Support**
-   - In the same dialog, check "Enable Source Link support"
+    - In the same dialog, check "Enable Source Link support"
 
 3. **Enable Symbol Server**
-   - Go to Tools → Options → Debugging → Symbols
-   - If publishing to a symbol server, add the symbol server URL
-   - For local development, ensure "Load only specified modules" is unchecked
+    - Go to Tools → Options → Debugging → Symbols
+    - If publishing to a symbol server, add the symbol server URL
+    - For local development, ensure "Load only specified modules" is unchecked
 
 4. **Enable Source Server Support**
-   - Go to Tools → Options → Debugging → General
-   - Check "Enable source server support"
+    - Go to Tools → Options → Debugging → General
+    - Check "Enable source server support"
 
 ## Visual Studio Code / Rider Configuration
 
@@ -73,7 +73,8 @@ To enable stepping into ThirdOpinion.Common code in Visual Studio:
 
 ## Local Development
 
-When working with local project references (not NuGet packages), debugging is automatic. The configuration in `Directory.Build.props` ensures:
+When working with local project references (not NuGet packages), debugging is automatic. The configuration in
+`Directory.Build.props` ensures:
 
 - Debug symbols are always generated
 - Source code is embedded in PDBs
@@ -96,6 +97,7 @@ If automatic symbol loading doesn't work:
 3. Place the PDB next to the DLL in your bin folder
 
 Example:
+
 ```bash
 # Extract symbol package
 unzip ThirdOpinion.Common.Aws.Bedrock.1.0.0-alpha.5.snupkg
@@ -166,6 +168,7 @@ The debug symbol configuration is defined in `Directory.Build.props`:
 ### Sources show as "decompiled"
 
 If sources show as decompiled despite embedded sources:
+
 1. This might be a caching issue - restart your IDE
 2. Verify the PDB was built with `EmbedAllSources=true`
 3. Use a tool like `dotnet-symbol` to verify PDB contents

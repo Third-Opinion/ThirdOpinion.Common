@@ -29,7 +29,7 @@ public class S3UrlGeneratorTests
             .ReturnsAsync(expectedUrl);
 
         // Act
-        var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
+        string result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
 
         // Assert
         result.ShouldBe(expectedUrl);
@@ -52,7 +52,7 @@ public class S3UrlGeneratorTests
             .ReturnsAsync(expectedUrl);
 
         // Act
-        var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
+        string result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
 
         // Assert
         result.ShouldBe(expectedUrl);
@@ -75,7 +75,7 @@ public class S3UrlGeneratorTests
             .ReturnsAsync(expectedUrl);
 
         // Act
-        var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
+        string result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
 
         // Assert
         result.ShouldBe(expectedUrl);
@@ -147,7 +147,7 @@ public class S3UrlGeneratorTests
             .ReturnsAsync(expectedUrl);
 
         // Act
-        var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
+        string result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
 
         // Assert
         result.ShouldBe(expectedUrl);
@@ -187,7 +187,7 @@ public class S3UrlGeneratorTests
             .ReturnsAsync(expectedUrl);
 
         // Act
-        var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
+        string result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
 
         // Assert
         result.ShouldBe(expectedUrl);
@@ -206,7 +206,7 @@ public class S3UrlGeneratorTests
             .ReturnsAsync(expectedUrl);
 
         // Act
-        var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
+        string result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
 
         // Assert
         result.ShouldBe(expectedUrl);
@@ -227,7 +227,7 @@ public class S3UrlGeneratorTests
             .ReturnsAsync(expectedUrl);
 
         // Act
-        var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
+        string result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
 
         // Assert
         result.ShouldBe(expectedUrl);
@@ -251,7 +251,7 @@ public class S3UrlGeneratorTests
             .ReturnsAsync(expectedUrl);
 
         // Act
-        var result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
+        string result = await _urlGenerator.GeneratePreSignedUrl(s3Arn, expiration);
 
         // Assert
         result.ShouldBe(expectedUrl);

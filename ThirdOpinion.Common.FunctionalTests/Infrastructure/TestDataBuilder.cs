@@ -22,7 +22,7 @@ public static class TestDataBuilder
         Demographics.SexEnum? sex = null,
         string? phoneNumber = null)
     {
-        var patientFaker = new Faker<Patient>()
+        Faker<Patient>? patientFaker = new Faker<Patient>()
             .RuleFor(p => p.TenantGuid, _ => Guid.NewGuid())
             .RuleFor(p => p.PatientGuid, _ => Guid.NewGuid())
             .RuleFor(p => p.PatientHuid, f => $"P{f.Random.AlphaNumeric(10).ToUpper()}")

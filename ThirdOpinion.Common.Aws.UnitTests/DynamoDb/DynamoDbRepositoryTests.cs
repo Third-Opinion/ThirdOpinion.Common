@@ -5,6 +5,8 @@ using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.Logging;
 using Moq;
 using ThirdOpinion.Common.Aws.DynamoDb;
+using QueryFilter = ThirdOpinion.Common.Aws.DynamoDb.Filters.QueryFilter;
+using ScanFilter = ThirdOpinion.Common.Aws.DynamoDb.Filters.ScanFilter;
 
 namespace ThirdOpinion.Common.Aws.Tests.DynamoDb;
 
@@ -174,7 +176,7 @@ public class DynamoDbRepositoryTests
             .Returns(asyncSearchMock.Object);
 
         // Act
-        var results = await _repository.QueryAsync<TestEntity>(hashKey);
+        IEnumerable<TestEntity> results = await _repository.QueryAsync<TestEntity>(hashKey);
 
         // Assert
         _contextMock.Verify(x => x.QueryAsync<TestEntity>(hashKey), Times.Once);
@@ -202,10 +204,10 @@ public class DynamoDbRepositoryTests
                     It.IsAny<List<ScanCondition>>()))
             .Returns(asyncSearchMock.Object);
 
-        var filter = new Aws.DynamoDb.Filters.QueryFilter();
+        var filter = new QueryFilter();
 
         // Act
-        var results = await _repository.QueryAsync<TestEntity>(hashKey, filter);
+        IEnumerable<TestEntity> results = await _repository.QueryAsync<TestEntity>(hashKey, filter);
 
         // Assert
         _contextMock.Verify(
@@ -247,7 +249,7 @@ public class DynamoDbRepositoryTests
             .ReturnsAsync(mockResponse);
 
         // Act
-        var result = await _repository.QueryAsync<TestEntity>(queryRequest);
+        QueryResult<TestEntity> result = await _repository.QueryAsync<TestEntity>(queryRequest);
 
         // Assert
         result.ShouldNotBeNull();
@@ -275,7 +277,7 @@ public class DynamoDbRepositoryTests
             .Returns(asyncSearchMock.Object);
 
         // Act
-        var results = await _repository.ScanAsync<TestEntity>();
+        IEnumerable<TestEntity> results = await _repository.ScanAsync<TestEntity>();
 
         // Assert
         _contextMock.Verify(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>()),
@@ -301,10 +303,10 @@ public class DynamoDbRepositoryTests
         _contextMock.Setup(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>()))
             .Returns(asyncSearchMock.Object);
 
-        var filter = new Aws.DynamoDb.Filters.ScanFilter();
+        var filter = new ScanFilter();
 
         // Act
-        var results = await _repository.ScanAsync<TestEntity>(filter);
+        IEnumerable<TestEntity> results = await _repository.ScanAsync<TestEntity>(filter);
 
         // Assert
         _contextMock.Verify(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>()),

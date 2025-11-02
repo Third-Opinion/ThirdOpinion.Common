@@ -38,7 +38,7 @@ public class SqsMessageQueueTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _messageQueue.SendMessageAsync(queueUrl, message);
+        SendMessageResponse result = await _messageQueue.SendMessageAsync(queueUrl, message);
 
         // Assert
         result.ShouldBe(expectedResponse);
@@ -78,7 +78,7 @@ public class SqsMessageQueueTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result
+        SendMessageResponse result
             = await _messageQueue.SendMessageAsync(queueUrl, messageBody, messageAttributes,
                 delaySeconds);
 
@@ -143,7 +143,8 @@ public class SqsMessageQueueTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _messageQueue.SendMessageBatchAsync(queueUrl, messages);
+        SendMessageBatchResponse result
+            = await _messageQueue.SendMessageBatchAsync(queueUrl, messages);
 
         // Assert
         result.ShouldBe(expectedResponse);
@@ -186,7 +187,8 @@ public class SqsMessageQueueTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _messageQueue.SendMessageBatchAsync(queueUrl, entries);
+        SendMessageBatchResponse result
+            = await _messageQueue.SendMessageBatchAsync(queueUrl, entries);
 
         // Assert
         result.ShouldBe(expectedResponse);
@@ -218,7 +220,8 @@ public class SqsMessageQueueTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _messageQueue.ReceiveMessagesAsync(queueUrl, maxMessages,
+        ReceiveMessageResponse result = await _messageQueue.ReceiveMessagesAsync(queueUrl,
+            maxMessages,
             waitTimeSeconds, visibilityTimeout);
 
         // Assert
@@ -313,7 +316,8 @@ public class SqsMessageQueueTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _messageQueue.DeleteMessageAsync(queueUrl, receiptHandle);
+        DeleteMessageResponse result
+            = await _messageQueue.DeleteMessageAsync(queueUrl, receiptHandle);
 
         // Assert
         result.ShouldBe(expectedResponse);
@@ -353,7 +357,8 @@ public class SqsMessageQueueTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _messageQueue.DeleteMessageBatchAsync(queueUrl, entries);
+        DeleteMessageBatchResponse result
+            = await _messageQueue.DeleteMessageBatchAsync(queueUrl, entries);
 
         // Assert
         result.ShouldBe(expectedResponse);
@@ -376,7 +381,7 @@ public class SqsMessageQueueTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result
+        ChangeMessageVisibilityResponse result
             = await _messageQueue.ChangeMessageVisibilityAsync(queueUrl, receiptHandle,
                 visibilityTimeout);
 
@@ -412,7 +417,8 @@ public class SqsMessageQueueTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _messageQueue.GetQueueAttributesAsync(queueUrl, attributeNames);
+        GetQueueAttributesResponse result
+            = await _messageQueue.GetQueueAttributesAsync(queueUrl, attributeNames);
 
         // Assert
         result.ShouldBe(expectedResponse);
@@ -445,7 +451,7 @@ public class SqsMessageQueueTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _messageQueue.CreateQueueAsync(queueName, attributes);
+        CreateQueueResponse result = await _messageQueue.CreateQueueAsync(queueName, attributes);
 
         // Assert
         result.ShouldBe(expectedResponse);
@@ -477,7 +483,7 @@ public class SqsMessageQueueTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _messageQueue.GetQueueUrlAsync(queueName);
+        string result = await _messageQueue.GetQueueUrlAsync(queueName);
 
         // Assert
         result.ShouldBe(expectedQueueUrl);

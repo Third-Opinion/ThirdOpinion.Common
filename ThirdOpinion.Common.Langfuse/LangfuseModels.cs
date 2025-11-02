@@ -1,5 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Amazon.BedrockRuntime.Model;
+using Amazon.Runtime.Documents;
 
 namespace ThirdOpinion.Common.Langfuse;
 
@@ -392,29 +394,29 @@ public class
     /// <summary>
     ///     Converts this prompt with schema to a Bedrock ToolConfiguration
     /// </summary>
-    public Amazon.BedrockRuntime.Model.ToolConfiguration? BuildToolConfiguration()
+    public ToolConfiguration? BuildToolConfiguration()
     {
         if (Schema == null)
             return null;
 
         try
         {
-            var tool = new Amazon.BedrockRuntime.Model.Tool
+            var tool = new Tool
             {
-                ToolSpec = new Amazon.BedrockRuntime.Model.ToolSpecification
+                ToolSpec = new ToolSpecification
                 {
                     Name = ToolName ?? GenerateToolName(),
                     Description = ToolDescription ?? GenerateToolDescription(),
-                    InputSchema = new Amazon.BedrockRuntime.Model.ToolInputSchema
+                    InputSchema = new ToolInputSchema
                     {
-                        Json = new Amazon.Runtime.Documents.Document(Schema.RootElement.GetRawText())
+                        Json = new Document(Schema.RootElement.GetRawText())
                     }
                 }
             };
 
-            return new Amazon.BedrockRuntime.Model.ToolConfiguration
+            return new ToolConfiguration
             {
-                Tools = new List<Amazon.BedrockRuntime.Model.Tool> { tool }
+                Tools = new List<Tool> { tool }
             };
         }
         catch (Exception)

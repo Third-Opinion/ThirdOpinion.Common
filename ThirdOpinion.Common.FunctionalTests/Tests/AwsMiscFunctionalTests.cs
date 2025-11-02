@@ -47,7 +47,8 @@ public class AwsMiscFunctionalTests : BaseIntegrationTest
         try
         {
             // Try to retrieve a secret using the configured service
-            var retrievedValues = await SecretsManagerService.GetSecretAsync();
+            Dictionary<string, string>? retrievedValues
+                = await SecretsManagerService.GetSecretAsync();
 
             WriteOutput($"Retrieved secret with {retrievedValues?.Count ?? 0} key-value pairs");
 

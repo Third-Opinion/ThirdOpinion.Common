@@ -5,13 +5,13 @@ using Microsoft.Extensions.Logging;
 namespace ThirdOpinion.Common.Langfuse;
 
 /// <summary>
-/// Service for retrieving and caching Langfuse prompts with schema information
-/// and building tool configurations for Bedrock
+///     Service for retrieving and caching Langfuse prompts with schema information
+///     and building tool configurations for Bedrock
 /// </summary>
 public class LangfuseSchemaService : ILangfuseSchemaService
 {
-    private readonly ILangfuseService _langfuseService;
     private readonly IMemoryCache _cache;
+    private readonly ILangfuseService _langfuseService;
     private readonly ILogger<LangfuseSchemaService> _logger;
 
     public LangfuseSchemaService(
@@ -19,7 +19,8 @@ public class LangfuseSchemaService : ILangfuseSchemaService
         IMemoryCache cache,
         ILogger<LangfuseSchemaService> logger)
     {
-        _langfuseService = langfuseService ?? throw new ArgumentNullException(nameof(langfuseService));
+        _langfuseService
+            = langfuseService ?? throw new ArgumentNullException(nameof(langfuseService));
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -31,11 +32,9 @@ public class LangfuseSchemaService : ILangfuseSchemaService
         TimeSpan? cacheDuration = null)
     {
         if (string.IsNullOrWhiteSpace(promptName))
-        {
             throw new ArgumentException("Prompt name cannot be null or empty", nameof(promptName));
-        }
 
-        var cacheKey = version.HasValue
+        string cacheKey = version.HasValue
             ? $"langfuse:prompt:{promptName}:v{version}"
             : $"langfuse:prompt:{promptName}:latest";
 
@@ -52,17 +51,20 @@ public class LangfuseSchemaService : ILangfuseSchemaService
         {
             // Fetch from Langfuse
             var versionString = version?.ToString();
-            var prompt = await _langfuseService.GetPromptAsync(promptName, versionString);
+            LangfusePromptResponse? prompt
+                = await _langfuseService.GetPromptAsync(promptName, versionString);
 
             if (prompt == null)
             {
-                _logger.LogWarning("Prompt '{PromptName}' version '{Version}' not found in Langfuse",
+                _logger.LogWarning(
+                    "Prompt '{PromptName}' version '{Version}' not found in Langfuse",
                     promptName, version?.ToString() ?? "latest");
                 return null;
             }
 
             // Convert to LangfusePromptWithSchema
-            var promptWithSchema = LangfuseSchemaHelper.ConvertToPromptWithSchema(prompt);
+            LangfusePromptWithSchema promptWithSchema
+                = LangfuseSchemaHelper.ConvertToPromptWithSchema(prompt);
 
             // Cache it
             var cacheOptions = new MemoryCacheEntryOptions
@@ -73,14 +75,16 @@ public class LangfuseSchemaService : ILangfuseSchemaService
 
             _cache.Set(cacheKey, promptWithSchema, cacheOptions);
 
-            _logger.LogDebug("Successfully cached prompt with schema for {CacheKey}. Has schema: {HasSchema}",
+            _logger.LogDebug(
+                "Successfully cached prompt with schema for {CacheKey}. Has schema: {HasSchema}",
                 cacheKey, promptWithSchema.Schema != null);
 
             return promptWithSchema;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving prompt with schema for {PromptName} version {Version}",
+            _logger.LogError(ex,
+                "Error retrieving prompt with schema for {PromptName} version {Version}",
                 promptName, version?.ToString() ?? "latest");
             return null;
         }
@@ -92,11 +96,9 @@ public class LangfuseSchemaService : ILangfuseSchemaService
         int? version = null)
     {
         if (string.IsNullOrWhiteSpace(promptName))
-        {
             throw new ArgumentException("Prompt name cannot be null or empty", nameof(promptName));
-        }
 
-        var cacheKey = version.HasValue
+        string cacheKey = version.HasValue
             ? $"langfuse:toolconfig:{promptName}:v{version}"
             : $"langfuse:toolconfig:{promptName}:latest";
 
@@ -111,15 +113,16 @@ public class LangfuseSchemaService : ILangfuseSchemaService
 
         try
         {
-            var prompt = await GetPromptWithSchema(promptName, version);
+            LangfusePromptWithSchema? prompt = await GetPromptWithSchema(promptName, version);
             if (prompt?.Schema == null)
             {
-                _logger.LogDebug("No schema available for prompt {PromptName}, no tool configuration created",
+                _logger.LogDebug(
+                    "No schema available for prompt {PromptName}, no tool configuration created",
                     promptName);
                 return null;
             }
 
-            var toolConfig = prompt.BuildToolConfiguration();
+            ToolConfiguration? toolConfig = prompt.BuildToolConfiguration();
 
             if (toolConfig != null)
             {
@@ -131,19 +134,23 @@ public class LangfuseSchemaService : ILangfuseSchemaService
 
                 _cache.Set(cacheKey, toolConfig, cacheOptions);
 
-                _logger.LogInformation("Successfully built and cached tool configuration for prompt {PromptName}. Tool name: {ToolName}",
+                _logger.LogInformation(
+                    "Successfully built and cached tool configuration for prompt {PromptName}. Tool name: {ToolName}",
                     promptName, toolConfig.Tools?.FirstOrDefault()?.ToolSpec?.Name ?? "unknown");
             }
             else
             {
-                _logger.LogWarning("Failed to build tool configuration from schema for prompt {PromptName}", promptName);
+                _logger.LogWarning(
+                    "Failed to build tool configuration from schema for prompt {PromptName}",
+                    promptName);
             }
 
             return toolConfig;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error building tool configuration for prompt {PromptName} version {Version}",
+            _logger.LogError(ex,
+                "Error building tool configuration for prompt {PromptName} version {Version}",
                 promptName, version?.ToString() ?? "latest");
             return null;
         }
@@ -153,9 +160,7 @@ public class LangfuseSchemaService : ILangfuseSchemaService
     public void InvalidateCache(string promptName, int? version = null)
     {
         if (string.IsNullOrWhiteSpace(promptName))
-        {
             throw new ArgumentException("Prompt name cannot be null or empty", nameof(promptName));
-        }
 
         if (version.HasValue)
         {
@@ -166,7 +171,8 @@ public class LangfuseSchemaService : ILangfuseSchemaService
             _cache.Remove(promptCacheKey);
             _cache.Remove(toolConfigCacheKey);
 
-            _logger.LogInformation("Invalidated cache for {PromptName} version {Version}", promptName, version);
+            _logger.LogInformation("Invalidated cache for {PromptName} version {Version}",
+                promptName, version);
         }
         else
         {

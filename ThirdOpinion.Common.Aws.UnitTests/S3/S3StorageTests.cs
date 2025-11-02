@@ -38,7 +38,7 @@ public class S3StorageTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result
+        PutObjectResponse result
             = await _s3Storage.PutObjectAsync(bucketName, key, stream, contentType, metadata);
 
         // Assert
@@ -69,7 +69,8 @@ public class S3StorageTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _s3Storage.PutObjectAsync(bucketName, key, content, contentType);
+        PutObjectResponse result
+            = await _s3Storage.PutObjectAsync(bucketName, key, content, contentType);
 
         // Assert
         result.ShouldBe(expectedResponse);
@@ -144,7 +145,7 @@ public class S3StorageTests
             .ReturnsAsync(mockResponse);
 
         // Act
-        var result = await _s3Storage.GetObjectAsync(bucketName, key);
+        Stream result = await _s3Storage.GetObjectAsync(bucketName, key);
 
         // Assert
         result.ShouldBe(responseStream);
@@ -175,7 +176,7 @@ public class S3StorageTests
             .ReturnsAsync(mockResponse);
 
         // Act
-        var result = await _s3Storage.GetObjectAsStringAsync(bucketName, key);
+        string result = await _s3Storage.GetObjectAsStringAsync(bucketName, key);
 
         // Assert
         result.ShouldBe(expectedContent);
@@ -200,7 +201,7 @@ public class S3StorageTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _s3Storage.GetObjectMetadataAsync(bucketName, key);
+        GetObjectMetadataResponse result = await _s3Storage.GetObjectMetadataAsync(bucketName, key);
 
         // Assert
         result.ShouldBe(expectedResponse);
@@ -223,7 +224,7 @@ public class S3StorageTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _s3Storage.DeleteObjectAsync(bucketName, key);
+        DeleteObjectResponse result = await _s3Storage.DeleteObjectAsync(bucketName, key);
 
         // Assert
         result.ShouldBe(expectedResponse);
@@ -253,7 +254,7 @@ public class S3StorageTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _s3Storage.DeleteObjectsAsync(bucketName, keys);
+        DeleteObjectsResponse result = await _s3Storage.DeleteObjectsAsync(bucketName, keys);
 
         // Assert
         result.ShouldBe(expectedResponse);
@@ -279,7 +280,7 @@ public class S3StorageTests
             .ReturnsAsync(new GetObjectMetadataResponse { HttpStatusCode = HttpStatusCode.OK });
 
         // Act
-        var result = await _s3Storage.ObjectExistsAsync(bucketName, key);
+        bool result = await _s3Storage.ObjectExistsAsync(bucketName, key);
 
         // Assert
         result.ShouldBeTrue();
@@ -299,7 +300,7 @@ public class S3StorageTests
                 new AmazonS3Exception("Not Found") { StatusCode = HttpStatusCode.NotFound });
 
         // Act
-        var result = await _s3Storage.ObjectExistsAsync(bucketName, key);
+        bool result = await _s3Storage.ObjectExistsAsync(bucketName, key);
 
         // Assert
         result.ShouldBeFalse();
@@ -331,7 +332,8 @@ public class S3StorageTests
             .ReturnsAsync(mockResponse);
 
         // Act
-        var result = await _s3Storage.ListObjectsAsync(bucketName, prefix, maxKeys);
+        IEnumerable<S3Object> result
+            = await _s3Storage.ListObjectsAsync(bucketName, prefix, maxKeys);
 
         // Assert
         result.ShouldBe(expectedObjects);
@@ -358,7 +360,8 @@ public class S3StorageTests
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _s3Storage.CopyObjectAsync(sourceBucket, sourceKey, destBucket, destKey);
+        CopyObjectResponse result
+            = await _s3Storage.CopyObjectAsync(sourceBucket, sourceKey, destBucket, destKey);
 
         // Assert
         result.ShouldBe(expectedResponse);
@@ -384,7 +387,7 @@ public class S3StorageTests
             .ReturnsAsync(expectedUrl);
 
         // Act
-        var result = await _s3Storage.GeneratePresignedUrlAsync(bucketName, key, expiration);
+        string result = await _s3Storage.GeneratePresignedUrlAsync(bucketName, key, expiration);
 
         // Assert
         result.ShouldBe(expectedUrl);
@@ -411,7 +414,7 @@ public class S3StorageTests
             .ReturnsAsync(expectedUrl);
 
         // Act
-        var result
+        string result
             = await _s3Storage.GeneratePresignedPutUrlAsync(bucketName, key, expiration,
                 contentType, metadata);
 

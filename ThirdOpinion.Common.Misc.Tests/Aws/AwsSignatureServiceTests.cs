@@ -37,7 +37,8 @@ public class AwsSignatureServiceTests
             "https://healthlake.us-east-1.amazonaws.com/datastore/test/r4/Patient/123");
 
         // Act
-        var signedRequest = await _service.SignRequestAsync(request, "healthlake", "us-east-1");
+        HttpRequestMessage signedRequest
+            = await _service.SignRequestAsync(request, "healthlake", "us-east-1");
 
         // Assert
         signedRequest.ShouldNotBeNull();
@@ -55,7 +56,8 @@ public class AwsSignatureServiceTests
             "https://healthlake.us-east-1.amazonaws.com/datastore/test/r4/Patient/123");
 
         // Act
-        var signedRequest = await _service.SignRequestAsync(request, "healthlake", "us-east-1");
+        HttpRequestMessage signedRequest
+            = await _service.SignRequestAsync(request, "healthlake", "us-east-1");
 
         // Assert - Authorization can be set as either typed header or raw header
         string authValue = null;
@@ -81,7 +83,7 @@ public class AwsSignatureServiceTests
         var requestBody = "{\"resourceType\":\"Patient\",\"id\":\"123\"}";
 
         // Act
-        var signedRequest
+        HttpRequestMessage signedRequest
             = await _service.SignRequestWithBodyAsync(request, requestBody, "healthlake",
                 "us-east-1");
 
@@ -89,11 +91,12 @@ public class AwsSignatureServiceTests
         signedRequest.ShouldNotBeNull();
         signedRequest.Content.ShouldNotBeNull();
 
-        var contentString = await signedRequest.Content.ReadAsStringAsync();
+        string contentString = await signedRequest.Content.ReadAsStringAsync();
         contentString.ShouldBe(requestBody);
 
         // Content hash header should be based on the body
-        var contentHash = signedRequest.Headers.GetValues("X-Amz-Content-Sha256").FirstOrDefault();
+        string? contentHash
+            = signedRequest.Headers.GetValues("X-Amz-Content-Sha256").FirstOrDefault();
         contentHash.ShouldNotBeNull();
         contentHash.ShouldNotBe(
             "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"); // Empty string hash
@@ -107,7 +110,8 @@ public class AwsSignatureServiceTests
             "https://healthlake.us-east-1.amazonaws.com/datastore/test/r4/Patient/123");
 
         // Act
-        var signedRequest = await _service.SignRequestAsync(request, "healthlake", "us-east-1");
+        HttpRequestMessage signedRequest
+            = await _service.SignRequestAsync(request, "healthlake", "us-east-1");
 
         // Assert
         // For GET requests, X-Amz-Content-Sha256 header is not added per AWS best practices
@@ -128,7 +132,8 @@ public class AwsSignatureServiceTests
         request.Headers.Add("User-Agent", "FhirTools/1.0");
 
         // Act
-        var signedRequest = await _service.SignRequestAsync(request, "healthlake", "us-east-1");
+        HttpRequestMessage signedRequest
+            = await _service.SignRequestAsync(request, "healthlake", "us-east-1");
 
         // Assert
         signedRequest.Headers.Contains("X-Correlation-ID").ShouldBeTrue();
@@ -146,10 +151,11 @@ public class AwsSignatureServiceTests
             "https://healthlake.eu-west-1.amazonaws.com/datastore/test/r4/Patient/123");
 
         // Act
-        var signedRequest = await _service.SignRequestAsync(request, "healthlake", "eu-west-1");
+        HttpRequestMessage signedRequest
+            = await _service.SignRequestAsync(request, "healthlake", "eu-west-1");
 
         // Assert
-        var authValue = signedRequest.Headers.GetValues("Authorization").FirstOrDefault();
+        string? authValue = signedRequest.Headers.GetValues("Authorization").FirstOrDefault();
         authValue.ShouldNotBeNull();
         authValue.ShouldContain("/eu-west-1/healthlake/aws4_request");
     }
@@ -162,10 +168,11 @@ public class AwsSignatureServiceTests
             "https://s3.us-east-1.amazonaws.com/mybucket/mykey");
 
         // Act
-        var signedRequest = await _service.SignRequestAsync(request, "s3", "us-east-1");
+        HttpRequestMessage signedRequest
+            = await _service.SignRequestAsync(request, "s3", "us-east-1");
 
         // Assert
-        var authValue = signedRequest.Headers.GetValues("Authorization").FirstOrDefault();
+        string? authValue = signedRequest.Headers.GetValues("Authorization").FirstOrDefault();
         authValue.ShouldNotBeNull();
         authValue.ShouldContain("/us-east-1/s3/aws4_request");
     }

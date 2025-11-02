@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 
-namespace ThirdOpinion.Common.Aws.S3.StringExtensions;
+namespace ThirdOpinion.Common.Misc.StringExtensions;
 
 /// <summary>
 ///     Provides extension methods for string manipulation and conversion

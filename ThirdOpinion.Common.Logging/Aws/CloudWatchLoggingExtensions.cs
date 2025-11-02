@@ -40,8 +40,9 @@ public static class CloudWatchLoggingExtensions
                         ?? Environment.GetEnvironmentVariable("AWS_DEFAULT_REGION")
                         ?? "us-east-1";
 
-        var retentionDays = cloudWatchConfig.GetValue("RetentionDays", 30);
-        var minimumLevel = cloudWatchConfig.GetValue("MinimumLevel", LogEventLevel.Information);
+        int retentionDays = cloudWatchConfig.GetValue("RetentionDays", 30);
+        LogEventLevel minimumLevel
+            = cloudWatchConfig.GetValue("MinimumLevel", LogEventLevel.Information);
 
         var options = new AWSLoggerConfig
         {
@@ -62,7 +63,7 @@ public static class CloudWatchLoggingExtensions
             options.Credentials = new BasicAWSCredentials(accessKeyId, secretAccessKey);
 
         // Create log group if needed
-        var createLogGroup = cloudWatchConfig.GetValue("CreateLogGroup", true);
+        bool createLogGroup = cloudWatchConfig.GetValue("CreateLogGroup", true);
         if (createLogGroup)
             EnsureLogGroupExists(options, logGroupName, retentionDays).GetAwaiter().GetResult();
 

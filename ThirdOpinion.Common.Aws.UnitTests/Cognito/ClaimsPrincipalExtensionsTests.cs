@@ -16,7 +16,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetUserId();
+        string result = principal.GetUserId();
 
         // Assert
         result.ShouldBe("user123");
@@ -33,7 +33,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetUserId();
+        string result = principal.GetUserId();
 
         // Assert
         result.ShouldBe("sub456");
@@ -51,7 +51,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetUserId();
+        string result = principal.GetUserId();
 
         // Assert
         result.ShouldBe("user123");
@@ -64,7 +64,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity());
 
         // Act
-        var result = principal.GetUserId();
+        string result = principal.GetUserId();
 
         // Assert
         result.ShouldBe(string.Empty);
@@ -81,7 +81,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetUsername();
+        string result = principal.GetUsername();
 
         // Assert
         result.ShouldBe("johndoe");
@@ -98,7 +98,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetUsername();
+        string result = principal.GetUsername();
 
         // Assert
         result.ShouldBe("john.doe");
@@ -115,7 +115,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetEmail();
+        string result = principal.GetEmail();
 
         // Assert
         result.ShouldBe("john.doe@example.com");
@@ -132,7 +132,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetEmail();
+        string result = principal.GetEmail();
 
         // Assert
         result.ShouldBe("john.doe@test.com");
@@ -149,7 +149,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetFirstName();
+        string result = principal.GetFirstName();
 
         // Assert
         result.ShouldBe("John");
@@ -166,7 +166,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetLastName();
+        string result = principal.GetLastName();
 
         // Assert
         result.ShouldBe("Doe");
@@ -183,7 +183,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetGroups();
+        List<string>? result = principal.GetGroups();
 
         // Assert
         result.ShouldNotBeNull();
@@ -204,7 +204,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetGroups();
+        List<string>? result = principal.GetGroups();
 
         // Assert
         result.ShouldNotBeNull();
@@ -221,7 +221,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity());
 
         // Act
-        var result = principal.GetGroups();
+        List<string>? result = principal.GetGroups();
 
         // Assert
         result.ShouldBeNull();
@@ -238,7 +238,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetGroups();
+        List<string>? result = principal.GetGroups();
 
         // Assert
         result.ShouldBeNull();
@@ -256,7 +256,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetTenantGuid();
+        Guid? result = principal.GetTenantGuid();
 
         // Assert
         result.ShouldBe(expectedGuid);
@@ -274,7 +274,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetTenantGuid();
+        Guid? result = principal.GetTenantGuid();
 
         // Assert
         result.ShouldBe(expectedGuid);
@@ -291,7 +291,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetTenantGuid();
+        Guid? result = principal.GetTenantGuid();
 
         // Assert
         result.ShouldBeNull();
@@ -304,7 +304,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity());
 
         // Act
-        var result = principal.GetTenantGuid();
+        Guid? result = principal.GetTenantGuid();
 
         // Assert
         result.ShouldBeNull();
@@ -321,7 +321,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetTenantName();
+        string result = principal.GetTenantName();
 
         // Assert
         result.ShouldBe("Acme Corp");
@@ -338,7 +338,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.GetTenantName();
+        string result = principal.GetTenantName();
 
         // Assert
         result.ShouldBe("Test Company");
@@ -355,7 +355,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.IsInGroup("Admin");
+        bool result = principal.IsInGroup("Admin");
 
         // Assert
         result.ShouldBeTrue();
@@ -372,7 +372,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
 
         // Act
-        var result = principal.IsInGroup("Admin");
+        bool result = principal.IsInGroup("Admin");
 
         // Assert
         result.ShouldBeFalse();
@@ -385,7 +385,7 @@ public class ClaimsPrincipalExtensionsTests
         var principal = new ClaimsPrincipal(new ClaimsIdentity());
 
         // Act
-        var result = principal.IsInGroup("Admin");
+        bool result = principal.IsInGroup("Admin");
 
         // Assert
         result.ShouldBeFalse();

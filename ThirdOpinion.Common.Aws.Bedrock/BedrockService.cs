@@ -66,12 +66,16 @@ public class BedrockService : IBedrockService, IDisposable
         ILangfuseService? langfuseService = null,
         IBedrockPricingService? pricingService = null)
     {
-        _bedrockRuntimeClient = bedrockRuntimeClient ?? throw new ArgumentNullException(nameof(bedrockRuntimeClient));
+        _bedrockRuntimeClient = bedrockRuntimeClient ??
+                                throw new ArgumentNullException(nameof(bedrockRuntimeClient));
         _bedrockClient = bedrockClient ?? throw new ArgumentNullException(nameof(bedrockClient));
-        _rateLimiterService = rateLimiterService ?? throw new ArgumentNullException(nameof(rateLimiterService));
-        _retryPolicyService = retryPolicyService ?? throw new ArgumentNullException(nameof(retryPolicyService));
+        _rateLimiterService = rateLimiterService ??
+                              throw new ArgumentNullException(nameof(rateLimiterService));
+        _retryPolicyService = retryPolicyService ??
+                              throw new ArgumentNullException(nameof(retryPolicyService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _correlationIdProvider = correlationIdProvider ?? throw new ArgumentNullException(nameof(correlationIdProvider));
+        _correlationIdProvider = correlationIdProvider ??
+                                 throw new ArgumentNullException(nameof(correlationIdProvider));
         _config = config?.Value ?? throw new ArgumentNullException(nameof(config));
         _langfuseService = langfuseService;
         _pricingService = pricingService ?? new BedrockPricingService();
@@ -675,19 +679,21 @@ public class BedrockService : IBedrockService, IDisposable
         List<string> variables = ExtractPromptVariables(promptTemplate);
         string prompt = promptTemplate;
 
-        _logger.LogDebug("Substituting {VariableCount} variables in prompt: {Variables} [CorrelationId: {CorrelationId}]",
+        _logger.LogDebug(
+            "Substituting {VariableCount} variables in prompt: {Variables} [CorrelationId: {CorrelationId}]",
             variables.Count, string.Join(", ", variables), correlationId);
 
         // Replace each variable with its value
         foreach (string variable in variables)
         {
             string value = GetVariableValue(variable, record, metadata);
-            string placeholder = $"{{{{{variable}}}}}";
+            var placeholder = $"{{{{{variable}}}}}";
 
             // Use case-insensitive replacement
             prompt = ReplaceIgnoreCase(prompt, placeholder, value);
 
-            _logger.LogDebug("Substituted variable '{Variable}' with value of length {ValueLength} [CorrelationId: {CorrelationId}]",
+            _logger.LogDebug(
+                "Substituted variable '{Variable}' with value of length {ValueLength} [CorrelationId: {CorrelationId}]",
                 variable, value.Length, correlationId);
         }
 
@@ -700,7 +706,8 @@ public class BedrockService : IBedrockService, IDisposable
     /// <param name="promptTemplate">The prompt template with {{variable}} placeholders</param>
     /// <param name="variableValues">Dictionary of variable names to values</param>
     /// <returns>The prompt with all variables substituted</returns>
-    public string SubstitutePromptVariables(string promptTemplate, Dictionary<string, string> variableValues)
+    public string SubstitutePromptVariables(string promptTemplate,
+        Dictionary<string, string> variableValues)
     {
         string correlationId = _correlationIdProvider.GetCorrelationId();
 
@@ -708,7 +715,8 @@ public class BedrockService : IBedrockService, IDisposable
         List<string> variables = ExtractPromptVariables(promptTemplate);
         string prompt = promptTemplate;
 
-        _logger.LogDebug("Substituting {VariableCount} variables in prompt: {Variables} [CorrelationId: {CorrelationId}]",
+        _logger.LogDebug(
+            "Substituting {VariableCount} variables in prompt: {Variables} [CorrelationId: {CorrelationId}]",
             variables.Count, string.Join(", ", variables), correlationId);
 
         // Replace each variable with its value
@@ -723,12 +731,13 @@ public class BedrockService : IBedrockService, IDisposable
                 value = key != null ? variableValues[key] : "";
             }
 
-            string placeholder = $"{{{{{variable}}}}}";
+            var placeholder = $"{{{{{variable}}}}}";
 
             // Use case-insensitive replacement
             prompt = ReplaceIgnoreCase(prompt, placeholder, value);
 
-            _logger.LogDebug("Substituted variable '{Variable}' with value of length {ValueLength} [CorrelationId: {CorrelationId}]",
+            _logger.LogDebug(
+                "Substituted variable '{Variable}' with value of length {ValueLength} [CorrelationId: {CorrelationId}]",
                 variable, value.Length, correlationId);
         }
 
@@ -743,23 +752,19 @@ public class BedrockService : IBedrockService, IDisposable
         if (string.IsNullOrWhiteSpace(promptTemplate))
             return new List<string>();
 
-        string pattern = @"\{\{\s*([a-zA-Z][a-zA-Z0-9_]*)\s*\}\}";
+        var pattern = @"\{\{\s*([a-zA-Z][a-zA-Z0-9_]*)\s*\}\}";
         Regex regex = new(pattern, RegexOptions.IgnoreCase);
 
         var variables = new List<string>();
         MatchCollection matches = regex.Matches(promptTemplate);
 
         foreach (Match match in matches)
-        {
             if (match.Groups.Count > 1)
             {
                 string variableName = match.Groups[1].Value.Trim();
                 if (!variables.Contains(variableName, StringComparer.OrdinalIgnoreCase))
-                {
                     variables.Add(variableName);
-                }
             }
-        }
 
         return variables;
     }
@@ -767,7 +772,9 @@ public class BedrockService : IBedrockService, IDisposable
     /// <summary>
     ///     Gets the value for a variable from the record or metadata
     /// </summary>
-    private static string GetVariableValue(string variableName, LlmRecord record, Dictionary<string, string> metadata)
+    private static string GetVariableValue(string variableName,
+        LlmRecord record,
+        Dictionary<string, string> metadata)
     {
         // Check built-in record field variables
         string? value = variableName.ToLowerInvariant() switch
@@ -809,7 +816,8 @@ public class BedrockService : IBedrockService, IDisposable
     /// <summary>
     ///     Extracts configuration values from a Langfuse config dictionary
     /// </summary>
-    private (string? Model, double? Temperature, double? TopP, int? MaxTokens) ExtractLangfuseConfig(Dictionary<string, object>? config)
+    private (string? Model, double? Temperature, double? TopP, int? MaxTokens)
+        ExtractLangfuseConfig(Dictionary<string, object>? config)
     {
         if (config == null)
             return (null, null, null, null);
@@ -820,24 +828,15 @@ public class BedrockService : IBedrockService, IDisposable
         int? maxTokens = null;
 
         if (config.TryGetValue("model", out object? modelValue) && modelValue is string modelStr)
-        {
             model = modelStr;
-        }
 
         if (config.TryGetValue("temperature", out object? tempValue))
-        {
             temperature = Convert.ToDouble(tempValue);
-        }
 
-        if (config.TryGetValue("top_p", out object? topPValue))
-        {
-            topP = Convert.ToDouble(topPValue);
-        }
+        if (config.TryGetValue("top_p", out object? topPValue)) topP = Convert.ToDouble(topPValue);
 
         if (config.TryGetValue("max_tokens", out object? maxTokensValue))
-        {
             maxTokens = Convert.ToInt32(maxTokensValue);
-        }
 
         return (model, temperature, topP, maxTokens);
     }
@@ -851,7 +850,8 @@ public class BedrockService : IBedrockService, IDisposable
             return null;
 
         return _config.ModelConfigurations.Values
-            .FirstOrDefault(m => string.Equals(m.ModelId, modelId, StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(m =>
+                string.Equals(m.ModelId, modelId, StringComparison.OrdinalIgnoreCase));
     }
 }
 

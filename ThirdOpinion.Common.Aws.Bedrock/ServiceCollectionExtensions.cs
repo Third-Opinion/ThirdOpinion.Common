@@ -53,7 +53,8 @@ public static class ServiceCollectionExtensions
             var rateLimiter = serviceProvider.GetRequiredService<IRateLimiterService>();
             var retryPolicy = serviceProvider.GetRequiredService<IRetryPolicyService>();
             var logger = serviceProvider.GetRequiredService<ILogger<BedrockService>>();
-            var correlationIdProvider = serviceProvider.GetRequiredService<ICorrelationIdProvider>();
+            var correlationIdProvider
+                = serviceProvider.GetRequiredService<ICorrelationIdProvider>();
             var config = serviceProvider.GetRequiredService<IOptions<BedrockConfig>>();
 
             // Optional services for tracing

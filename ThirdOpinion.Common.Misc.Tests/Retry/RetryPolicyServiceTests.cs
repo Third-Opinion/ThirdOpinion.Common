@@ -1,5 +1,6 @@
 using System.Net;
 using Microsoft.Extensions.Logging;
+using Polly;
 using ThirdOpinion.Common.Misc.Retry;
 
 namespace ThirdOpinion.Common.Misc.Tests.Retry;
@@ -22,7 +23,7 @@ public class RetryPolicyServiceTests
     public void GetRetryPolicy_ShouldReturnPolicy_ForAnyServiceName(string serviceName)
     {
         // Act
-        var policy = _retryPolicyService.GetRetryPolicy(serviceName);
+        IAsyncPolicy<HttpResponseMessage> policy = _retryPolicyService.GetRetryPolicy(serviceName);
 
         // Assert
         policy.ShouldNotBeNull();
@@ -35,7 +36,8 @@ public class RetryPolicyServiceTests
     public void GetCircuitBreakerPolicy_ShouldReturnPolicy_ForAnyServiceName(string serviceName)
     {
         // Act
-        var policy = _retryPolicyService.GetCircuitBreakerPolicy(serviceName);
+        IAsyncPolicy<HttpResponseMessage> policy
+            = _retryPolicyService.GetCircuitBreakerPolicy(serviceName);
 
         // Assert
         policy.ShouldNotBeNull();
@@ -48,7 +50,8 @@ public class RetryPolicyServiceTests
     public void GetCombinedPolicy_ShouldReturnPolicy_ForAnyServiceName(string serviceName)
     {
         // Act
-        var policy = _retryPolicyService.GetCombinedPolicy(serviceName);
+        IAsyncPolicy<HttpResponseMessage> policy
+            = _retryPolicyService.GetCombinedPolicy(serviceName);
 
         // Assert
         policy.ShouldNotBeNull();
@@ -58,7 +61,8 @@ public class RetryPolicyServiceTests
     public async Task RetryPolicy_ShouldRetryOnTransientErrors()
     {
         // Arrange
-        var policy = _retryPolicyService.GetRetryPolicy("TestService");
+        IAsyncPolicy<HttpResponseMessage>
+            policy = _retryPolicyService.GetRetryPolicy("TestService");
         var callCount = 0;
         var expectedStatusCode = HttpStatusCode.InternalServerError;
 
@@ -83,12 +87,13 @@ public class RetryPolicyServiceTests
     public async Task RetryPolicy_ShouldSucceedAfterTransientFailures()
     {
         // Arrange
-        var policy = _retryPolicyService.GetRetryPolicy("TestService");
+        IAsyncPolicy<HttpResponseMessage>
+            policy = _retryPolicyService.GetRetryPolicy("TestService");
         var callCount = 0;
         var successResponse = new HttpResponseMessage(HttpStatusCode.OK);
 
         // Act
-        var result = await policy.ExecuteAsync(async () =>
+        HttpResponseMessage? result = await policy.ExecuteAsync(async () =>
         {
             callCount++;
 
@@ -109,7 +114,8 @@ public class RetryPolicyServiceTests
     public async Task RetryPolicy_ShouldNotRetryOnNonTransientErrors()
     {
         // Arrange
-        var policy = _retryPolicyService.GetRetryPolicy("TestService");
+        IAsyncPolicy<HttpResponseMessage>
+            policy = _retryPolicyService.GetRetryPolicy("TestService");
         var callCount = 0;
 
         // Act & Assert
@@ -134,7 +140,8 @@ public class RetryPolicyServiceTests
     public async Task RetryPolicy_ShouldNotRetryOnClientErrors(HttpStatusCode statusCode)
     {
         // Arrange
-        var policy = _retryPolicyService.GetRetryPolicy("TestService");
+        IAsyncPolicy<HttpResponseMessage>
+            policy = _retryPolicyService.GetRetryPolicy("TestService");
         var callCount = 0;
 
         // Act & Assert
@@ -160,7 +167,8 @@ public class RetryPolicyServiceTests
     public async Task RetryPolicy_ShouldRetryOnServerErrors(HttpStatusCode statusCode)
     {
         // Arrange
-        var policy = _retryPolicyService.GetRetryPolicy("TestService");
+        IAsyncPolicy<HttpResponseMessage>
+            policy = _retryPolicyService.GetRetryPolicy("TestService");
         var callCount = 0;
 
         // Act & Assert
@@ -181,7 +189,8 @@ public class RetryPolicyServiceTests
     public async Task CombinedPolicy_ShouldUseRetryAndCircuitBreaker()
     {
         // Arrange
-        var policy = _retryPolicyService.GetCombinedPolicy("TestService");
+        IAsyncPolicy<HttpResponseMessage> policy
+            = _retryPolicyService.GetCombinedPolicy("TestService");
         var callCount = 0;
 
         // Act & Assert
@@ -216,8 +225,8 @@ public class RetryPolicyServiceTests
         var serviceName = "TestService";
 
         // Act
-        var policy1 = _retryPolicyService.GetRetryPolicy(serviceName);
-        var policy2 = _retryPolicyService.GetRetryPolicy(serviceName);
+        IAsyncPolicy<HttpResponseMessage> policy1 = _retryPolicyService.GetRetryPolicy(serviceName);
+        IAsyncPolicy<HttpResponseMessage> policy2 = _retryPolicyService.GetRetryPolicy(serviceName);
 
         // Assert
         policy1.ShouldBe(policy2); // Should return cached instance
@@ -230,8 +239,10 @@ public class RetryPolicyServiceTests
         var serviceName = "TestService";
 
         // Act
-        var policy1 = _retryPolicyService.GetCircuitBreakerPolicy(serviceName);
-        var policy2 = _retryPolicyService.GetCircuitBreakerPolicy(serviceName);
+        IAsyncPolicy<HttpResponseMessage> policy1
+            = _retryPolicyService.GetCircuitBreakerPolicy(serviceName);
+        IAsyncPolicy<HttpResponseMessage> policy2
+            = _retryPolicyService.GetCircuitBreakerPolicy(serviceName);
 
         // Assert
         policy1.ShouldBe(policy2); // Should return cached instance
@@ -244,8 +255,10 @@ public class RetryPolicyServiceTests
         var serviceName = "TestService";
 
         // Act
-        var policy1 = _retryPolicyService.GetCombinedPolicy(serviceName);
-        var policy2 = _retryPolicyService.GetCombinedPolicy(serviceName);
+        IAsyncPolicy<HttpResponseMessage> policy1
+            = _retryPolicyService.GetCombinedPolicy(serviceName);
+        IAsyncPolicy<HttpResponseMessage> policy2
+            = _retryPolicyService.GetCombinedPolicy(serviceName);
 
         // Assert
         policy1.ShouldBe(policy2); // Should return cached instance
@@ -255,7 +268,8 @@ public class RetryPolicyServiceTests
     public async Task RetryPolicy_ShouldHaveExponentialBackoff()
     {
         // Arrange
-        var policy = _retryPolicyService.GetRetryPolicy("TestService");
+        IAsyncPolicy<HttpResponseMessage>
+            policy = _retryPolicyService.GetRetryPolicy("TestService");
         var callTimes = new List<DateTime>();
 
         // Act & Assert

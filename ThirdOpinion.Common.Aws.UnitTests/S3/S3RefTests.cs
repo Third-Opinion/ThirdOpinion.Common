@@ -65,7 +65,7 @@ public class tS3RefTests
         var s3Ref = new S3Ref("my-bucket", "documents/report.pdf", "eu-west-1", null);
 
         // Act
-        var result = s3Ref.ToUri();
+        string result = s3Ref.ToUri();
 
         // Assert
         result.ShouldBe("https://my-bucket.eu-west-1.amazonaws.com/documents/report.pdf");
@@ -79,7 +79,7 @@ public class tS3RefTests
             "123456789012");
 
         // Act
-        var result = s3Ref.ToS3Path();
+        string result = s3Ref.ToS3Path();
 
         // Assert
         result.ShouldBe("data-bucket/analytics/2023/report.csv");
@@ -93,7 +93,7 @@ public class tS3RefTests
             "111222333444");
 
         // Act
-        var result = s3Ref.ToArn();
+        string result = s3Ref.ToArn();
 
         // Assert
         result.ShouldBe(
@@ -107,7 +107,7 @@ public class tS3RefTests
         var s3Ref = new S3Ref("logs-bucket", "application/2023/12/app.log", "us-west-1", null);
 
         // Act
-        var result = s3Ref.ToS3EndpointUri();
+        string result = s3Ref.ToS3EndpointUri();
 
         // Assert
         result.ShouldBe("https://s3.us-west-1.amazonaws.com/application/2023/12/app.log");
@@ -120,7 +120,7 @@ public class tS3RefTests
         var arn = "arn:aws:s3:eu-central-1:555666777888:media-bucket/videos/training.mp4";
 
         // Act
-        var result = S3Ref.ParseArn(arn);
+        S3Ref result = S3Ref.ParseArn(arn);
 
         // Assert
         result.Bucket.ShouldBe("media-bucket");
@@ -137,7 +137,7 @@ public class tS3RefTests
         var arn = "arn:aws:s3:::global-bucket/data/file.txt";
 
         // Act
-        var result = S3Ref.ParseArn(arn);
+        S3Ref result = S3Ref.ParseArn(arn);
 
         // Assert
         result.Bucket.ShouldBe("global-bucket");
@@ -162,7 +162,7 @@ public class tS3RefTests
         var invalidArn = "invalid-arn-format";
 
         // Act & Assert
-        ArgumentException? exception
+        var exception
             = Should.Throw<ArgumentException>(() => S3Ref.ParseArn(invalidArn));
         exception.Message.ShouldBe("Invalid S3 ARN format (Parameter 'arn')");
     }
@@ -174,7 +174,7 @@ public class tS3RefTests
         var nonS3Arn = "arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0";
 
         // Act & Assert
-        ArgumentException? exception
+        var exception
             = Should.Throw<ArgumentException>(() => S3Ref.ParseArn(nonS3Arn));
         exception.Message.ShouldBe("Invalid S3 ARN format (Parameter 'arn')");
     }
@@ -186,7 +186,7 @@ public class tS3RefTests
         var uri = "https://my-bucket.s3.us-east-1.amazonaws.com/folder/document.pdf";
 
         // Act
-        var result = S3Ref.ParseObjectUri(uri);
+        S3Ref result = S3Ref.ParseObjectUri(uri);
 
         // Assert
         result.Bucket.ShouldBe("my-bucket");
@@ -203,7 +203,7 @@ public class tS3RefTests
         var invalidUri = "https://example.com/not-s3";
 
         // Act & Assert
-        ArgumentException? exception
+        var exception
             = Should.Throw<ArgumentException>(() => S3Ref.ParseObjectUri(invalidUri));
         exception.Message.ShouldBe("Invalid S3 URI format (Parameter 'objectUri')");
     }
@@ -215,7 +215,7 @@ public class tS3RefTests
         var uri = "https://s3.us-west-2.amazonaws.com/test-bucket/data/file.json";
 
         // Act
-        var result = S3Ref.ParseEndpointUri(uri);
+        S3Ref result = S3Ref.ParseEndpointUri(uri);
 
         // Assert
         result.Bucket.ShouldBe("test-bucket");
@@ -232,7 +232,7 @@ public class tS3RefTests
         var invalidUri = "https://invalid-endpoint.com/bucket/key";
 
         // Act & Assert
-        ArgumentException? exception
+        var exception
             = Should.Throw<ArgumentException>(() => S3Ref.ParseEndpointUri(invalidUri));
         exception.Message.ShouldBe("Invalid S3 URI format (Parameter 'fileUri')");
     }
@@ -244,7 +244,7 @@ public class tS3RefTests
         var validUrl = "https://bucket-name.s3.eu-west-1.amazonaws.com/path/file.txt";
 
         // Act
-        var success = S3Ref.TryParseObjectUrl(validUrl, out var result);
+        bool success = S3Ref.TryParseObjectUrl(validUrl, out S3Ref? result);
 
         // Assert
         success.ShouldBeTrue();
@@ -260,7 +260,7 @@ public class tS3RefTests
         var invalidUrl = "https://invalid-url.com";
 
         // Act
-        var success = S3Ref.TryParseObjectUrl(invalidUrl, out var result);
+        bool success = S3Ref.TryParseObjectUrl(invalidUrl, out S3Ref? result);
 
         // Assert
         success.ShouldBeFalse();
@@ -274,7 +274,7 @@ public class tS3RefTests
         var validArn = "arn:aws:s3:us-east-1:123456789012:my-bucket/my-key";
 
         // Act
-        var success = S3Ref.TryParseArn(validArn, out var result);
+        bool success = S3Ref.TryParseArn(validArn, out S3Ref? result);
 
         // Assert
         success.ShouldBeTrue();
@@ -290,7 +290,7 @@ public class tS3RefTests
         var invalidArn = "invalid-arn";
 
         // Act
-        var success = S3Ref.TryParseArn(invalidArn, out var result);
+        bool success = S3Ref.TryParseArn(invalidArn, out S3Ref? result);
 
         // Assert
         success.ShouldBeFalse();
@@ -304,7 +304,7 @@ public class tS3RefTests
         var validUri = "https://s3.ap-southeast-2.amazonaws.com/bucket/key";
 
         // Act
-        var success = S3Ref.TryParseEndpointUri(validUri, out var result);
+        bool success = S3Ref.TryParseEndpointUri(validUri, out S3Ref? result);
 
         // Assert
         success.ShouldBeTrue();
@@ -320,7 +320,7 @@ public class tS3RefTests
         var invalidUri = "https://invalid.com/path";
 
         // Act
-        var success = S3Ref.TryParseEndpointUri(invalidUri, out var result);
+        bool success = S3Ref.TryParseEndpointUri(invalidUri, out S3Ref? result);
 
         // Assert
         success.ShouldBeFalse();
@@ -334,7 +334,7 @@ public class tS3RefTests
         var validArn = "arn:aws:s3:us-east-1:123456789012:bucket/key";
 
         // Act
-        var result = validArn.IsValidS3Arn();
+        bool result = validArn.IsValidS3Arn();
 
         // Assert
         result.ShouldBeTrue();
@@ -347,7 +347,7 @@ public class tS3RefTests
         var validBucketArn = "arn:aws:s3:us-east-1:123456789012:bucket";
 
         // Act
-        var result = validBucketArn.IsValidS3Arn();
+        bool result = validBucketArn.IsValidS3Arn();
 
         // Assert
         result.ShouldBeTrue();
@@ -360,7 +360,7 @@ public class tS3RefTests
         var invalidArn = "not-an-arn";
 
         // Act
-        var result = invalidArn.IsValidS3Arn();
+        bool result = invalidArn.IsValidS3Arn();
 
         // Assert
         result.ShouldBeFalse();

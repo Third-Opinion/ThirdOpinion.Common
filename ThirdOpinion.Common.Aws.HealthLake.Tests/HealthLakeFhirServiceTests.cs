@@ -308,7 +308,7 @@ public class HealthLakeFhirServiceTests
             .ReturnsAsync(() => new HttpResponseMessage(HttpStatusCode.Created));
 
         // Act
-        var results = await _service.PutResourcesAsync(resources);
+        Dictionary<string, bool> results = await _service.PutResourcesAsync(resources);
 
         // Assert
         results.Count.ShouldBe(3);
@@ -334,7 +334,7 @@ public class HealthLakeFhirServiceTests
             .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.BadRequest));
 
         // Act
-        var results = await _service.PutResourcesAsync(resources);
+        Dictionary<string, bool> results = await _service.PutResourcesAsync(resources);
 
         // Assert
         results.Count.ShouldBe(2);
@@ -365,7 +365,7 @@ public class HealthLakeFhirServiceTests
     public void GetSupportedResourceTypes_ShouldReturnAllTypes()
     {
         // Act
-        var types = _service.GetSupportedResourceTypes();
+        IReadOnlyList<string> types = _service.GetSupportedResourceTypes();
 
         // Assert
         types.ShouldNotBeEmpty();
@@ -518,7 +518,8 @@ public class HealthLakeFhirServiceTests
             .ReturnsAsync(response);
 
         // Act
-        var version = await _service.PutResourceAsync(resourceType, resourceId, resourceJson, null);
+        string? version
+            = await _service.PutResourceAsync(resourceType, resourceId, resourceJson, null);
 
         // Assert
         version.ShouldBe(expectedVersion);

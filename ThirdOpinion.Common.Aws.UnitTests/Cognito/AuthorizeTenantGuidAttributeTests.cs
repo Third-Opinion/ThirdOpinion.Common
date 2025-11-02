@@ -48,7 +48,7 @@ public class AuthorizeTenantGuidAttributeTests
             = CreateValidationContext(new List<string> { "Admin", "TestGroup" }, true);
 
         // Act
-        var result = _attribute.GetValidationResult(tenantGuid, validationContext);
+        ValidationResult? result = _attribute.GetValidationResult(tenantGuid, validationContext);
 
         // Assert
         result.ShouldBe(ValidationResult.Success);
@@ -63,7 +63,7 @@ public class AuthorizeTenantGuidAttributeTests
             = CreateValidationContext(new List<string> { "WrongGroup" }, true);
 
         // Act
-        var result = _attribute.GetValidationResult(tenantGuid, validationContext);
+        ValidationResult? result = _attribute.GetValidationResult(tenantGuid, validationContext);
 
         // Assert
         result.ShouldNotBe(ValidationResult.Success);
@@ -79,7 +79,7 @@ public class AuthorizeTenantGuidAttributeTests
             = CreateValidationContext(new List<string> { "Admin" }, false);
 
         // Act
-        var result = _attribute.GetValidationResult(tenantGuid, validationContext);
+        ValidationResult? result = _attribute.GetValidationResult(tenantGuid, validationContext);
 
         // Assert
         result.ShouldNotBe(ValidationResult.Success);
@@ -94,7 +94,7 @@ public class AuthorizeTenantGuidAttributeTests
         ValidationContext validationContext = CreateValidationContext(null, true);
 
         // Act
-        var result = _attribute.GetValidationResult(tenantGuid, validationContext);
+        ValidationResult? result = _attribute.GetValidationResult(tenantGuid, validationContext);
 
         // Assert
         result.ShouldNotBe(ValidationResult.Success);
@@ -110,7 +110,7 @@ public class AuthorizeTenantGuidAttributeTests
             = CreateValidationContext(new List<string> { "Admin" }, true);
 
         // Act
-        var result = _attribute.GetValidationResult(tenantGuid, validationContext);
+        ValidationResult? result = _attribute.GetValidationResult(tenantGuid, validationContext);
 
         // Assert
         result.ShouldNotBe(ValidationResult.Success);
@@ -128,7 +128,7 @@ public class AuthorizeTenantGuidAttributeTests
             = CreateValidationContext(new List<string> { "Admin" }, true);
 
         // Act
-        var result = _attribute.GetValidationResult(tenantGuid, validationContext);
+        ValidationResult? result = _attribute.GetValidationResult(tenantGuid, validationContext);
 
         // Assert
         result.ShouldNotBe(ValidationResult.Success);
@@ -144,7 +144,7 @@ public class AuthorizeTenantGuidAttributeTests
             = CreateValidationContext(new List<string> { "Manager", "User" }, true);
 
         // Act
-        var result = _attribute.GetValidationResult(tenantGuid, validationContext);
+        ValidationResult? result = _attribute.GetValidationResult(tenantGuid, validationContext);
 
         // Assert
         result.ShouldBe(ValidationResult.Success);

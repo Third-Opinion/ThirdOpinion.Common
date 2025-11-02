@@ -12,10 +12,14 @@ using Amazon.SQS;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using ThirdOpinion.Common.Aws.Bedrock;
 using ThirdOpinion.Common.Aws.Misc.SecretsManager;
 using ThirdOpinion.Common.Langfuse;
 using ThirdOpinion.Common.Langfuse.Configuration;
+using ThirdOpinion.Common.Logging;
+using ThirdOpinion.Common.Misc.RateLimiting;
+using ThirdOpinion.Common.Misc.Retry;
 
 namespace ThirdOpinion.Common.FunctionalTests.Utilities;
 
@@ -77,6 +81,15 @@ public static class TestCollectionSetupHelper
     private static void ConfigureThirdOpinionServices(IServiceCollection services,
         IConfiguration configuration)
     {
+        // Add required infrastructure services
+        services.AddRateLimiting();
+        services.AddRetryPolicies();
+        services.AddFhirToolsLogging();
+
+        // Configure Bedrock configuration
+        services.Configure<ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig>(
+            configuration.GetSection("Bedrock"));
+
         // Configure Langfuse if keys are provided
         var langfusePublicKey = configuration.GetValue<string>("Langfuse:PublicKey");
         var langfuseSecretKey = configuration.GetValue<string>("Langfuse:SecretKey");
@@ -87,8 +100,37 @@ public static class TestCollectionSetupHelper
             services.AddSingleton<ILangfuseService, LangfuseService>();
         }
 
-        // Configure Bedrock service
-        services.AddSingleton<IBedrockService, BedrockService>();
+        // Configure Bedrock pricing service
+        services.AddSingleton<IBedrockPricingService, BedrockPricingService>();
+
+        // Configure Bedrock service with explicit factory
+        services.AddSingleton<IBedrockService>(serviceProvider =>
+        {
+            var bedrockRuntimeClient = serviceProvider.GetRequiredService<IAmazonBedrockRuntime>();
+            var bedrockClient = serviceProvider.GetRequiredService<IAmazonBedrock>();
+            var rateLimiter = serviceProvider.GetRequiredService<IRateLimiterService>();
+            var retryPolicy = serviceProvider.GetRequiredService<IRetryPolicyService>();
+            var logger = serviceProvider.GetRequiredService<ILogger<BedrockService>>();
+            var correlationIdProvider = serviceProvider.GetRequiredService<ICorrelationIdProvider>();
+            var config = serviceProvider.GetRequiredService<IOptions<ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig>>();
+            var langfuseService = serviceProvider.GetService<ILangfuseService>();
+            var pricingService = serviceProvider.GetRequiredService<IBedrockPricingService>();
+
+            return new BedrockService(
+                bedrockRuntimeClient,
+                bedrockClient,
+                rateLimiter,
+                retryPolicy,
+                logger,
+                correlationIdProvider,
+                config,
+                langfuseService,
+                pricingService);
+        });
+
+        // Configure Secrets Manager configuration
+        services.Configure<ThirdOpinion.Common.Aws.Misc.Configuration.SecretsManagerConfig>(
+            configuration.GetSection("SecretsManager"));
 
         // Configure Secrets Manager service
         services.AddSingleton<ISecretsManagerService, SecretsManagerService>();

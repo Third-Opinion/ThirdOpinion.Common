@@ -61,7 +61,7 @@ public class LangfuseFunctionalTests : BaseIntegrationTest
             { "session_id", "test-session" }
         };
 
-        var response
+        LangfuseTraceResponse? response
             = await LangfuseService.CreateTraceAsync(traceId, "functional-test-trace", metadata);
 
         WriteOutput($"Created trace with ID: {traceId}");
@@ -113,7 +113,8 @@ public class LangfuseFunctionalTests : BaseIntegrationTest
             }
         };
 
-        var response = await LangfuseService.CreateGenerationAsync(generationRequest);
+        LangfuseObservationResponse? response
+            = await LangfuseService.CreateGenerationAsync(generationRequest);
 
         WriteOutput($"Created generation with ID: {generationId} in trace: {traceId}");
 
@@ -148,7 +149,7 @@ public class LangfuseFunctionalTests : BaseIntegrationTest
             { "source", "automated_test" }
         };
 
-        var response = await LangfuseService.CreateObservationAsync(
+        LangfuseObservationResponse? response = await LangfuseService.CreateObservationAsync(
             traceId,
             eventId,
             "event",
@@ -203,7 +204,7 @@ public class LangfuseFunctionalTests : BaseIntegrationTest
             Total = 20
         };
 
-        var response = await LangfuseService.UpdateGenerationAsync(
+        LangfuseObservationResponse? response = await LangfuseService.UpdateGenerationAsync(
             generationId,
             DateTime.UtcNow,
             new { text = "Updated response with completion" },
@@ -268,7 +269,7 @@ public class LangfuseFunctionalTests : BaseIntegrationTest
             return;
         }
 
-        var dataMaskingEnabled = Configuration.GetValue("Langfuse:EnableDataMasking", true);
+        bool dataMaskingEnabled = Configuration.GetValue("Langfuse:EnableDataMasking", true);
         WriteOutput($"Data masking configuration: {dataMaskingEnabled}");
 
         WriteOutput("Testing Langfuse with potentially sensitive data...");
@@ -297,7 +298,8 @@ public class LangfuseFunctionalTests : BaseIntegrationTest
             EndTime = DateTime.UtcNow
         };
 
-        var response = await LangfuseService.CreateGenerationAsync(generationRequest);
+        LangfuseObservationResponse? response
+            = await LangfuseService.CreateGenerationAsync(generationRequest);
 
         response.ShouldNotBeNull();
         WriteOutput(

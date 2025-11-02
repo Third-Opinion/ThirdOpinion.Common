@@ -6,6 +6,7 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.Model;
 using Amazon.S3;
+using Amazon.S3.Model;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Microsoft.AspNetCore.Mvc;
@@ -71,7 +72,7 @@ public class AwsTestController : ControllerBase
         var testContent = "This is a test object content";
         TestResult putObjectTest = await RunTest("Put Object", async () =>
         {
-            var response
+            PutObjectResponse response
                 = await _s3Storage.PutObjectAsync(testBucket, testKey, testContent, "text/plain");
             return new { Key = testKey, response.ETag };
         });
@@ -80,7 +81,7 @@ public class AwsTestController : ControllerBase
         // Test 3: Get object
         TestResult getObjectTest = await RunTest("Get Object", async () =>
         {
-            var content = await _s3Storage.GetObjectAsStringAsync(testBucket, testKey);
+            string content = await _s3Storage.GetObjectAsStringAsync(testBucket, testKey);
             if (content != testContent)
                 throw new Exception($"Content mismatch. Expected: {testContent}, Got: {content}");
             return new { Content = content };
@@ -90,8 +91,8 @@ public class AwsTestController : ControllerBase
         // Test 4: List objects
         TestResult listObjectsTest = await RunTest("List Objects", async () =>
         {
-            var objects = await _s3Storage.ListObjectsAsync(testBucket);
-            var count = objects.Count();
+            IEnumerable<S3Object> objects = await _s3Storage.ListObjectsAsync(testBucket);
+            int count = objects.Count();
             if (count == 0)
                 throw new Exception("No objects found");
             return new { ObjectCount = count };
@@ -102,7 +103,7 @@ public class AwsTestController : ControllerBase
         TestResult deleteObjectTest = await RunTest("Delete Object", async () =>
         {
             await _s3Storage.DeleteObjectAsync(testBucket, testKey);
-            var exists = await _s3Storage.ObjectExistsAsync(testBucket, testKey);
+            bool exists = await _s3Storage.ObjectExistsAsync(testBucket, testKey);
             if (exists)
                 throw new Exception("Object still exists after deletion");
             return new { Deleted = true };
@@ -254,7 +255,8 @@ public class AwsTestController : ControllerBase
 
         TestResult sendMessageTest = await RunTest("Send Message", async () =>
         {
-            var response = await _sqsMessageQueue.SendMessageAsync(queueUrl, testMessage);
+            SendMessageResponse response
+                = await _sqsMessageQueue.SendMessageAsync(queueUrl, testMessage);
             return new { response.MessageId };
         });
         results.Results.Add(sendMessageTest);

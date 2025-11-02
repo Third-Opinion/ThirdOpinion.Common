@@ -82,26 +82,26 @@
     <!-- These are included in the package as DLLs, not as dependencies -->
     <!-- PrivateAssets="all" prevents them from becoming package dependencies -->
     <ItemGroup>
-        <ProjectReference Include="..\ThirdOpinion.Common.Aws.Cognito\ThirdOpinion.Common.Aws.Cognito.csproj" PrivateAssets="all" />
-        <ProjectReference Include="..\ThirdOpinion.Common.Aws.DynamoDb\ThirdOpinion.Common.Aws.DynamoDb.csproj" PrivateAssets="all" />
-        <ProjectReference Include="..\ThirdOpinion.Common.Aws.S3\ThirdOpinion.Common.Aws.S3.csproj" PrivateAssets="all" />
-        <ProjectReference Include="..\ThirdOpinion.Common.Aws.SQS\ThirdOpinion.Common.Aws.SQS.csproj" PrivateAssets="all" />
-        <ProjectReference Include="..\ThirdOpinion.Common.Aws.HealthLake\ThirdOpinion.Common.Aws.HealthLake.csproj" PrivateAssets="all" />
-        <ProjectReference Include="..\ThirdOpinion.Common.Aws.Bedrock\ThirdOpinion.Common.Aws.Bedrock.csproj" PrivateAssets="all" />
-        <ProjectReference Include="..\ThirdOpinion.Common.AthenaEhr\ThirdOpinion.Common.AthenaEhr.csproj" PrivateAssets="all" />
-        <ProjectReference Include="..\ThirdOpinion.Common.Aws.Misc\ThirdOpinion.Common.Aws.Misc.csproj" PrivateAssets="all" />
-        <ProjectReference Include="..\ThirdOpinion.Common.Misc\ThirdOpinion.Common.Misc.csproj" PrivateAssets="all" />
-        <ProjectReference Include="..\ThirdOpinion.Common.Logging\ThirdOpinion.Common.Logging.csproj" PrivateAssets="all" />
-        <ProjectReference Include="..\ThirdOpinion.Common.Fhir\ThirdOpinion.Common.Fhir.csproj" PrivateAssets="all" />
-        <ProjectReference Include="..\ThirdOpinion.Common.Fhir.Documents\ThirdOpinion.Common.Fhir.Documents.csproj" PrivateAssets="all" />
-        <ProjectReference Include="..\ThirdOpinion.Common.Langfuse\ThirdOpinion.Common.Langfuse.csproj" PrivateAssets="all" />
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.Cognito\ThirdOpinion.Common.Aws.Cognito.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.DynamoDb\ThirdOpinion.Common.Aws.DynamoDb.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.S3\ThirdOpinion.Common.Aws.S3.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.SQS\ThirdOpinion.Common.Aws.SQS.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.HealthLake\ThirdOpinion.Common.Aws.HealthLake.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.Bedrock\ThirdOpinion.Common.Aws.Bedrock.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.AthenaEhr\ThirdOpinion.Common.AthenaEhr.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.Misc\ThirdOpinion.Common.Aws.Misc.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Misc\ThirdOpinion.Common.Misc.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Logging\ThirdOpinion.Common.Logging.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Fhir\ThirdOpinion.Common.Fhir.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Fhir.Documents\ThirdOpinion.Common.Fhir.Documents.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Langfuse\ThirdOpinion.Common.Langfuse.csproj" PrivateAssets="all"/>
     </ItemGroup>
 
     <!-- Custom target to include project reference DLLs in the NuGet package -->
     <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
         <ItemGroup>
             <!-- Include all project reference DLLs -->
-            <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
+            <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))"/>
         </ItemGroup>
     </Target>
 

@@ -69,7 +69,8 @@ public class GlobalAppSettingsOptionsTests
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Act
-        var options = serviceProvider.GetRequiredService<IOptions<GlobalAppSettingsOptions>>()
+        GlobalAppSettingsOptions options = serviceProvider
+            .GetRequiredService<IOptions<GlobalAppSettingsOptions>>()
             .Value;
 
         // Assert
@@ -101,7 +102,8 @@ public class GlobalAppSettingsOptionsTests
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Act
-        var options = serviceProvider.GetRequiredService<IOptions<GlobalAppSettingsOptions>>()
+        GlobalAppSettingsOptions options = serviceProvider
+            .GetRequiredService<IOptions<GlobalAppSettingsOptions>>()
             .Value;
 
         // Assert
@@ -130,7 +132,8 @@ public class GlobalAppSettingsOptionsTests
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Act
-        var options = serviceProvider.GetRequiredService<IOptions<GlobalAppSettingsOptions>>()
+        GlobalAppSettingsOptions options = serviceProvider
+            .GetRequiredService<IOptions<GlobalAppSettingsOptions>>()
             .Value;
 
         // Assert
@@ -168,14 +171,15 @@ public class GlobalAppSettingsOptionsTests
         options.Tenants.TenantGroups[tenantId] = groups;
 
         // Act & Assert - Existing tenant
-        var foundExisting
-            = options.Tenants.TenantGroups.TryGetValue(tenantId, out var existingGroups);
+        bool foundExisting
+            = options.Tenants.TenantGroups.TryGetValue(tenantId, out List<string>? existingGroups);
         foundExisting.ShouldBeTrue();
         existingGroups.ShouldBe(groups);
 
         // Act & Assert - Non-existing tenant
-        var foundNonExisting
-            = options.Tenants.TenantGroups.TryGetValue("non-existing", out var nonExistingGroups);
+        bool foundNonExisting
+            = options.Tenants.TenantGroups.TryGetValue("non-existing",
+                out List<string>? nonExistingGroups);
         foundNonExisting.ShouldBeFalse();
         nonExistingGroups.ShouldBeNull();
     }

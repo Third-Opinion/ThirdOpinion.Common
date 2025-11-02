@@ -7,6 +7,7 @@ using Microsoft.Extensions.Options;
 using Polly;
 using ThirdOpinion.Common.Langfuse.Configuration;
 using ThirdOpinion.Common.Logging;
+
 // using ThirdOpinion.Common.Bedrock; - Removed AWS dependency
 
 namespace ThirdOpinion.Common.Langfuse;

@@ -13,7 +13,7 @@ public class PaginationTests
         var route = "/users";
 
         // Act
-        var result = PaginationHelper.GetPageUri(parameters, baseUri, route);
+        Uri result = PaginationHelper.GetPageUri(parameters, baseUri, route);
 
         // Assert
         Assert.Equal("https://api.example.com/users?pageNumber=2&pageSize=10", result.ToString());
@@ -30,7 +30,7 @@ public class PaginationTests
         var totalRecords = 25;
 
         // Act
-        var result
+        PagedResponse<string> result
             = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route, totalRecords);
 
         // Assert
@@ -60,7 +60,7 @@ public class PaginationTests
         var totalRecords = 25;
 
         // Act
-        var result
+        PagedResponse<string> result
             = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route, totalRecords);
 
         // Assert
@@ -90,7 +90,7 @@ public class PaginationTests
         var totalRecords = 25;
 
         // Act
-        var result
+        PagedResponse<string> result
             = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route, totalRecords);
 
         // Assert
@@ -120,7 +120,7 @@ public class PaginationTests
         var totalRecords = 0;
 
         // Act
-        var result
+        PagedResponse<string> result
             = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route, totalRecords);
 
         // Assert
@@ -144,7 +144,7 @@ public class PaginationTests
         var totalRecords = 3;
 
         // Act
-        var result
+        PagedResponse<string> result
             = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route, totalRecords);
 
         // Assert
@@ -173,7 +173,8 @@ public class PaginationTests
         var route = "/users";
 
         // Act
-        var result = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route);
+        PagedResponse<string> result
+            = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route);
 
         // Assert
         result.Items.Count.ShouldBe(3);

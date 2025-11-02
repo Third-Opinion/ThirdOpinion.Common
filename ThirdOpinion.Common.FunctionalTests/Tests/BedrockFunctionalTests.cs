@@ -158,7 +158,8 @@ public class BedrockFunctionalTests : BaseIntegrationTest
             TopP = 0.9
         };
 
-        var response = await BedrockService.InvokeModelAsync(request, "functional-test", "1.0");
+        ModelInvocationResponse response
+            = await BedrockService.InvokeModelAsync(request, "functional-test", "1.0");
 
         WriteOutput($"Generated response length: {response.Content?.Length ?? 0} characters");
 
@@ -197,7 +198,8 @@ public class BedrockFunctionalTests : BaseIntegrationTest
             TopP = 0.9
         };
 
-        var response = await BedrockService.InvokeModelAsync(request, "langfuse-test", "1.0");
+        ModelInvocationResponse response
+            = await BedrockService.InvokeModelAsync(request, "langfuse-test", "1.0");
 
         response.ShouldNotBeNull();
         response.Content.ShouldNotBeNullOrEmpty();
