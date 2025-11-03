@@ -124,6 +124,64 @@ public class HealthLakeFhirService : IFhirDestinationService
     }
 
     /// <inheritdoc />
+    public async Task<T> GetResourceAsync<T>(string resourceType,
+        string resourceId,
+        CancellationToken cancellationToken = default) where T : class
+    {
+        ValidateResourceType(resourceType);
+        ValidateResourceId(resourceId);
+
+        _logger.LogInformation("Starting HealthLake GET operation for {ResourceType}/{ResourceId}",
+            resourceType, resourceId);
+
+        await _concurrencySemaphore.WaitAsync(cancellationToken);
+        try
+        {
+            // Build the GET request to HealthLake FHIR endpoint
+            var endpoint
+                = $"https://healthlake.{_config.Region}.amazonaws.com/datastore/{_config.DatastoreId}/r4/{resourceType}/{resourceId}";
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
+
+            // Set Accept header for FHIR JSON response
+            request.Headers.Add("Accept", "application/fhir+json");
+
+            // Send the request with AWS credentials
+            HttpResponseMessage response
+                = await _healthLakeHttpService.SendSignedRequestAsync(request, cancellationToken);
+
+            // Handle response and deserialize
+            T resource = await HandleGetResponseAsync<T>(response, resourceType, resourceId,
+                cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully retrieved FHIR resource from HealthLake: {ResourceType}/{ResourceId}",
+                resourceType, resourceId);
+
+            return resource;
+        }
+        catch (HealthLakeException)
+        {
+            throw; // Re-throw HealthLake-specific exceptions
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error retrieving FHIR resource from HealthLake: {ResourceType}/{ResourceId}",
+                resourceType, resourceId);
+            throw new HealthLakeException(
+                $"Failed to retrieve FHIR resource from HealthLake: {ex.Message}",
+                resourceType,
+                resourceId,
+                ex);
+        }
+        finally
+        {
+            _concurrencySemaphore.Release();
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<Dictionary<string, bool>> PutResourcesAsync(
         IEnumerable<(string ResourceType, string ResourceId, string ResourceJson)> resources,
         CancellationToken cancellationToken = default)
@@ -382,6 +440,108 @@ public class HealthLakeFhirService : IFhirDestinationService
                     resourceType,
                     resourceId,
                     conflictDetails ?? "Version conflict detected");
+
+            case HttpStatusCode.TooManyRequests:
+                TimeSpan? retryAfter = response.Headers.RetryAfter?.Delta;
+                throw new HealthLakeThrottlingException(
+                    "HealthLake API rate limit exceeded",
+                    retryAfter.HasValue ? DateTimeOffset.UtcNow.Add(retryAfter.Value) : null);
+
+            case HttpStatusCode.InternalServerError:
+            case HttpStatusCode.BadGateway:
+            case HttpStatusCode.ServiceUnavailable:
+            case HttpStatusCode.GatewayTimeout:
+                string errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                throw new HealthLakeException(
+                    $"HealthLake service error: {response.StatusCode} - {errorContent}",
+                    resourceType,
+                    resourceId,
+                    response.StatusCode);
+
+            default:
+                string unknownErrorContent
+                    = await response.Content.ReadAsStringAsync(cancellationToken);
+                throw new HealthLakeException(
+                    $"Unexpected HealthLake response: {response.StatusCode} - {unknownErrorContent}",
+                    resourceType,
+                    resourceId,
+                    response.StatusCode);
+        }
+    }
+
+    /// <summary>
+    ///     Handles the HTTP response from a GET operation
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize the resource to</typeparam>
+    /// <param name="response">The HTTP response message</param>
+    /// <param name="resourceType">The FHIR resource type</param>
+    /// <param name="resourceId">The resource identifier</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The deserialized resource</returns>
+    private async Task<T> HandleGetResponseAsync<T>(HttpResponseMessage response,
+        string resourceType,
+        string resourceId,
+        CancellationToken cancellationToken) where T : class
+    {
+        switch (response.StatusCode)
+        {
+            case HttpStatusCode.OK:
+                // Success - deserialize and return the resource
+                string responseContent
+                    = await response.Content.ReadAsStringAsync(cancellationToken);
+
+                if (string.IsNullOrWhiteSpace(responseContent))
+                    throw new HealthLakeException(
+                        "HealthLake returned empty response for resource",
+                        resourceType,
+                        resourceId,
+                        HttpStatusCode.OK);
+
+                try
+                {
+                    T? resource = JsonSerializer.Deserialize<T>(responseContent,
+                        new JsonSerializerOptions
+                        {
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                            PropertyNameCaseInsensitive = true
+                        });
+
+                    if (resource == null)
+                        throw new HealthLakeException(
+                            "Failed to deserialize HealthLake response to expected type",
+                            resourceType,
+                            resourceId);
+
+                    return resource;
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogError(ex, "Failed to deserialize HealthLake response for {ResourceType}/{ResourceId}",
+                        resourceType, resourceId);
+                    throw new HealthLakeException(
+                        $"Failed to deserialize HealthLake response: {ex.Message}",
+                        resourceType,
+                        resourceId,
+                        ex);
+                }
+
+            case HttpStatusCode.NotFound:
+                throw new HealthLakeException(
+                    $"Resource not found: {resourceType}/{resourceId}",
+                    resourceType,
+                    resourceId,
+                    HttpStatusCode.NotFound);
+
+            case HttpStatusCode.Unauthorized:
+                throw new HealthLakeException(
+                    "Authentication failed for HealthLake access",
+                    resourceType,
+                    resourceId,
+                    HttpStatusCode.Unauthorized);
+
+            case HttpStatusCode.Forbidden:
+                throw new HealthLakeAccessDeniedException(
+                    $"Access denied to HealthLake datastore for resource {resourceType}/{resourceId}");
 
             case HttpStatusCode.TooManyRequests:
                 TimeSpan? retryAfter = response.Headers.RetryAfter?.Delta;

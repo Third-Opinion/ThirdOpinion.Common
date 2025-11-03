@@ -11,6 +11,12 @@ This library provides integration with Athena EHR system, including:
 - Token management and refresh
 - Resilient HTTP client with retry policies
 
+## Installation
+
+```bash
+dotnet add package ThirdOpinion.Common.AthenaEhr
+```
+
 ## Usage
 
 ```csharp

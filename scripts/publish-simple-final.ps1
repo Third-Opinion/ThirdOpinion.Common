@@ -1,6 +1,6 @@
 param(
     [string]$AwsProfile = "to-prod-admin",
-    [string]$Version = "1.0.0-alpha.8",
+    [string]$Version = "1.1.3",
     [string]$Configuration = "Release"
 )
 
@@ -26,11 +26,20 @@ try {
     dotnet restore
     dotnet build --configuration $Configuration --no-restore
 
-    Write-Host "  Packing ThirdOpinion.Common (combined package)..." -ForegroundColor Cyan
-    dotnet pack src/ThirdOpinion.Common.csproj --configuration $Configuration --no-build --output packages -p:PackageVersion=$Version
+    Write-Host "  Packing ThirdOpinion.Common (combined package with symbols)..." -ForegroundColor Cyan
+    dotnet pack src/ThirdOpinion.Common.csproj `
+        --configuration $Configuration `
+        --output packages `
+        -p:PackageVersion=$Version `
+        -p:IncludeSymbols=true `
+        -p:SymbolPackageFormat=snupkg
     if ($LASTEXITCODE -ne 0) {
         throw "Failed to pack ThirdOpinion.Common"
     }
+
+    Write-Host "  ✅ Generated packages:" -ForegroundColor Green
+    Write-Host "    - ThirdOpinion.Common.$Version.nupkg (main package with embedded PDBs)" -ForegroundColor White
+    Write-Host "    - ThirdOpinion.Common.$Version.snupkg (symbol package for symbol servers)" -ForegroundColor White
 
     # Configure NuGet source with CodeArtifact credential provider
     Write-Host "Configuring NuGet source..." -ForegroundColor Cyan
@@ -44,7 +53,7 @@ try {
 
     # Publish package
     Write-Host "Publishing package..." -ForegroundColor Cyan
-    $packageFile = "packages\ThirdOpinion.Common.$Version.nupkg"
+    $packageFile = "packages/ThirdOpinion.Common.$Version.nupkg"
     dotnet nuget push $packageFile --source aws-codeartifact --api-key any --skip-duplicate
 
     # Cleanup

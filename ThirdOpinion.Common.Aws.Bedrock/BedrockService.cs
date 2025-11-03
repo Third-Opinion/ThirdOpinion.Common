@@ -163,6 +163,7 @@ public class BedrockService : IBedrockService, IDisposable
             if (_rateLimiterService != null)
             {
                 IRateLimiter rateLimiter = _rateLimiterService.GetRateLimiter("Bedrock");
+                if(rateLimiter != null) throw new ArgumentException("Bedrock rate limiter is null. Configure it.");
                 await rateLimiter.WaitAsync(cancellationToken);
             }
 

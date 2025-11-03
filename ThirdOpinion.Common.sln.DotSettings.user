@@ -36,6 +36,9 @@
     &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.FunctionalTests" Presentation="&amp;lt;ThirdOpinion.Common.FunctionalTests&amp;gt;" /&gt;
   &lt;/Or&gt;
 &lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=ba1d02a9_002D5367_002D4643_002Db7a6_002Dd169e1c1a85f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="HealthLakeFhirService_GetResourceAsync_ShouldRetrieveResource_WhenConfigured" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;ProjectFile&gt;B9A4B802-FC87-46B4-8DFD-80CA41BA89E0/d:Tests/f:HealthLakeFunctionalTests.cs&lt;/ProjectFile&gt;
+&lt;/SessionState&gt;</s:String>
     <s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=bdc8868a_002D3304_002D4b30_002Db865_002D570cbf355923/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="DynamoDbRepositoryTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::3F6E4900-2F30-4DC8-B1AB-B289DBB8ED53::net8.0::ThirdOpinion.Common.Aws.Tests.DynamoDb.DynamoDbRepositoryTests&lt;/TestId&gt;
@@ -51,6 +54,8 @@
     &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.UnitTests" Presentation="&amp;lt;ThirdOpinion.Common.Aws.UnitTests&amp;gt;" /&gt;
     &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Fhir.UnitTests" Presentation="&amp;lt;ThirdOpinion.Common.Fhir.UnitTests&amp;gt;" /&gt;
     &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.FunctionalTests" Presentation="&amp;lt;ThirdOpinion.Common.FunctionalTests&amp;gt;" /&gt;
+    &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Misc.UnitTests" Presentation="&amp;lt;ThirdOpinion.Common.Misc.UnitTests&amp;gt;" /&gt;
+    &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.TestApi.Tests" Presentation="&amp;lt;ThirdOpinion.Common.TestApi.Tests&amp;gt;" /&gt;
   &lt;/Or&gt;
 &lt;/SessionState&gt;</s:String>
     <s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=fbbe0165_002De816_002D456a_002Db9f1_002D578fffa57821/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="SendMessageAsync_WithStringMessage_SendsDirectly" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;

@@ -14,6 +14,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ThirdOpinion.Common.Aws.Bedrock;
+using ThirdOpinion.Common.Aws.HealthLake;
+using ThirdOpinion.Common.Aws.HealthLake.Http;
 using ThirdOpinion.Common.Aws.Misc.SecretsManager;
 using ThirdOpinion.Common.Langfuse;
 using ThirdOpinion.Common.Langfuse.Configuration;
@@ -137,6 +139,16 @@ public static class TestCollectionSetupHelper
 
         // Configure Secrets Manager service
         services.AddSingleton<ISecretsManagerService, SecretsManagerService>();
+
+        // Configure HealthLake configuration
+        services.Configure<ThirdOpinion.Common.Aws.HealthLake.Configuration.HealthLakeConfig>(
+            configuration.GetSection("HealthLake"));
+
+        // Configure HealthLake HTTP client (AWS-signed)
+        services.AddHttpClient<IHealthLakeHttpService, HealthLakeHttpService>();
+
+        // Configure HealthLake FHIR service
+        services.AddSingleton<IFhirDestinationService, HealthLakeFhirService>();
     }
 
     private static void ValidateSSOProfile(string profileName)

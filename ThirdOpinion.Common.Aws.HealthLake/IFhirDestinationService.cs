@@ -35,6 +35,20 @@ public interface IFhirDestinationService
         CancellationToken cancellationToken = default) where T : class;
 
     /// <summary>
+    ///     Retrieves a strongly-typed FHIR resource from the destination service
+    /// </summary>
+    /// <typeparam name="T">The type of the FHIR resource</typeparam>
+    /// <param name="resourceType">The FHIR resource type</param>
+    /// <param name="resourceId">The unique identifier for the resource</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The deserialized FHIR resource object</returns>
+    /// <exception cref="ArgumentException">Thrown when parameters are invalid</exception>
+    /// <exception cref="HealthLakeException">Thrown when the operation fails</exception>
+    Task<T> GetResourceAsync<T>(string resourceType,
+        string resourceId,
+        CancellationToken cancellationToken = default) where T : class;
+
+    /// <summary>
     ///     Writes multiple FHIR resources in batch operation
     /// </summary>
     /// <param name="resources">Collection of resources to write, each containing resourceType, resourceId, and JSON content</param>

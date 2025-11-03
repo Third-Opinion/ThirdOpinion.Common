@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ThirdOpinion.Common.Aws.Bedrock;
+using ThirdOpinion.Common.Aws.HealthLake;
 using ThirdOpinion.Common.Aws.Misc.SecretsManager;
 using ThirdOpinion.Common.FunctionalTests.Utilities;
 using ThirdOpinion.Common.Langfuse;
@@ -33,6 +34,7 @@ public abstract class BaseIntegrationTest : IAsyncLifetime
     protected readonly IConfiguration Configuration;
     protected readonly IAmazonDynamoDB DynamoDbClient;
     protected readonly IAmazonHealthLake HealthLakeClient;
+    protected readonly IFhirDestinationService? HealthLakeFhirService;
     protected readonly ILangfuseService? LangfuseService;
     protected readonly ILangfuseSchemaService? LangfuseSchemaService;
     protected readonly ILogger Logger;
@@ -86,6 +88,7 @@ public abstract class BaseIntegrationTest : IAsyncLifetime
         LangfuseService = ServiceProvider.GetService<ILangfuseService>();
         LangfuseSchemaService = ServiceProvider.GetService<ILangfuseSchemaService>();
         SecretsManagerService = ServiceProvider.GetService<ISecretsManagerService>();
+        HealthLakeFhirService = ServiceProvider.GetService<IFhirDestinationService>();
     }
 
 

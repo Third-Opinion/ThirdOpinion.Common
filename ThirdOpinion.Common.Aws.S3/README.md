@@ -45,7 +45,7 @@ public class MyService
 ```json
 {
   "S3": {
-    "Region": "us-east-1",
+    "Region": "us-east-2",
     "ServiceUrl": "http://localhost:4566"
   }
 }

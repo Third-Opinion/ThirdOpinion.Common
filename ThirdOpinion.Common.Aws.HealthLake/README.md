@@ -11,6 +11,12 @@ This library provides integration with AWS HealthLake for managing FHIR R4 resou
 - Search and query capabilities
 - Batch operations support
 
+## Installation
+
+```bash
+dotnet add package ThirdOpinion.Common.Aws.HealthLake
+```
+
 ## Usage
 
 ```csharp
