@@ -29,6 +29,7 @@ public class RadiographicProgressionObservationBuilder : AiResourceBuilderBase<O
     private ResourceReference? _patientReference;
     private CodeableConcept? _progressionStatus;
     private string? _qualitativeAssessment;
+    private string? _recistTimepointsJson;
 
     /// <summary>
     ///     Creates a new Radiographic Progression Observation builder
@@ -503,6 +504,19 @@ public class RadiographicProgressionObservationBuilder : AiResourceBuilderBase<O
     }
 
     /// <summary>
+    ///     Sets the RECIST timepoints JSON data for this observation.
+    ///     This stores the complete RECIST assessment timepoints data structure including
+    ///     baseline and follow-up measurements, lesion tracking, and response assessments.
+    /// </summary>
+    /// <param name="timepointsJson">The RECIST timepoints data as JSON string</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public RadiographicProgressionObservationBuilder WithRecistTimepointsJson(string? timepointsJson)
+    {
+        _recistTimepointsJson = timepointsJson;
+        return this;
+    }
+
+    /// <summary>
     ///     Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
@@ -646,6 +660,12 @@ public class RadiographicProgressionObservationBuilder : AiResourceBuilderBase<O
             List<Extension> conflictingFactExtensions
                 = CreateConflictingFactExtensions(_conflictingFacts);
             observation.Extension.AddRange(conflictingFactExtensions);
+        }
+
+        // Add RECIST timepoints JSON extension if provided
+        if (!string.IsNullOrWhiteSpace(_recistTimepointsJson))
+        {
+            observation.Extension.Add(RecistTimepointsExtension.CreateExtension(_recistTimepointsJson));
         }
 
         return observation;

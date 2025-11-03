@@ -580,4 +580,252 @@ public class RadiographicProgressionObservationBuilderTests
         observation.Note.Count.ShouldBe(3);
         observation.Component.Count.ShouldBeGreaterThan(4);
     }
+
+    [Fact]
+    public void WithRecistTimepointsJson_AddsExtensionCorrectly()
+    {
+        // Arrange
+        var builder = new RadiographicProgressionObservationBuilder(_configuration);
+        var timepointsJson = @"{
+            ""patientId"": ""P-001"",
+            ""timepoints"": [
+                {
+                    ""timepointId"": ""TP-BASELINE"",
+                    ""assessmentDate"": ""2025-01-01"",
+                    ""isBaseline"": true,
+                    ""imagingModality"": ""MRI"",
+                    ""targetLesions"": [
+                        {
+                            ""lesionId"": ""TL-001"",
+                            ""anatomicalLocation"": ""Brain frontal lobe"",
+                            ""measurementMM"": 28.3
+                        }
+                    ],
+                    ""sumOfDiameters"": 28.3
+                }
+            ]
+        }";
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithProgressionDetected()
+            .WithRecistTimepointsJson(timepointsJson)
+            .Build();
+
+        // Assert
+        observation.Extension.ShouldNotBeEmpty();
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldNotBeNull();
+
+        // Verify nested extension contains the JSON
+        Extension? jsonExtension = timepointsExtension.Extension
+            .FirstOrDefault(e => e.Url == "timepointsJson");
+        jsonExtension.ShouldNotBeNull();
+        var jsonValue = jsonExtension.Value as FhirString;
+        jsonValue.ShouldNotBeNull();
+        jsonValue.Value.ShouldContain("TP-BASELINE");
+        jsonValue.Value.ShouldContain("TL-001");
+        jsonValue.Value.ShouldContain("Brain frontal lobe");
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_NullJson_DoesNotAddExtension()
+    {
+        // Arrange
+        var builder = new RadiographicProgressionObservationBuilder(_configuration);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithProgressionDetected()
+            .WithRecistTimepointsJson(null)
+            .Build();
+
+        // Assert
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_EmptyString_DoesNotAddExtension()
+    {
+        // Arrange
+        var builder = new RadiographicProgressionObservationBuilder(_configuration);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithProgressionDetected()
+            .WithRecistTimepointsJson("   ")
+            .Build();
+
+        // Assert
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_FluentInterfaceChaining_Works()
+    {
+        // Arrange
+        var timepointsJson = @"{""timepoints"":[{""timepointId"":""TP-001""}]}";
+
+        // Act
+        Observation observation = new RadiographicProgressionObservationBuilder(_configuration)
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithProgressionDetected()
+            .WithRecistTimepointsJson(timepointsJson)
+            .WithConfidence(0.88f)
+            .WithImagingType("MRI")
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldNotBeNull();
+
+        // Verify other properties still work
+        observation.Subject.ShouldBe(_patientReference);
+        observation.Device.ShouldBe(_deviceReference);
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_SerializesAndDeserializes()
+    {
+        // Arrange
+        var timepointsJson = @"{
+            ""patientId"": ""P-789"",
+            ""timepoints"": [
+                {
+                    ""timepointId"": ""TP-002"",
+                    ""assessmentDate"": ""2025-03-10"",
+                    ""isBaseline"": false,
+                    ""sumOfDiameters"": 35.7
+                }
+            ]
+        }";
+
+        var builder = new RadiographicProgressionObservationBuilder(_configuration);
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithProgressionDetected()
+            .WithRecistTimepointsJson(timepointsJson)
+            .Build();
+
+        // Act - Serialize
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        string json = serializer.SerializeToString(observation);
+
+        // Assert - Verify serialization
+        json.ShouldContain("https://thirdopinion.io/recist-timepoints");
+        json.ShouldContain("timepointsJson");
+        json.ShouldContain("TP-002");
+
+        // Act - Deserialize
+        var parser = new FhirJsonParser();
+        var deserializedObs = parser.Parse<Observation>(json);
+
+        // Assert - Verify deserialization
+        deserializedObs.ShouldNotBeNull();
+        Extension? deserializedExtension = deserializedObs.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        deserializedExtension.ShouldNotBeNull();
+
+        Extension? jsonExt = deserializedExtension.Extension
+            .FirstOrDefault(e => e.Url == "timepointsJson");
+        jsonExt.ShouldNotBeNull();
+        var deserializedJsonValue = jsonExt.Value as FhirString;
+        deserializedJsonValue.Value.ShouldContain("P-789");
+        deserializedJsonValue.Value.ShouldContain("TP-002");
+    }
+
+    [Fact]
+    public void Build_WithoutRecistTimepointsJson_MaintainsBackwardCompatibility()
+    {
+        // Arrange & Act - Build without using the new feature
+        Observation observation = new RadiographicProgressionObservationBuilder(_configuration)
+            .WithPatient(_patientReference)
+            .WithProgressionDetected()
+            .WithImagingType("CT")
+            .WithConfidence(0.85f)
+            .Build();
+
+        // Assert - Should work exactly as before
+        observation.ShouldNotBeNull();
+        observation.Status.ShouldBe(ObservationStatus.Final);
+        observation.Subject.ShouldBe(_patientReference);
+
+        // No timepoints extension should be present
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_ComplexJson_StoresCorrectly()
+    {
+        // Arrange - Test with complex nested JSON structure
+        var complexJson = @"{
+            ""patientId"": ""P-999"",
+            ""timepoints"": [
+                {
+                    ""timepointId"": ""TP-BASELINE"",
+                    ""assessmentDate"": ""2025-01-15"",
+                    ""isBaseline"": true,
+                    ""imagingModality"": ""PET-CT"",
+                    ""targetLesions"": [
+                        {
+                            ""lesionId"": ""TL-001"",
+                            ""anatomicalLocation"": ""Mediastinal lymph node"",
+                            ""measurementMM"": 18.5
+                        }
+                    ],
+                    ""nonTargetLesions"": [
+                        {
+                            ""anatomicalSite"": ""Pleura"",
+                            ""description"": ""Pleural effusion"",
+                            ""status"": ""present""
+                        }
+                    ],
+                    ""newLesionAssessment"": {
+                        ""present"": false,
+                        ""lesions"": []
+                    },
+                    ""sumOfDiameters"": 18.5,
+                    ""notes"": ""Baseline PET-CT assessment""
+                }
+            ]
+        }";
+
+        // Act
+        Observation observation = new RadiographicProgressionObservationBuilder(_configuration)
+            .WithPatient(_patientReference)
+            .WithProgressionDetected()
+            .WithRecistTimepointsJson(complexJson)
+            .Build();
+
+        // Assert
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldNotBeNull();
+
+        Extension? jsonExtension = timepointsExtension.Extension
+            .FirstOrDefault(e => e.Url == "timepointsJson");
+        var storedJson = (jsonExtension?.Value as FhirString)?.Value;
+        storedJson.ShouldNotBeNull();
+
+        // Verify all components are preserved
+        storedJson.ShouldContain("TL-001");
+        storedJson.ShouldContain("Mediastinal lymph node");
+        storedJson.ShouldContain("nonTargetLesions");
+        storedJson.ShouldContain("Pleural effusion");
+        storedJson.ShouldContain("newLesionAssessment");
+        storedJson.ShouldContain("Baseline PET-CT assessment");
+    }
 }

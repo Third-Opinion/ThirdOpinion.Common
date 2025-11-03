@@ -34,6 +34,7 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     private string? _measurementChange;
     private ResourceReference? _patientReference;
     private CodeableConcept? _recistResponse;
+    private string? _recistTimepointsJson;
     private string? _summary;
 
     /// <summary>
@@ -440,6 +441,19 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
+    ///     Sets the RECIST timepoints JSON data for this observation.
+    ///     This stores the complete RECIST assessment timepoints data structure including
+    ///     baseline and follow-up measurements, lesion tracking, and response assessments.
+    /// </summary>
+    /// <param name="timepointsJson">The RECIST timepoints data as JSON string</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public RecistProgressionObservationBuilder WithRecistTimepointsJson(string? timepointsJson)
+    {
+        _recistTimepointsJson = timepointsJson;
+        return this;
+    }
+
+    /// <summary>
     ///     Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
@@ -575,6 +589,12 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
             List<Extension> conflictingFactExtensions
                 = CreateConflictingFactExtensions(_conflictingFacts);
             observation.Extension.AddRange(conflictingFactExtensions);
+        }
+
+        // Add RECIST timepoints JSON extension if provided
+        if (!string.IsNullOrWhiteSpace(_recistTimepointsJson))
+        {
+            observation.Extension.Add(RecistTimepointsExtension.CreateExtension(_recistTimepointsJson));
         }
 
         return observation;

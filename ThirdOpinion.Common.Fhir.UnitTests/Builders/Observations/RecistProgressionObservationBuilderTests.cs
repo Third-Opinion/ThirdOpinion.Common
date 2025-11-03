@@ -1013,4 +1013,264 @@ public class RecistProgressionObservationBuilderTests
         observation.Meta.Security.ShouldNotBeNull();
         observation.Meta.Security.Any(s => s.Code == "AIAST").ShouldBeTrue();
     }
+
+    [Fact]
+    public void WithRecistTimepointsJson_AddsExtensionCorrectly()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+        var timepointsJson = @"{
+            ""patientId"": ""P-001"",
+            ""timepoints"": [
+                {
+                    ""timepointId"": ""TP-BASELINE"",
+                    ""assessmentDate"": ""2025-01-01"",
+                    ""isBaseline"": true,
+                    ""imagingModality"": ""CT"",
+                    ""sliceThickness"": 5,
+                    ""targetLesions"": [
+                        {
+                            ""lesionId"": ""TL-001"",
+                            ""lesionType"": ""non-nodal"",
+                            ""anatomicalLocation"": ""Right lung upper lobe"",
+                            ""organ"": ""lung"",
+                            ""measurementAxis"": ""long_axis"",
+                            ""measurementMM"": 45.5
+                        }
+                    ],
+                    ""sumOfDiameters"": 45.5
+                }
+            ]
+        }";
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithRecistTimepointsJson(timepointsJson)
+            .Build();
+
+        // Assert
+        observation.Extension.ShouldNotBeEmpty();
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldNotBeNull();
+
+        // Verify nested extension contains the JSON
+        Extension? jsonExtension = timepointsExtension.Extension
+            .FirstOrDefault(e => e.Url == "timepointsJson");
+        jsonExtension.ShouldNotBeNull();
+        var jsonValue = jsonExtension.Value as FhirString;
+        jsonValue.ShouldNotBeNull();
+        jsonValue.Value.ShouldContain("TP-BASELINE");
+        jsonValue.Value.ShouldContain("TL-001");
+        jsonValue.Value.ShouldContain("lung");
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_NullJson_DoesNotAddExtension()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithRecistTimepointsJson(null)
+            .Build();
+
+        // Assert
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_EmptyString_DoesNotAddExtension()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithRecistTimepointsJson("   ")
+            .Build();
+
+        // Assert
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_FluentInterfaceChaining_Works()
+    {
+        // Arrange
+        var timepointsJson = @"{""timepoints"":[{""timepointId"":""TP-001""}]}";
+
+        // Act
+        Observation observation = new RecistProgressionObservationBuilder(_configuration)
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithRecistTimepointsJson(timepointsJson)
+            .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE, "Progressive Disease")
+            .WithConfidence(0.95f)
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldNotBeNull();
+
+        // Verify other properties still work
+        observation.Subject.ShouldBe(_patientReference);
+        observation.Device.ShouldBe(_deviceReference);
+        observation.Focus[0].ShouldBe(_tumorReference);
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_SerializesAndDeserializes()
+    {
+        // Arrange
+        var timepointsJson = @"{
+            ""patientId"": ""P-123"",
+            ""timepoints"": [
+                {
+                    ""timepointId"": ""TP-001"",
+                    ""assessmentDate"": ""2025-02-15"",
+                    ""isBaseline"": false,
+                    ""sumOfDiameters"": 52.3
+                }
+            ]
+        }";
+
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithRecistTimepointsJson(timepointsJson)
+            .Build();
+
+        // Act - Serialize
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        string json = serializer.SerializeToString(observation);
+
+        // Assert - Verify serialization
+        json.ShouldContain("https://thirdopinion.io/recist-timepoints");
+        json.ShouldContain("timepointsJson");
+        json.ShouldContain("TP-001");
+
+        // Act - Deserialize
+        var parser = new FhirJsonParser();
+        var deserializedObs = parser.Parse<Observation>(json);
+
+        // Assert - Verify deserialization
+        deserializedObs.ShouldNotBeNull();
+        Extension? deserializedExtension = deserializedObs.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        deserializedExtension.ShouldNotBeNull();
+
+        Extension? jsonExt = deserializedExtension.Extension
+            .FirstOrDefault(e => e.Url == "timepointsJson");
+        jsonExt.ShouldNotBeNull();
+        var deserializedJsonValue = jsonExt.Value as FhirString;
+        deserializedJsonValue.Value.ShouldContain("P-123");
+        deserializedJsonValue.Value.ShouldContain("TP-001");
+    }
+
+    [Fact]
+    public void Build_WithoutRecistTimepointsJson_MaintainsBackwardCompatibility()
+    {
+        // Arrange & Act - Build without using the new feature
+        Observation observation = new RecistProgressionObservationBuilder(_configuration)
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithRecistResponse(FhirCodingHelper.NciCodes.STABLE_DISEASE, "Stable Disease")
+            .Build();
+
+        // Assert - Should work exactly as before
+        observation.ShouldNotBeNull();
+        observation.Status.ShouldBe(ObservationStatus.Final);
+        observation.Subject.ShouldBe(_patientReference);
+        observation.Device.ShouldBe(_deviceReference);
+
+        // No timepoints extension should be present
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_ComplexJson_StoresCorrectly()
+    {
+        // Arrange - Test with complex nested JSON structure
+        var complexJson = @"{
+            ""patientId"": ""P-456"",
+            ""timepoints"": [
+                {
+                    ""timepointId"": ""TP-BASELINE"",
+                    ""assessmentDate"": ""2025-01-01"",
+                    ""isBaseline"": true,
+                    ""imagingModality"": ""CT"",
+                    ""targetLesions"": [
+                        {
+                            ""lesionId"": ""TL-001"",
+                            ""anatomicalLocation"": ""Liver segment 6"",
+                            ""measurementMM"": 35.0
+                        },
+                        {
+                            ""lesionId"": ""TL-002"",
+                            ""anatomicalLocation"": ""Right lung"",
+                            ""measurementMM"": 22.5
+                        }
+                    ],
+                    ""nonTargetLesions"": [
+                        {
+                            ""anatomicalSite"": ""Bone"",
+                            ""description"": ""Multiple sclerotic lesions"",
+                            ""status"": ""present""
+                        }
+                    ],
+                    ""newLesionAssessment"": {
+                        ""present"": false,
+                        ""lesions"": []
+                    },
+                    ""sumOfDiameters"": 57.5,
+                    ""notes"": ""Baseline assessment complete""
+                }
+            ]
+        }";
+
+        // Act
+        Observation observation = new RecistProgressionObservationBuilder(_configuration)
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithRecistTimepointsJson(complexJson)
+            .Build();
+
+        // Assert
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldNotBeNull();
+
+        Extension? jsonExtension = timepointsExtension.Extension
+            .FirstOrDefault(e => e.Url == "timepointsJson");
+        var storedJson = (jsonExtension?.Value as FhirString)?.Value;
+        storedJson.ShouldNotBeNull();
+
+        // Verify all components are preserved
+        storedJson.ShouldContain("TL-001");
+        storedJson.ShouldContain("TL-002");
+        storedJson.ShouldContain("Liver segment 6");
+        storedJson.ShouldContain("Right lung");
+        storedJson.ShouldContain("nonTargetLesions");
+        storedJson.ShouldContain("newLesionAssessment");
+        storedJson.ShouldContain("Baseline assessment complete");
+    }
 }
