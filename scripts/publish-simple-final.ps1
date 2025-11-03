@@ -1,6 +1,6 @@
 param(
     [string]$AwsProfile = "to-prod-admin",
-    [string]$Version = "1.1.3",
+    [string]$Version = "1.1.4",
     [string]$Configuration = "Release"
 )
 
