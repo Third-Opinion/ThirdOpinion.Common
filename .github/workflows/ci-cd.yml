@@ -95,7 +95,6 @@ jobs:
         name: test-results
         path: ./test-results/
 
-
     - name: Comment PR with test results
       uses: dorny/test-reporter@v1
       if: always() && hashFiles('./test-results/*.trx') != ''
@@ -273,13 +272,17 @@ jobs:
         VERSION=${{ steps.version.outputs.version }}
 
         # Pack single combined package with all sub-projects as embedded DLLs
-        echo "Packing ThirdOpinion.Common (combined package with all sub-projects)..."
+        echo "Packing ThirdOpinion.Common (combined package with symbols)..."
         dotnet pack src/ThirdOpinion.Common.csproj \
           --configuration Release \
           --output ./packages/ \
-          -p:PackageVersion=$VERSION
+          -p:PackageVersion=$VERSION \
+          -p:IncludeSymbols=true \
+          -p:SymbolPackageFormat=snupkg
 
-        echo "✅ Package created successfully"
+        echo "✅ Generated packages:"
+        echo "  - ThirdOpinion.Common.$VERSION.nupkg (main package with embedded PDBs)"
+        echo "  - ThirdOpinion.Common.$VERSION.snupkg (symbol package for symbol servers)"
 
     - name: Upload packages as artifacts
       uses: actions/upload-artifact@v4
@@ -318,34 +321,43 @@ jobs:
       with:
         role-to-assume: ${{ vars.AWS_CODEARTIFACT_ROLE_ARN }}
         role-session-name: GitHubActions-Development
-        aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+        aws-region: ${{ vars.AWS_REGION || 'us-east-2' }}
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    - name: Configure CodeArtifact
+    - name: Install CodeArtifact Credential Provider
+      run: |
+        echo "Installing CodeArtifact NuGet Credential Provider..."
+        # Always install (will update if already exists)
+        dotnet tool install -g AWS.CodeArtifact.NuGet.CredentialProvider || \
+          dotnet tool update -g AWS.CodeArtifact.NuGet.CredentialProvider
+        echo "✅ CodeArtifact NuGet Credential Provider installed/updated"
+
+    - name: Configure CodeArtifact Credential Provider
+      run: |
+        echo "Configuring credential provider to use environment credentials..."
+        # Configure credential provider to use AWS credentials from environment
+        # (AWS credentials are configured by aws-actions/configure-aws-credentials above)
+        dotnet codeartifact-creds install
+        echo "✅ Credential provider configured"
+
+    - name: Configure CodeArtifact NuGet Source
       id: codeartifact
       run: |
         # Get domain and repository from environment variables
         DOMAIN="${{ vars.AWS_CODEARTIFACT_DOMAIN }}"
         DOMAIN_OWNER="${{ vars.AWS_CODEARTIFACT_DOMAIN_OWNER }}"
-        REPOSITORY="${{ vars.AWS_CODEARTIFACT_REPOSITORY_DEV || vars.AWS_CODEARTIFACT_REPOSITORY }}"
+        REPOSITORY="${{ vars.AWS_CODEARTIFACT_REPOSITORY }}"
 
         echo "Domain: $DOMAIN"
         echo "Domain Owner: $DOMAIN_OWNER"
         echo "Repository: $REPOSITORY"
 
-        # Get authorization token
-        AUTH_TOKEN=$(aws codeartifact get-authorization-token \
-          --domain "$DOMAIN" \
-          --domain-owner "$DOMAIN_OWNER" \
-          --query authorizationToken \
-          --output text)
-
-        # Get repository endpoint
-        REPO_URL=$(aws codeartifact get-repository-endpoint \
+        # Get repository endpoint (returns base URL without /v3/index.json)
+        REPO_BASE_URL=$(aws codeartifact get-repository-endpoint \
           --domain "$DOMAIN" \
           --domain-owner "$DOMAIN_OWNER" \
           --repository "$REPOSITORY" \
@@ -353,26 +365,55 @@ jobs:
           --query repositoryEndpoint \
           --output text)
 
+        # Append /v3/index.json for NuGet v3 protocol (matching PowerShell script)
+        REPO_URL="${REPO_BASE_URL%/}/v3/index.json"
+
         echo "Repository URL: $REPO_URL"
         echo "repo_url=$REPO_URL" >> $GITHUB_OUTPUT
 
-        # Configure NuGet source
-        dotnet nuget add source "$REPO_URL" \
-          --name "codeartifact-dev" \
-          --username aws \
-          --password "$AUTH_TOKEN" \
-          --store-password-in-clear-text
+        # Remove existing source if present (matching PowerShell script behavior)
+        dotnet nuget remove source aws-codeartifact 2>/dev/null || true
+
+        # Add CodeArtifact source (authentication handled by credential provider)
+        echo "Adding NuGet source (authentication handled by credential provider)..."
+        dotnet nuget add source "$REPO_URL" --name aws-codeartifact
+
+    - name: Get package version
+      id: package-version
+      run: |
+        # Get the main package file to extract version
+        PACKAGE_FILE=$(ls ./packages/ThirdOpinion.Common.*.nupkg | grep -v "\\.Aws\\." | grep -v "\\.Fhir\\." | grep -v "\\.Misc\\." | grep -v "\\.Langfuse\\." | grep -v "\\.AthenaEhr\\." | grep -v "\\.Logging\\." | head -n 1)
+        if [[ -z "$PACKAGE_FILE" ]]; then
+          PACKAGE_FILE=$(ls ./packages/ThirdOpinion.Common.*.nupkg | head -n 1)
+        fi
+        # Remove .nupkg extension and extract version from filename
+        PACKAGE_BASE=$(basename "$PACKAGE_FILE" .nupkg)
+        VERSION=${PACKAGE_BASE#ThirdOpinion.Common.}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Package version: $VERSION"
 
     - name: Publish to CodeArtifact (Development)
       run: |
-        echo "Publishing development packages..."
-        for package in ./packages/*.nupkg; do
-          echo "Publishing: $(basename "$package")"
-          dotnet nuget push "$package" \
-            --source "codeartifact-dev" \
-            --skip-duplicate \
-            --timeout 300
-        done
+        echo "Publishing package..."
+        VERSION=${{ steps.package-version.outputs.version }}
+        PACKAGE_FILE="packages/ThirdOpinion.Common.$VERSION.nupkg"
+        
+        # The --api-key any flag tells NuGet to use credential providers for authentication
+        # The credential provider will automatically get and inject the CodeArtifact token
+        dotnet nuget push "$PACKAGE_FILE" \
+          --source aws-codeartifact \
+          --api-key any \
+          --skip-duplicate
+        
+        # Commented out for future use - loop through all packages
+        # for package in ./packages/*.nupkg; do
+        #   echo "Publishing: $(basename "$package")"
+        #   dotnet nuget push "$package" \
+        #     --source aws-codeartifact \
+        #     --api-key any \
+        #     --skip-duplicate
+        # done
+        
         echo "✅ Development packages published successfully"
 
   publish-release:
@@ -399,14 +440,30 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        role-to-assume: ${{ secrets.AWS_CODEARTIFACT_ROLE_ARN }}
+        role-to-assume: ${{ vars.AWS_CODEARTIFACT_ROLE_ARN }}
         role-session-name: GitHubActions-Production
-        aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+        aws-region: ${{ vars.AWS_REGION || 'us-east-2' }}
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install CodeArtifact Credential Provider
+      run: |
+        echo "Installing CodeArtifact NuGet Credential Provider..."
+        # Always install (will update if already exists)
+        dotnet tool install -g AWS.CodeArtifact.NuGet.CredentialProvider || \
+          dotnet tool update -g AWS.CodeArtifact.NuGet.CredentialProvider
+        echo "✅ CodeArtifact NuGet Credential Provider installed/updated"
+
+    - name: Configure CodeArtifact Credential Provider
+      run: |
+        echo "Configuring credential provider to use environment credentials..."
+        # Configure credential provider to use AWS credentials from environment
+        # (AWS credentials are configured by aws-actions/configure-aws-credentials above)
+        dotnet codeartifact-creds install
+        echo "✅ Credential provider configured"
 
     - name: Get package information
       id: package-info
@@ -419,7 +476,8 @@ jobs:
         fi
 
         PACKAGE_NAME=$(basename "$MAIN_PACKAGE_FILE" .nupkg)
-        VERSION=$(echo "$PACKAGE_NAME" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9\.\-]+)?$')
+        # Extract version from package name (remove "ThirdOpinion.Common." prefix)
+        VERSION=${PACKAGE_NAME#ThirdOpinion.Common.}
 
         echo "Main Package: $PACKAGE_NAME"
         echo "Version: $VERSION"
@@ -437,27 +495,20 @@ jobs:
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
         fi
 
-    - name: Configure CodeArtifact
+    - name: Configure CodeArtifact NuGet Source
       id: codeartifact
       run: |
         # Use production repository for releases
-        DOMAIN="${{ secrets.AWS_CODEARTIFACT_DOMAIN }}"
-        DOMAIN_OWNER="${{ secrets.AWS_CODEARTIFACT_DOMAIN_OWNER }}"
-        REPOSITORY="${{ secrets.AWS_CODEARTIFACT_REPOSITORY_PROD || secrets.AWS_CODEARTIFACT_REPOSITORY }}"
+        DOMAIN="${{ vars.AWS_CODEARTIFACT_DOMAIN }}"
+        DOMAIN_OWNER="${{ vars.AWS_CODEARTIFACT_DOMAIN_OWNER }}"
+        REPOSITORY="${{ vars.AWS_CODEARTIFACT_REPOSITORY }}"
 
         echo "Domain: $DOMAIN"
         echo "Domain Owner: $DOMAIN_OWNER"
         echo "Repository: $REPOSITORY"
 
-        # Get authorization token
-        AUTH_TOKEN=$(aws codeartifact get-authorization-token \
-          --domain "$DOMAIN" \
-          --domain-owner "$DOMAIN_OWNER" \
-          --query authorizationToken \
-          --output text)
-
-        # Get repository endpoint
-        REPO_URL=$(aws codeartifact get-repository-endpoint \
+        # Get repository endpoint (returns base URL without /v3/index.json)
+        REPO_BASE_URL=$(aws codeartifact get-repository-endpoint \
           --domain "$DOMAIN" \
           --domain-owner "$DOMAIN_OWNER" \
           --repository "$REPOSITORY" \
@@ -465,48 +516,83 @@ jobs:
           --query repositoryEndpoint \
           --output text)
 
+        # Append /v3/index.json for NuGet v3 protocol (matching PowerShell script)
+        REPO_URL="${REPO_BASE_URL%/}/v3/index.json"
+
         echo "Repository URL: $REPO_URL"
         echo "repo_url=$REPO_URL" >> $GITHUB_OUTPUT
 
-        # Configure NuGet source
-        dotnet nuget add source "$REPO_URL" \
-          --name "codeartifact-prod" \
-          --username aws \
-          --password "$AUTH_TOKEN" \
-          --store-password-in-clear-text
+        # Remove existing source if present (matching PowerShell script behavior)
+        dotnet nuget remove source aws-codeartifact 2>/dev/null || true
+
+        # Add CodeArtifact source (authentication handled by credential provider)
+        echo "Adding NuGet source (authentication handled by credential provider)..."
+        dotnet nuget add source "$REPO_URL" --name aws-codeartifact
 
     - name: Validate package before publishing
       run: |
-        echo "Validating packages before publication..."
-        for package in ./packages/*.nupkg; do
-          echo "Validating: $(basename "$package")"
-          # Check if package is not empty
-          if [[ ! -s "$package" ]]; then
-            echo "❌ Package is empty: $package"
-            exit 1
-          fi
-          # Check package size (should be > 1KB)
-          size=$(stat -f%z "$package" 2>/dev/null || stat -c%s "$package" 2>/dev/null || echo 0)
-          if [[ $size -lt 1024 ]]; then
-            echo "❌ Package too small: $package ($size bytes)"
-            exit 1
-          fi
-          echo "✅ Package validation passed: $package ($size bytes)"
-        done
+        echo "Validating package before publication..."
+        VERSION=${{ steps.package-info.outputs.version }}
+        PACKAGE_FILE="packages/ThirdOpinion.Common.$VERSION.nupkg"
+        
+        echo "Validating: $(basename "$PACKAGE_FILE")"
+        # Check if package exists
+        if [[ ! -f "$PACKAGE_FILE" ]]; then
+          echo "❌ Package not found: $PACKAGE_FILE"
+          exit 1
+        fi
+        # Check if package is not empty
+        if [[ ! -s "$PACKAGE_FILE" ]]; then
+          echo "❌ Package is empty: $PACKAGE_FILE"
+          exit 1
+        fi
+        # Check package size (should be > 1KB)
+        size=$(stat -f%z "$PACKAGE_FILE" 2>/dev/null || stat -c%s "$PACKAGE_FILE" 2>/dev/null || echo 0)
+        if [[ $size -lt 1024 ]]; then
+          echo "❌ Package too small: $PACKAGE_FILE ($size bytes)"
+          exit 1
+        fi
+        echo "✅ Package validation passed: $PACKAGE_FILE ($size bytes)"
+        
+        # Commented out for future use - validate all packages
+        # for package in ./packages/*.nupkg; do
+        #   echo "Validating: $(basename "$package")"
+        #   # Check if package is not empty
+        #   if [[ ! -s "$package" ]]; then
+        #     echo "❌ Package is empty: $package"
+        #     exit 1
+        #   fi
+        #   # Check package size (should be > 1KB)
+        #   size=$(stat -f%z "$package" 2>/dev/null || stat -c%s "$package" 2>/dev/null || echo 0)
+        #   if [[ $size -lt 1024 ]]; then
+        #     echo "❌ Package too small: $package ($size bytes)"
+        #     exit 1
+        #   fi
+        #   echo "✅ Package validation passed: $package ($size bytes)"
+        # done
 
     - name: Publish to CodeArtifact (Production)
       run: |
-        echo "Publishing release packages..."
-        echo "Version: ${{ steps.package-info.outputs.version }}"
-        echo "Is Pre-release: ${{ steps.package-info.outputs.is_prerelease }}"
-
-        for package in ./packages/*.nupkg; do
-          echo "Publishing: $(basename "$package")"
-          dotnet nuget push "$package" \
-            --source "codeartifact-prod" \
-            --skip-duplicate \
-            --timeout 300
-        done
+        echo "Publishing package..."
+        VERSION=${{ steps.package-info.outputs.version }}
+        PACKAGE_FILE="packages/ThirdOpinion.Common.$VERSION.nupkg"
+        
+        # The --api-key any flag tells NuGet to use credential providers for authentication
+        # The credential provider will automatically get and inject the CodeArtifact token
+        dotnet nuget push "$PACKAGE_FILE" \
+          --source aws-codeartifact \
+          --api-key any \
+          --skip-duplicate
+        
+        # Commented out for future use - loop through all packages
+        # for package in ./packages/*.nupkg; do
+        #   echo "Publishing: $(basename "$package")"
+        #   dotnet nuget push "$package" \
+        #     --source aws-codeartifact \
+        #     --api-key any \
+        #     --skip-duplicate
+        # done
+        
         echo "✅ Release packages published successfully"
 
     - name: Create release summary
@@ -527,7 +613,7 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### Installation" >> $GITHUB_STEP_SUMMARY
         echo '```bash' >> $GITHUB_STEP_SUMMARY
-        echo "aws codeartifact login --tool dotnet --domain ${{ secrets.AWS_CODEARTIFACT_DOMAIN }} --repository ${{ secrets.AWS_CODEARTIFACT_REPOSITORY_PROD || secrets.AWS_CODEARTIFACT_REPOSITORY }}" >> $GITHUB_STEP_SUMMARY
+        echo "aws codeartifact login --tool dotnet --domain ${{ vars.AWS_CODEARTIFACT_DOMAIN }} --repository ${{ vars.AWS_CODEARTIFACT_REPOSITORY }}" >> $GITHUB_STEP_SUMMARY
         echo "dotnet add package ThirdOpinion.Common --version ${{ steps.package-info.outputs.version }}" >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
 
