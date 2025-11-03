@@ -12,9 +12,9 @@ using ThirdOpinion.Common.Aws.HealthLake.Http;
 namespace ThirdOpinion.Common.Aws.HealthLake;
 
 /// <summary>
-///     Service for writing FHIR resources to AWS HealthLake
+///     Service for writing and reading FHIR resources to/from AWS HealthLake
 /// </summary>
-public class HealthLakeFhirService : IFhirDestinationService
+public class HealthLakeFhirService : IFhirDestinationService, IFhirSourceService
 {
     // Supported FHIR resource types for HealthLake
     private static readonly HashSet<string> SupportedResourceTypes
@@ -182,6 +182,149 @@ public class HealthLakeFhirService : IFhirDestinationService
     }
 
     /// <inheritdoc />
+    public async Task<string?> GetResourceAsync(string resourceType,
+        string resourceId,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateResourceType(resourceType);
+        ValidateResourceId(resourceId);
+
+        _logger.LogInformation("Starting HealthLake GET operation for {ResourceType}/{ResourceId}",
+            resourceType, resourceId);
+
+        await _concurrencySemaphore.WaitAsync(cancellationToken);
+        try
+        {
+            // Build the GET request to HealthLake FHIR endpoint
+            var endpoint
+                = $"https://healthlake.{_config.Region}.amazonaws.com/datastore/{_config.DatastoreId}/r4/{resourceType}/{resourceId}";
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
+
+            // Set Accept header for FHIR JSON response
+            request.Headers.Add("Accept", "application/json");
+
+            // Send the request with AWS credentials
+            HttpResponseMessage response
+                = await _healthLakeHttpService.SendSignedRequestAsync(request, cancellationToken);
+
+            // Handle response based on status code
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning("FHIR resource not found in HealthLake: {ResourceType}/{ResourceId}",
+                    resourceType, resourceId);
+                return null;
+            }
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                throw new HealthLakeException(
+                    "Authentication failed for HealthLake access",
+                    resourceType,
+                    resourceId,
+                    HttpStatusCode.Unauthorized);
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                throw new HealthLakeAccessDeniedException(
+                    $"Access denied to HealthLake datastore for resource {resourceType}/{resourceId}");
+            }
+
+            if (response.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                TimeSpan? retryAfter = response.Headers.RetryAfter?.Delta;
+                throw new HealthLakeThrottlingException(
+                    "HealthLake API rate limit exceeded",
+                    retryAfter.HasValue ? DateTimeOffset.UtcNow.Add(retryAfter.Value) : null);
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                string errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+                throw new HealthLakeException(
+                    $"HealthLake GET request failed with status {response.StatusCode}: {errorContent}",
+                    resourceType,
+                    resourceId,
+                    response.StatusCode);
+            }
+
+            // Success - read and return the JSON string
+            string json = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            _logger.LogInformation(
+                "Successfully retrieved FHIR resource from HealthLake: {ResourceType}/{ResourceId}",
+                resourceType, resourceId);
+
+            return json;
+        }
+        catch (HealthLakeException)
+        {
+            throw; // Re-throw HealthLake-specific exceptions
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error retrieving FHIR resource from HealthLake: {ResourceType}/{ResourceId}",
+                resourceType, resourceId);
+            throw new HealthLakeException(
+                $"Failed to retrieve FHIR resource from HealthLake: {ex.Message}",
+                resourceType,
+                resourceId,
+                ex);
+        }
+        finally
+        {
+            _concurrencySemaphore.Release();
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Dictionary<string, string?>> GetResourcesAsync(
+        IEnumerable<(string ResourceType, string ResourceId)> resourceRequests,
+        CancellationToken cancellationToken = default)
+    {
+        if (resourceRequests == null)
+            throw new ArgumentNullException(nameof(resourceRequests));
+
+        List<(string ResourceType, string ResourceId)> requestList = resourceRequests.ToList();
+        if (!requestList.Any())
+            return new Dictionary<string, string?>();
+
+        _logger.LogInformation("Starting batch HealthLake GET operation for {Count} resources",
+            requestList.Count);
+
+        var results = new Dictionary<string, string?>();
+        IEnumerable<Task> tasks = requestList.Select(async req =>
+        {
+            var key = $"{req.ResourceType}/{req.ResourceId}";
+            try
+            {
+                string? json = await GetResourceAsync(req.ResourceType, req.ResourceId, cancellationToken);
+                lock (results)
+                {
+                    results[key] = json;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to retrieve resource in batch operation: {Key}", key);
+                lock (results)
+                {
+                    results[key] = null;
+                }
+            }
+        });
+
+        await Task.WhenAll(tasks);
+
+        _logger.LogInformation("Completed batch GET operation. Success: {SuccessCount}/{TotalCount}",
+            results.Count(r => r.Value != null), requestList.Count);
+
+        return results;
+    }
+
+    /// <inheritdoc />
     public async Task<Dictionary<string, bool>> PutResourcesAsync(
         IEnumerable<(string ResourceType, string ResourceId, string ResourceJson)> resources,
         CancellationToken cancellationToken = default)
@@ -238,6 +381,20 @@ public class HealthLakeFhirService : IFhirDestinationService
     }
 
     /// <inheritdoc />
+    IReadOnlyList<string> IFhirDestinationService.GetSupportedResourceTypes()
+    {
+        return SupportedResourceTypes.ToList().AsReadOnly();
+    }
+
+    /// <inheritdoc />
+    IReadOnlyCollection<string> IFhirSourceService.GetSupportedResourceTypes()
+    {
+        return SupportedResourceTypes;
+    }
+
+    /// <summary>
+    ///     Gets the list of supported FHIR resource types
+    /// </summary>
     public IReadOnlyList<string> GetSupportedResourceTypes()
     {
         return SupportedResourceTypes.ToList().AsReadOnly();

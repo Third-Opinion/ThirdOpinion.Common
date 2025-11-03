@@ -1,8 +1,10 @@
 using Amazon;
 using Amazon.HealthLake;
+using Amazon.Runtime;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using ThirdOpinion.Common.Aws.HealthLake.Aws;
 using ThirdOpinion.Common.Aws.HealthLake.Configuration;
 using ThirdOpinion.Common.Aws.HealthLake.Http;
 
@@ -28,6 +30,12 @@ public static class ServiceCollectionExtensions
         // Register configuration
         services.Configure<HealthLakeConfig>(configuration.GetSection("AWS:HealthLake"));
 
+        // Register AWS credentials (uses default credential chain: env vars, profile, IAM role, etc.)
+        services.AddSingleton<AWSCredentials>(_ => FallbackCredentialsFactory.GetCredentials());
+
+        // Register AWS signature service
+        services.AddSingleton<IAwsSignatureService, AwsSignatureService>();
+
         // Register AWS HealthLake client
         services.AddSingleton<IAmazonHealthLake>(sp =>
         {
@@ -51,8 +59,9 @@ public static class ServiceCollectionExtensions
         // Register HealthLake HTTP service
         services.AddScoped<IHealthLakeHttpService, HealthLakeHttpService>();
 
-        // Register FHIR destination service
+        // Register FHIR destination and source services
         services.AddScoped<IFhirDestinationService, HealthLakeFhirService>();
+        services.AddScoped<IFhirSourceService>(sp => sp.GetRequiredService<IFhirDestinationService>() as IFhirSourceService ?? throw new InvalidOperationException("HealthLakeFhirService not registered"));
         services.AddScoped<HealthLakeFhirService>();
 
         return services;

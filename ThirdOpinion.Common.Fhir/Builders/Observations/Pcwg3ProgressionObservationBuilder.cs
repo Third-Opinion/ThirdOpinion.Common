@@ -10,6 +10,10 @@ namespace ThirdOpinion.Common.Fhir.Builders.Observations;
 /// <summary>
 ///     Builder for creating FHIR Observations for PCWG3 bone scan progression assessment
 /// </summary>
+/// <remarks>
+///     This builder is deprecated and will be replaced by a unified RadiographicObservationBuilder in a future release.
+/// </remarks>
+[Obsolete("This builder will be replaced by a unified RadiographicObservationBuilder in a future release.")]
 public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observation>
 {
     private readonly List<Observation.ComponentComponent> _components;

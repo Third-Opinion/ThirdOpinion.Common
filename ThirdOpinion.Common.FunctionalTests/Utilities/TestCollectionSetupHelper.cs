@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ThirdOpinion.Common.Aws.Bedrock;
 using ThirdOpinion.Common.Aws.HealthLake;
+using ThirdOpinion.Common.Aws.HealthLake.Aws;
 using ThirdOpinion.Common.Aws.HealthLake.Http;
 using ThirdOpinion.Common.Aws.Misc.SecretsManager;
 using ThirdOpinion.Common.Langfuse;
@@ -48,6 +49,12 @@ public static class TestCollectionSetupHelper
                 $"Please configure SSO by running: aws configure sso --profile {awsProfile}");
 
         AWSCredentials? credentials = profile.GetAWSCredentials(sharedCredentialsFile);
+
+        // Register AWS credentials for use by other services
+        services.AddSingleton(credentials);
+
+        // Register AWS signature service for HealthLake
+        services.AddSingleton<IAwsSignatureService, AwsSignatureService>();
 
         // Configure all AWS service clients with SSO profile credentials
         var cognitoClient = new AmazonCognitoIdentityProviderClient(credentials, regionEndpoint);
@@ -142,13 +149,18 @@ public static class TestCollectionSetupHelper
 
         // Configure HealthLake configuration
         services.Configure<ThirdOpinion.Common.Aws.HealthLake.Configuration.HealthLakeConfig>(
-            configuration.GetSection("HealthLake"));
+            configuration.GetSection("AWS:HealthLake"));
 
         // Configure HealthLake HTTP client (AWS-signed)
         services.AddHttpClient<IHealthLakeHttpService, HealthLakeHttpService>();
 
         // Configure HealthLake FHIR service
         services.AddSingleton<IFhirDestinationService, HealthLakeFhirService>();
+
+        // Configure HealthLake FHIR source service (for GET operations)
+        services.AddSingleton<IFhirSourceService>(sp =>
+            sp.GetRequiredService<IFhirDestinationService>() as IFhirSourceService
+            ?? throw new InvalidOperationException("HealthLakeFhirService must implement IFhirSourceService"));
     }
 
     private static void ValidateSSOProfile(string profileName)

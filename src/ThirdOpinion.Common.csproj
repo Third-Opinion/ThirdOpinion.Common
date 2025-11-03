@@ -41,11 +41,12 @@
         <PackageReleaseNotes>
             Version 1.1.6:
             - Added RECIST timepoints JSON storage capability to RecistProgressionObservationBuilder
-            - Added RECIST timepoints JSON storage capability to RadiographicProgressionObservationBuilder
             - Created RecistTimepointsExtension helper for reusable FHIR extension creation
-            - Added WithRecistTimepointsJson() method to both builders for storing complete RECIST assessment data
+            - Added WithRecistTimepointsJson() method for storing complete RECIST assessment data
             - Added comprehensive unit tests (15 new tests) for RECIST timepoints functionality
             - Maintains full backward compatibility - all 333 FHIR unit tests pass
+            - Removed RadiographicProgressionObservationBuilder
+            - Marked Pcwg3ProgressionObservationBuilder and RecistProgressionObservationBuilder as obsolete
 
             Version 1.1.5:
             - Added ILangfuseSchemaService and LangfuseSchemaService for schema-aware prompt management

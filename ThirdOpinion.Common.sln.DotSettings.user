@@ -1,4 +1,5 @@
 ﻿<wpf:ResourceDictionary xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xml:space="preserve">
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AAsyncTestSyncContext_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003FLibrary_003FApplication_0020Support_003FJetBrains_003FRider2025_002E1_003Fresharper_002Dhost_003FSourcesCache_003F18429a71393536d36caea68412f9b8cb5847efc4e7ed27989cba4d64c5512b_003FAsyncTestSyncContext_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AExecutionTimer_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003FLibrary_003FApplication_0020Support_003FJetBrains_003FRider2025_002E1_003Fresharper_002Dhost_003FSourcesCache_003F3b92f859131bde25d0f7a63de08963e995d1e1426e584dfd4b8e833d2d3dba_003FExecutionTimer_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
     <s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AIAmazonHealthLake_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003FLibrary_003FApplication_0020Support_003FJetBrains_003FRider2025_002E1_003Fresharper_002Dhost_003FSourcesCache_003Fc04e8d17ad9c1d60fbb9199aef283b6bdc6c9dd3944d34dc2ea9a432f7f7d7_003FIAmazonHealthLake_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
     <s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AIAmazonS3_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003FLibrary_003FApplication_0020Support_003FJetBrains_003FRider2025_002E1_003Fresharper_002Dhost_003FSourcesCache_003Fe4e2edcf2a9cd7c2fc2236e63b4c1f9840814e49aecbd4ec4ebf040c128b0_003FIAmazonS3_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
@@ -21,6 +22,9 @@
     &lt;TestId&gt;xUnit::3F6E4900-2F30-4DC8-B1AB-B289DBB8ED53::net8.0::ThirdOpinion.Common.Aws.Tests.SQS.ServiceCollectionExtensionsTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=655efe45_002D253c_002D4818_002Da4f1_002D4e164650f4f4/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="All tests from HealthLakeIntegrationTests.cs" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;ProjectFile&gt;B9A4B802-FC87-46B4-8DFD-80CA41BA89E0/d:Tests/f:HealthLakeIntegrationTests.cs&lt;/ProjectFile&gt;
+&lt;/SessionState&gt;</s:String>
     <s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=727096ca_002D9c5f_002D4d0e_002D8dde_002D9d19818dea88/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="BedrockService_WithLangfuse_ShouldTraceRequest_WhenBothConfigured" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::B9A4B802-FC87-46B4-8DFD-80CA41BA89E0::net8.0::ThirdOpinion.Common.FunctionalTests.Tests.BedrockFunctionalTests.BedrockService_WithLangfuse_ShouldTraceRequest_WhenBothConfigured&lt;/TestId&gt;
@@ -37,7 +41,13 @@
   &lt;/Or&gt;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=ba1d02a9_002D5367_002D4643_002Db7a6_002Dd169e1c1a85f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="HealthLakeFhirService_GetResourceAsync_ShouldRetrieveResource_WhenConfigured" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;ProjectFile&gt;B9A4B802-FC87-46B4-8DFD-80CA41BA89E0/d:Tests/f:HealthLakeFunctionalTests.cs&lt;/ProjectFile&gt;
+  &lt;Or&gt;
+    &lt;ProjectFile&gt;B9A4B802-FC87-46B4-8DFD-80CA41BA89E0/d:Tests/f:HealthLakeFunctionalTests.cs&lt;/ProjectFile&gt;
+    &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Fhir.UnitTests" Presentation="&amp;lt;ThirdOpinion.Common.Fhir.UnitTests&amp;gt;" /&gt;
+    &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Aws.UnitTests" Presentation="&amp;lt;ThirdOpinion.Common.Aws.UnitTests&amp;gt;" /&gt;
+    &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Misc.UnitTests" Presentation="&amp;lt;ThirdOpinion.Common.Misc.UnitTests&amp;gt;" /&gt;
+    &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Misc.Tests" Presentation="&amp;lt;ThirdOpinion.Common.Misc.Tests&amp;gt;" /&gt;
+  &lt;/Or&gt;
 &lt;/SessionState&gt;</s:String>
     <s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=bdc8868a_002D3304_002D4b30_002Db865_002D570cbf355923/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="DynamoDbRepositoryTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;

@@ -10,6 +10,10 @@ namespace ThirdOpinion.Common.Fhir.Builders.Observations;
 /// <summary>
 ///     Builder for creating FHIR Observations for RECIST 1.1 radiographic progression with imaging references
 /// </summary>
+/// <remarks>
+///     This builder is deprecated and will be replaced by a unified RadiographicObservationBuilder in a future release.
+/// </remarks>
+[Obsolete("This builder will be replaced by a unified RadiographicObservationBuilder in a future release.")]
 public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observation>
 {
     private readonly List<Observation.ComponentComponent> _components;
