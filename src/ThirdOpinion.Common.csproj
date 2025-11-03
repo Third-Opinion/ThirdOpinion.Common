@@ -22,9 +22,9 @@
           * main/master: Uses this version as-is for manual releases
         - For manual version updates, update this value and create a release
         -->
-        <Version>1.1.5</Version>
-        <AssemblyVersion>1.1.5.0</AssemblyVersion>
-        <FileVersion>1.1.5.0</FileVersion>
+        <Version>1.1.6</Version>
+        <AssemblyVersion>1.1.6.0</AssemblyVersion>
+        <FileVersion>1.1.6.0</FileVersion>
 
         <!-- Package Metadata -->
         <Description>Third Opinion Common Libraries - Complete package including AWS services integration (S3, DynamoDB, SQS, Cognito), FHIR R4 healthcare integration, and utility functions</Description>
@@ -39,6 +39,14 @@
 
         <!-- Release Notes -->
         <PackageReleaseNotes>
+            Version 1.1.6:
+            - Added RECIST timepoints JSON storage capability to RecistProgressionObservationBuilder
+            - Added RECIST timepoints JSON storage capability to RadiographicProgressionObservationBuilder
+            - Created RecistTimepointsExtension helper for reusable FHIR extension creation
+            - Added WithRecistTimepointsJson() method to both builders for storing complete RECIST assessment data
+            - Added comprehensive unit tests (15 new tests) for RECIST timepoints functionality
+            - Maintains full backward compatibility - all 333 FHIR unit tests pass
+
             Version 1.1.5:
             - Added ILangfuseSchemaService and LangfuseSchemaService for schema-aware prompt management
             - Added prompt variable substitution with {{variable}} syntax in BedrockService
