@@ -144,7 +144,7 @@ public class HealthLakeFhirService : IFhirDestinationService
             using var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
 
             // Set Accept header for FHIR JSON response
-            request.Headers.Add("Accept", "application/fhir+json");
+            request.Headers.Add("Accept", "application/json");
 
             // Send the request with AWS credentials
             HttpResponseMessage response
