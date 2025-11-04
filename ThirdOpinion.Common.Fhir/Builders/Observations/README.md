@@ -227,141 +227,105 @@ public PsaProgressionObservationBuilder AddNote(string noteText)
 
 ---
 
-### RecistProgressionObservationBuilder
+### RadiographicObservationBuilder
 
-Creates observations for RECIST 1.1 radiographic progression analysis.
+**Unified builder for creating FHIR Observations for radiographic progression assessment**
+
+Creates observations for radiographic progression analysis supporting multiple assessment standards: RECIST 1.1, PCWG3, and Observed.
+
+> **Note**: This builder replaces the deprecated `RecistProgressionObservationBuilder` and `Pcwg3ProgressionObservationBuilder` classes, providing a unified interface for all radiographic assessment standards.
 
 #### Purpose
 
-Generates FHIR Observations that assess radiographic progression using RECIST 1.1 (Response Evaluation Criteria in Solid
-Tumors) methodology.
+Generates FHIR Observations that assess radiographic progression using your choice of clinical assessment standard. The builder adapts its behavior based on the selected standard while maintaining a consistent, fluent API.
 
 #### Key Features
 
+- **Unified Interface**: Single builder supports multiple radiographic assessment standards
+- **Standard Selection**: Choose RECIST 1.1, PCWG3, or Observed via enum parameter
 - **Category**: `imaging` (Imaging study)
-- **Code**: LOINC `33717-0` (Tumor response)
-- **Value**: RECIST response codes (Complete Response, Partial Response, Progressive Disease, Stable Disease)
-- **Evidence**: Imaging studies and radiology reports
-- **Measurements**: Target lesion diameters (SLD)
-- **Body Sites**: Anatomical locations using SNOMED codes
+- **Common Methods**: Core functionality available for all standards
+- **Standard-Specific Methods**: Specialized methods for each assessment type
+- **Evidence Support**: Imaging studies and radiology reports for all standards
+- **Clinical Facts**: Structured supporting and conflicting evidence
+- **AI Integration**: Confidence scoring and AIAST security labeling
 
-#### RECIST Response Types
+#### RadiographicStandard Enum
 
-- **CR** (Complete Response) - `C25197` - No evidence of disease
-- **PR** (Partial Response) - `C25206` - ≥30% decrease in SLD
-- **PD** (Progressive Disease) - `C35571` - ≥20% increase in SLD or new lesions
-- **SD** (Stable Disease) - `C85553` - Neither PR nor PD criteria met
-
-#### Basic Usage
+Select the assessment standard using the `RadiographicStandard` enum:
 
 ```csharp
-var recistObservation = new RecistProgressionObservationBuilder(config)
+public enum RadiographicStandard
+{
+    /// RECIST 1.1 (Response Evaluation Criteria in Solid Tumors version 1.1)
+    /// Used for solid tumor response assessment
+    RECIST_1_1,
+
+    /// PCWG3 (Prostate Cancer Working Group 3) bone scan progression criteria
+    /// Used for bone scan progression in prostate cancer
+    PCWG3,
+
+    /// Observed radiographic progression without specific criteria
+    /// Used for general radiographic findings
+    Observed
+}
+```
+
+#### Standard-Specific Codes and Values
+
+Each standard generates appropriate FHIR codes:
+
+**PCWG3 Standard:**
+- Code: LOINC `44667-7` (Bone scan findings)
+- Value: Progressive disease (`277022003`) or Stable disease (`359746009`)
+
+**RECIST 1.1 Standard:**
+- Code: LOINC `21976-6` (Cancer disease status) + NCI `C111544` (RECIST 1.1)
+- Value: RECIST response codes (CR, PR, PD, SD) or custom via `WithRecistResponse()`
+
+**Observed Standard:**
+- Code: LOINC `59462-2` (Imaging study Observations)
+- Value: Progressive disease, Stable disease, or Inconclusive
+
+#### Basic Usage Examples
+
+##### RECIST 1.1 Example
+
+```csharp
+var recistObservation = new RadiographicObservationBuilder(config, RadiographicStandard.RECIST_1_1)
     .WithInferenceId("recist-assessment-001")
     .WithPatient("Patient/patient-321", "Michael Davis")
     .WithDevice("Device/recist-ai-classifier", "RECIST AI Classifier v1.5")
-    .WithFocus("Condition/metastatic-prostate-cancer")
-    .WithCriteria("RECIST-1.1-2024", "RECIST 1.1 Criteria",
-                  "Response Evaluation Criteria in Solid Tumors version 1.1")
+    .WithFocus(new ResourceReference("Condition/metastatic-prostate-cancer"))
     .WithRecistResponse("C35571", "Progressive Disease") // PD
-    .AddImagingStudy("ImagingStudy/ct-chest-abdomen-001", "CT Chest/Abdomen/Pelvis")
-    .AddRadiologyReport("DocumentReference/radiology-report-001", "Radiology interpretation")
-
-    .AddComponent("Current SLD", new Quantity(58.7m, "mm"))  // 30% increase
+    .AddImagingStudy(new ResourceReference("ImagingStudy/ct-chest-001", "CT Chest/Abdomen/Pelvis"))
+    .AddRadiologyReport(new ResourceReference("DiagnosticReport/rad-001", "Radiology interpretation"))
+    .AddComponent("Current SLD", new Quantity(58.7m, "mm"))
     .AddComponent("New lesion detected", true)
-    .AddBodySite("10200004", "Liver structure") // New liver lesion
-    .AddBodySite("39607008", "Lung structure") // Existing lung lesions
+    .WithBodySite("10200004", "Liver structure")
+    .WithMeasurementChange("Target lesions increased from 45.2mm to 58.7mm (30% increase)")
+    .WithImagingType("CT with IV contrast")
+    .WithConfidence(0.92f)
     .WithEffectiveDate(DateTime.UtcNow)
-    .AddNote("Progressive disease with 30% increase in target lesions and new liver lesion")
+    .AddNote("Progressive disease with 30% increase in target lesions")
     .Build();
 ```
 
-#### Component Types
-
-The builder supports various component measurements:
+##### PCWG3 Example
 
 ```csharp
-// Quantity measurements
-.AddComponent("Target lesion SLD", new Quantity(42.5m, "mm"))
-.AddComponent("Percent change from nadir", new Quantity(25.3m, "%"))
-
-// Boolean findings
-.AddComponent("New lesion detected", true)
-.AddComponent("Non-target lesion progression", false)
-
-// CodeableConcept classifications
-.AddComponent("Lesion type", new CodeableConcept(...))
-```
-
----
-
-### RecistProgressionObservationBuilder (continued)
-
-#### API Reference
-
-```csharp
-public RecistProgressionObservationBuilder WithInferenceId(string id)
-public RecistProgressionObservationBuilder WithPatient(ResourceReference patientRef)
-public RecistProgressionObservationBuilder WithDevice(ResourceReference deviceRef)
-public RecistProgressionObservationBuilder WithFocus(ResourceReference conditionRef)
-public RecistProgressionObservationBuilder WithCriteria(string criteriaId, string display, string description)
-public RecistProgressionObservationBuilder WithRecistResponse(string nciCode, string display)
-public RecistProgressionObservationBuilder AddComponent(string codeText, Quantity valueQuantity)
-public RecistProgressionObservationBuilder AddComponent(string codeText, bool valueBoolean)
-public RecistProgressionObservationBuilder AddComponent(string codeText, CodeableConcept valueCodeableConcept)
-public RecistProgressionObservationBuilder AddImagingStudy(ResourceReference imagingStudyRef, string? displayText = null)
-public RecistProgressionObservationBuilder AddRadiologyReport(ResourceReference documentRef, string? displayText = null)
-public RecistProgressionObservationBuilder AddBodySite(string snomedCode, string display)
-public RecistProgressionObservationBuilder WithEffectiveDate(DateTime effectiveDate)
-public RecistProgressionObservationBuilder AddNote(string noteText)
-```
-
-#### Validation Requirements
-
-- Patient reference is required
-- Device reference is required
-- RECIST response must be set
-- At least one component measurement is recommended
-- Focus reference to primary condition is recommended
-
----
-
-### Pcwg3ProgressionObservationBuilder
-
-Creates observations for PCWG3 bone scan progression analysis in prostate cancer.
-
-#### Purpose
-
-Generates FHIR Observations that assess bone scan progression using PCWG3 (Prostate Cancer Working Group 3) criteria for
-bone metastases progression.
-
-#### Key Features
-
-- **Category**: `imaging` (Imaging study)
-- **Code**: LOINC `44667-7` (Bone scan findings)
-- **Value**: Progressive disease vs. Stable disease (SNOMED codes)
-- **Evidence**: Supporting clinical facts with structured metadata
-- **AI Integration**: Confidence scoring and AIAST security labeling
-- **PCWG3 Criteria**: Specialized bone scan progression assessment
-
-#### PCWG3 Progression Logic
-
-- **Progression**: New bone lesions or unequivocal progression of existing lesions
-- **Stable**: No new lesions and no unequivocal progression
-- **Confirmation**: Requires confirmation scan ≥6 weeks after initial detection
-
-#### Basic Usage
-
-```csharp
-var pcwg3Observation = new Pcwg3ProgressionObservationBuilder(config)
+var pcwg3Observation = new RadiographicObservationBuilder(config, RadiographicStandard.PCWG3)
     .WithInferenceId("pcwg3-assessment-001")
     .WithPatient("Patient/patient-789", "David Wilson")
     .WithDevice("Device/pcwg3-bone-scan-ai", "PCWG3 Bone Scan AI v2.0")
-    .WithFocus("Condition/prostate-cancer-with-bone-mets")
-    .WithIdentified(true) // Progression identified
+    .WithFocus(new ResourceReference("Condition/prostate-cancer-with-bone-mets"))
+    .WithDetermination("True") // Progression identified
     .WithInitialLesions("New lesion at L5 vertebra")
     .WithConfirmationDate(new DateTime(2025, 2, 15))
     .WithTimeBetweenScans("8 weeks")
     .WithAdditionalLesions("Multiple new thoracic spine lesions")
+    .AddImagingStudy(new ResourceReference("ImagingStudy/bone-scan-001"))
+    .AddRadiologyReport(new ResourceReference("DiagnosticReport/bone-report-001"))
     .WithSupportingFacts(clinicalFacts)
     .WithConfidence(0.91f)
     .WithEffectiveDate(DateTime.UtcNow)
@@ -369,9 +333,166 @@ var pcwg3Observation = new Pcwg3ProgressionObservationBuilder(config)
     .Build();
 ```
 
+##### Observed Standard Example
+
+```csharp
+var observedProgression = new RadiographicObservationBuilder(config, RadiographicStandard.Observed)
+    .WithInferenceId("observed-assessment-001")
+    .WithPatient("Patient/patient-456", "Sarah Johnson")
+    .WithDevice("Device/radiologist-review", "Radiologist Review")
+    .WithFocus(new ResourceReference("Condition/lung-cancer"))
+    .WithDetermination("True") // Progression observed
+    .AddImagingStudy(new ResourceReference("ImagingStudy/pet-ct-001", "PET-CT"))
+    .AddRadiologyReport(new ResourceReference("DiagnosticReport/pet-report-001"))
+    .WithSummary("Increased FDG uptake in mediastinal lymph nodes suggesting progression")
+    .WithConfidence(0.85f)
+    .WithEffectiveDate(DateTime.UtcNow)
+    .AddNote("Radiographic progression observed without specific criteria application")
+    .Build();
+```
+
+#### Common Methods (Available for All Standards)
+
+These methods work with all three assessment standards:
+
+```csharp
+// Core setup
+.WithInferenceId(string id)
+.WithPatient(ResourceReference patient)
+.WithPatient(string patientId, string? display = null)
+.WithDevice(ResourceReference device)
+.WithDevice(string deviceId, string? display = null)
+.WithFocus(params ResourceReference[] focuses)
+
+// Assessment details
+.WithDetermination(string determination)  // "True", "False", or "Inconclusive"
+.WithConfidence(float confidence)         // 0.0 to 1.0
+.WithConfidenceRationale(string? rationale)
+.WithConfirmationDate(DateTime? date)
+.WithSummary(string? summary)
+
+// Evidence - Available for ALL standards
+.AddImagingStudy(ResourceReference imagingStudy)
+.AddRadiologyReport(ResourceReference report)
+.WithSupportingFacts(params Fact[] facts)
+.WithConflictingFacts(params Fact[] facts)
+
+// Metadata
+.WithEffectiveDate(DateTime effectiveDate)
+.WithEffectiveDate(DateTimeOffset effectiveDate)
+.AddNote(string noteText)
+
+// Base class methods
+.WithCriteria(string id, string display, string? system = null)
+.AddDerivedFrom(ResourceReference reference)
+.AddDerivedFrom(string reference, string? display = null)
+```
+
+#### PCWG3-Specific Methods
+
+Additional methods available when using `RadiographicStandard.PCWG3`:
+
+```csharp
+.WithInitialLesions(string? initialLesions)
+.WithAdditionalLesions(string? additionalLesions)
+.WithTimeBetweenScans(string? timeBetweenScans)
+.WithInitialScanDate(DateTime? initialScanDate)
+.WithConfirmationLesions(string? confirmationLesions)
+.AddEvidence(ResourceReference reference, string? display = null)
+.AddEvidence(string referenceString, string? display = null)
+```
+
+**Example:**
+```csharp
+var pcwg3Obs = new RadiographicObservationBuilder(config, RadiographicStandard.PCWG3)
+    .WithPatient("Patient/patient-001")
+    .WithDevice("Device/bone-scan-ai")
+    .WithDetermination("True")
+    .WithInitialLesions("2 new bone lesions at L3 and T10")
+    .WithConfirmationDate(DateTime.Parse("2025-02-01"))
+    .WithTimeBetweenScans("8 weeks")
+    .WithAdditionalLesions("1 additional lesion at T8 on confirmation scan")
+    .WithConfidence(0.93f)
+    .Build();
+```
+
+#### RECIST-Specific Methods
+
+Additional methods available when using `RadiographicStandard.RECIST_1_1`:
+
+```csharp
+.WithRecistCriteria(string criteria)
+.WithRecistResponse(string nciCode, string display)
+.WithBodySite(string snomedCode, string display)
+.WithMeasurementChange(string? measurementChange)
+.WithImagingType(string? imagingType)
+.WithImagingDate(DateTime? imagingDate)
+.WithRecistTimepointsJson(string? timepointsJson)
+.AddComponent(string code, Quantity value)
+.AddComponent(string code, bool value)
+.AddComponent(string code, CodeableConcept value)
+```
+
+**RECIST Response Codes:**
+- **CR** (Complete Response) - `C25197` - No evidence of disease
+- **PR** (Partial Response) - `C25206` - ≥30% decrease in SLD
+- **PD** (Progressive Disease) - `C35571` - ≥20% increase in SLD or new lesions
+- **SD** (Stable Disease) - `C85553` - Neither PR nor PD criteria met
+
+**Example:**
+```csharp
+var recistObs = new RadiographicObservationBuilder(config, RadiographicStandard.RECIST_1_1)
+    .WithPatient("Patient/patient-002")
+    .WithDevice("Device/recist-analyzer")
+    .WithRecistResponse("C35571", "Progressive Disease")
+    .WithBodySite("39607008", "Lung structure")
+    .AddComponent("Target lesion SLD", new Quantity(58.7m, "mm"))
+    .AddComponent("Percent change from nadir", new Quantity(30.0m, "%"))
+    .AddComponent("New lesion detected", true)
+    .WithMeasurementChange("SLD increased from 45.2mm to 58.7mm")
+    .WithImagingType("CT Chest/Abdomen/Pelvis")
+    .WithImagingDate(DateTime.Parse("2025-01-15"))
+    .WithConfidence(0.94f)
+    .Build();
+```
+
+#### RECIST Timepoints JSON Storage
+
+For RECIST assessments, store complete timepoint data structures:
+
+```csharp
+var timepointsJson = @"{
+    ""baseline"": {
+        ""date"": ""2024-06-01"",
+        ""targetLesions"": [
+            { ""location"": ""Lung, right upper lobe"", ""diameter"": 32.5 },
+            { ""location"": ""Liver, segment 7"", ""diameter"": 12.7 }
+        ],
+        ""sld"": 45.2
+    },
+    ""followup"": {
+        ""date"": ""2025-01-15"",
+        ""targetLesions"": [
+            { ""location"": ""Lung, right upper lobe"", ""diameter"": 42.1 },
+            { ""location"": ""Liver, segment 7"", ""diameter"": 16.6 }
+        ],
+        ""sld"": 58.7,
+        ""newLesions"": [
+            { ""location"": ""Liver, segment 4"", ""diameter"": 8.2 }
+        ]
+    }
+}";
+
+var observation = new RadiographicObservationBuilder(config, RadiographicStandard.RECIST_1_1)
+    .WithRecistTimepointsJson(timepointsJson)
+    .WithRecistResponse("C35571", "Progressive Disease")
+    // ... other methods
+    .Build();
+```
+
 #### Supporting Facts Integration
 
-The builder accepts clinical facts that provide evidence for progression:
+All standards support structured clinical facts as evidence:
 
 ```csharp
 var supportingFacts = new[]
@@ -379,22 +500,22 @@ var supportingFacts = new[]
     new Fact
     {
         factGuid = "fact-001",
-        factDocumentReference = "DocumentReference/bone-scan-baseline",
+        factDocumentReference = "DocumentReference/baseline-scan",
         type = "finding",
-        fact = "Baseline bone scan showed no evidence of metastatic disease",
+        fact = "Baseline imaging showed 3 target lesions with SLD 45.2mm",
         @ref = new[] { "1.123" },
-        timeRef = "2024-12-01",
-        relevance = "Establishes baseline for progression assessment"
+        timeRef = "2024-06-01",
+        relevance = "Establishes baseline for comparison"
     },
     new Fact
     {
         factGuid = "fact-002",
-        factDocumentReference = "DocumentReference/bone-scan-followup",
+        factDocumentReference = "DocumentReference/followup-scan",
         type = "finding",
-        fact = "Follow-up scan shows new uptake in L5 and T8 vertebrae",
+        fact = "Follow-up imaging shows SLD increased to 58.7mm (30% increase)",
         @ref = new[] { "2.456" },
-        timeRef = "2025-02-15",
-        relevance = "Evidence of new bone metastases indicating progression"
+        timeRef = "2025-01-15",
+        relevance = "Documents progression per RECIST criteria"
     }
 };
 
@@ -403,107 +524,112 @@ var observation = builder
     .Build();
 ```
 
-#### Component Structure
-
-The builder creates structured components for:
-
-- **Initial Lesions**: Description of newly identified lesions
-- **Confirmation Date**: Date progression was confirmed
-- **Time Between Scans**: Interval between initial and confirmation scans
-- **Additional Lesions**: Further lesions beyond initial findings
-- **Confidence Score**: AI assessment confidence (0.0-1.0)
-
 #### API Reference
 
+##### Constructor
 ```csharp
-public Pcwg3ProgressionObservationBuilder WithInferenceId(string id)
-public Pcwg3ProgressionObservationBuilder WithPatient(ResourceReference patientRef)
-public Pcwg3ProgressionObservationBuilder WithPatient(string patientId, string? display = null)
-public Pcwg3ProgressionObservationBuilder WithDevice(ResourceReference deviceRef)
-public Pcwg3ProgressionObservationBuilder WithDevice(string deviceId, string? display = null)
-public Pcwg3ProgressionObservationBuilder WithFocus(params ResourceReference[] focus)
-public Pcwg3ProgressionObservationBuilder WithIdentified(bool identified)
-public Pcwg3ProgressionObservationBuilder WithInitialLesions(string? initialLesions)
-public Pcwg3ProgressionObservationBuilder WithConfirmationDate(DateTime? confirmationDate)
-public Pcwg3ProgressionObservationBuilder WithTimeBetweenScans(string? timeBetweenScans)
-public Pcwg3ProgressionObservationBuilder WithAdditionalLesions(string? additionalLesions)
-public Pcwg3ProgressionObservationBuilder WithSupportingFacts(params Fact[] facts)
-public Pcwg3ProgressionObservationBuilder WithConfidence(float confidence)
-public Pcwg3ProgressionObservationBuilder WithEffectiveDate(DateTime effectiveDate)
-public Pcwg3ProgressionObservationBuilder AddNote(string noteText)
+public RadiographicObservationBuilder(
+    AiInferenceConfiguration configuration,
+    RadiographicStandard standard)
 ```
 
-#### Progressive Disease Example
-
+##### Common Methods (All Standards)
 ```csharp
-var progressionObservation = new Pcwg3ProgressionObservationBuilder(config)
-    .WithPatient("Patient/pc-patient-001")
-    .WithDevice("Device/pcwg3-analyzer")
-    .WithFocus("Condition/prostate-cancer-stage-iv")
-    .WithIdentified(true) // Progression detected
-    .WithInitialLesions("New focal uptake L5 vertebral body")
-    .WithConfirmationDate(new DateTime(2025, 3, 15))
-    .WithTimeBetweenScans("12 weeks")
-    .WithAdditionalLesions("Increased uptake T8, new lesion T12")
-    .WithConfidence(0.94f)
-    .Build();
-
-// Results in SNOMED 277022003 "Progressive disease"
+public RadiographicObservationBuilder WithInferenceId(string id)
+public RadiographicObservationBuilder WithPatient(ResourceReference patient)
+public RadiographicObservationBuilder WithPatient(string patientId, string? display = null)
+public RadiographicObservationBuilder WithDevice(ResourceReference device)
+public RadiographicObservationBuilder WithDevice(string deviceId, string? display = null)
+public RadiographicObservationBuilder WithFocus(params ResourceReference[] focuses)
+public RadiographicObservationBuilder WithDetermination(string? determination)
+public RadiographicObservationBuilder WithConfidence(float confidence)
+public RadiographicObservationBuilder WithConfidenceRationale(string? rationale)
+public RadiographicObservationBuilder WithConfirmationDate(DateTime? date)
+public RadiographicObservationBuilder WithSummary(string? summary)
+public RadiographicObservationBuilder AddImagingStudy(ResourceReference imagingStudy)
+public RadiographicObservationBuilder AddRadiologyReport(ResourceReference report)
+public RadiographicObservationBuilder WithSupportingFacts(params Fact[] facts)
+public RadiographicObservationBuilder WithConflictingFacts(params Fact[] facts)
+public RadiographicObservationBuilder WithEffectiveDate(DateTime effectiveDate)
+public RadiographicObservationBuilder WithEffectiveDate(DateTimeOffset effectiveDate)
+public RadiographicObservationBuilder AddNote(string noteText)
 ```
 
-#### Stable Disease Example
-
+##### PCWG3-Specific Methods
 ```csharp
-var stableObservation = new Pcwg3ProgressionObservationBuilder(config)
-    .WithPatient("Patient/pc-patient-002")
-    .WithDevice("Device/pcwg3-analyzer")
-    .WithFocus("Condition/prostate-cancer-stage-iv")
-    .WithIdentified(false) // No progression
-    .WithConfidence(0.88f)
-    .Build();
-
-// Results in SNOMED 359746009 "Stable disease"
+public RadiographicObservationBuilder WithInitialLesions(string? initialLesions)
+public RadiographicObservationBuilder WithAdditionalLesions(string? additionalLesions)
+public RadiographicObservationBuilder WithTimeBetweenScans(string? timeBetweenScans)
+public RadiographicObservationBuilder WithInitialScanDate(DateTime? initialScanDate)
+public RadiographicObservationBuilder WithConfirmationLesions(string? confirmationLesions)
+public RadiographicObservationBuilder AddEvidence(ResourceReference reference, string? display = null)
+public RadiographicObservationBuilder AddEvidence(string referenceString, string? display = null)
 ```
 
-#### Enhanced RecistProgressionObservationBuilder Features
-
-The RecistProgressionObservationBuilder has been enhanced with new capabilities:
-
-##### New Methods for Enhanced JSON Support
-
+##### RECIST-Specific Methods
 ```csharp
-public RecistProgressionObservationBuilder WithIdentified(bool identified)
-public RecistProgressionObservationBuilder WithMeasurementChange(string? measurementChange)
-public RecistProgressionObservationBuilder WithImagingType(string? imagingType)
-public RecistProgressionObservationBuilder WithConfirmationDate(DateTime? confirmationDate)
-public RecistProgressionObservationBuilder WithSupportingFacts(params Fact[] facts)
-public RecistProgressionObservationBuilder WithConfidence(float confidence)
-```
-
-##### Enhanced Usage Example
-
-```csharp
-var enhancedRecistObservation = new RecistProgressionObservationBuilder(config)
-    .WithPatient("Patient/patient-123")
-    .WithDevice("Device/recist-ai-v2")
-    .WithFocus("Condition/nsclc-stage-iv")
-    .WithIdentified(true) // Progression identified
-    .WithMeasurementChange("Target lesions increased from 45.2mm to 58.7mm (30% increase)")
-    .WithImagingType("CT Chest/Abdomen/Pelvis with IV contrast")
-    .WithConfirmationDate(new DateTime(2025, 2, 20))
-    .WithSupportingFacts(radiologyFacts)
-    .WithConfidence(0.92f)
-    .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE, "Progressive Disease")
-    .Build();
+public RadiographicObservationBuilder WithRecistCriteria(string criteria)
+public RadiographicObservationBuilder WithRecistResponse(string nciCode, string display)
+public RadiographicObservationBuilder WithBodySite(string snomedCode, string display)
+public RadiographicObservationBuilder WithMeasurementChange(string? measurementChange)
+public RadiographicObservationBuilder WithImagingType(string? imagingType)
+public RadiographicObservationBuilder WithImagingDate(DateTime? imagingDate)
+public RadiographicObservationBuilder WithRecistTimepointsJson(string? timepointsJson)
+public RadiographicObservationBuilder AddComponent(string code, Quantity value)
+public RadiographicObservationBuilder AddComponent(string code, bool value)
+public RadiographicObservationBuilder AddComponent(string code, CodeableConcept value)
 ```
 
 #### Validation Requirements
 
-- Patient reference is required
-- Device reference is required
-- Identified status (boolean) must be set
-- Confidence must be between 0.0 and 1.0
-- Supporting facts should include relevant clinical evidence
+All standards require:
+- Patient reference (call `WithPatient()`)
+- Device reference (call `WithDevice()`)
+
+Standard-specific requirements:
+- **RECIST 1.1**: At least one component or RECIST response recommended
+- **PCWG3**: Determination ("True"/"False"/"Inconclusive") or supporting facts recommended
+- **Observed**: Summary or notes recommended to document findings
+
+#### Migration Guide
+
+Migrating from deprecated builders is straightforward:
+
+**From RecistProgressionObservationBuilder:**
+```csharp
+// Old code
+var observation = new RecistProgressionObservationBuilder(config)
+    .WithPatient(...)
+    .WithRecistResponse(...)
+    .Build();
+
+// New code - Add standard parameter to constructor
+var observation = new RadiographicObservationBuilder(config, RadiographicStandard.RECIST_1_1)
+    .WithPatient(...)
+    .WithRecistResponse(...)
+    .Build();
+```
+
+**From Pcwg3ProgressionObservationBuilder:**
+```csharp
+// Old code
+var observation = new Pcwg3ProgressionObservationBuilder(config)
+    .WithPatient(...)
+    .WithIdentified(true)
+    .Build();
+
+// New code - Add standard parameter, use WithDetermination instead of WithIdentified
+var observation = new RadiographicObservationBuilder(config, RadiographicStandard.PCWG3)
+    .WithPatient(...)
+    .WithDetermination("True")  // Replaces WithIdentified(true)
+    .Build();
+```
+
+**Key Changes:**
+- Add `RadiographicStandard` enum parameter to constructor
+- `WithIdentified(bool)` is now `WithDetermination("True"/"False"/"Inconclusive")`
+- `AddImagingStudy()` and `AddRadiologyReport()` now available for **all** standards
+- All other method names remain the same
 
 ## Common Patterns
 
