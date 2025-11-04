@@ -1,8 +1,10 @@
+using Hl7.Fhir.Model;
 using Microsoft.Extensions.DependencyInjection;
 using ThirdOpinion.Common.Aws.HealthLake;
 using ThirdOpinion.Common.FunctionalTests.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
+using Task = System.Threading.Tasks.Task;
 
 namespace ThirdOpinion.Common.FunctionalTests.Tests;
 
@@ -49,7 +51,7 @@ public class HealthLakeIntegrationTests : BaseIntegrationTest
             try
             {
                 // Use dynamic type since we don't have FHIR models defined
-                var patient = await _fhirSourceService.GetResourceAsync<dynamic>(
+                var patient = await _fhirSourceService.GetResourceAsync<Patient>(
                     "Patient",
                     patientId,
                     CancellationToken.None);
@@ -91,7 +93,7 @@ public class HealthLakeIntegrationTests : BaseIntegrationTest
         // Act & Assert
         var exception = await Should.ThrowAsync<Exception>(async () =>
         {
-            await _fhirSourceService.GetResourceAsync<dynamic>(
+            await _fhirSourceService.GetResourceAsync<Patient>(
                 "Patient",
                 nonExistentId,
                 CancellationToken.None);
@@ -148,7 +150,7 @@ public class HealthLakeIntegrationTests : BaseIntegrationTest
 
             // Act - Read the patient back
             WriteOutput($"Reading patient resource back...");
-            var retrievedPatient = await _fhirSourceService.GetResourceAsync<dynamic>(
+            var retrievedPatient = await _fhirSourceService.GetResourceAsync<Patient>(
                 "Patient",
                 testPatientId,
                 CancellationToken.None);
@@ -157,9 +159,11 @@ public class HealthLakeIntegrationTests : BaseIntegrationTest
             Assert.NotNull(retrievedPatient);
             WriteOutput($"✓ Successfully retrieved patient: {testPatientId}");
 
-            string patientInfo = retrievedPatient.ToString();
-            Assert.Contains(testPatientId, patientInfo);
-            Assert.Contains("Patient", patientInfo);
+            // Verify patient properties
+            Assert.Equal(testPatientId, retrievedPatient.Id);
+            Assert.True(retrievedPatient.Active == true);
+            Assert.NotEmpty(retrievedPatient.Name);
+            Assert.Equal("TestPatient", retrievedPatient.Name[0].Family);
             WriteOutput($"✓ Patient data contains expected ID and resourceType");
         }
         catch (Exception ex)
@@ -186,8 +190,8 @@ public class HealthLakeIntegrationTests : BaseIntegrationTest
 
         // Act
         var startTime = DateTime.UtcNow;
-        List<Task<dynamic>> tasks = _testPatientIds
-            .Select(patientId => _fhirSourceService.GetResourceAsync<dynamic>(
+        List<Task<Patient>> tasks = _testPatientIds
+            .Select(patientId => _fhirSourceService.GetResourceAsync<Patient>(
                 "Patient",
                 patientId,
                 CancellationToken.None))

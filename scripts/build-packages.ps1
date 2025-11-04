@@ -1,11 +1,46 @@
 # ThirdOpinion.Common Package Build Script (PowerShell)
 # This script builds and packs all NuGet packages for local testing
+#
+# Usage Examples:
+#   Default (local build with timestamp):
+#     .\build-packages.ps1
+#     Result: Creates package with version 1.0.0-local.{timestamp}
+#
+#   Custom prerelease tag:
+#     .\build-packages.ps1 -PrereleaseTag "dev"
+#     Result: Creates package with version from csproj + -dev.{timestamp}
+#
+#   Explicit version:
+#     .\build-packages.ps1 -Version "2.0.0-alpha.1"
+#     Result: Creates package with version 2.0.0-alpha.1
 
 param(
     [string]$Configuration = "Release",
     [string]$OutputDir = "./packages",
-    [string]$Version = "1.0.0-local.$(Get-Date -Format 'yyyyMMddHHmmss')"
+    [string]$Version = "",  # If empty, uses csproj version with prerelease tag
+    [string]$PrereleaseTag = "local"  # Prerelease tag (local, dev, test, etc.)
 )
+
+# Function to extract version from csproj file
+function Get-CsProjVersion {
+    param([string]$CsProjPath)
+
+    $content = Get-Content $CsProjPath -Raw
+    if ($content -match '<Version>([\d\.]+)</Version>') {
+        return $matches[1]
+    }
+    throw "Could not find version in $CsProjPath"
+}
+
+# Determine version to use
+if ([string]::IsNullOrWhiteSpace($Version)) {
+    Write-Host "Reading version from csproj..." -ForegroundColor Cyan
+    $csprojPath = "src/ThirdOpinion.Common.csproj"
+    $baseVersion = Get-CsProjVersion -CsProjPath $csprojPath
+    $timestamp = Get-Date -Format 'yyyyMMddHHmmss'
+    $Version = "$baseVersion-$PrereleaseTag.$timestamp"
+    Write-Host "Generated version: $Version" -ForegroundColor White
+}
 
 # Configuration
 Write-Host "🔨 Building ThirdOpinion.Common NuGet Packages" -ForegroundColor Green

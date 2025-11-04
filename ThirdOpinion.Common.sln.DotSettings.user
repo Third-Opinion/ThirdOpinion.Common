@@ -23,7 +23,10 @@
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=655efe45_002D253c_002D4818_002Da4f1_002D4e164650f4f4/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="All tests from HealthLakeIntegrationTests.cs" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;ProjectFile&gt;B9A4B802-FC87-46B4-8DFD-80CA41BA89E0/d:Tests/f:HealthLakeIntegrationTests.cs&lt;/ProjectFile&gt;
+  &lt;Or&gt;
+    &lt;ProjectFile&gt;B9A4B802-FC87-46B4-8DFD-80CA41BA89E0/d:Tests/f:HealthLakeIntegrationTests.cs&lt;/ProjectFile&gt;
+    &lt;ProjectFile&gt;B9A4B802-FC87-46B4-8DFD-80CA41BA89E0/d:Tests/f:HealthLakeFunctionalTests.cs&lt;/ProjectFile&gt;
+  &lt;/Or&gt;
 &lt;/SessionState&gt;</s:String>
     <s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=727096ca_002D9c5f_002D4d0e_002D8dde_002D9d19818dea88/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="BedrockService_WithLangfuse_ShouldTraceRequest_WhenBothConfigured" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;

@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading.Tasks;
 using Amazon.HealthLake;
+using Hl7.Fhir.Model;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq.Protected;
@@ -12,6 +14,7 @@ using ThirdOpinion.Common.Aws.HealthLake.Http;
 using ThirdOpinion.Common.Aws.HealthLake.Logging;
 using ThirdOpinion.Common.Aws.HealthLake.RateLimiting;
 using ThirdOpinion.Common.Aws.HealthLake.Retry;
+using Task = System.Threading.Tasks.Task;
 
 namespace ThirdOpinion.Common.Aws.HealthLake.Tests;
 
@@ -273,8 +276,11 @@ public class HealthLakeFhirServiceTests
         // Arrange
         var resourceType = "Patient";
         var resourceId = "12345";
-        var patient = new TestPatientResource
-            { ResourceType = "Patient", Id = "12345", Active = true };
+        var patient = new Patient
+        {
+            Id = "12345",
+            Active = true
+        };
 
         SetupHttpResponse(HttpStatusCode.Created, "");
 

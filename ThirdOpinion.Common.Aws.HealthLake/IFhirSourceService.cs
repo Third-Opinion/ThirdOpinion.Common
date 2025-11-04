@@ -26,7 +26,7 @@ public interface IFhirSourceService
     /// <returns>The deserialized FHIR resource, or null if not found</returns>
     Task<T?> GetResourceAsync<T>(string resourceType,
         string resourceId,
-        CancellationToken cancellationToken = default) where T : class;
+        CancellationToken cancellationToken = default) where T : Hl7.Fhir.Model.Base;
 
     /// <summary>
     ///     Retrieves multiple FHIR resources in batch

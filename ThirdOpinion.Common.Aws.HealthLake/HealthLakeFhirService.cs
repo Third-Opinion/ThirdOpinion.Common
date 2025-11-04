@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Amazon.HealthLake;
+using Hl7.Fhir.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ThirdOpinion.Common.Aws.HealthLake.Configuration;
@@ -109,24 +110,26 @@ public class HealthLakeFhirService : IFhirDestinationService, IFhirSourceService
     public async Task PutResourceAsync<T>(string resourceType,
         string resourceId,
         T resource,
-        CancellationToken cancellationToken = default) where T : class
+        CancellationToken cancellationToken = default) where T : Hl7.Fhir.Model.Base
     {
         if (resource == null)
             throw new ArgumentNullException(nameof(resource));
 
-        string json = JsonSerializer.Serialize(resource, new JsonSerializerOptions
+        // Use FHIR serializer for proper FHIR resource serialization
+        var serializer = new FhirJsonSerializer(new SerializerSettings
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false
+            Pretty = false,
+            AppendNewLine = false
         });
+        string json = serializer.SerializeToString(resource);
 
         await PutResourceAsync(resourceType, resourceId, json, cancellationToken);
     }
 
     /// <inheritdoc />
-    public async Task<T> GetResourceAsync<T>(string resourceType,
+    public async Task<T?> GetResourceAsync<T>(string resourceType,
         string resourceId,
-        CancellationToken cancellationToken = default) where T : class
+        CancellationToken cancellationToken = default) where T : Hl7.Fhir.Model.Base
     {
         ValidateResourceType(resourceType);
         ValidateResourceId(resourceId);
@@ -656,12 +659,9 @@ public class HealthLakeFhirService : IFhirDestinationService, IFhirSourceService
 
                 try
                 {
-                    T? resource = JsonSerializer.Deserialize<T>(responseContent,
-                        new JsonSerializerOptions
-                        {
-                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                            PropertyNameCaseInsensitive = true
-                        });
+                    // Use FHIR parser for proper deserialization of FHIR resources
+                    var parser = new FhirJsonParser();
+                    T? resource = parser.Parse(responseContent, typeof(T)) as T;
 
                     if (resource == null)
                         throw new HealthLakeException(
@@ -671,7 +671,7 @@ public class HealthLakeFhirService : IFhirDestinationService, IFhirSourceService
 
                     return resource;
                 }
-                catch (JsonException ex)
+                catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed to deserialize HealthLake response for {ResourceType}/{ResourceId}",
                         resourceType, resourceId);

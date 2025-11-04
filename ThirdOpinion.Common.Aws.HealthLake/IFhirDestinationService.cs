@@ -32,7 +32,7 @@ public interface IFhirDestinationService
     Task PutResourceAsync<T>(string resourceType,
         string resourceId,
         T resource,
-        CancellationToken cancellationToken = default) where T : class;
+        CancellationToken cancellationToken = default) where T : Hl7.Fhir.Model.Base;
 
     /// <summary>
     ///     Retrieves a strongly-typed FHIR resource from the destination service
@@ -44,9 +44,9 @@ public interface IFhirDestinationService
     /// <returns>The deserialized FHIR resource object</returns>
     /// <exception cref="ArgumentException">Thrown when parameters are invalid</exception>
     /// <exception cref="HealthLakeException">Thrown when the operation fails</exception>
-    Task<T> GetResourceAsync<T>(string resourceType,
+    Task<T?> GetResourceAsync<T>(string resourceType,
         string resourceId,
-        CancellationToken cancellationToken = default) where T : class;
+        CancellationToken cancellationToken = default) where T : Hl7.Fhir.Model.Base;
 
     /// <summary>
     ///     Writes multiple FHIR resources in batch operation
