@@ -22,9 +22,9 @@
           * main/master: Uses this version as-is for manual releases
         - For manual version updates, update this value and create a release
         -->
-        <Version>1.1.6</Version>
-        <AssemblyVersion>1.1.6.0</AssemblyVersion>
-        <FileVersion>1.1.6.0</FileVersion>
+        <Version>1.1.10</Version>
+        <AssemblyVersion>1.1.10.0</AssemblyVersion>
+        <FileVersion>1.1.10.0</FileVersion>
 
         <!-- Package Metadata -->
         <Description>Third Opinion Common Libraries - Complete package including AWS services integration (S3, DynamoDB, SQS, Cognito), FHIR R4 healthcare integration, and utility functions</Description>
@@ -39,6 +39,20 @@
 
         <!-- Release Notes -->
         <PackageReleaseNotes>
+            Version 1.1.10:
+            - Fixed: AddImagingStudy and AddRadiologyReport now available for all RadiographicStandard types
+            - These methods moved from RECIST-specific to common methods section
+            - Added 2 additional unit tests verifying PCWG3 and Observed standards can use imaging references
+            - All 347 FHIR unit tests pass
+
+            Version 1.1.9:
+            - Added unified RadiographicObservationBuilder consolidating PCWG3 and RECIST builders
+            - Supports RECIST 1.1, PCWG3, and Observed radiographic assessment standards
+            - Added RadiographicStandard enum for specifying assessment criteria
+            - Comprehensive unit tests (18 new tests) covering all three standards
+            - Pcwg3ProgressionObservationBuilder and RecistProgressionObservationBuilder remain available but deprecated
+            - All 345 FHIR unit tests pass maintaining backward compatibility
+
             Version 1.1.6:
             - Added RECIST timepoints JSON storage capability to RecistProgressionObservationBuilder
             - Created RecistTimepointsExtension helper for reusable FHIR extension creation

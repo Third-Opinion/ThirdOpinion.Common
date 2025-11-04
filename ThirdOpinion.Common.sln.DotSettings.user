@@ -22,10 +22,18 @@
     &lt;TestId&gt;xUnit::3F6E4900-2F30-4DC8-B1AB-B289DBB8ED53::net8.0::ThirdOpinion.Common.Aws.Tests.SQS.ServiceCollectionExtensionsTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=655efe45_002D253c_002D4818_002Da4f1_002D4e164650f4f4/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="All tests from HealthLakeIntegrationTests.cs" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=655efe45_002D253c_002D4818_002Da4f1_002D4e164650f4f4/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="All tests from HealthLakeIntegrationTests.cs" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;Or&gt;
     &lt;ProjectFile&gt;B9A4B802-FC87-46B4-8DFD-80CA41BA89E0/d:Tests/f:HealthLakeIntegrationTests.cs&lt;/ProjectFile&gt;
     &lt;ProjectFile&gt;B9A4B802-FC87-46B4-8DFD-80CA41BA89E0/d:Tests/f:HealthLakeFunctionalTests.cs&lt;/ProjectFile&gt;
+  &lt;/Or&gt;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=65abd08e_002Dcdfc_002D4237_002D85e5_002Dbbaef4a80d28/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="GetResourceAsync_WithRealPatientIds_ShouldRetrievePatients" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;Or&gt;
+    &lt;TestAncestor&gt;
+      &lt;TestId&gt;xUnit::B9A4B802-FC87-46B4-8DFD-80CA41BA89E0::net8.0::ThirdOpinion.Common.FunctionalTests.Tests.HealthLakeIntegrationTests.GetResourceAsync_WithRealPatientIds_ShouldRetrievePatients&lt;/TestId&gt;
+    &lt;/TestAncestor&gt;
+    &lt;ProjectFile&gt;4EB69A2E-7E3C-47DE-BFD0-971706FCBE02/d:Builders/d:Conditions/f:HsdmAssessmentConditionBuilderTests.cs&lt;/ProjectFile&gt;
   &lt;/Or&gt;
 &lt;/SessionState&gt;</s:String>
     <s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=727096ca_002D9c5f_002D4d0e_002D8dde_002D9d19818dea88/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="BedrockService_WithLangfuse_ShouldTraceRequest_WhenBothConfigured" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
