@@ -68,66 +68,28 @@ runs:
         ORIGINAL_SEMVER="${{ steps.gitversion.outputs.semVer }}"
         BRANCH_NAME="${{ steps.gitversion.outputs.branchName }}"
         
-        # Detect if this is a develop or fix branch that should have preview label
-        # GitVersion might not always apply the label, so we check the branch name pattern
+        # Detect preview branches (develop, fix branches)
         IS_PREVIEW_BRANCH=false
         if [[ "$BRANCH_NAME" =~ ^(develop|fix|fixes)[/-] ]] || [[ "$BRANCH_NAME" =~ ^dev(elop)?(ment)?$ ]]; then
           IS_PREVIEW_BRANCH=true
-          # Override label if GitVersion didn't set it
-          if [ -z "$PRE_RELEASE_LABEL" ]; then
-            PRE_RELEASE_LABEL="preview"
-          fi
         fi
         
-        # For develop/fix branches in ContinuousDeployment mode:
-        # Each commit = one patch increment (1.1.11 -> 1.1.12 -> 1.1.13)
-        # Workaround: GitVersion counts from last tag (v1.0.0), but we want to count from next-version (1.1.11)
-        # Solution: Calculate effective commits since 1.1.11 by finding the commit where .gitversion.yml
-        # was first set with next-version: 1.1.11, then count commits from there
-        if [ "$IS_PREVIEW_BRANCH" = true ] || ([ -n "$PRE_RELEASE_LABEL" ] && [ "$PRE_RELEASE_LABEL" = "preview" ]); then
-          # ContinuousDeployment: Each commit increments patch by 1
-          # Find the commit where .gitversion.yml was first set with next-version: 1.1.11
-          # Then count commits from that point
-          
-          # Find the first commit that added/modified .gitversion.yml with next-version: 1.1.11
-          # This is our "base" commit for counting
-          GITVERSION_BASE_COMMIT=$(git log --all --reverse --format="%H" -- .gitversion.yml 2>/dev/null | head -1 || echo "")
-          
-          if [ -n "$GITVERSION_BASE_COMMIT" ]; then
-            # Count commits since .gitversion.yml was first created/modified
-            COMMITS_SINCE_GITVERSION=$(git rev-list --count "$GITVERSION_BASE_COMMIT"..HEAD 2>/dev/null || echo "0")
-            
-            # If we have commits since gitversion.yml was set, use that count
-            # Otherwise, we're at the base commit, so use base + 1
-            if [ "$COMMITS_SINCE_GITVERSION" -gt 0 ]; then
-              CALCULATED_PATCH=$((BASE_PATCH + COMMITS_SINCE_GITVERSION))
-              echo "   ℹ️  Counting from .gitversion.yml base: $COMMITS_SINCE_GITVERSION commits since setup"
-            else
-              # At the base commit, use base + 1
-              CALCULATED_PATCH=$((BASE_PATCH + 1))
-              echo "   ℹ️  At base commit, using base + 1"
-            fi
+        # Use GitVersion's calculated values directly
+        MAJOR_MINOR_PATCH="${{ steps.gitversion.outputs.majorMinorPatch }}"
+        CALCULATED_PATCH="$BASE_PATCH"
+        BASE_VERSION="$MAJOR_MINOR_PATCH"
+        
+        # For preview branches, ensure preview label is applied
+        if [ "$IS_PREVIEW_BRANCH" = true ]; then
+          if [ -z "$PRE_RELEASE_LABEL" ]; then
+            # GitVersion didn't apply label, add preview manually
+            FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-preview"
           else
-            # Fallback: If we can't find .gitversion.yml in history, use heuristic
-            # If CommitsSinceVersionSource is very large (counting from old tag v1.0.0),
-            # normalize by using base + 1 for the first calculation
-            if [ "$COMMITS_SINCE_VERSION" -gt 50 ] && [ "$BASE_PATCH" -eq 11 ]; then
-              CALCULATED_PATCH=$((BASE_PATCH + 1))
-              echo "   ⚠️  Using normalized calculation (next-version: 1.1.11). Tag v1.1.11 for accurate counting."
-            else
-              # Normal case: use commits since version source
-              CALCULATED_PATCH=$((BASE_PATCH + COMMITS_SINCE_VERSION))
-            fi
+            # GitVersion applied a label, use it
+            FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-${PRE_RELEASE_LABEL}"
           fi
-          
-          MAJOR_MINOR_PATCH="${MAJOR}.${MINOR}.${CALCULATED_PATCH}"
-          FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-preview"
-          BASE_VERSION="${MAJOR}.${MINOR}.${BASE_PATCH}"
         else
-          # For stable branches (main/master) or other labels, use GitVersion's calculation
-          MAJOR_MINOR_PATCH="${{ steps.gitversion.outputs.majorMinorPatch }}"
-          BASE_VERSION="$MAJOR_MINOR_PATCH"
-          CALCULATED_PATCH="$BASE_PATCH"
+          # Non-preview branches: use GitVersion's output as-is
           if [ -n "$PRE_RELEASE_LABEL" ]; then
             FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-${PRE_RELEASE_LABEL}"
           else
@@ -153,14 +115,11 @@ runs:
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
         fi
         
-        echo "✅ Calculated version: $FORMATTED_VERSION"
+        echo "✅ Version: $FORMATTED_VERSION"
         echo "   Base version: $BASE_VERSION"
         echo "   Branch: $BRANCH_NAME"
-        if [ "$IS_PREVIEW_BRANCH" = true ] || ([ -n "$PRE_RELEASE_LABEL" ] && [ "$PRE_RELEASE_LABEL" = "preview" ]); then
-          echo "   ContinuousDeployment mode: Each commit = +1 patch"
-          echo "   Commits since version source: $COMMITS_SINCE_VERSION"
-          echo "   Patch calculation: $BASE_PATCH + $COMMITS_SINCE_VERSION = $CALCULATED_PATCH"
-          echo "   (Preview branch detected: $BRANCH_NAME)"
+        echo "   GitVersion SemVer: $ORIGINAL_SEMVER"
+        if [ "$IS_PREVIEW_BRANCH" = true ]; then
+          echo "   Preview branch detected"
         fi
-        echo "   Original SemVer: $ORIGINAL_SEMVER"
 
