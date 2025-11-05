@@ -1,138 +1,138 @@
-# name: Test GitVersion
+name: Test GitVersion
 
-# # Test workflow to evaluate GitVersion tool
-# # This workflow can be triggered manually or on push to test branches
+# Test workflow to evaluate GitVersion tool
+# This workflow can be triggered manually or on push to test branches
 
-# on:
-#   workflow_dispatch:
-#   push:
-#     branches: [ main, master, develop, 'feature/**', 'fix/**' ]
-#   pull_request:
-#     branches: [ main, master, develop ]
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master, develop ]
 
-# env:
-#   DOTNET_VERSION: '8.0.x'
+env:
+  DOTNET_VERSION: '8.0.x'
 
-# jobs:
-#   test-gitversion:
-#     name: Test GitVersion
-#     runs-on: ubuntu-latest
+jobs:
+  test-gitversion:
+    name: Test GitVersion
+    runs-on: ubuntu-latest
     
-#     steps:
-#     - name: Checkout code
-#       uses: actions/checkout@v4
-#       with:
-#         fetch-depth: 0  # GitVersion needs full git history
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # GitVersion needs full git history
 
-#     - name: Install GitVersion
-#       uses: gittools/actions/gitversion/setup@v4.2.0
-#       with:
-#         versionSpec: '6.4.x'
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v4.2.0
+      with:
+        versionSpec: '6.4.x'
 
-#     - name: Execute GitVersion
-#       id: gitversion
-#       uses: gittools/actions/gitversion/execute@v4.2.0
-#       with:
-#         configFilePath: .gitversion.yml
+    - name: Execute GitVersion
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v4.2.0
+      with:
+        configFilePath: .gitversion.yml
 
-#     - name: Format version without commit count
-#       id: version
-#       run: |
-#         MAJOR_MINOR_PATCH="${{ steps.gitversion.outputs.majorMinorPatch }}"
-#         PRE_RELEASE_LABEL="${{ steps.gitversion.outputs.preReleaseLabel }}"
-#         ORIGINAL_SEMVER="${{ steps.gitversion.outputs.semVer }}"
+    - name: Format version without commit count
+      id: version
+      run: |
+        MAJOR_MINOR_PATCH="${{ steps.gitversion.outputs.majorMinorPatch }}"
+        PRE_RELEASE_LABEL="${{ steps.gitversion.outputs.preReleaseLabel }}"
+        ORIGINAL_SEMVER="${{ steps.gitversion.outputs.semVer }}"
         
-#         # Construct version: 1.1.11-preview (without .108)
-#         if [ -n "$PRE_RELEASE_LABEL" ]; then
-#           FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-${PRE_RELEASE_LABEL}"
-#         else
-#           FORMATTED_VERSION="$MAJOR_MINOR_PATCH"
-#         fi
+        # Construct version: 1.1.11-preview (without .108)
+        if [ -n "$PRE_RELEASE_LABEL" ]; then
+          FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-${PRE_RELEASE_LABEL}"
+        else
+          FORMATTED_VERSION="$MAJOR_MINOR_PATCH"
+        fi
         
-#         echo "formatted_version=$FORMATTED_VERSION" >> $GITHUB_OUTPUT
-#         echo "base_version=$MAJOR_MINOR_PATCH" >> $GITHUB_OUTPUT
+        echo "formatted_version=$FORMATTED_VERSION" >> $GITHUB_OUTPUT
+        echo "base_version=$MAJOR_MINOR_PATCH" >> $GITHUB_OUTPUT
         
-#         # Check if it's a pre-release
-#         if [ -n "$PRE_RELEASE_LABEL" ]; then
-#           echo "is_prerelease=true" >> $GITHUB_OUTPUT
-#         else
-#           echo "is_prerelease=false" >> $GITHUB_OUTPUT
-#         fi
+        # Check if it's a pre-release
+        if [ -n "$PRE_RELEASE_LABEL" ]; then
+          echo "is_prerelease=true" >> $GITHUB_OUTPUT
+        else
+          echo "is_prerelease=false" >> $GITHUB_OUTPUT
+        fi
         
-#         echo "✅ Formatted version: $FORMATTED_VERSION"
-#         echo "   Original SemVer: $ORIGINAL_SEMVER"
-#         echo "   (Removed commit count suffix)"
+        echo "✅ Formatted version: $FORMATTED_VERSION"
+        echo "   Original SemVer: $ORIGINAL_SEMVER"
+        echo "   (Removed commit count suffix)"
 
-#     - name: Display GitVersion Outputs
-#       run: |
-#         echo "=== GitVersion Results ==="
-#         echo "Formatted Version: ${{ steps.version.outputs.formatted_version }}"
-#         echo "Base Version: ${{ steps.version.outputs.base_version }}"
-#         echo "Is Pre-Release: ${{ steps.version.outputs.is_prerelease }}"
-#         echo ""
-#         echo "--- GitVersion Raw Outputs ---"
-#         echo "Major: ${{ steps.gitversion.outputs.major }}"
-#         echo "Minor: ${{ steps.gitversion.outputs.minor }}"
-#         echo "Patch: ${{ steps.gitversion.outputs.patch }}"
-#         echo "MajorMinorPatch: ${{ steps.gitversion.outputs.majorMinorPatch }}"
-#         echo "PreReleaseLabel: ${{ steps.gitversion.outputs.preReleaseLabel }}"
-#         echo "PreReleaseNumber: ${{ steps.gitversion.outputs.preReleaseNumber }}"
-#         echo "PreReleaseTag: ${{ steps.gitversion.outputs.preReleaseTag }}"
-#         echo "SemVer (with commit count): ${{ steps.gitversion.outputs.semVer }}"
-#         echo "FullSemVer: ${{ steps.gitversion.outputs.fullSemVer }}"
-#         echo "AssemblySemVer: ${{ steps.gitversion.outputs.assemblySemVer }}"
-#         echo "AssemblySemFileVer: ${{ steps.gitversion.outputs.assemblySemFileVer }}"
-#         echo "InformationalVersion: ${{ steps.gitversion.outputs.informationalVersion }}"
-#         echo "BranchName: ${{ steps.gitversion.outputs.branchName }}"
-#         echo "EscapedBranchName: ${{ steps.gitversion.outputs.escapedBranchName }}"
-#         echo "Sha: ${{ steps.gitversion.outputs.sha }}"
-#         echo "ShortSha: ${{ steps.gitversion.outputs.shortSha }}"
-#         echo "VersionSourceSha: ${{ steps.gitversion.outputs.versionSourceSha }}"
-#         echo "CommitsSinceVersionSource: ${{ steps.gitversion.outputs.commitsSinceVersionSource }}"
-#         echo "UncommittedChanges: ${{ steps.gitversion.outputs.uncommittedChanges }}"
-#         echo "CommitDate: ${{ steps.gitversion.outputs.commitDate }}"
+    - name: Display GitVersion Outputs
+      run: |
+        echo "=== GitVersion Results ==="
+        echo "Formatted Version: ${{ steps.version.outputs.formatted_version }}"
+        echo "Base Version: ${{ steps.version.outputs.base_version }}"
+        echo "Is Pre-Release: ${{ steps.version.outputs.is_prerelease }}"
+        echo ""
+        echo "--- GitVersion Raw Outputs ---"
+        echo "Major: ${{ steps.gitversion.outputs.major }}"
+        echo "Minor: ${{ steps.gitversion.outputs.minor }}"
+        echo "Patch: ${{ steps.gitversion.outputs.patch }}"
+        echo "MajorMinorPatch: ${{ steps.gitversion.outputs.majorMinorPatch }}"
+        echo "PreReleaseLabel: ${{ steps.gitversion.outputs.preReleaseLabel }}"
+        echo "PreReleaseNumber: ${{ steps.gitversion.outputs.preReleaseNumber }}"
+        echo "PreReleaseTag: ${{ steps.gitversion.outputs.preReleaseTag }}"
+        echo "SemVer (with commit count): ${{ steps.gitversion.outputs.semVer }}"
+        echo "FullSemVer: ${{ steps.gitversion.outputs.fullSemVer }}"
+        echo "AssemblySemVer: ${{ steps.gitversion.outputs.assemblySemVer }}"
+        echo "AssemblySemFileVer: ${{ steps.gitversion.outputs.assemblySemFileVer }}"
+        echo "InformationalVersion: ${{ steps.gitversion.outputs.informationalVersion }}"
+        echo "BranchName: ${{ steps.gitversion.outputs.branchName }}"
+        echo "EscapedBranchName: ${{ steps.gitversion.outputs.escapedBranchName }}"
+        echo "Sha: ${{ steps.gitversion.outputs.sha }}"
+        echo "ShortSha: ${{ steps.gitversion.outputs.shortSha }}"
+        echo "VersionSourceSha: ${{ steps.gitversion.outputs.versionSourceSha }}"
+        echo "CommitsSinceVersionSource: ${{ steps.gitversion.outputs.commitsSinceVersionSource }}"
+        echo "UncommittedChanges: ${{ steps.gitversion.outputs.uncommittedChanges }}"
+        echo "CommitDate: ${{ steps.gitversion.outputs.commitDate }}"
 
-#     - name: Compare with Current System
-#       run: |
-#         echo ""
-#         echo "=== Comparison with Current System ==="
-#         CURRENT_VERSION=$(grep -oP '<Version>\K[^<]+' src/ThirdOpinion.Common.csproj || echo "1.0.0")
-#         echo "Current project version: $CURRENT_VERSION"
-#         echo "GitVersion Formatted Version: ${{ steps.version.outputs.formatted_version }}"
-#         echo "GitVersion SemVer (with commit count): ${{ steps.gitversion.outputs.semVer }}"
-#         echo "GitVersion FullSemVer: ${{ steps.gitversion.outputs.fullSemVer }}"
-#         echo "GitVersion AssemblySemVer: ${{ steps.gitversion.outputs.assemblySemVer }}"
-#         echo ""
-#         echo "Branch: ${{ steps.gitversion.outputs.branchName }}"
-#         echo "Commits since version source: ${{ steps.gitversion.outputs.commitsSinceVersionSource }}"
-#         echo ""
-#         echo "✅ Use formatted version for packages: ${{ steps.version.outputs.formatted_version }}"
+    - name: Compare with Current System
+      run: |
+        echo ""
+        echo "=== Comparison with Current System ==="
+        CURRENT_VERSION=$(grep -oP '<Version>\K[^<]+' src/ThirdOpinion.Common.csproj || echo "1.0.0")
+        echo "Current project version: $CURRENT_VERSION"
+        echo "GitVersion Formatted Version: ${{ steps.version.outputs.formatted_version }}"
+        echo "GitVersion SemVer (with commit count): ${{ steps.gitversion.outputs.semVer }}"
+        echo "GitVersion FullSemVer: ${{ steps.gitversion.outputs.fullSemVer }}"
+        echo "GitVersion AssemblySemVer: ${{ steps.gitversion.outputs.assemblySemVer }}"
+        echo ""
+        echo "Branch: ${{ steps.gitversion.outputs.branchName }}"
+        echo "Commits since version source: ${{ steps.gitversion.outputs.commitsSinceVersionSource }}"
+        echo ""
+        echo "✅ Use formatted version for packages: ${{ steps.version.outputs.formatted_version }}"
 
-#     - name: Display GitVersion Command Output
-#       run: |
-#         echo ""
-#         echo "=== GitVersion Command Output ==="
-#         dotnet-gitversion /output json | jq '.'
+    - name: Display GitVersion Command Output
+      run: |
+        echo ""
+        echo "=== GitVersion Command Output ==="
+        dotnet-gitversion /output json | jq '.'
 
-#     - name: Create Summary
-#       run: |
-#         echo "## GitVersion Test Results" >> $GITHUB_STEP_SUMMARY
-#         echo "" >> $GITHUB_STEP_SUMMARY
-#         echo "### Version Information" >> $GITHUB_STEP_SUMMARY
-#         echo "- **Formatted Version** (for packages): ${{ steps.version.outputs.formatted_version }}" >> $GITHUB_STEP_SUMMARY
-#         echo "- **Base Version**: ${{ steps.version.outputs.base_version }}" >> $GITHUB_STEP_SUMMARY
-#         echo "- **SemVer** (with commit count): ${{ steps.gitversion.outputs.semVer }}" >> $GITHUB_STEP_SUMMARY
-#         echo "- **FullSemVer**: ${{ steps.gitversion.outputs.fullSemVer }}" >> $GITHUB_STEP_SUMMARY
-#         echo "- **AssemblySemVer**: ${{ steps.gitversion.outputs.assemblySemVer }}" >> $GITHUB_STEP_SUMMARY
-#         echo "- **AssemblySemFileVer**: ${{ steps.gitversion.outputs.assemblySemFileVer }}" >> $GITHUB_STEP_SUMMARY
-#         echo "" >> $GITHUB_STEP_SUMMARY
-#         echo "### Branch Information" >> $GITHUB_STEP_SUMMARY
-#         echo "- **Branch**: ${{ steps.gitversion.outputs.branchName }}" >> $GITHUB_STEP_SUMMARY
-#         echo "- **Sha**: ${{ steps.gitversion.outputs.shortSha }}" >> $GITHUB_STEP_SUMMARY
-#         echo "- **Commits Since Version Source**: ${{ steps.gitversion.outputs.commitsSinceVersionSource }}" >> $GITHUB_STEP_SUMMARY
-#         echo "" >> $GITHUB_STEP_SUMMARY
-#         echo "### Pre-Release Information" >> $GITHUB_STEP_SUMMARY
-#         echo "- **PreReleaseTag**: ${{ steps.gitversion.outputs.preReleaseTag }}" >> $GITHUB_STEP_SUMMARY
-#         echo "- **PreReleaseLabel**: ${{ steps.gitversion.outputs.preReleaseLabel }}" >> $GITHUB_STEP_SUMMARY
-#         echo "- **PreReleaseNumber**: ${{ steps.gitversion.outputs.preReleaseNumber }}" >> $GITHUB_STEP_SUMMARY
+    - name: Create Summary
+      run: |
+        echo "## GitVersion Test Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Version Information" >> $GITHUB_STEP_SUMMARY
+        echo "- **Formatted Version** (for packages): ${{ steps.version.outputs.formatted_version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Base Version**: ${{ steps.version.outputs.base_version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **SemVer** (with commit count): ${{ steps.gitversion.outputs.semVer }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **FullSemVer**: ${{ steps.gitversion.outputs.fullSemVer }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **AssemblySemVer**: ${{ steps.gitversion.outputs.assemblySemVer }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **AssemblySemFileVer**: ${{ steps.gitversion.outputs.assemblySemFileVer }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Branch Information" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch**: ${{ steps.gitversion.outputs.branchName }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Sha**: ${{ steps.gitversion.outputs.shortSha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commits Since Version Source**: ${{ steps.gitversion.outputs.commitsSinceVersionSource }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Pre-Release Information" >> $GITHUB_STEP_SUMMARY
+        echo "- **PreReleaseTag**: ${{ steps.gitversion.outputs.preReleaseTag }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **PreReleaseLabel**: ${{ steps.gitversion.outputs.preReleaseLabel }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **PreReleaseNumber**: ${{ steps.gitversion.outputs.preReleaseNumber }}" >> $GITHUB_STEP_SUMMARY
 
