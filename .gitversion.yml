@@ -9,53 +9,20 @@ mode: ContinuousDelivery
 branches:
   main:
     regex: ^main$|^master$
-    mode: ContinuousDelivery
     increment: Minor
-    source-branches: ['develop', 'release']
   
   develop:
     regex: ^dev(elop)?(ment)?$
-    mode: ContinuousDeployment
     label: preview
     increment: Patch
-    source-branches: []
-    # ContinuousDeployment: Increments patch on every commit (1.1.11 -> 1.1.12 -> 1.1.13)
+    source-branches: [ 'main']
   
   fix:
     regex: ^fix[/-]
-    mode: ContinuousDeployment
     label: preview
     increment: Patch
     source-branches: ['develop', 'main']
-    # ContinuousDeployment: Increments patch on every commit (1.1.11 -> 1.1.12 -> 1.1.13)
   
-  feature:
-    regex: ^features?[/-]
-    mode: ContinuousDelivery
-    label: alpha
-    increment: Inherit
-    source-branches: ['develop', 'main']
-  
-  release:
-    regex: ^releases?[/-]
-    mode: ContinuousDelivery
-    label: rc
-    increment: None
-    source-branches: ['develop', 'main']
-  
-  pull-request:
-    regex: ^(pull|pull-requests|pr)[/-]
-    mode: ContinuousDelivery
-    label: PullRequest
-    increment: Inherit
-    source-branches: ['develop', 'main']
-  
-  hotfix:
-    regex: ^hotfix(es)?[/-]
-    mode: ContinuousDelivery
-    increment: Patch
-    source-branches: ['release', 'main']
-
 # Ignore patterns for commits that shouldn't affect versioning
 ignore:
   sha: []
@@ -78,7 +45,5 @@ assembly-informational-format: '{InformationalVersion}'
 tag-prefix: '[vV]?'
 
 # Next version (base version to start from)
-
 # If not set, GitVersion will try to determine from tags or start at 0.1.0
-next-version: 1.1.14
-
+# next-version: 1.1.11
