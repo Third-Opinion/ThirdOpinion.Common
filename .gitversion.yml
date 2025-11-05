@@ -80,5 +80,5 @@ tag-prefix: '[vV]?'
 # Next version (base version to start from)
 
 # If not set, GitVersion will try to determine from tags or start at 0.1.0
-# next-version: 1.1.11
+next-version: 1.1.14
 
