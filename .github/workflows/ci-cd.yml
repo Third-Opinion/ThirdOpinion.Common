@@ -418,6 +418,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
+      packages: write
 
     steps:
     - name: Checkout code
@@ -531,6 +532,34 @@ jobs:
         
         echo "✅ Development packages published successfully"
 
+    - name: Publish to GitHub Packages (Development)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "Publishing package to GitHub Packages..."
+        VERSION=${{ steps.package-version.outputs.version }}
+        PACKAGE_FILE="packages/ThirdOpinion.Common.$VERSION.nupkg"
+        SYMBOL_FILE="packages/ThirdOpinion.Common.$VERSION.snupkg"
+        
+        # GitHub Packages NuGet endpoint
+        NUGET_SOURCE="https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+        
+        # Publish main package directly using API key (no credential storage needed)
+        dotnet nuget push "$PACKAGE_FILE" \
+          --source "$NUGET_SOURCE" \
+          --api-key "$GITHUB_TOKEN" \
+          --skip-duplicate
+        
+        # Publish symbol package if it exists
+        if [ -f "$SYMBOL_FILE" ]; then
+          dotnet nuget push "$SYMBOL_FILE" \
+            --source "$NUGET_SOURCE" \
+            --api-key "$GITHUB_TOKEN" \
+            --skip-duplicate
+        fi
+        
+        echo "✅ Development packages published to GitHub Packages"
+
     - name: Create and push version tag
       if: github.ref_name == 'develop'
       run: |
@@ -571,6 +600,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
+      packages: write
 
     steps:
     - name: Checkout code
@@ -741,6 +771,34 @@ jobs:
         # done
         
         echo "✅ Release packages published successfully"
+
+    - name: Publish to GitHub Packages (Production)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "Publishing package to GitHub Packages..."
+        VERSION=${{ steps.package-info.outputs.version }}
+        PACKAGE_FILE="packages/ThirdOpinion.Common.$VERSION.nupkg"
+        SYMBOL_FILE="packages/ThirdOpinion.Common.$VERSION.snupkg"
+        
+        # GitHub Packages NuGet endpoint
+        NUGET_SOURCE="https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+        
+        # Publish main package directly using API key (no credential storage needed)
+        dotnet nuget push "$PACKAGE_FILE" \
+          --source "$NUGET_SOURCE" \
+          --api-key "$GITHUB_TOKEN" \
+          --skip-duplicate
+        
+        # Publish symbol package if it exists
+        if [ -f "$SYMBOL_FILE" ]; then
+          dotnet nuget push "$SYMBOL_FILE" \
+            --source "$NUGET_SOURCE" \
+            --api-key "$GITHUB_TOKEN" \
+            --skip-duplicate
+        fi
+        
+        echo "✅ Release packages published to GitHub Packages"
 
     - name: Create and push version tag
       if: github.ref_name == 'main' || github.ref_name == 'master'
