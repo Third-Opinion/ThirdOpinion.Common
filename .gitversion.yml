@@ -1,0 +1,52 @@
+# GitVersion Configuration
+# See https://gitversion.net/docs/configuration/ for full documentation
+
+mode: ContinuousDelivery
+# ContinuousDelivery: Increments on merges FROM source branches
+# ContinuousDeployment: Increments on every commit
+
+# Main branch configuration
+branches:
+  main:
+    regex: ^main$|^master$
+    increment: Minor
+    # When merging FROM develop → increments minor (1.1.x → 1.2.0)
+  
+  develop:
+    regex: ^dev(elop)?(ment)?$
+    label: preview
+    increment: Patch
+    source-branches: ['main']
+    # When merging TO develop → increments patch (1.1.11 → 1.1.12-preview)
+  
+  fix:
+    regex: ^fix[/-]
+    label: preview
+    increment: Patch
+    source-branches: ['develop', 'main']
+    # When merging TO fix/* → increments patch (1.1.11 → 1.1.12-preview)
+
+# Ignore patterns for commits that shouldn't affect versioning
+ignore:
+  sha: []
+
+# Configuration for version calculation
+major-version-bump-message: '\+semver:\s?(breaking|major)'
+minor-version-bump-message: '\+semver:\s?(feature|minor)'
+patch-version-bump-message: '\+semver:\s?(fix|patch)'
+no-bump-message: '\+semver:\s?(none|skip)'
+
+# Assembly versioning
+assembly-versioning-scheme: MajorMinorPatch
+assembly-file-versioning-scheme: MajorMinorPatch
+assembly-informational-format: '{InformationalVersion}'
+
+# Version increment behavior
+# Note: Padding properties removed - not supported in GitVersion 6.4.0
+
+# Tag prefix (none by default)
+tag-prefix: '[vV]?'
+
+# Next version (base version to start from)
+# If not set, GitVersion will try to determine from tags or start at 0.1.0
+# next-version: 1.1.11

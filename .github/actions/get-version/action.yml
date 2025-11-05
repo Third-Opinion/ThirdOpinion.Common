@@ -1,0 +1,95 @@
+name: 'Get Version from GitVersion'
+description: 'Determines version using GitVersion with ContinuousDeployment mode (each commit = one patch increment)'
+
+inputs:
+  config_file_path:
+    description: 'Path to GitVersion config file'
+    required: false
+    default: '.gitversion.yml'
+
+outputs:
+  formatted_version:
+    description: 'Formatted version without commit count (e.g., 1.1.11-preview)'
+    value: ${{ steps.version.outputs.formatted_version }}
+  base_version:
+    description: 'Base version without pre-release label (e.g., 1.1.11)'
+    value: ${{ steps.version.outputs.base_version }}
+  sem_ver:
+    description: 'SemVer with commit count (e.g., 1.1.11-preview.108)'
+    value: ${{ steps.version.outputs.sem_ver }}
+  full_sem_ver:
+    description: 'Full SemVer with build metadata'
+    value: ${{ steps.version.outputs.full_sem_ver }}
+  assembly_sem_ver:
+    description: 'Assembly SemVer (for assembly versioning)'
+    value: ${{ steps.version.outputs.assembly_sem_ver }}
+  assembly_sem_file_ver:
+    description: 'Assembly SemFileVer (for file versioning)'
+    value: ${{ steps.version.outputs.assembly_sem_file_ver }}
+  is_prerelease:
+    description: 'Whether this is a pre-release version'
+    value: ${{ steps.version.outputs.is_prerelease }}
+  branch_name:
+    description: 'Current branch name'
+    value: ${{ steps.version.outputs.branch_name }}
+  major:
+    description: 'Major version number'
+    value: ${{ steps.version.outputs.major }}
+  minor:
+    description: 'Minor version number'
+    value: ${{ steps.version.outputs.minor }}
+  patch:
+    description: 'Patch version number'
+    value: ${{ steps.version.outputs.patch }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v4.2.0
+      with:
+        versionSpec: '6.4.x'
+
+    - name: Execute GitVersion
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v4.2.0
+      with:
+        configFilePath: ${{ inputs.config_file_path }}
+
+    - name: Format version
+      id: version
+      shell: bash
+      run: |
+        MAJOR_MINOR_PATCH="${{ steps.gitversion.outputs.majorMinorPatch }}"
+        PRE_RELEASE_LABEL="${{ steps.gitversion.outputs.preReleaseLabel }}"
+        ORIGINAL_SEMVER="${{ steps.gitversion.outputs.semVer }}"
+        
+        # Format version: Remove commit count suffix (e.g., 1.1.12-preview.16 -> 1.1.12-preview)
+        if [ -n "$PRE_RELEASE_LABEL" ]; then
+          FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-${PRE_RELEASE_LABEL}"
+        else
+          FORMATTED_VERSION="$MAJOR_MINOR_PATCH"
+        fi
+        
+        echo "formatted_version=$FORMATTED_VERSION" >> $GITHUB_OUTPUT
+        echo "base_version=$MAJOR_MINOR_PATCH" >> $GITHUB_OUTPUT
+        echo "sem_ver=$ORIGINAL_SEMVER" >> $GITHUB_OUTPUT
+        echo "full_sem_ver=${{ steps.gitversion.outputs.fullSemVer }}" >> $GITHUB_OUTPUT
+        echo "assembly_sem_ver=${{ steps.gitversion.outputs.assemblySemVer }}" >> $GITHUB_OUTPUT
+        echo "assembly_sem_file_ver=${{ steps.gitversion.outputs.assemblySemFileVer }}" >> $GITHUB_OUTPUT
+        echo "branch_name=${{ steps.gitversion.outputs.branchName }}" >> $GITHUB_OUTPUT
+        echo "major=${{ steps.gitversion.outputs.major }}" >> $GITHUB_OUTPUT
+        echo "minor=${{ steps.gitversion.outputs.minor }}" >> $GITHUB_OUTPUT
+        echo "patch=${{ steps.gitversion.outputs.patch }}" >> $GITHUB_OUTPUT
+        
+        # Check if it's a pre-release
+        if [ -n "$PRE_RELEASE_LABEL" ]; then
+          echo "is_prerelease=true" >> $GITHUB_OUTPUT
+        else
+          echo "is_prerelease=false" >> $GITHUB_OUTPUT
+        fi
+        
+        echo "✅ Version: $FORMATTED_VERSION"
+        echo "   Base version: $MAJOR_MINOR_PATCH"
+        echo "   GitVersion SemVer: $ORIGINAL_SEMVER"
+

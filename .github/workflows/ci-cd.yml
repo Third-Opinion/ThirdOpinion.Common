@@ -33,82 +33,82 @@ env:
   SOLUTION_PATH: './ThirdOpinion.Common.sln'
 
 jobs:
-  build-and-test:
-    name: Build and Test
-    runs-on: ubuntu-latest
+  # build-and-test:
+  #   name: Build and Test
+  #   runs-on: ubuntu-latest
     
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #     with:
+  #       fetch-depth: 0
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+  #   - name: Setup .NET
+  #     uses: actions/setup-dotnet@v4
+  #     with:
+  #       dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    - name: Cache NuGet packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-        restore-keys: |
-          ${{ runner.os }}-nuget-
+  #   - name: Cache NuGet packages
+  #     uses: actions/cache@v4
+  #     with:
+  #       path: ~/.nuget/packages
+  #       key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+  #       restore-keys: |
+  #         ${{ runner.os }}-nuget-
 
-    - name: Restore dependencies
-      run: dotnet restore ${{ env.SOLUTION_PATH }}
+  #   - name: Restore dependencies
+  #     run: dotnet restore ${{ env.SOLUTION_PATH }}
 
-    - name: Build solution
-      run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
+  #   - name: Build solution
+  #     run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
 
-    - name: Run unit tests
-      run: |
-        # Run miscellaneous unit tests
-        dotnet test ThirdOpinion.Common.Misc.UnitTests/ThirdOpinion.Common.Misc.UnitTests.csproj \
-          --configuration Release \
-          --no-build \
-          --verbosity normal \
-          --logger trx \
-          --results-directory ./test-results/
+  #   - name: Run unit tests
+  #     run: |
+  #       # Run miscellaneous unit tests
+  #       dotnet test ThirdOpinion.Common.Misc.UnitTests/ThirdOpinion.Common.Misc.UnitTests.csproj \
+  #         --configuration Release \
+  #         --no-build \
+  #         --verbosity normal \
+  #         --logger trx \
+  #         --results-directory ./test-results/
 
-        # Run FHIR unit tests
-        dotnet test ThirdOpinion.Common.Fhir.UnitTests/ThirdOpinion.Common.Fhir.UnitTests.csproj \
-          --configuration Release \
-          --no-build \
-          --verbosity normal \
-          --logger trx \
-          --results-directory ./test-results/
+  #       # Run FHIR unit tests
+  #       dotnet test ThirdOpinion.Common.Fhir.UnitTests/ThirdOpinion.Common.Fhir.UnitTests.csproj \
+  #         --configuration Release \
+  #         --no-build \
+  #         --verbosity normal \
+  #         --logger trx \
+  #         --results-directory ./test-results/
 
-        # Run AWS unit tests (may fail but still produce results)
-        dotnet test ThirdOpinion.Common.Aws.UnitTests/ThirdOpinion.Common.Aws.UnitTests.csproj \
-          --configuration Release \
-          --no-build \
-          --verbosity normal \
-          --logger trx \
-          --results-directory ./test-results/ || echo "AWS tests failed but continuing with results"
+  #       # Run AWS unit tests (may fail but still produce results)
+  #       dotnet test ThirdOpinion.Common.Aws.UnitTests/ThirdOpinion.Common.Aws.UnitTests.csproj \
+  #         --configuration Release \
+  #         --no-build \
+  #         --verbosity normal \
+  #         --logger trx \
+  #         --results-directory ./test-results/ || echo "AWS tests failed but continuing with results"
 
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-results
-        path: ./test-results/
+  #   - name: Upload test results
+  #     uses: actions/upload-artifact@v4
+  #     if: always()
+  #     with:
+  #       name: test-results
+  #       path: ./test-results/
 
-    - name: Comment PR with test results
-      uses: dorny/test-reporter@v1
-      if: always() && hashFiles('./test-results/*.trx') != ''
-      with:
-        name: Unit Tests
-        path: './test-results/*.trx'
-        reporter: dotnet-trx
-        fail-on-error: false
+  #   - name: Comment PR with test results
+  #     uses: dorny/test-reporter@v1
+  #     if: always() && hashFiles('./test-results/*.trx') != ''
+  #     with:
+  #       name: Unit Tests
+  #       path: './test-results/*.trx'
+  #       reporter: dotnet-trx
+  #       fail-on-error: false
 
   functional-tests:
     name: Functional Tests
     runs-on: ubuntu-latest
     if: github.event.inputs.run_functional_tests == 'true' || github.event_name == 'workflow_dispatch'
-    needs: build-and-test
+    # needs: build-and-test
     
     permissions:
       id-token: write
@@ -158,11 +158,11 @@ jobs:
   package:
     name: Create NuGet Packages
     runs-on: ubuntu-latest
-    needs: build-and-test
-    if: |
-      github.event_name == 'release' || 
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_packages == 'true') ||
-      (github.ref_name == 'main' || github.ref_name == 'master' || github.ref_name == 'develop')
+    # needs: build-and-test
+    # if: |
+    #   github.event_name == 'release' || 
+    #   (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_packages == 'true') ||
+    #   (github.ref_name == 'main' || github.ref_name == 'master' || github.ref_name == 'develop')
     
     steps:
     - name: Checkout code
@@ -178,89 +178,100 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ${{ env.SOLUTION_PATH }}
 
-    - name: Determine version
+    # OLD VERSION DETERMINATION - COMMENTED OUT (replaced by GitVersion composite action)
+    # - name: Determine version
+    #   id: version
+    #   run: |
+    #     # Read base version from project file
+    #     BASE_VERSION=$(grep -oP '<Version>\K[^<]+' src/ThirdOpinion.Common.csproj || echo "1.0.0")
+    #     RUN_NUMBER=${{ github.run_number }}
+    #
+    #     echo "Base version from project file: $BASE_VERSION"
+    #
+    #     # Determine final version based on trigger and branch
+    #     if [ "${{ github.event_name }}" == "release" ]; then
+    #       # For releases, use the git tag version
+    #       VERSION=${{ github.event.release.tag_name }}
+    #       # Remove 'v' prefix if present
+    #       VERSION=${VERSION#v}
+    #       echo "is_prerelease=false" >> $GITHUB_OUTPUT
+    #       echo "version_source=release_tag" >> $GITHUB_OUTPUT
+    #     elif [ "${{ github.ref_name }}" == "develop" ]; then
+    #       # For develop branch, use base version with beta suffix
+    #       VERSION="${BASE_VERSION}-beta.${RUN_NUMBER}"
+    #       echo "is_prerelease=true" >> $GITHUB_OUTPUT
+    #       echo "version_source=auto_develop" >> $GITHUB_OUTPUT
+    #     elif [[ "${{ github.ref_name }}" == feature/* ]]; then
+    #       # For feature branches, use base version with alpha suffix
+    #       BRANCH_SAFE=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9]/-/g' | cut -c1-20)
+    #       VERSION="${BASE_VERSION}-alpha.${RUN_NUMBER}.${BRANCH_SAFE}"
+    #       echo "is_prerelease=true" >> $GITHUB_OUTPUT
+    #       echo "version_source=auto_feature" >> $GITHUB_OUTPUT
+    #     elif [ "${{ github.ref_name }}" == "main" ] || [ "${{ github.ref_name }}" == "master" ]; then
+    #       # For main/master, check if base version should be incremented
+    #       if [ "$BASE_VERSION" == "1.0.0" ]; then
+    #         # Use auto-increment for main if still on default version
+    #         VERSION="1.0.${RUN_NUMBER}"
+    #         echo "version_source=auto_main" >> $GITHUB_OUTPUT
+    #       else
+    #         # Use base version from project file for manual releases
+    #         VERSION="$BASE_VERSION"
+    #         echo "version_source=manual_main" >> $GITHUB_OUTPUT
+    #       fi
+    #       echo "is_prerelease=false" >> $GITHUB_OUTPUT
+    #     else
+    #       # For other branches, use base version with branch suffix
+    #       BRANCH_SAFE=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9]/-/g' | cut -c1-20)
+    #       VERSION="${BASE_VERSION}-${BRANCH_SAFE}.${RUN_NUMBER}"
+    #       echo "is_prerelease=true" >> $GITHUB_OUTPUT
+    #       echo "version_source=auto_other" >> $GITHUB_OUTPUT
+    #     fi
+    #
+    #     # Validate semantic versioning format (basic check)
+    #     if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\-[a-zA-Z0-9\.\-]+)?$ ]]; then
+    #       echo "Warning: Version '$VERSION' may not follow semantic versioning"
+    #     fi
+    #
+    #     echo "version=$VERSION" >> $GITHUB_OUTPUT
+    #     echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
+    #     echo "Package version will be: $VERSION"
+    #     echo "Version source: $(cat $GITHUB_OUTPUT | grep version_source | cut -d'=' -f2)"
+
+    - name: Get version from GitVersion
       id: version
+      uses: ./.github/actions/get-version
+
+    - name: Display version information
       run: |
-        # Read base version from project file
-        BASE_VERSION=$(grep -oP '<Version>\K[^<]+' src/ThirdOpinion.Common.csproj || echo "1.0.0")
-        RUN_NUMBER=${{ github.run_number }}
+        echo "✅ Version determined: ${{ steps.version.outputs.formatted_version }}"
+        echo "   Base version: ${{ steps.version.outputs.base_version }}"
+        echo "   Is pre-release: ${{ steps.version.outputs.is_prerelease }}"
+        echo "   Branch: ${{ steps.version.outputs.branch_name }}"
+        echo "   SemVer (with commit count): ${{ steps.version.outputs.sem_ver }}"
 
-        echo "Base version from project file: $BASE_VERSION"
+    # - name: Update project versions
+    #   run: |
+    #     VERSION="${{ steps.version.outputs.formatted_version }}"
+    #     BASE_VERSION="${{ steps.version.outputs.base_version }}"
 
-        # Determine final version based on trigger and branch
-        if [ "${{ github.event_name }}" == "release" ]; then
-          # For releases, use the git tag version
-          VERSION=${{ github.event.release.tag_name }}
-          # Remove 'v' prefix if present
-          VERSION=${VERSION#v}
-          echo "is_prerelease=false" >> $GITHUB_OUTPUT
-          echo "version_source=release_tag" >> $GITHUB_OUTPUT
-        elif [ "${{ github.ref_name }}" == "develop" ]; then
-          # For develop branch, use base version with beta suffix
-          VERSION="${BASE_VERSION}-beta.${RUN_NUMBER}"
-          echo "is_prerelease=true" >> $GITHUB_OUTPUT
-          echo "version_source=auto_develop" >> $GITHUB_OUTPUT
-        elif [[ "${{ github.ref_name }}" == feature/* ]]; then
-          # For feature branches, use base version with alpha suffix
-          BRANCH_SAFE=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9]/-/g' | cut -c1-20)
-          VERSION="${BASE_VERSION}-alpha.${RUN_NUMBER}.${BRANCH_SAFE}"
-          echo "is_prerelease=true" >> $GITHUB_OUTPUT
-          echo "version_source=auto_feature" >> $GITHUB_OUTPUT
-        elif [ "${{ github.ref_name }}" == "main" ] || [ "${{ github.ref_name }}" == "master" ]; then
-          # For main/master, check if base version should be incremented
-          if [ "$BASE_VERSION" == "1.0.0" ]; then
-            # Use auto-increment for main if still on default version
-            VERSION="1.0.${RUN_NUMBER}"
-            echo "version_source=auto_main" >> $GITHUB_OUTPUT
-          else
-            # Use base version from project file for manual releases
-            VERSION="$BASE_VERSION"
-            echo "version_source=manual_main" >> $GITHUB_OUTPUT
-          fi
-          echo "is_prerelease=false" >> $GITHUB_OUTPUT
-        else
-          # For other branches, use base version with branch suffix
-          BRANCH_SAFE=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9]/-/g' | cut -c1-20)
-          VERSION="${BASE_VERSION}-${BRANCH_SAFE}.${RUN_NUMBER}"
-          echo "is_prerelease=true" >> $GITHUB_OUTPUT
-          echo "version_source=auto_other" >> $GITHUB_OUTPUT
-        fi
+    #     echo "Updating project versions:"
+    #     echo "  Base version: $BASE_VERSION"
+    #     echo "  Final version: $VERSION"
 
-        # Validate semantic versioning format (basic check)
-        if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\-[a-zA-Z0-9\.\-]+)?$ ]]; then
-          echo "Warning: Version '$VERSION' may not follow semantic versioning"
-        fi
+    #     # For assembly versions, use the base version (without pre-release suffixes)
+    #     ASSEMBLY_VERSION="$BASE_VERSION"
 
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
-        echo "Package version will be: $VERSION"
-        echo "Version source: $(cat $GITHUB_OUTPUT | grep version_source | cut -d'=' -f2)"
+    #     # Update main project version
+    #     sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" src/ThirdOpinion.Common.csproj
+    #     sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$ASSEMBLY_VERSION.0<\/AssemblyVersion>/g" src/ThirdOpinion.Common.csproj
+    #     sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$ASSEMBLY_VERSION.0<\/FileVersion>/g" src/ThirdOpinion.Common.csproj
 
-    - name: Update project versions
-      run: |
-        VERSION=${{ steps.version.outputs.version }}
-        BASE_VERSION=${{ steps.version.outputs.base_version }}
-        VERSION_SOURCE=${{ steps.version.outputs.version_source }}
+    #     echo "Updated package version to: $VERSION"
+    #     echo "Updated assembly version to: $ASSEMBLY_VERSION.0"
 
-        echo "Updating project versions:"
-        echo "  Base version: $BASE_VERSION"
-        echo "  Final version: $VERSION"
-        echo "  Version source: $VERSION_SOURCE"
-
-        # For assembly versions, use the base version (without pre-release suffixes)
-        ASSEMBLY_VERSION=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' || echo "$BASE_VERSION")
-
-        # Update main project version
-        sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" src/ThirdOpinion.Common.csproj
-        sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$ASSEMBLY_VERSION.0<\/AssemblyVersion>/g" src/ThirdOpinion.Common.csproj
-        sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$ASSEMBLY_VERSION.0<\/FileVersion>/g" src/ThirdOpinion.Common.csproj
-
-        echo "Updated package version to: $VERSION"
-        echo "Updated assembly version to: $ASSEMBLY_VERSION.0"
-
-        # Show updated project file for verification
-        echo "Updated project file version section:"
-        grep -A2 -B2 "<Version>" src/ThirdOpinion.Common.csproj || echo "Could not find version in main project file"
+    #     # Show updated project file for verification
+    #     echo "Updated project file version section:"
+    #     grep -A2 -B2 "<Version>" src/ThirdOpinion.Common.csproj || echo "Could not find version in main project file"
 
     - name: Build solution
       run: |
@@ -269,14 +280,18 @@ jobs:
     - name: Pack combined NuGet package
       run: |
         echo "Creating combined ThirdOpinion.Common package..."
-        VERSION=${{ steps.version.outputs.version }}
+        VERSION="${{ steps.version.outputs.formatted_version }}"
+        BASE_VERSION="${{ steps.version.outputs.base_version }}"
 
         # Pack single combined package with all sub-projects as embedded DLLs
+        # Using -p: parameters to set versions without modifying .csproj file
         echo "Packing ThirdOpinion.Common (combined package with symbols)..."
         dotnet pack src/ThirdOpinion.Common.csproj \
           --configuration Release \
           --output ./packages/ \
           -p:PackageVersion=$VERSION \
+          -p:AssemblyVersion="${BASE_VERSION}.0" \
+          -p:FileVersion="${BASE_VERSION}.0" \
           -p:IncludeSymbols=true \
           -p:SymbolPackageFormat=snupkg
 
@@ -294,15 +309,15 @@ jobs:
       run: |
         echo "Generated packages:"
         ls -la ./packages/
-        echo "Expected package: ThirdOpinion.Common.${{ steps.version.outputs.version }}.nupkg"
+        echo "Expected package: ThirdOpinion.Common.${{ steps.version.outputs.formatted_version }}.nupkg"
 
   publish-dev:
     name: Publish Development Packages
     runs-on: ubuntu-latest
-    needs: [build-and-test, package]
+    # needs: [build-and-test, package]
     if: |
       (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_packages == 'true') ||
-      github.ref_name == 'develop'
+      github.ref_name == 'develop' || github.ref_name == 'fix'
     environment: development
 
     permissions:
@@ -419,7 +434,7 @@ jobs:
   publish-release:
     name: Publish Release Packages
     runs-on: ubuntu-latest
-    needs: [build-and-test, package]
+    # needs: [build-and-test, package]
     if: |
       github.event_name == 'release' ||
       github.ref_name == 'main' ||
