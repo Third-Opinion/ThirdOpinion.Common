@@ -8,6 +8,7 @@ name: CI/CD Pipeline
 # - Releases: Full pipeline with stable release publishing to GitHub Packages
 # - Manual dispatch: Optional functional tests and package publishing
 
+
 on:
   push:
     branches: [ main, master, develop, 'feature/**' ]
