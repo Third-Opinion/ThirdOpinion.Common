@@ -56,31 +56,50 @@ runs:
       with:
         configFilePath: ${{ inputs.config_file_path }}
 
-    - name: Format version without commit count
+    - name: Format version with commit-based increment
       id: version
       shell: bash
       run: |
-        MAJOR_MINOR_PATCH="${{ steps.gitversion.outputs.majorMinorPatch }}"
+        MAJOR="${{ steps.gitversion.outputs.major }}"
+        MINOR="${{ steps.gitversion.outputs.minor }}"
+        BASE_PATCH="${{ steps.gitversion.outputs.patch }}"
+        COMMITS_SINCE_VERSION="${{ steps.gitversion.outputs.commitsSinceVersionSource }}"
         PRE_RELEASE_LABEL="${{ steps.gitversion.outputs.preReleaseLabel }}"
         ORIGINAL_SEMVER="${{ steps.gitversion.outputs.semVer }}"
+        BRANCH_NAME="${{ steps.gitversion.outputs.branchName }}"
         
-        # Construct version: 1.1.11-preview (without .108)
-        if [ -n "$PRE_RELEASE_LABEL" ]; then
+        # For develop/fix branches in ContinuousDeployment mode:
+        # Increment patch by the number of commits since version source
+        # This ensures every commit (or batch of commits) increments the version
+        if [ -n "$PRE_RELEASE_LABEL" ] && [ "$PRE_RELEASE_LABEL" = "preview" ]; then
+          # Calculate patch version: base_patch + commits_since_version
+          # This makes every commit increment the patch version
+          CALCULATED_PATCH=$((BASE_PATCH + COMMITS_SINCE_VERSION))
+          MAJOR_MINOR_PATCH="${MAJOR}.${MINOR}.${CALCULATED_PATCH}"
           FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-${PRE_RELEASE_LABEL}"
+          BASE_VERSION="${MAJOR}.${MINOR}.${BASE_PATCH}"
         else
-          FORMATTED_VERSION="$MAJOR_MINOR_PATCH"
+          # For stable branches (main/master) or other labels, use GitVersion's calculation
+          MAJOR_MINOR_PATCH="${{ steps.gitversion.outputs.majorMinorPatch }}"
+          BASE_VERSION="$MAJOR_MINOR_PATCH"
+          CALCULATED_PATCH="$BASE_PATCH"
+          if [ -n "$PRE_RELEASE_LABEL" ]; then
+            FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-${PRE_RELEASE_LABEL}"
+          else
+            FORMATTED_VERSION="$MAJOR_MINOR_PATCH"
+          fi
         fi
         
         echo "formatted_version=$FORMATTED_VERSION" >> $GITHUB_OUTPUT
-        echo "base_version=$MAJOR_MINOR_PATCH" >> $GITHUB_OUTPUT
+        echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
         echo "sem_ver=$ORIGINAL_SEMVER" >> $GITHUB_OUTPUT
         echo "full_sem_ver=${{ steps.gitversion.outputs.fullSemVer }}" >> $GITHUB_OUTPUT
         echo "assembly_sem_ver=${{ steps.gitversion.outputs.assemblySemVer }}" >> $GITHUB_OUTPUT
         echo "assembly_sem_file_ver=${{ steps.gitversion.outputs.assemblySemFileVer }}" >> $GITHUB_OUTPUT
-        echo "branch_name=${{ steps.gitversion.outputs.branchName }}" >> $GITHUB_OUTPUT
-        echo "major=${{ steps.gitversion.outputs.major }}" >> $GITHUB_OUTPUT
-        echo "minor=${{ steps.gitversion.outputs.minor }}" >> $GITHUB_OUTPUT
-        echo "patch=${{ steps.gitversion.outputs.patch }}" >> $GITHUB_OUTPUT
+        echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+        echo "major=$MAJOR" >> $GITHUB_OUTPUT
+        echo "minor=$MINOR" >> $GITHUB_OUTPUT
+        echo "patch=$CALCULATED_PATCH" >> $GITHUB_OUTPUT
         
         # Check if it's a pre-release
         if [ -n "$PRE_RELEASE_LABEL" ]; then
@@ -89,7 +108,11 @@ runs:
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
         fi
         
-        echo "✅ Formatted version: $FORMATTED_VERSION"
+        echo "✅ Calculated version: $FORMATTED_VERSION"
+        echo "   Base version: $BASE_VERSION"
+        if [ -n "$PRE_RELEASE_LABEL" ] && [ "$PRE_RELEASE_LABEL" = "preview" ]; then
+          echo "   Commits since version source: $COMMITS_SINCE_VERSION"
+          echo "   Patch increment: $BASE_PATCH + $COMMITS_SINCE_VERSION = $CALCULATED_PATCH"
+        fi
         echo "   Original SemVer: $ORIGINAL_SEMVER"
-        echo "   (Removed commit count suffix)"
 
