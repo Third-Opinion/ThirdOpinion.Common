@@ -1,4 +1,5 @@
 using Hl7.Fhir.Model;
+using Newtonsoft.Json;
 using ThirdOpinion.Common.Fhir.Models;
 
 namespace ThirdOpinion.Common.Fhir.Extensions;
@@ -12,6 +13,11 @@ public static class ClinicalFactExtension
     ///     The extension URL for clinical facts
     /// </summary>
     public const string ExtensionUrl = "https://thirdopinion.io/clinical-fact";
+
+    /// <summary>
+    ///     The sub-extension URL for NDJSON facts array
+    /// </summary>
+    public const string NdjsonExtensionUrl = "factsArrayJson";
 
     /// <summary>
     ///     Creates a FHIR Extension from a clinical fact
@@ -71,9 +77,7 @@ public static class ClinicalFactExtension
         if (facts == null)
             return new List<Extension>();
 
-        return facts.Where(f => f != null)
-            .Select(CreateExtension)
-            .ToList();
+        return new List<Extension> { CreateNdjsonExtension(facts) };
     }
 
     /// <summary>
@@ -84,5 +88,48 @@ public static class ClinicalFactExtension
     public static List<Extension> CreateExtensions(params Fact[] facts)
     {
         return CreateExtensions((IEnumerable<Fact>)facts);
+    }
+
+    /// <summary>
+    ///     Creates a single FHIR Extension containing all facts as NDJSON (newline-delimited JSON)
+    /// </summary>
+    /// <param name="facts">The clinical facts to convert</param>
+    /// <returns>A FHIR Extension with all facts as NDJSON in a single valueString</returns>
+    public static Extension CreateNdjsonExtension(IEnumerable<Fact> facts)
+    {
+        if (facts == null)
+            throw new ArgumentNullException(nameof(facts));
+
+        var factsList = facts.Where(f => f != null).ToList();
+
+        if (factsList.Count == 0)
+            throw new ArgumentException("Facts collection cannot be empty", nameof(facts));
+
+        // Serialize each fact to a single-line JSON string
+        var ndjsonLines = factsList.Select(fact =>
+            JsonConvert.SerializeObject(fact, Formatting.None));
+
+        // Join with newlines to create NDJSON format
+        string ndjsonContent = string.Join("\n", ndjsonLines);
+
+        // Create the main extension with sub-extension containing NDJSON
+        var extension = new Extension
+        {
+            Url = ExtensionUrl
+        };
+
+        extension.Extension.Add(new Extension(NdjsonExtensionUrl, new FhirString(ndjsonContent)));
+
+        return extension;
+    }
+
+    /// <summary>
+    ///     Creates a single FHIR Extension containing all facts as NDJSON (newline-delimited JSON)
+    /// </summary>
+    /// <param name="facts">The clinical facts to convert</param>
+    /// <returns>A FHIR Extension with all facts as NDJSON in a single valueString</returns>
+    public static Extension CreateNdjsonExtension(params Fact[] facts)
+    {
+        return CreateNdjsonExtension((IEnumerable<Fact>)facts);
     }
 }
