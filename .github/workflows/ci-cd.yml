@@ -56,54 +56,53 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-nuget-
 
-    # Comment for now due to test failure
-    # - name: Restore dependencies
-    #   run: dotnet restore ${{ env.SOLUTION_PATH }}
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_PATH }}
 
-    # - name: Build solution
-    #   run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
+    - name: Build solution
+      run: dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
 
-    # - name: Run unit tests
-    #   run: |
-    #     # Run miscellaneous unit tests
-    #     dotnet test ThirdOpinion.Common.Misc.UnitTests/ThirdOpinion.Common.Misc.UnitTests.csproj \
-    #       --configuration Release \
-    #       --no-build \
-    #       --verbosity normal \
-    #       --logger trx \
-    #       --results-directory ./test-results/
+    - name: Run unit tests
+      run: |
+        # Run miscellaneous unit tests
+        dotnet test ThirdOpinion.Common.Misc.UnitTests/ThirdOpinion.Common.Misc.UnitTests.csproj \
+          --configuration Release \
+          --no-build \
+          --verbosity normal \
+          --logger trx \
+          --results-directory ./test-results/
 
-    #     # Run FHIR unit tests
-    #     dotnet test ThirdOpinion.Common.Fhir.UnitTests/ThirdOpinion.Common.Fhir.UnitTests.csproj \
-    #       --configuration Release \
-    #       --no-build \
-    #       --verbosity normal \
-    #       --logger trx \
-    #       --results-directory ./test-results/
+        # Run FHIR unit tests
+        dotnet test ThirdOpinion.Common.Fhir.UnitTests/ThirdOpinion.Common.Fhir.UnitTests.csproj \
+          --configuration Release \
+          --no-build \
+          --verbosity normal \
+          --logger trx \
+          --results-directory ./test-results/
 
-    #     # Run AWS unit tests (may fail but still produce results)
-    #     dotnet test ThirdOpinion.Common.Aws.UnitTests/ThirdOpinion.Common.Aws.UnitTests.csproj \
-    #       --configuration Release \
-    #       --no-build \
-    #       --verbosity normal \
-    #       --logger trx \
-    #       --results-directory ./test-results/ || echo "AWS tests failed but continuing with results"
+        # Run AWS unit tests (may fail but still produce results)
+        dotnet test ThirdOpinion.Common.Aws.UnitTests/ThirdOpinion.Common.Aws.UnitTests.csproj \
+          --configuration Release \
+          --no-build \
+          --verbosity normal \
+          --logger trx \
+          --results-directory ./test-results/ || echo "AWS tests failed but continuing with results"
 
-    # - name: Upload test results
-    #   uses: actions/upload-artifact@v4
-    #   if: always()
-    #   with:
-    #     name: test-results
-    #     path: ./test-results/
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: ./test-results/
 
-    # - name: Comment PR with test results
-    #   uses: dorny/test-reporter@v1
-    #   if: always() && hashFiles('./test-results/*.trx') != ''
-    #   with:
-    #     name: Unit Tests
-    #     path: './test-results/*.trx'
-    #     reporter: dotnet-trx
-    #     fail-on-error: false
+    - name: Comment PR with test results
+      uses: dorny/test-reporter@v1
+      if: always() && hashFiles('./test-results/*.trx') != ''
+      with:
+        name: Unit Tests
+        path: './test-results/*.trx'
+        reporter: dotnet-trx
+        fail-on-error: false
 
   functional-tests:
     name: Functional Tests
