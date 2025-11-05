@@ -162,7 +162,8 @@ jobs:
     if: |
       github.event_name == 'release' || 
       (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_packages == 'true') ||
-      (github.ref_name == 'main' || github.ref_name == 'master' || github.ref_name == 'develop')
+      (github.ref_name == 'main' || github.ref_name == 'master' || github.ref_name == 'develop') ||
+      (github.ref_name == 'feature/**' || github.ref_name == 'fix/**')
     
     steps:
     - name: Checkout code
