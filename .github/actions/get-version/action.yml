@@ -81,12 +81,45 @@ runs:
         
         # For develop/fix branches in ContinuousDeployment mode:
         # Each commit = one patch increment (1.1.11 -> 1.1.12 -> 1.1.13)
-        # Calculate: base_patch + commits_since_version = final patch
-        # Example: base 1.1.11 (patch 11) + 117 commits = 1.1.128-preview
+        # Workaround: GitVersion counts from last tag (v1.0.0), but we want to count from next-version (1.1.11)
+        # Solution: Calculate effective commits since 1.1.11 by finding the commit where .gitversion.yml
+        # was first set with next-version: 1.1.11, then count commits from there
         if [ "$IS_PREVIEW_BRANCH" = true ] || ([ -n "$PRE_RELEASE_LABEL" ] && [ "$PRE_RELEASE_LABEL" = "preview" ]); then
           # ContinuousDeployment: Each commit increments patch by 1
-          # So: base_patch + number_of_commits = final_patch
-          CALCULATED_PATCH=$((BASE_PATCH + COMMITS_SINCE_VERSION))
+          # Find the commit where .gitversion.yml was first set with next-version: 1.1.11
+          # Then count commits from that point
+          
+          # Find the first commit that added/modified .gitversion.yml with next-version: 1.1.11
+          # This is our "base" commit for counting
+          GITVERSION_BASE_COMMIT=$(git log --all --reverse --format="%H" -- .gitversion.yml 2>/dev/null | head -1 || echo "")
+          
+          if [ -n "$GITVERSION_BASE_COMMIT" ]; then
+            # Count commits since .gitversion.yml was first created/modified
+            COMMITS_SINCE_GITVERSION=$(git rev-list --count "$GITVERSION_BASE_COMMIT"..HEAD 2>/dev/null || echo "0")
+            
+            # If we have commits since gitversion.yml was set, use that count
+            # Otherwise, we're at the base commit, so use base + 1
+            if [ "$COMMITS_SINCE_GITVERSION" -gt 0 ]; then
+              CALCULATED_PATCH=$((BASE_PATCH + COMMITS_SINCE_GITVERSION))
+              echo "   ℹ️  Counting from .gitversion.yml base: $COMMITS_SINCE_GITVERSION commits since setup"
+            else
+              # At the base commit, use base + 1
+              CALCULATED_PATCH=$((BASE_PATCH + 1))
+              echo "   ℹ️  At base commit, using base + 1"
+            fi
+          else
+            # Fallback: If we can't find .gitversion.yml in history, use heuristic
+            # If CommitsSinceVersionSource is very large (counting from old tag v1.0.0),
+            # normalize by using base + 1 for the first calculation
+            if [ "$COMMITS_SINCE_VERSION" -gt 50 ] && [ "$BASE_PATCH" -eq 11 ]; then
+              CALCULATED_PATCH=$((BASE_PATCH + 1))
+              echo "   ⚠️  Using normalized calculation (next-version: 1.1.11). Tag v1.1.11 for accurate counting."
+            else
+              # Normal case: use commits since version source
+              CALCULATED_PATCH=$((BASE_PATCH + COMMITS_SINCE_VERSION))
+            fi
+          fi
+          
           MAJOR_MINOR_PATCH="${MAJOR}.${MINOR}.${CALCULATED_PATCH}"
           FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-preview"
           BASE_VERSION="${MAJOR}.${MINOR}.${BASE_PATCH}"
