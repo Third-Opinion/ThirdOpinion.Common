@@ -25,6 +25,7 @@ branches:
     increment: Patch
     source-branches: ['develop', 'main']
   
+
 # Ignore patterns for commits that shouldn't affect versioning
 ignore:
   sha: []
