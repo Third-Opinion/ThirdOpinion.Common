@@ -22,7 +22,7 @@ branches:
     # ContinuousDeployment: Increments patch on every commit (1.1.11 -> 1.1.12 -> 1.1.13)
   
   fix:
-    regex: ^fix
+    regex: fix/ci-cd
     mode: ContinuousDeployment
     label: preview
     increment: Patch
