@@ -56,70 +56,40 @@ runs:
       with:
         configFilePath: ${{ inputs.config_file_path }}
 
-    - name: Format version with commit-based increment
+    - name: Format version
       id: version
       shell: bash
       run: |
-        MAJOR="${{ steps.gitversion.outputs.major }}"
-        MINOR="${{ steps.gitversion.outputs.minor }}"
-        BASE_PATCH="${{ steps.gitversion.outputs.patch }}"
-        COMMITS_SINCE_VERSION="${{ steps.gitversion.outputs.commitsSinceVersionSource }}"
+        MAJOR_MINOR_PATCH="${{ steps.gitversion.outputs.majorMinorPatch }}"
         PRE_RELEASE_LABEL="${{ steps.gitversion.outputs.preReleaseLabel }}"
         ORIGINAL_SEMVER="${{ steps.gitversion.outputs.semVer }}"
-        BRANCH_NAME="${{ steps.gitversion.outputs.branchName }}"
         
-        # Detect preview branches (develop, fix branches)
-        IS_PREVIEW_BRANCH=false
-        if [[ "$BRANCH_NAME" =~ ^(develop|fix|fixes)[/-] ]] || [[ "$BRANCH_NAME" =~ ^dev(elop)?(ment)?$ ]]; then
-          IS_PREVIEW_BRANCH=true
-        fi
-        
-        # Use GitVersion's calculated values directly
-        MAJOR_MINOR_PATCH="${{ steps.gitversion.outputs.majorMinorPatch }}"
-        CALCULATED_PATCH="$BASE_PATCH"
-        BASE_VERSION="$MAJOR_MINOR_PATCH"
-        
-        # For preview branches, ensure preview label is applied
-        if [ "$IS_PREVIEW_BRANCH" = true ]; then
-          if [ -z "$PRE_RELEASE_LABEL" ]; then
-            # GitVersion didn't apply label, add preview manually
-            FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-preview"
-          else
-            # GitVersion applied a label, use it
-            FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-${PRE_RELEASE_LABEL}"
-          fi
+        # Format version: Remove commit count suffix (e.g., 1.1.12-preview.16 -> 1.1.12-preview)
+        if [ -n "$PRE_RELEASE_LABEL" ]; then
+          FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-${PRE_RELEASE_LABEL}"
         else
-          # Non-preview branches: use GitVersion's output as-is
-          if [ -n "$PRE_RELEASE_LABEL" ]; then
-            FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-${PRE_RELEASE_LABEL}"
-          else
-            FORMATTED_VERSION="$MAJOR_MINOR_PATCH"
-          fi
+          FORMATTED_VERSION="$MAJOR_MINOR_PATCH"
         fi
         
         echo "formatted_version=$FORMATTED_VERSION" >> $GITHUB_OUTPUT
-        echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
+        echo "base_version=$MAJOR_MINOR_PATCH" >> $GITHUB_OUTPUT
         echo "sem_ver=$ORIGINAL_SEMVER" >> $GITHUB_OUTPUT
         echo "full_sem_ver=${{ steps.gitversion.outputs.fullSemVer }}" >> $GITHUB_OUTPUT
         echo "assembly_sem_ver=${{ steps.gitversion.outputs.assemblySemVer }}" >> $GITHUB_OUTPUT
         echo "assembly_sem_file_ver=${{ steps.gitversion.outputs.assemblySemFileVer }}" >> $GITHUB_OUTPUT
-        echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
-        echo "major=$MAJOR" >> $GITHUB_OUTPUT
-        echo "minor=$MINOR" >> $GITHUB_OUTPUT
-        echo "patch=$CALCULATED_PATCH" >> $GITHUB_OUTPUT
+        echo "branch_name=${{ steps.gitversion.outputs.branchName }}" >> $GITHUB_OUTPUT
+        echo "major=${{ steps.gitversion.outputs.major }}" >> $GITHUB_OUTPUT
+        echo "minor=${{ steps.gitversion.outputs.minor }}" >> $GITHUB_OUTPUT
+        echo "patch=${{ steps.gitversion.outputs.patch }}" >> $GITHUB_OUTPUT
         
         # Check if it's a pre-release
-        if [ "$IS_PREVIEW_BRANCH" = true ] || [ -n "$PRE_RELEASE_LABEL" ]; then
+        if [ -n "$PRE_RELEASE_LABEL" ]; then
           echo "is_prerelease=true" >> $GITHUB_OUTPUT
         else
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
         fi
         
         echo "✅ Version: $FORMATTED_VERSION"
-        echo "   Base version: $BASE_VERSION"
-        echo "   Branch: $BRANCH_NAME"
+        echo "   Base version: $MAJOR_MINOR_PATCH"
         echo "   GitVersion SemVer: $ORIGINAL_SEMVER"
-        if [ "$IS_PREVIEW_BRANCH" = true ]; then
-          echo "   Preview branch detected"
-        fi
 

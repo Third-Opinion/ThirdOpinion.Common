@@ -249,29 +249,29 @@ jobs:
         echo "   Branch: ${{ steps.version.outputs.branch_name }}"
         echo "   SemVer (with commit count): ${{ steps.version.outputs.sem_ver }}"
 
-    - name: Update project versions
-      run: |
-        VERSION="${{ steps.version.outputs.formatted_version }}"
-        BASE_VERSION="${{ steps.version.outputs.base_version }}"
+    # - name: Update project versions
+    #   run: |
+    #     VERSION="${{ steps.version.outputs.formatted_version }}"
+    #     BASE_VERSION="${{ steps.version.outputs.base_version }}"
 
-        echo "Updating project versions:"
-        echo "  Base version: $BASE_VERSION"
-        echo "  Final version: $VERSION"
+    #     echo "Updating project versions:"
+    #     echo "  Base version: $BASE_VERSION"
+    #     echo "  Final version: $VERSION"
 
-        # For assembly versions, use the base version (without pre-release suffixes)
-        ASSEMBLY_VERSION="$BASE_VERSION"
+    #     # For assembly versions, use the base version (without pre-release suffixes)
+    #     ASSEMBLY_VERSION="$BASE_VERSION"
 
-        # Update main project version
-        sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" src/ThirdOpinion.Common.csproj
-        sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$ASSEMBLY_VERSION.0<\/AssemblyVersion>/g" src/ThirdOpinion.Common.csproj
-        sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$ASSEMBLY_VERSION.0<\/FileVersion>/g" src/ThirdOpinion.Common.csproj
+    #     # Update main project version
+    #     sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" src/ThirdOpinion.Common.csproj
+    #     sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$ASSEMBLY_VERSION.0<\/AssemblyVersion>/g" src/ThirdOpinion.Common.csproj
+    #     sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$ASSEMBLY_VERSION.0<\/FileVersion>/g" src/ThirdOpinion.Common.csproj
 
-        echo "Updated package version to: $VERSION"
-        echo "Updated assembly version to: $ASSEMBLY_VERSION.0"
+    #     echo "Updated package version to: $VERSION"
+    #     echo "Updated assembly version to: $ASSEMBLY_VERSION.0"
 
-        # Show updated project file for verification
-        echo "Updated project file version section:"
-        grep -A2 -B2 "<Version>" src/ThirdOpinion.Common.csproj || echo "Could not find version in main project file"
+    #     # Show updated project file for verification
+    #     echo "Updated project file version section:"
+    #     grep -A2 -B2 "<Version>" src/ThirdOpinion.Common.csproj || echo "Could not find version in main project file"
 
     - name: Build solution
       run: |
@@ -281,13 +281,17 @@ jobs:
       run: |
         echo "Creating combined ThirdOpinion.Common package..."
         VERSION="${{ steps.version.outputs.formatted_version }}"
+        BASE_VERSION="${{ steps.version.outputs.base_version }}"
 
         # Pack single combined package with all sub-projects as embedded DLLs
+        # Using -p: parameters to set versions without modifying .csproj file
         echo "Packing ThirdOpinion.Common (combined package with symbols)..."
         dotnet pack src/ThirdOpinion.Common.csproj \
           --configuration Release \
           --output ./packages/ \
           -p:PackageVersion=$VERSION \
+          -p:AssemblyVersion="${BASE_VERSION}.0" \
+          -p:FileVersion="${BASE_VERSION}.0" \
           -p:IncludeSymbols=true \
           -p:SymbolPackageFormat=snupkg
 
