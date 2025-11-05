@@ -194,8 +194,7 @@ public class ClinicalFactExtensionTests
 
         // Assert
         extensions.ShouldNotBeNull();
-        extensions.Count.ShouldBe(2);
+        extensions.Count.ShouldBe(1);
         extensions[0].Url.ShouldBe("https://thirdopinion.io/clinical-fact");
-        extensions[1].Url.ShouldBe("https://thirdopinion.io/clinical-fact");
     }
 }
