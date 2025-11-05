@@ -22,11 +22,11 @@ branches:
     # ContinuousDeployment: Increments patch on every commit (1.1.11 -> 1.1.12 -> 1.1.13)
   
   fix:
-    regex: ^fix/ci-cd$
+    regex: ^fix[/-]
     mode: ContinuousDeployment
     label: preview
     increment: Patch
-    source-branches: []
+    source-branches: ['develop', 'main']
     # ContinuousDeployment: Increments patch on every commit (1.1.11 -> 1.1.12 -> 1.1.13)
   
   feature:
@@ -80,5 +80,5 @@ tag-prefix: '[vV]?'
 # Next version (base version to start from)
 
 # If not set, GitVersion will try to determine from tags or start at 0.1.0
-next-version: 1.1.11
+# next-version: 1.1.11
 
