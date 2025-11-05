@@ -1,5 +1,5 @@
 name: 'Get Version from GitVersion'
-description: 'Determines version using GitVersion and formats it without commit count'
+description: 'Determines version using GitVersion with ContinuousDeployment mode (each commit = one patch increment)'
 
 inputs:
   config_file_path:
@@ -68,15 +68,27 @@ runs:
         ORIGINAL_SEMVER="${{ steps.gitversion.outputs.semVer }}"
         BRANCH_NAME="${{ steps.gitversion.outputs.branchName }}"
         
+        # Detect if this is a develop or fix branch that should have preview label
+        # GitVersion might not always apply the label, so we check the branch name pattern
+        IS_PREVIEW_BRANCH=false
+        if [[ "$BRANCH_NAME" =~ ^(develop|fix|fixes)[/-] ]] || [[ "$BRANCH_NAME" =~ ^dev(elop)?(ment)?$ ]]; then
+          IS_PREVIEW_BRANCH=true
+          # Override label if GitVersion didn't set it
+          if [ -z "$PRE_RELEASE_LABEL" ]; then
+            PRE_RELEASE_LABEL="preview"
+          fi
+        fi
+        
         # For develop/fix branches in ContinuousDeployment mode:
-        # Increment patch by the number of commits since version source
-        # This ensures every commit (or batch of commits) increments the version
-        if [ -n "$PRE_RELEASE_LABEL" ] && [ "$PRE_RELEASE_LABEL" = "preview" ]; then
-          # Calculate patch version: base_patch + commits_since_version
-          # This makes every commit increment the patch version
+        # Each commit = one patch increment (1.1.11 -> 1.1.12 -> 1.1.13)
+        # Calculate: base_patch + commits_since_version = final patch
+        # Example: base 1.1.11 (patch 11) + 117 commits = 1.1.128-preview
+        if [ "$IS_PREVIEW_BRANCH" = true ] || ([ -n "$PRE_RELEASE_LABEL" ] && [ "$PRE_RELEASE_LABEL" = "preview" ]); then
+          # ContinuousDeployment: Each commit increments patch by 1
+          # So: base_patch + number_of_commits = final_patch
           CALCULATED_PATCH=$((BASE_PATCH + COMMITS_SINCE_VERSION))
           MAJOR_MINOR_PATCH="${MAJOR}.${MINOR}.${CALCULATED_PATCH}"
-          FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-${PRE_RELEASE_LABEL}"
+          FORMATTED_VERSION="${MAJOR_MINOR_PATCH}-preview"
           BASE_VERSION="${MAJOR}.${MINOR}.${BASE_PATCH}"
         else
           # For stable branches (main/master) or other labels, use GitVersion's calculation
@@ -102,7 +114,7 @@ runs:
         echo "patch=$CALCULATED_PATCH" >> $GITHUB_OUTPUT
         
         # Check if it's a pre-release
-        if [ -n "$PRE_RELEASE_LABEL" ]; then
+        if [ "$IS_PREVIEW_BRANCH" = true ] || [ -n "$PRE_RELEASE_LABEL" ]; then
           echo "is_prerelease=true" >> $GITHUB_OUTPUT
         else
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
@@ -110,9 +122,12 @@ runs:
         
         echo "✅ Calculated version: $FORMATTED_VERSION"
         echo "   Base version: $BASE_VERSION"
-        if [ -n "$PRE_RELEASE_LABEL" ] && [ "$PRE_RELEASE_LABEL" = "preview" ]; then
+        echo "   Branch: $BRANCH_NAME"
+        if [ "$IS_PREVIEW_BRANCH" = true ] || ([ -n "$PRE_RELEASE_LABEL" ] && [ "$PRE_RELEASE_LABEL" = "preview" ]); then
+          echo "   ContinuousDeployment mode: Each commit = +1 patch"
           echo "   Commits since version source: $COMMITS_SINCE_VERSION"
-          echo "   Patch increment: $BASE_PATCH + $COMMITS_SINCE_VERSION = $CALCULATED_PATCH"
+          echo "   Patch calculation: $BASE_PATCH + $COMMITS_SINCE_VERSION = $CALCULATED_PATCH"
+          echo "   (Preview branch detected: $BRANCH_NAME)"
         fi
         echo "   Original SemVer: $ORIGINAL_SEMVER"
 
