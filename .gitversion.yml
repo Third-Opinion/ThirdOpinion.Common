@@ -1,0 +1,85 @@
+# GitVersion Configuration
+# See https://gitversion.net/docs/configuration/ for full documentation
+
+mode: ContinuousDelivery
+# ContinuousDelivery: Generates versions based on branch and commit history
+# ContinuousDeployment: Always increments version
+
+# Main branch configuration
+branches:
+  main:
+    regex: ^main$|^master$
+    mode: ContinuousDelivery
+    increment: Minor
+    source-branches: ['develop', 'release']
+  
+  develop:
+    regex: ^dev(elop)?(ment)?$
+    mode: ContinuousDelivery
+    label: preview
+    increment: Patch
+    source-branches: []
+    # Note: Pre-release number (.108) comes from commits since version source
+    # To remove it, tag the commit or use CI/CD to format the version string
+  
+  fix:
+    regex: ^fix(es)?[/-]
+    mode: ContinuousDelivery
+    label: preview
+    increment: Patch
+    source-branches: ['develop', 'main']
+    # Note: Pre-release number comes from commits since version source
+    # To remove it, tag the commit or use CI/CD to format the version string
+  
+  feature:
+    regex: ^features?[/-]
+    mode: ContinuousDelivery
+    label: alpha
+    increment: Inherit
+    source-branches: ['develop', 'main']
+  
+  release:
+    regex: ^releases?[/-]
+    mode: ContinuousDelivery
+    label: rc
+    increment: None
+    source-branches: ['develop', 'main']
+  
+  pull-request:
+    regex: ^(pull|pull-requests|pr)[/-]
+    mode: ContinuousDelivery
+    label: PullRequest
+    increment: Inherit
+    source-branches: ['develop', 'main']
+  
+  hotfix:
+    regex: ^hotfix(es)?[/-]
+    mode: ContinuousDelivery
+    increment: Patch
+    source-branches: ['release', 'main']
+
+# Ignore patterns for commits that shouldn't affect versioning
+ignore:
+  sha: []
+
+# Configuration for version calculation
+major-version-bump-message: '\+semver:\s?(breaking|major)'
+minor-version-bump-message: '\+semver:\s?(feature|minor)'
+patch-version-bump-message: '\+semver:\s?(fix|patch)'
+no-bump-message: '\+semver:\s?(none|skip)'
+
+# Assembly versioning
+assembly-versioning-scheme: MajorMinorPatch
+assembly-file-versioning-scheme: MajorMinorPatch
+assembly-informational-format: '{InformationalVersion}'
+
+# Version increment behavior
+# Note: Padding properties removed - not supported in GitVersion 6.4.0
+
+# Tag prefix (none by default)
+tag-prefix: '[vV]?'
+
+# Next version (base version to start from)
+# If not set, GitVersion will try to determine from tags or start at 0.1.0
+next-version: 1.1.11
+
