@@ -1,7 +1,7 @@
 # GitVersion Configuration
 # See https://gitversion.net/docs/configuration/ for full documentation
 
-mode: ContinuousDelivery
+mode: ContinuousDeployment
 # ContinuousDelivery: Generates versions based on branch and commit history
 # ContinuousDeployment: Always increments version
 
@@ -13,12 +13,14 @@ branches:
   
   develop:
     regex: ^dev(elop)?(ment)?$
+    mode: ContinuousDeployment
     label: preview
     increment: Patch
     source-branches: [ 'main']
   
   fix:
     regex: ^fix[/-]
+    mode: ContinuousDeployment
     label: preview
     increment: Patch
     source-branches: ['develop', 'main']
