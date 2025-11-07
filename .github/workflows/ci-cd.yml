@@ -178,6 +178,19 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ${{ env.SOLUTION_PATH }}
 
+    - name: Determine build configuration
+      id: build-config
+      run: |
+        if [ "${{ github.ref_name }}" == "develop" ]; then
+          BUILD_CONFIG="Debug"
+          echo "Using Debug configuration for develop branch (better debugging experience)"
+        else
+          BUILD_CONFIG="Release"
+          echo "Using Release configuration for ${{ github.ref_name }} branch (production build)"
+        fi
+        echo "configuration=$BUILD_CONFIG" >> $GITHUB_OUTPUT
+        echo "Build configuration: $BUILD_CONFIG"
+
     # OLD VERSION DETERMINATION - COMMENTED OUT (replaced by tag-based versioning)
     # - name: Determine version
     #   id: version
@@ -281,22 +294,26 @@ jobs:
           echo "version_source=tag_develop" >> $GITHUB_OUTPUT
           
         elif [ "$BRANCH_NAME" == "main" ] || [ "$BRANCH_NAME" == "master" ]; then
-          # For main/master: find latest stable tag (v* excluding preview)
-          LATEST_TAG=$(git tag -l "v*" | grep -v "preview" | sort -V | tail -n1 || echo "")
+          # For main/master: find latest preview tag and remove -preview suffix
+          LATEST_PREVIEW_TAG=$(git tag -l "*-preview" | sort -V | tail -n1 || echo "")
           
-          if [ -z "$LATEST_TAG" ]; then
-            # No stable tags found, start from 1.0.0
-            VERSION="1.0.0"
-            BASE_VERSION="1.0.0"
+          if [ -z "$LATEST_PREVIEW_TAG" ]; then
+            # No preview tags found, check for stable tags as fallback
+            LATEST_STABLE_TAG=$(git tag -l "v*" | grep -v "preview" | sort -V | tail -n1 || echo "")
+            
+            if [ -z "$LATEST_STABLE_TAG" ]; then
+              # No tags found at all, start from 1.0.0
+              VERSION="1.0.0"
+              BASE_VERSION="1.0.0"
+            else
+              # Use latest stable tag as-is
+              BASE_VERSION=$(echo "$LATEST_STABLE_TAG" | sed 's/^v//')
+              VERSION="$BASE_VERSION"
+            fi
           else
-            # Parse latest stable tag (e.g., v1.1.12)
-            BASE_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
-            MAJOR=$(echo "$BASE_VERSION" | cut -d. -f1)
-            MINOR=$(echo "$BASE_VERSION" | cut -d. -f2)
-            NEW_MINOR=$((MINOR + 1))
-            # Increment minor, reset patch to 0
-            VERSION="${MAJOR}.${NEW_MINOR}.0"
-            BASE_VERSION="$VERSION"
+            # Remove -preview suffix from latest preview tag (e.g., v1.1.15-preview -> 1.1.15)
+            BASE_VERSION=$(echo "$LATEST_PREVIEW_TAG" | sed 's/^v//' | sed 's/-preview$//')
+            VERSION="$BASE_VERSION"
           fi
           
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
@@ -322,7 +339,17 @@ jobs:
         echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
         echo "✅ Version determined: $VERSION (base: $BASE_VERSION)"
         echo "   Branch: $BRANCH_NAME"
-        echo "   Latest tag: ${LATEST_TAG:-none}"
+        # Show appropriate tag based on branch
+        if [ "$BRANCH_NAME" == "main" ] || [ "$BRANCH_NAME" == "master" ]; then
+          echo "   Latest preview tag: ${LATEST_PREVIEW_TAG:-none}"
+          if [ -n "$LATEST_STABLE_TAG" ]; then
+            echo "   Fallback stable tag: $LATEST_STABLE_TAG"
+          fi
+        elif [ "$BRANCH_NAME" == "develop" ]; then
+          echo "   Latest preview tag: ${LATEST_TAG:-none}"
+        else
+          echo "   Latest tag: ${LATEST_TAG:-none}"
+        fi
 
     - name: Display version information
       run: |
@@ -369,7 +396,7 @@ jobs:
 
     - name: Build solution
       run: |
-        dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
+        dotnet build ${{ env.SOLUTION_PATH }} --configuration ${{ steps.build-config.outputs.configuration }} --no-restore
 
     - name: Pack combined NuGet package
       run: |
@@ -381,7 +408,7 @@ jobs:
         # Using -p: parameters to set versions without modifying .csproj file
         echo "Packing ThirdOpinion.Common (combined package with symbols)..."
         dotnet pack src/ThirdOpinion.Common.csproj \
-          --configuration Release \
+          --configuration ${{ steps.build-config.outputs.configuration }} \
           --output ./packages/ \
           -p:PackageVersion=$VERSION \
           -p:AssemblyVersion="${BASE_VERSION}.0" \
