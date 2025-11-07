@@ -442,15 +442,24 @@ Additional methods available when using `RadiographicStandard.Observed`:
 .WithObservedChanges(string? observedChanges)
 ```
 
-**Purpose:** Describes observed radiographic changes when formal criteria (like RECIST) are inconclusive but changes are evident.
+**Purpose:** Describes observed radiographic changes when formal criteria (like RECIST) are inconclusive but changes are evident. Values are automatically mapped to SNOMED CT codes.
+
+**SNOMED Code Mapping:**
+The method automatically maps common values to standardized SNOMED CT codes:
+- `"Progression"` → **444391001** "Malignant tumor progression (finding)"
+- `"Stable"` → **713837000** "Neoplasm stable (finding)"
+- `"Regression"` → **265743007** "Regression of neoplasm (finding)"
+- Other values → Stored as text-only CodeableConcept
+
+The mapping is case-insensitive, so "progression", "Progression", and "PROGRESSION" all map to the same SNOMED code.
 
 **Example:**
 ```csharp
 var observedObs = new RadiographicObservationBuilder(config, RadiographicStandard.Observed)
     .WithPatient("Patient/patient-003")
     .WithDevice("Device/radiologist-review")
-    .WithDetermination("Inconclusive") // Formal criteria unclear
-    .WithObservedChanges("Progression") // But progression is observed
+    .WithDetermination("Inconclusive") // Formal criteria unclear, uses SNOMED 419984006
+    .WithObservedChanges("Progression") // Maps to SNOMED 444391001
     .WithSummary("Clear progression observed despite measurement variability")
     .WithConfidence(0.85f)
     .Build();

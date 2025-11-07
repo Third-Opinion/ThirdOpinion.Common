@@ -404,9 +404,13 @@ public class RadiographicObservationBuilderTests
         observedChangesComponent.Code.Coding[0].Code.ShouldBe("observed-changes");
         observedChangesComponent.Code.Coding[0].Display.ShouldBe("Observed Changes");
 
-        var valueString = observedChangesComponent.Value as FhirString;
-        valueString.ShouldNotBeNull();
-        valueString.Value.ShouldBe("Progression");
+        // Verify the value is a CodeableConcept with SNOMED code
+        var valueCodeableConcept = observedChangesComponent.Value as CodeableConcept;
+        valueCodeableConcept.ShouldNotBeNull();
+        valueCodeableConcept.Coding.ShouldNotBeEmpty();
+        valueCodeableConcept.Coding[0].System.ShouldBe("http://snomed.info/sct");
+        valueCodeableConcept.Coding[0].Code.ShouldBe("444391001");
+        valueCodeableConcept.Coding[0].Display.ShouldBe("Malignant tumor progression (finding)");
 
         // Check that determination is Inconclusive
         Observation.ComponentComponent? determinationComponent = observation.Component
@@ -438,6 +442,104 @@ public class RadiographicObservationBuilderTests
             .FirstOrDefault(c => c.Code.Coding.Any(coding => coding.Code == "observed-changes"));
 
         observedChangesComponent.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Build_ObservedWithStableChanges_AddsSnomedCode()
+    {
+        // Arrange
+        var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.Observed);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("Inconclusive")
+            .WithObservedChanges("Stable")
+            .WithSummary("RECIST criteria inconclusive, but lesions appear stable")
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+
+        // Check that observedChanges component has correct SNOMED code for Stable
+        Observation.ComponentComponent? observedChangesComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(coding => coding.Code == "observed-changes"));
+
+        observedChangesComponent.ShouldNotBeNull();
+
+        var valueCodeableConcept = observedChangesComponent.Value as CodeableConcept;
+        valueCodeableConcept.ShouldNotBeNull();
+        valueCodeableConcept.Coding.ShouldNotBeEmpty();
+        valueCodeableConcept.Coding[0].System.ShouldBe("http://snomed.info/sct");
+        valueCodeableConcept.Coding[0].Code.ShouldBe("713837000");
+        valueCodeableConcept.Coding[0].Display.ShouldBe("Neoplasm stable (finding)");
+    }
+
+    [Fact]
+    public void Build_ObservedWithRegressionChanges_AddsSnomedCode()
+    {
+        // Arrange
+        var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.Observed);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("Inconclusive")
+            .WithObservedChanges("Regression")
+            .WithSummary("RECIST criteria inconclusive, but tumor regression observed")
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+
+        // Check that observedChanges component has correct SNOMED code for Regression
+        Observation.ComponentComponent? observedChangesComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(coding => coding.Code == "observed-changes"));
+
+        observedChangesComponent.ShouldNotBeNull();
+
+        var valueCodeableConcept = observedChangesComponent.Value as CodeableConcept;
+        valueCodeableConcept.ShouldNotBeNull();
+        valueCodeableConcept.Coding.ShouldNotBeEmpty();
+        valueCodeableConcept.Coding[0].System.ShouldBe("http://snomed.info/sct");
+        valueCodeableConcept.Coding[0].Code.ShouldBe("265743007");
+        valueCodeableConcept.Coding[0].Display.ShouldBe("Regression of neoplasm (finding)");
+    }
+
+    [Fact]
+    public void Build_ObservedWithUnmappedChanges_UsesFallbackText()
+    {
+        // Arrange
+        var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.Observed);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("Inconclusive")
+            .WithObservedChanges("Mixed response with some progression and some regression")
+            .WithSummary("Complex response pattern")
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+
+        // Check that observedChanges component uses text fallback for unmapped values
+        Observation.ComponentComponent? observedChangesComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(coding => coding.Code == "observed-changes"));
+
+        observedChangesComponent.ShouldNotBeNull();
+
+        var valueCodeableConcept = observedChangesComponent.Value as CodeableConcept;
+        valueCodeableConcept.ShouldNotBeNull();
+        valueCodeableConcept.Text.ShouldBe("Mixed response with some progression and some regression");
+        // Should not have SNOMED coding for unmapped values
+        valueCodeableConcept.Coding.ShouldBeEmpty();
     }
 
     #endregion
@@ -503,8 +605,8 @@ public class RadiographicObservationBuilderTests
         // Assert
         var valueCodeableConcept = observation.Value as CodeableConcept;
         valueCodeableConcept.ShouldNotBeNull();
-        valueCodeableConcept.Coding[0].Code.ShouldBe("373067005"); // Inconclusive
-        valueCodeableConcept.Coding[0].Display.ShouldBe("Inconclusive");
+        valueCodeableConcept.Coding[0].Code.ShouldBe("419984006"); // Inconclusive
+        valueCodeableConcept.Coding[0].Display.ShouldStartWith("Inconclusive");
     }
 
     [Fact]

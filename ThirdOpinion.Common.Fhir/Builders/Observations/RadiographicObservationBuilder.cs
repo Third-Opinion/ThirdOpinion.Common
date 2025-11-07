@@ -827,8 +827,33 @@ public class RadiographicObservationBuilder : AiResourceBuilderBase<Observation>
 
         // "Inconclusive"
         return FhirCodingHelper.CreateSnomedConcept(
-            "373067005",
-            "Inconclusive");
+            "419984006",
+            "Inconclusive (qualifier value)");
+    }
+
+    /// <summary>
+    ///     Creates a CodeableConcept for observed changes with appropriate SNOMED codes
+    /// </summary>
+    private CodeableConcept? CreateObservedChangesValue()
+    {
+        if (string.IsNullOrWhiteSpace(_observedChanges))
+            return null;
+
+        // Map common observed changes values to SNOMED codes
+        return _observedChanges.Trim().ToLowerInvariant() switch
+        {
+            "progression" => FhirCodingHelper.CreateSnomedConcept(
+                "444391001",
+                "Malignant tumor progression (finding)"),
+            "stable" => FhirCodingHelper.CreateSnomedConcept(
+                "713837000",
+                "Neoplasm stable (finding)"),
+            "regression" => FhirCodingHelper.CreateSnomedConcept(
+                "265743007",
+                "Regression of neoplasm (finding)"),
+            // Fallback to text-only CodeableConcept for unmapped values
+            _ => new CodeableConcept { Text = _observedChanges }
+        };
     }
 
     private CodeableConcept CreateMethodCodeableConcept()
@@ -1207,24 +1232,28 @@ public class RadiographicObservationBuilder : AiResourceBuilderBase<Observation>
     {
         const string componentSystem = "http://thirdopinion.ai/fhir/CodeSystem/radiographic-components";
 
-        // Add observed changes component
+        // Add observed changes component with SNOMED-coded value
         if (!string.IsNullOrWhiteSpace(_observedChanges))
-            _components.Add(new Observation.ComponentComponent
-            {
-                Code = new CodeableConcept
+        {
+            var observedChangesValue = CreateObservedChangesValue();
+            if (observedChangesValue != null)
+                _components.Add(new Observation.ComponentComponent
                 {
-                    Coding = new List<Coding>
+                    Code = new CodeableConcept
                     {
-                        new()
+                        Coding = new List<Coding>
                         {
-                            System = componentSystem,
-                            Code = "observed-changes",
-                            Display = "Observed Changes"
+                            new()
+                            {
+                                System = componentSystem,
+                                Code = "observed-changes",
+                                Display = "Observed Changes"
+                            }
                         }
-                    }
-                },
-                Value = new FhirString(_observedChanges)
-            });
+                    },
+                    Value = observedChangesValue
+                });
+        }
     }
 
     private string GetComponentSystem()
