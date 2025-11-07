@@ -154,29 +154,6 @@ public class RadiographicObservationBuilderTests
         observation.Note[0].Text.ShouldContain("nuclear medicine specialist");
     }
 
-    [Fact]
-    public void Build_PCWG3WithImagingReferences_AddsReferencesToDerivedFrom()
-    {
-        // Arrange
-        var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.PCWG3);
-        var imagingStudyRef = new ResourceReference("ImagingStudy/bone-scan-123", "Bone Scan");
-        var radiologyReportRef = new ResourceReference("DiagnosticReport/rad-456", "Bone Scan Report");
-
-        // Act
-        Observation observation = builder
-            .WithPatient(_patientReference)
-            .WithDevice(_deviceReference)
-            .WithFocus(_tumorReference)
-            .AddImagingStudy(imagingStudyRef)
-            .AddRadiologyReport(radiologyReportRef)
-            .Build();
-
-        // Assert - Imaging studies and radiology reports should work with PCWG3 too
-        observation.DerivedFrom.Count.ShouldBe(2);
-        observation.DerivedFrom.ShouldContain(imagingStudyRef);
-        observation.DerivedFrom.ShouldContain(radiologyReportRef);
-    }
-
     #endregion
 
     #region RECIST Standard Tests
@@ -204,7 +181,6 @@ public class RadiographicObservationBuilderTests
                 Code = "mm"
             })
             .AddComponent("new-lesions", true)
-            .AddImagingStudy(imagingStudyRef)
             .AddRadiologyReport(radiologyReportRef)
             .WithMeasurementChange("20% increase in sum of longest diameters")
             .WithImagingType("CT")
@@ -236,9 +212,8 @@ public class RadiographicObservationBuilderTests
         observation.BodySite.ShouldNotBeNull();
         observation.BodySite.Coding[0].Code.ShouldBe("39607008");
 
-        // Check derivedFrom includes imaging studies and reports
-        observation.DerivedFrom.Count.ShouldBe(2);
-        observation.DerivedFrom.ShouldContain(imagingStudyRef);
+        // Check derivedFrom includes radiology report
+        observation.DerivedFrom.Count.ShouldBe(1);
         observation.DerivedFrom.ShouldContain(radiologyReportRef);
 
         // Check RECIST response value
@@ -353,26 +328,46 @@ public class RadiographicObservationBuilderTests
     }
 
     [Fact]
-    public void Build_ObservedWithImagingReferences_AddsReferencesToDerivedFrom()
+    public void Build_WithDuplicateDerivedFromReferences_DeduplicatesCorrectly()
     {
         // Arrange
         var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.Observed);
-        var imagingStudyRef = new ResourceReference("ImagingStudy/ct-123", "CT Scan");
-        var radiologyReportRef = new ResourceReference("DiagnosticReport/rad-456", "CT Report");
+        var documentRef = "DocumentReference/doc-123";
+
+        // Create multiple facts that reference the same document
+        var facts = new[]
+        {
+            new Fact
+            {
+                factGuid = "fact-001",
+                factDocumentReference = documentRef,
+                fact = "First finding from the document"
+            },
+            new Fact
+            {
+                factGuid = "fact-002",
+                factDocumentReference = documentRef,
+                fact = "Second finding from the same document"
+            },
+            new Fact
+            {
+                factGuid = "fact-003",
+                factDocumentReference = documentRef,
+                fact = "Third finding from the same document"
+            }
+        };
 
         // Act
         Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .AddImagingStudy(imagingStudyRef)
-            .AddRadiologyReport(radiologyReportRef)
+            .WithSupportingFacts(facts)
             .Build();
 
-        // Assert - Imaging studies and radiology reports should work with Observed standard too
-        observation.DerivedFrom.Count.ShouldBe(2);
-        observation.DerivedFrom.ShouldContain(imagingStudyRef);
-        observation.DerivedFrom.ShouldContain(radiologyReportRef);
+        // Assert - Should only have ONE derivedFrom entry even though 3 facts reference the same document
+        observation.DerivedFrom.Count.ShouldBe(1);
+        observation.DerivedFrom[0].Reference.ShouldBe(documentRef);
     }
 
     [Fact]
@@ -733,7 +728,7 @@ public class RadiographicObservationBuilderTests
     public void Build_WithInferenceId_IncludesInferenceIdInMethod()
     {
         // Arrange
-        const string inferenceId = "test-inference-123";
+        const string inferenceId = "pcwg3-bone-progression";
         var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.PCWG3);
 
         // Act

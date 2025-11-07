@@ -2,6 +2,7 @@ using Amazon.HealthLake;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ThirdOpinion.Common.Aws.HealthLake;
 using ThirdOpinion.Common.Aws.HealthLake.Configuration;
 using ThirdOpinion.Common.Aws.HealthLake.Http;
 using ThirdOpinion.Common.Logging;
@@ -134,14 +135,8 @@ internal class Program
         // Configure AWS options
         services.AddDefaultAWSOptions(configuration.GetAWSOptions());
 
-        // Add AWS services
-        services.AddAWSService<IAmazonHealthLake>();
-
-        // Configure HealthLake
-        services.Configure<HealthLakeConfig>(configuration.GetSection("HealthLake"));
-
-        // Add HttpClient for HealthLake HTTP service
-        services.AddHttpClient<IHealthLakeHttpService, HealthLakeHttpService>();
+        // Add HealthLake services (includes IAwsSignatureService, HealthLakeHttpService, etc.)
+        services.AddHealthLakeServices(configuration);
 
         // Add correlation ID provider
         services.AddScoped<ICorrelationIdProvider, CorrelationIdProvider>();

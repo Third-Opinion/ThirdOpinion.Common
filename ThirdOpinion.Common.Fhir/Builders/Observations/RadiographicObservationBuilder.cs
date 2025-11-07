@@ -17,7 +17,6 @@ public class RadiographicObservationBuilder : AiResourceBuilderBase<Observation>
     private readonly List<Fact> _conflictingFacts;
     private readonly List<ResourceReference> _evidenceReferences;
     private readonly List<ResourceReference> _focusReferences;
-    private readonly List<ResourceReference> _imagingStudies;
     private readonly List<string> _notes;
     private readonly List<ResourceReference> _radiologyReports;
     private readonly RadiographicStandard _standard;
@@ -64,7 +63,6 @@ public class RadiographicObservationBuilder : AiResourceBuilderBase<Observation>
     {
         _standard = standard;
         _focusReferences = new List<ResourceReference>();
-        _imagingStudies = new List<ResourceReference>();
         _radiologyReports = new List<ResourceReference>();
         _evidenceReferences = new List<ResourceReference>();
         _components = new List<Observation.ComponentComponent>();
@@ -336,20 +334,6 @@ public class RadiographicObservationBuilder : AiResourceBuilderBase<Observation>
     {
         if (facts != null && facts.Length > 0)
             _conflictingFacts.AddRange(facts.Where(f => f != null));
-        return this;
-    }
-
-    /// <summary>
-    ///     Adds an imaging study reference to derivedFrom
-    /// </summary>
-    /// <param name="imagingStudy">The imaging study resource reference</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public RadiographicObservationBuilder AddImagingStudy(ResourceReference imagingStudy)
-    {
-        if (imagingStudy == null)
-            throw new ArgumentNullException(nameof(imagingStudy));
-
-        _imagingStudies.Add(imagingStudy);
         return this;
     }
 
@@ -867,7 +851,7 @@ public class RadiographicObservationBuilder : AiResourceBuilderBase<Observation>
                     new()
                     {
                         System = Configuration.CriteriaSystem,
-                        Code = $"pcwg3-bone-progression-{InferenceId ?? Guid.NewGuid().ToString()}",
+                        Code = "pcwg3-bone-progression",
                         Display = "PCWG3 Bone Scan Progression Criteria"
                     }
                 },
@@ -880,7 +864,7 @@ public class RadiographicObservationBuilder : AiResourceBuilderBase<Observation>
                     new()
                     {
                         System = Configuration.CriteriaSystem,
-                        Code = $"recist-1.1-{InferenceId ?? Guid.NewGuid().ToString()}",
+                        Code = "recist-1.1",
                         Display = "RECIST 1.1"
                     }
                 },
@@ -893,7 +877,7 @@ public class RadiographicObservationBuilder : AiResourceBuilderBase<Observation>
                     new()
                     {
                         System = Configuration.CriteriaSystem,
-                        Code = $"observed-radiographic-{InferenceId ?? Guid.NewGuid().ToString()}",
+                        Code = "observed-radiographic",
                         Display = "Observed Radiographic Assessment"
                     }
                 },
@@ -910,8 +894,7 @@ public class RadiographicObservationBuilder : AiResourceBuilderBase<Observation>
         // Add evidence references (PCWG3)
         allDerivedFrom.AddRange(_evidenceReferences);
 
-        // Add imaging studies and radiology reports (RECIST)
-        allDerivedFrom.AddRange(_imagingStudies);
+        // Add radiology reports (RECIST)
         allDerivedFrom.AddRange(_radiologyReports);
 
         // Add base derivedFrom references
@@ -919,8 +902,15 @@ public class RadiographicObservationBuilder : AiResourceBuilderBase<Observation>
 
         if (allDerivedFrom.Any())
         {
+            // Deduplicate by Reference string (case-sensitive)
+            // Take first occurrence to preserve original display text
+            var uniqueReferences = allDerivedFrom
+                .GroupBy(r => r.Reference)
+                .Select(g => g.First())
+                .ToList();
+
             observation.DerivedFrom.Clear();
-            observation.DerivedFrom.AddRange(allDerivedFrom);
+            observation.DerivedFrom.AddRange(uniqueReferences);
         }
     }
 
