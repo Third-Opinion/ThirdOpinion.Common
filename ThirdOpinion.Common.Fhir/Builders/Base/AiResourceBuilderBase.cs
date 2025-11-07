@@ -5,7 +5,7 @@ using ThirdOpinion.Common.Fhir.Helpers;
 namespace ThirdOpinion.Common.Fhir.Builders.Base;
 
 /// <summary>
-/// Abstract base class for building FHIR resources with AI inference metadata
+///     Abstract base class for building FHIR resources with AI inference metadata
 /// </summary>
 /// <typeparam name="T">The type of FHIR resource to build</typeparam>
 public abstract class AiResourceBuilderBase<T> where T : Resource
@@ -13,37 +13,7 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
     private static readonly object _idGenerationLock = new();
 
     /// <summary>
-    /// The inference ID for this resource
-    /// </summary>
-    protected string? InferenceId { get; set; }
-
-    /// <summary>
-    /// The criteria ID used for this inference
-    /// </summary>
-    protected string? CriteriaId { get; set; }
-
-    /// <summary>
-    /// The display text for the criteria
-    /// </summary>
-    protected string? CriteriaDisplay { get; set; }
-
-    /// <summary>
-    /// The criteria system URI
-    /// </summary>
-    protected string? CriteriaSystem { get; set; }
-
-    /// <summary>
-    /// List of resources this inference was derived from
-    /// </summary>
-    protected List<ResourceReference> DerivedFromReferences { get; }
-
-    /// <summary>
-    /// Configuration for AI inference operations
-    /// </summary>
-    protected AiInferenceConfiguration Configuration { get; }
-
-    /// <summary>
-    /// Creates a new instance of the builder with configuration
+    ///     Creates a new instance of the builder with configuration
     /// </summary>
     /// <param name="configuration">The AI inference configuration</param>
     protected AiResourceBuilderBase(AiInferenceConfiguration configuration)
@@ -53,7 +23,37 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
     }
 
     /// <summary>
-    /// Sets the inference ID for this resource
+    ///     The inference ID for this resource
+    /// </summary>
+    protected string? InferenceId { get; set; }
+
+    /// <summary>
+    ///     The criteria ID used for this inference
+    /// </summary>
+    protected string? CriteriaId { get; set; }
+
+    /// <summary>
+    ///     The display text for the criteria
+    /// </summary>
+    protected string? CriteriaDisplay { get; set; }
+
+    /// <summary>
+    ///     The criteria system URI
+    /// </summary>
+    protected string? CriteriaSystem { get; set; }
+
+    /// <summary>
+    ///     List of resources this inference was derived from
+    /// </summary>
+    protected List<ResourceReference> DerivedFromReferences { get; }
+
+    /// <summary>
+    ///     Configuration for AI inference operations
+    /// </summary>
+    protected AiInferenceConfiguration Configuration { get; }
+
+    /// <summary>
+    ///     Sets the inference ID for this resource
     /// </summary>
     /// <param name="id">The inference ID</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -64,7 +64,7 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
     }
 
     /// <summary>
-    /// Sets the criteria information for this inference
+    ///     Sets the criteria information for this inference
     /// </summary>
     /// <param name="id">The criteria ID</param>
     /// <param name="display">The display text for the criteria</param>
@@ -79,21 +79,18 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
     }
 
     /// <summary>
-    /// Adds a resource reference that this inference was derived from
+    ///     Adds a resource reference that this inference was derived from
     /// </summary>
     /// <param name="reference">The resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
     public AiResourceBuilderBase<T> AddDerivedFrom(ResourceReference reference)
     {
-        if (reference != null)
-        {
-            DerivedFromReferences.Add(reference);
-        }
+        if (reference != null) DerivedFromReferences.Add(reference);
         return this;
     }
 
     /// <summary>
-    /// Adds a resource reference that this inference was derived from
+    ///     Adds a resource reference that this inference was derived from
     /// </summary>
     /// <param name="reference">The reference string (e.g., "Patient/123")</param>
     /// <param name="display">Optional display text for the reference</param>
@@ -109,29 +106,26 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
             };
             DerivedFromReferences.Add(resourceRef);
         }
+
         return this;
     }
 
     /// <summary>
-    /// Ensures an inference ID is set, generating one if necessary
+    ///     Ensures an inference ID is set, generating one if necessary
     /// </summary>
     protected void EnsureInferenceId()
     {
         if (string.IsNullOrWhiteSpace(InferenceId))
-        {
             lock (_idGenerationLock)
             {
                 // Double-check after acquiring lock
                 if (string.IsNullOrWhiteSpace(InferenceId))
-                {
                     InferenceId = FhirIdGenerator.GenerateInferenceId();
-                }
             }
-        }
     }
 
     /// <summary>
-    /// Applies the AIAST security label to a resource
+    ///     Applies the AIAST security label to a resource
     /// </summary>
     /// <param name="resource">The resource to apply the label to</param>
     protected void ApplyAiastSecurityLabel(T resource)
@@ -153,14 +147,13 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
         };
 
         // Only add if not already present
-        if (!resource.Meta.Security.Any(s => s.System == aiastLabel.System && s.Code == aiastLabel.Code))
-        {
+        if (!resource.Meta.Security.Any(s =>
+                s.System == aiastLabel.System && s.Code == aiastLabel.Code))
             resource.Meta.Security.Add(aiastLabel);
-        }
     }
 
     /// <summary>
-    /// Validates that required fields are set
+    ///     Validates that required fields are set
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when required fields are missing</exception>
     protected virtual void ValidateRequiredFields()
@@ -169,13 +162,13 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
     }
 
     /// <summary>
-    /// Core build logic to be implemented by derived classes
+    ///     Core build logic to be implemented by derived classes
     /// </summary>
     /// <returns>The built FHIR resource</returns>
     protected abstract T BuildCore();
 
     /// <summary>
-    /// Builds the FHIR resource with AI metadata
+    ///     Builds the FHIR resource with AI metadata
     /// </summary>
     /// <returns>The completed FHIR resource</returns>
     public T Build()
@@ -187,16 +180,13 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
         EnsureInferenceId();
 
         // Call derived class build logic
-        var resource = BuildCore();
+        T resource = BuildCore();
 
         // Apply AIAST security label
         ApplyAiastSecurityLabel(resource);
 
         // Set the resource ID if it's not already set
-        if (string.IsNullOrWhiteSpace(resource.Id))
-        {
-            resource.Id = InferenceId;
-        }
+        if (string.IsNullOrWhiteSpace(resource.Id)) resource.Id = InferenceId;
 
         return resource;
     }

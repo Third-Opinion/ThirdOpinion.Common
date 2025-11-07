@@ -9,8 +9,8 @@ namespace ThirdOpinion.Common.Fhir.UnitTests.Builders.Observations;
 public class AdtStatusObservationBuilderTests
 {
     private readonly AiInferenceConfiguration _configuration;
-    private readonly ResourceReference _patientReference;
     private readonly ResourceReference _deviceReference;
+    private readonly ResourceReference _patientReference;
 
     public AdtStatusObservationBuilderTests()
     {
@@ -26,7 +26,7 @@ public class AdtStatusObservationBuilderTests
         var builder = new AdtStatusObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithStatus(true) // Active ADT
@@ -40,7 +40,8 @@ public class AdtStatusObservationBuilderTests
         // Check category
         observation.Category.ShouldHaveSingleItem();
         observation.Category[0].Coding[0].Code.ShouldBe("therapy");
-        observation.Category[0].Coding[0].System.ShouldBe("http://terminology.hl7.org/CodeSystem/observation-category");
+        observation.Category[0].Coding[0].System
+            .ShouldBe("http://terminology.hl7.org/CodeSystem/observation-category");
 
         // Check code (ADT therapy)
         observation.Code.Coding[0].System.ShouldBe(FhirCodingHelper.Systems.SNOMED_SYSTEM);
@@ -69,7 +70,7 @@ public class AdtStatusObservationBuilderTests
         var builder = new AdtStatusObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient("patient-123", "John Doe")
             .WithDevice("device-456", "Detection AI")
             .WithStatus(false) // Inactive ADT
@@ -93,7 +94,7 @@ public class AdtStatusObservationBuilderTests
         var builder = new AdtStatusObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithStatus(true)
@@ -119,7 +120,7 @@ public class AdtStatusObservationBuilderTests
         var builder = new AdtStatusObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithStatus(true)
@@ -143,7 +144,7 @@ public class AdtStatusObservationBuilderTests
         var customId = "custom-inference-12345";
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithInferenceId(customId)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
@@ -161,7 +162,7 @@ public class AdtStatusObservationBuilderTests
         var builder = new AdtStatusObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithStatus(false)
@@ -179,11 +180,12 @@ public class AdtStatusObservationBuilderTests
         var builder = new AdtStatusObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithStatus(true)
-            .WithCriteria("adt-detect-v1", "ADT Detection Algorithm v1.0", "http://example.org/criteria")
+            .WithCriteria("adt-detect-v1", "ADT Detection Algorithm v1.0",
+                "http://example.org/criteria")
             .Build();
 
         // Assert
@@ -246,7 +248,7 @@ public class AdtStatusObservationBuilderTests
     public void FluentInterface_SupportsCompleteChaining()
     {
         // Arrange & Act
-        var observation = new AdtStatusObservationBuilder(_configuration)
+        Observation observation = new AdtStatusObservationBuilder(_configuration)
             .WithInferenceId("test-inference-001")
             .WithPatient("Patient/p123", "Jane Doe")
             .WithDevice("Device/d456", "AI System")
@@ -275,7 +277,7 @@ public class AdtStatusObservationBuilderTests
         var builder = new AdtStatusObservationBuilder(_configuration);
 
         // Act & Assert
-        Should.Throw<ArgumentNullException>(() => builder.WithPatient((ResourceReference)null!));
+        Should.Throw<ArgumentNullException>(() => builder.WithPatient(null!));
         Should.Throw<ArgumentException>(() => builder.WithPatient(""));
         Should.Throw<ArgumentException>(() => builder.WithPatient("   "));
     }
@@ -287,7 +289,7 @@ public class AdtStatusObservationBuilderTests
         var builder = new AdtStatusObservationBuilder(_configuration);
 
         // Act & Assert
-        Should.Throw<ArgumentNullException>(() => builder.WithDevice((ResourceReference)null!));
+        Should.Throw<ArgumentNullException>(() => builder.WithDevice(null!));
         Should.Throw<ArgumentException>(() => builder.WithDevice(""));
         Should.Throw<ArgumentException>(() => builder.WithDevice("   "));
     }
@@ -302,14 +304,14 @@ public class AdtStatusObservationBuilderTests
         var dateTimeOffset = new DateTimeOffset(2024, 3, 15, 14, 30, 0, TimeSpan.FromHours(-5));
 
         // Act
-        var observation1 = builder1
+        Observation observation1 = builder1
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithStatus(true)
             .WithEffectiveDate(dateTime)
             .Build();
 
-        var observation2 = builder2
+        Observation observation2 = builder2
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithStatus(true)
@@ -326,7 +328,7 @@ public class AdtStatusObservationBuilderTests
     {
         // Arrange
         var builder = new AdtStatusObservationBuilder(_configuration);
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithStatus(true)
@@ -337,7 +339,7 @@ public class AdtStatusObservationBuilderTests
 
         // Act
         var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
-        var json = serializer.SerializeToString(observation);
+        string json = serializer.SerializeToString(observation);
 
         // Assert
         json.ShouldNotBeNullOrEmpty();
@@ -362,7 +364,7 @@ public class AdtStatusObservationBuilderTests
         var builder = new AdtStatusObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithStatus(true)
@@ -383,7 +385,7 @@ public class AdtStatusObservationBuilderTests
         var builder = new AdtStatusObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithStatus(false)
@@ -407,7 +409,7 @@ public class AdtStatusObservationBuilderTests
         var displayText = "ADT treatment started on 2025-01-01 with Zoladex 20 mg";
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithStatus(true)
@@ -416,8 +418,9 @@ public class AdtStatusObservationBuilderTests
 
         // Assert
         observation.Component.ShouldNotBeNull();
-        var treatmentComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "treatmentStartDate_v1"));
+        Observation.ComponentComponent? treatmentComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "treatmentStartDate_v1"));
         treatmentComponent.ShouldNotBeNull();
 
         // Check code
@@ -433,8 +436,9 @@ public class AdtStatusObservationBuilderTests
         // Check extension
         treatmentComponent.Extension.ShouldNotBeNull();
         treatmentComponent.Extension.Count.ShouldBe(1);
-        var extension = treatmentComponent.Extension[0];
-        extension.Url.ShouldBe("https://thirdopinion.io/fhir/StructureDefinition/source-medication-reference");
+        Extension? extension = treatmentComponent.Extension[0];
+        extension.Url.ShouldBe(
+            "https://thirdopinion.io/fhir/StructureDefinition/source-medication-reference");
         var extensionReference = extension.Value as ResourceReference;
         extensionReference.ShouldNotBeNull();
         extensionReference.Reference.ShouldBe(medicationReferenceId);
@@ -464,18 +468,21 @@ public class AdtStatusObservationBuilderTests
 
         // Act & Assert
         Should.Throw<ArgumentException>(() =>
-            builder.WithTreatmentStartDate(new DateTime(2025, 1, 1), "MedicationReference/test", null!));
+            builder.WithTreatmentStartDate(new DateTime(2025, 1, 1), "MedicationReference/test",
+                null!));
         Should.Throw<ArgumentException>(() =>
-            builder.WithTreatmentStartDate(new DateTime(2025, 1, 1), "MedicationReference/test", ""));
+            builder.WithTreatmentStartDate(new DateTime(2025, 1, 1), "MedicationReference/test",
+                ""));
         Should.Throw<ArgumentException>(() =>
-            builder.WithTreatmentStartDate(new DateTime(2025, 1, 1), "MedicationReference/test", "   "));
+            builder.WithTreatmentStartDate(new DateTime(2025, 1, 1), "MedicationReference/test",
+                "   "));
     }
 
     [Fact]
     public void WithTreatmentStartDate_IntegratesWithCompleteBuilder()
     {
         // Arrange & Act
-        var observation = new AdtStatusObservationBuilder(_configuration)
+        Observation observation = new AdtStatusObservationBuilder(_configuration)
             .WithInferenceId("test-inference-001")
             .WithPatient("Patient/p123", "Jane Doe")
             .WithDevice("Device/d456", "AI System")
@@ -483,7 +490,8 @@ public class AdtStatusObservationBuilderTests
             .WithCriteria("criteria-001", "Test Criteria")
             .AddEvidence("DocumentReference/doc1", "Note 1")
             .WithEffectiveDate(new DateTime(2024, 2, 1))
-            .WithTreatmentStartDate(new DateTime(2025, 1, 1), "MedicationReference/med-ref-1", "ADT treatment started on 2025-01-01 with Zoladex 20 mg")
+            .WithTreatmentStartDate(new DateTime(2025, 1, 1), "MedicationReference/med-ref-1",
+                "ADT treatment started on 2025-01-01 with Zoladex 20 mg")
             .AddNote("Clinical observation note")
             .Build();
 
@@ -492,8 +500,9 @@ public class AdtStatusObservationBuilderTests
         observation.Subject.Reference.ShouldBe("Patient/p123");
         observation.Device.Reference.ShouldBe("Device/d456");
         observation.Component.ShouldNotBeNull();
-        var treatmentComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "treatmentStartDate_v1"));
+        Observation.ComponentComponent? treatmentComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "treatmentStartDate_v1"));
         treatmentComponent.ShouldNotBeNull();
         observation.Note.Count.ShouldBe(1);
         observation.Method.ShouldNotBeNull();
@@ -503,7 +512,7 @@ public class AdtStatusObservationBuilderTests
     public void WithTreatmentStartDate_GeneratesCorrectJsonStructure()
     {
         // Arrange & Act
-        var observation = new AdtStatusObservationBuilder(_configuration)
+        Observation observation = new AdtStatusObservationBuilder(_configuration)
             .WithPatient("Patient/test-patient", "Test Patient")
             .WithDevice("Device/ai-device", "AI Detection Device")
             .WithStatus(true)
@@ -514,7 +523,7 @@ public class AdtStatusObservationBuilderTests
             .Build();
 
         var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
-        var json = serializer.SerializeToString(observation);
+        string json = serializer.SerializeToString(observation);
 
         // Assert - check that JSON contains expected structure
         json.ShouldContain("\"component\"");
@@ -524,6 +533,5 @@ public class AdtStatusObservationBuilderTests
         json.ShouldContain("\"extension\"");
         json.ShouldContain("\"MedicationReference/some-medicationreference-3\"");
         json.ShouldContain("\"ADT treatment started on 2025-01-01 with Zoladex 20 mg\"");
-
     }
 }

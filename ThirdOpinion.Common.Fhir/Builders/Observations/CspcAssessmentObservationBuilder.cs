@@ -6,22 +6,22 @@ using ThirdOpinion.Common.Fhir.Helpers;
 namespace ThirdOpinion.Common.Fhir.Builders.Observations;
 
 /// <summary>
-/// Builder for creating FHIR Observations for Castration-Sensitive Prostate Cancer (CSPC) assessment
+///     Builder for creating FHIR Observations for Castration-Sensitive Prostate Cancer (CSPC) assessment
 /// </summary>
 public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observation>
 {
-    private ResourceReference? _focus;
-    private ResourceReference? _patientReference;
-    private ResourceReference? _deviceReference;
-    private bool? _isCastrationSensitive;
-    private FhirDateTime? _effectiveDate;
     private readonly List<ResourceReference> _evidenceReferences;
     private readonly List<string> _notes;
-    private string? _interpretation;
     private float? _confidence;
+    private ResourceReference? _deviceReference;
+    private FhirDateTime? _effectiveDate;
+    private ResourceReference? _focus;
+    private string? _interpretation;
+    private bool? _isCastrationSensitive;
+    private ResourceReference? _patientReference;
 
     /// <summary>
-    /// Creates a new CSPC Assessment Observation builder
+    ///     Creates a new CSPC Assessment Observation builder
     /// </summary>
     /// <param name="configuration">The AI inference configuration</param>
     public CspcAssessmentObservationBuilder(AiInferenceConfiguration configuration)
@@ -32,7 +32,7 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets the inference ID for this resource
+    ///     Sets the inference ID for this resource
     /// </summary>
     /// <param name="id">The inference ID</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -43,20 +43,22 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets the criteria information for this inference
+    ///     Sets the criteria information for this inference
     /// </summary>
     /// <param name="id">The criteria ID</param>
     /// <param name="display">The display text for the criteria</param>
     /// <param name="system">The criteria system URI (optional)</param>
     /// <returns>This builder instance for method chaining</returns>
-    public new CspcAssessmentObservationBuilder WithCriteria(string id, string display, string? system = null)
+    public new CspcAssessmentObservationBuilder WithCriteria(string id,
+        string display,
+        string? system = null)
     {
         base.WithCriteria(id, display, system);
         return this;
     }
 
     /// <summary>
-    /// Adds a resource reference that this inference was derived from
+    ///     Adds a resource reference that this inference was derived from
     /// </summary>
     /// <param name="reference">The resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -67,19 +69,20 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Adds a resource reference that this inference was derived from
+    ///     Adds a resource reference that this inference was derived from
     /// </summary>
     /// <param name="reference">The reference string</param>
     /// <param name="display">Optional display text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public new CspcAssessmentObservationBuilder AddDerivedFrom(string reference, string? display = null)
+    public new CspcAssessmentObservationBuilder AddDerivedFrom(string reference,
+        string? display = null)
     {
         base.AddDerivedFrom(reference, display);
         return this;
     }
 
     /// <summary>
-    /// Sets the focus reference for this observation (REQUIRED - must reference a Condition)
+    ///     Sets the focus reference for this observation (REQUIRED - must reference a Condition)
     /// </summary>
     /// <param name="focus">The Condition resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -89,19 +92,18 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
             throw new ArgumentNullException(nameof(focus), "Focus reference cannot be null");
 
         // Validate that the reference is to a Condition resource
-        if (!string.IsNullOrWhiteSpace(focus.Reference) && !focus.Reference.StartsWith("Condition/"))
-        {
+        if (!string.IsNullOrWhiteSpace(focus.Reference) &&
+            !focus.Reference.StartsWith("Condition/"))
             throw new ArgumentException(
                 "Focus must reference a Condition resource. Reference must start with 'Condition/'",
                 nameof(focus));
-        }
 
         _focus = focus;
         return this;
     }
 
     /// <summary>
-    /// Sets the focus reference for this observation (REQUIRED - must reference a Condition)
+    ///     Sets the focus reference for this observation (REQUIRED - must reference a Condition)
     /// </summary>
     /// <param name="conditionId">The Condition ID</param>
     /// <param name="display">Optional display text</param>
@@ -109,11 +111,14 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
     public CspcAssessmentObservationBuilder WithFocus(string conditionId, string? display = null)
     {
         if (string.IsNullOrWhiteSpace(conditionId))
-            throw new ArgumentException("Condition ID cannot be null or empty", nameof(conditionId));
+            throw new ArgumentException("Condition ID cannot be null or empty",
+                nameof(conditionId));
 
         var reference = new ResourceReference
         {
-            Reference = conditionId.StartsWith("Condition/") ? conditionId : $"Condition/{conditionId}",
+            Reference = conditionId.StartsWith("Condition/")
+                ? conditionId
+                : $"Condition/{conditionId}",
             Display = display
         };
 
@@ -121,7 +126,7 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets the patient reference for this observation
+    ///     Sets the patient reference for this observation
     /// </summary>
     /// <param name="patient">The patient resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -132,7 +137,7 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets the patient reference for this observation
+    ///     Sets the patient reference for this observation
     /// </summary>
     /// <param name="patientId">The patient ID</param>
     /// <param name="display">Optional display text</param>
@@ -151,7 +156,7 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets the device reference that performed the assessment
+    ///     Sets the device reference that performed the assessment
     /// </summary>
     /// <param name="device">The device resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -162,7 +167,7 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets the device reference that performed the assessment
+    ///     Sets the device reference that performed the assessment
     /// </summary>
     /// <param name="deviceId">The device ID</param>
     /// <param name="display">Optional display text</param>
@@ -181,7 +186,7 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets whether the cancer is castration-sensitive
+    ///     Sets whether the cancer is castration-sensitive
     /// </summary>
     /// <param name="isSensitive">True if castration-sensitive, false if castration-resistant</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -192,31 +197,32 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Adds evidence supporting this observation
+    ///     Adds evidence supporting this observation
     /// </summary>
     /// <param name="reference">The evidence resource reference</param>
     /// <param name="display">Optional display text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public CspcAssessmentObservationBuilder AddEvidence(ResourceReference reference, string? display = null)
+    public CspcAssessmentObservationBuilder AddEvidence(ResourceReference reference,
+        string? display = null)
     {
         if (reference != null)
         {
             if (!string.IsNullOrWhiteSpace(display) && string.IsNullOrWhiteSpace(reference.Display))
-            {
                 reference.Display = display;
-            }
             _evidenceReferences.Add(reference);
         }
+
         return this;
     }
 
     /// <summary>
-    /// Adds evidence supporting this observation
+    ///     Adds evidence supporting this observation
     /// </summary>
     /// <param name="referenceString">The evidence reference string</param>
     /// <param name="display">Optional display text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public CspcAssessmentObservationBuilder AddEvidence(string referenceString, string? display = null)
+    public CspcAssessmentObservationBuilder AddEvidence(string referenceString,
+        string? display = null)
     {
         if (!string.IsNullOrWhiteSpace(referenceString))
         {
@@ -227,25 +233,23 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
             };
             _evidenceReferences.Add(reference);
         }
+
         return this;
     }
 
     /// <summary>
-    /// Sets the interpretation of the assessment
+    ///     Sets the interpretation of the assessment
     /// </summary>
     /// <param name="interpretation">The interpretation text</param>
     /// <returns>This builder instance for method chaining</returns>
     public CspcAssessmentObservationBuilder WithInterpretation(string interpretation)
     {
-        if (!string.IsNullOrWhiteSpace(interpretation))
-        {
-            _interpretation = interpretation;
-        }
+        if (!string.IsNullOrWhiteSpace(interpretation)) _interpretation = interpretation;
         return this;
     }
 
     /// <summary>
-    /// Sets the effective date/time of this observation
+    ///     Sets the effective date/time of this observation
     /// </summary>
     /// <param name="effectiveDate">The effective date/time</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -256,7 +260,7 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets the effective date/time of this observation
+    ///     Sets the effective date/time of this observation
     /// </summary>
     /// <param name="effectiveDate">The effective date/time as DateTimeOffset</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -267,63 +271,55 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Adds a note to this observation
+    ///     Adds a note to this observation
     /// </summary>
     /// <param name="noteText">The note text</param>
     /// <returns>This builder instance for method chaining</returns>
     public CspcAssessmentObservationBuilder AddNote(string noteText)
     {
-        if (!string.IsNullOrWhiteSpace(noteText))
-        {
-            _notes.Add(noteText);
-        }
+        if (!string.IsNullOrWhiteSpace(noteText)) _notes.Add(noteText);
         return this;
     }
 
     /// <summary>
-    /// Sets the AI confidence score for this observation
+    ///     Sets the AI confidence score for this observation
     /// </summary>
     /// <param name="confidence">The confidence score (0.0 to 1.0)</param>
     /// <returns>This builder instance for method chaining</returns>
     public CspcAssessmentObservationBuilder WithConfidence(float confidence)
     {
         if (confidence < 0.0f || confidence > 1.0f)
-            throw new ArgumentOutOfRangeException(nameof(confidence), "Confidence must be between 0.0 and 1.0");
+            throw new ArgumentOutOfRangeException(nameof(confidence),
+                "Confidence must be between 0.0 and 1.0");
 
         _confidence = confidence;
         return this;
     }
 
     /// <summary>
-    /// Validates that required fields are set before building
+    ///     Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
     {
         if (_focus == null)
-        {
             throw new InvalidOperationException(
                 "CSPC assessment requires focus reference to existing Condition. Call WithFocus() before Build().");
-        }
 
         if (_patientReference == null)
-        {
-            throw new InvalidOperationException("Patient reference is required. Call WithPatient() before Build().");
-        }
+            throw new InvalidOperationException(
+                "Patient reference is required. Call WithPatient() before Build().");
 
         if (_deviceReference == null)
-        {
-            throw new InvalidOperationException("Device reference is required. Call WithDevice() before Build().");
-        }
+            throw new InvalidOperationException(
+                "Device reference is required. Call WithDevice() before Build().");
 
         if (!_isCastrationSensitive.HasValue)
-        {
             throw new InvalidOperationException(
                 "Castration sensitivity status is required. Call WithCastrationSensitive() before Build().");
-        }
     }
 
     /// <summary>
-    /// Builds the CSPC Assessment Observation
+    ///     Builds the CSPC Assessment Observation
     /// </summary>
     /// <returns>The completed Observation resource</returns>
     protected override Observation BuildCore()
@@ -335,11 +331,11 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
             // Category: exam
             Category = new List<CodeableConcept>
             {
-                new CodeableConcept
+                new()
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://terminology.hl7.org/CodeSystem/observation-category",
                             Code = "exam",
@@ -354,7 +350,7 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
             {
                 Coding = new List<Coding>
                 {
-                    new Coding
+                    new()
                     {
                         System = FhirCodingHelper.Systems.LOINC_SYSTEM,
                         Code = "21889-1",
@@ -382,24 +378,21 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
 
         // Add interpretation if provided
         if (!string.IsNullOrWhiteSpace(_interpretation))
-        {
             observation.Interpretation = new List<CodeableConcept>
             {
-                new CodeableConcept
+                new()
                 {
                     Text = _interpretation
                 }
             };
-        }
 
         // Add method if criteria was set
         if (!string.IsNullOrWhiteSpace(CriteriaId))
-        {
             observation.Method = new CodeableConcept
             {
                 Coding = new List<Coding>
                 {
-                    new Coding
+                    new()
                     {
                         System = CriteriaSystem ?? Configuration.CriteriaSystem,
                         Code = CriteriaId,
@@ -408,7 +401,6 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
                 },
                 Text = CriteriaDisplay
             };
-        }
 
         // Add evidence to derivedFrom
         // Note: FHIR Observation initializes DerivedFrom as an empty list
@@ -431,7 +423,7 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://loinc.org",
                             Code = "LA11892-6",
@@ -468,24 +460,23 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Creates the value CodeableConcept with both SNOMED and ICD-10 codes
+    ///     Creates the value CodeableConcept with both SNOMED and ICD-10 codes
     /// </summary>
     private CodeableConcept CreateCastrationSensitivityValue()
     {
         if (_isCastrationSensitive == true)
-        {
             // Castration-sensitive: Use BOTH SNOMED and ICD-10 codes
             return new CodeableConcept
             {
                 Coding = new List<Coding>
                 {
-                    new Coding
+                    new()
                     {
                         System = FhirCodingHelper.Systems.SNOMED_SYSTEM,
                         Code = "1197209002",
                         Display = "Castration sensitive prostate cancer"
                     },
-                    new Coding
+                    new()
                     {
                         System = "http://hl7.org/fhir/sid/icd-10-cm",
                         Code = "Z19.1",
@@ -494,29 +485,26 @@ public class CspcAssessmentObservationBuilder : AiResourceBuilderBase<Observatio
                 },
                 Text = "Castration sensitive prostate cancer"
             };
-        }
-        else
+
+        // Castration-resistant: Use appropriate codes
+        return new CodeableConcept
         {
-            // Castration-resistant: Use appropriate codes
-            return new CodeableConcept
+            Coding = new List<Coding>
             {
-                Coding = new List<Coding>
+                new()
                 {
-                    new Coding
-                    {
-                        System = FhirCodingHelper.Systems.SNOMED_SYSTEM,
-                        Code = "445848006",
-                        Display = "Castration resistant prostate cancer"
-                    },
-                    new Coding
-                    {
-                        System = "http://hl7.org/fhir/sid/icd-10-cm",
-                        Code = "Z19.2",
-                        Display = "Hormone resistant status"
-                    }
+                    System = FhirCodingHelper.Systems.SNOMED_SYSTEM,
+                    Code = "445848006",
+                    Display = "Castration resistant prostate cancer"
                 },
-                Text = "Castration resistant prostate cancer"
-            };
-        }
+                new()
+                {
+                    System = "http://hl7.org/fhir/sid/icd-10-cm",
+                    Code = "Z19.2",
+                    Display = "Hormone resistant status"
+                }
+            },
+            Text = "Castration resistant prostate cancer"
+        };
     }
 }

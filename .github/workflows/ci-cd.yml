@@ -95,7 +95,6 @@ jobs:
         name: test-results
         path: ./test-results/
 
-
     - name: Comment PR with test results
       uses: dorny/test-reporter@v1
       if: always() && hashFiles('./test-results/*.trx') != ''
@@ -179,48 +178,247 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ${{ env.SOLUTION_PATH }}
 
-    - name: Determine version
+    - name: Determine build configuration
+      id: build-config
+      run: |
+        if [ "${{ github.ref_name }}" == "develop" ]; then
+          BUILD_CONFIG="Debug"
+          echo "Using Debug configuration for develop branch (better debugging experience)"
+        else
+          BUILD_CONFIG="Release"
+          echo "Using Release configuration for ${{ github.ref_name }} branch (production build)"
+        fi
+        echo "configuration=$BUILD_CONFIG" >> $GITHUB_OUTPUT
+        echo "Build configuration: $BUILD_CONFIG"
+
+    # OLD VERSION DETERMINATION - COMMENTED OUT (replaced by tag-based versioning)
+    # - name: Determine version
+    #   id: version
+    #   run: |
+    #     # Read base version from project file
+    #     BASE_VERSION=$(grep -oP '<Version>\K[^<]+' src/ThirdOpinion.Common.csproj || echo "1.0.0")
+    #     RUN_NUMBER=${{ github.run_number }}
+    #
+    #     echo "Base version from project file: $BASE_VERSION"
+    #
+    #     # Determine final version based on trigger and branch
+    #     if [ "${{ github.event_name }}" == "release" ]; then
+    #       # For releases, use the git tag version
+    #       VERSION=${{ github.event.release.tag_name }}
+    #       # Remove 'v' prefix if present
+    #       VERSION=${VERSION#v}
+    #       echo "is_prerelease=false" >> $GITHUB_OUTPUT
+    #       echo "version_source=release_tag" >> $GITHUB_OUTPUT
+    #     elif [ "${{ github.ref_name }}" == "develop" ]; then
+    #       # For develop branch, use base version with beta suffix
+    #       VERSION="${BASE_VERSION}-beta.${RUN_NUMBER}"
+    #       echo "is_prerelease=true" >> $GITHUB_OUTPUT
+    #       echo "version_source=auto_develop" >> $GITHUB_OUTPUT
+    #     elif [[ "${{ github.ref_name }}" == feature/* ]]; then
+    #       # For feature branches, use base version with alpha suffix
+    #       BRANCH_SAFE=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9]/-/g' | cut -c1-20)
+    #       VERSION="${BASE_VERSION}-alpha.${RUN_NUMBER}.${BRANCH_SAFE}"
+    #       echo "is_prerelease=true" >> $GITHUB_OUTPUT
+    #       echo "version_source=auto_feature" >> $GITHUB_OUTPUT
+    #     elif [ "${{ github.ref_name }}" == "main" ] || [ "${{ github.ref_name }}" == "master" ]; then
+    #       # For main/master, check if base version should be incremented
+    #       if [ "$BASE_VERSION" == "1.0.0" ]; then
+    #         # Use auto-increment for main if still on default version
+    #         VERSION="1.0.${RUN_NUMBER}"
+    #         echo "version_source=auto_main" >> $GITHUB_OUTPUT
+    #       else
+    #         # Use base version from project file for manual releases
+    #         VERSION="$BASE_VERSION"
+    #         echo "version_source=manual_main" >> $GITHUB_OUTPUT
+    #       fi
+    #       echo "is_prerelease=false" >> $GITHUB_OUTPUT
+    #     else
+    #       # For other branches, use base version with branch suffix
+    #       BRANCH_SAFE=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9]/-/g' | cut -c1-20)
+    #       VERSION="${BASE_VERSION}-${BRANCH_SAFE}.${RUN_NUMBER}"
+    #       echo "is_prerelease=true" >> $GITHUB_OUTPUT
+    #       echo "version_source=auto_other" >> $GITHUB_OUTPUT
+    #     fi
+    #
+    #     # Validate semantic versioning format (basic check)
+    #     if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\-[a-zA-Z0-9\.\-]+)?$ ]]; then
+    #       echo "Warning: Version '$VERSION' may not follow semantic versioning"
+    #     fi
+    #
+    #     echo "version=$VERSION" >> $GITHUB_OUTPUT
+    #     echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
+    #     echo "Package version will be: $VERSION"
+    #     echo "Version source: $(cat $GITHUB_OUTPUT | grep version_source | cut -d'=' -f2)"
+
+    - name: Determine version from tags
       id: version
       run: |
+        # Fetch all tags
+        git fetch --tags --force
+        
+        BRANCH_NAME="${{ github.ref_name }}"
+        
+        # Handle release events (use the release tag version)
         if [ "${{ github.event_name }}" == "release" ]; then
           VERSION=${{ github.event.release.tag_name }}
           # Remove 'v' prefix if present
           VERSION=${VERSION#v}
+          BASE_VERSION=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' || echo "$VERSION")
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
-        elif [ "${{ github.ref_name }}" == "develop" ]; then
-          # For develop branch, use pre-release versioning: 1.0.{run_number}-beta
-          RUN_NUMBER=${{ github.run_number }}
-          VERSION="1.0.${RUN_NUMBER}-beta"
+          echo "version_source=release_tag" >> $GITHUB_OUTPUT
+        elif [ "$BRANCH_NAME" == "develop" ]; then
+          # For develop: find latest preview tag (v*-preview)
+          LATEST_TAG=$(git tag -l "*-preview" | sort -V | tail -n1 || echo "")
+          
+          if [ -z "$LATEST_TAG" ]; then
+            # No preview tags found, check for stable tags and start from there
+            LATEST_STABLE=$(git tag -l "v*" | grep -v "preview" | sort -V | tail -n1 || echo "v1.0.0")
+            BASE_VERSION=$(echo "$LATEST_STABLE" | sed 's/^v//')
+            # Start from next patch version with preview
+            MAJOR=$(echo "$BASE_VERSION" | cut -d. -f1)
+            MINOR=$(echo "$BASE_VERSION" | cut -d. -f2)
+            PATCH=$(echo "$BASE_VERSION" | cut -d. -f3)
+            NEW_PATCH=$((PATCH + 1))
+            VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}-preview"
+          else
+            # Parse latest preview tag (e.g., v1.1.11-preview)
+            BASE_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//' | sed 's/-preview$//')
+            MAJOR=$(echo "$BASE_VERSION" | cut -d. -f1)
+            MINOR=$(echo "$BASE_VERSION" | cut -d. -f2)
+            PATCH=$(echo "$BASE_VERSION" | cut -d. -f3)
+            NEW_PATCH=$((PATCH + 1))
+            VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}-preview"
+          fi
+          
           echo "is_prerelease=true" >> $GITHUB_OUTPUT
-        else
-          # For other branches (main/master), use regular versioning
-          RUN_NUMBER=${{ github.run_number }}
-          VERSION="1.0.${RUN_NUMBER}"
+          echo "version_source=tag_develop" >> $GITHUB_OUTPUT
+          
+        elif [ "$BRANCH_NAME" == "main" ] || [ "$BRANCH_NAME" == "master" ]; then
+          # For main/master: find latest preview tag and remove -preview suffix
+          LATEST_PREVIEW_TAG=$(git tag -l "*-preview" | sort -V | tail -n1 || echo "")
+          
+          if [ -z "$LATEST_PREVIEW_TAG" ]; then
+            # No preview tags found, check for stable tags as fallback
+            LATEST_STABLE_TAG=$(git tag -l "v*" | grep -v "preview" | sort -V | tail -n1 || echo "")
+            
+            if [ -z "$LATEST_STABLE_TAG" ]; then
+              # No tags found at all, start from 1.0.0
+              VERSION="1.0.0"
+              BASE_VERSION="1.0.0"
+            else
+              # Use latest stable tag as-is
+              BASE_VERSION=$(echo "$LATEST_STABLE_TAG" | sed 's/^v//')
+              VERSION="$BASE_VERSION"
+            fi
+          else
+            # Remove -preview suffix from latest preview tag (e.g., v1.1.15-preview -> 1.1.15)
+            BASE_VERSION=$(echo "$LATEST_PREVIEW_TAG" | sed 's/^v//' | sed 's/-preview$//')
+            VERSION="$BASE_VERSION"
+          fi
+          
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          echo "version_source=tag_main" >> $GITHUB_OUTPUT
+          
+        else
+          # For other branches: use latest tag as base with branch suffix
+          LATEST_TAG=$(git tag -l "v*" | sort -V | tail -n1 || echo "v1.0.0")
+          BASE_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//' | sed 's/-.*$//')
+          RUN_NUMBER=${{ github.run_number }}
+          BRANCH_SAFE=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9]/-/g' | cut -c1-20)
+          VERSION="${BASE_VERSION}-${BRANCH_SAFE}.${RUN_NUMBER}"
+          echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          echo "version_source=tag_other" >> $GITHUB_OUTPUT
         fi
+        
+        # Extract base version (without pre-release suffix) if not already set
+        if [ -z "$BASE_VERSION" ]; then
+          BASE_VERSION=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' || echo "$VERSION")
+        fi
+        
         echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "Package version will be: $VERSION"
+        echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
+        echo "✅ Version determined: $VERSION (base: $BASE_VERSION)"
+        echo "   Branch: $BRANCH_NAME"
+        # Show appropriate tag based on branch
+        if [ "$BRANCH_NAME" == "main" ] || [ "$BRANCH_NAME" == "master" ]; then
+          echo "   Latest preview tag: ${LATEST_PREVIEW_TAG:-none}"
+          if [ -n "$LATEST_STABLE_TAG" ]; then
+            echo "   Fallback stable tag: $LATEST_STABLE_TAG"
+          fi
+        elif [ "$BRANCH_NAME" == "develop" ]; then
+          echo "   Latest preview tag: ${LATEST_TAG:-none}"
+        else
+          echo "   Latest tag: ${LATEST_TAG:-none}"
+        fi
 
-    - name: Update project versions
+    - name: Display version information
       run: |
+        echo "## Version Information" >> $GITHUB_STEP_SUMMARY
+        echo "- **Version**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Base Version**: ${{ steps.version.outputs.base_version }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Is Pre-release**: ${{ steps.version.outputs.is_prerelease }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Version Source**: ${{ steps.version.outputs.version_source }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        
+        echo ""
+        echo "📦 Version Information:"
+        echo "   Version: ${{ steps.version.outputs.version }}"
+        echo "   Base version: ${{ steps.version.outputs.base_version }}"
+        echo "   Is pre-release: ${{ steps.version.outputs.is_prerelease }}"
+        echo "   Source: ${{ steps.version.outputs.version_source }}"
+
+    # Commented out for now as we are using the version tags workflow to update the project versions
+    # - name: Update project versions
+    #   run: |
+    #     VERSION=${{ steps.version.outputs.version }}
+    #     BASE_VERSION=${{ steps.version.outputs.base_version }}
+    #     VERSION_SOURCE=${{ steps.version.outputs.version_source }}
+
+    #     echo "Updating project versions:"
+    #     echo "  Base version: $BASE_VERSION"
+    #     echo "  Final version: $VERSION"
+    #     echo "  Version source: $VERSION_SOURCE"
+
+    #     # For assembly versions, use the base version (without pre-release suffixes)
+    #     ASSEMBLY_VERSION=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' || echo "$BASE_VERSION")
+
+    #     # Update main project version
+    #     sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" src/ThirdOpinion.Common.csproj
+    #     sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$ASSEMBLY_VERSION.0<\/AssemblyVersion>/g" src/ThirdOpinion.Common.csproj
+    #     sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$ASSEMBLY_VERSION.0<\/FileVersion>/g" src/ThirdOpinion.Common.csproj
+
+    #     echo "Updated package version to: $VERSION"
+    #     echo "Updated assembly version to: $ASSEMBLY_VERSION.0"
+
+    #     # Show updated project file for verification
+    #     echo "Updated project file version section:"
+    #     grep -A2 -B2 "<Version>" src/ThirdOpinion.Common.csproj || echo "Could not find version in main project file"
+
+    - name: Build solution
+      run: |
+        dotnet build ${{ env.SOLUTION_PATH }} --configuration ${{ steps.build-config.outputs.configuration }} --no-restore
+
+    - name: Pack combined NuGet package
+      run: |
+        echo "Creating combined ThirdOpinion.Common package..."
         VERSION=${{ steps.version.outputs.version }}
-        # Update the main project version
-        sed -i "s/<Version>.*<\/Version>/<Version>$VERSION<\/Version>/g" src/ThirdOpinion.Common.csproj
-        # Also update assembly versions to match
-        sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$VERSION.0<\/AssemblyVersion>/g" src/ThirdOpinion.Common.csproj
-        sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$VERSION.0<\/FileVersion>/g" src/ThirdOpinion.Common.csproj
-        echo "Updated ThirdOpinion.Common package version to: $VERSION"
+        BASE_VERSION=${{ steps.version.outputs.base_version }}
 
-    - name: Build sub-projects first
-      run: |
-        dotnet build ${{ env.SOLUTION_PATH }} --configuration Release --no-restore
-
-    - name: Pack NuGet package
-      run: |
+        # Pack single combined package with all sub-projects as embedded DLLs
+        # Using -p: parameters to set versions without modifying .csproj file
+        echo "Packing ThirdOpinion.Common (combined package with symbols)..."
         dotnet pack src/ThirdOpinion.Common.csproj \
-          --configuration Release \
+          --configuration ${{ steps.build-config.outputs.configuration }} \
           --output ./packages/ \
-          -p:Version=${{ steps.version.outputs.version }}
+          -p:PackageVersion=$VERSION \
+          -p:AssemblyVersion="${BASE_VERSION}.0" \
+          -p:FileVersion="${BASE_VERSION}.0" \
+          -p:IncludeSymbols=true \
+          -p:SymbolPackageFormat=snupkg
+
+        echo "✅ Generated packages:"
+        echo "  - ThirdOpinion.Common.$VERSION.nupkg (main package with embedded PDBs)"
+        echo "  - ThirdOpinion.Common.$VERSION.snupkg (symbol package for symbol servers)"
 
     - name: Upload packages as artifacts
       uses: actions/upload-artifact@v4
@@ -234,49 +432,444 @@ jobs:
         ls -la ./packages/
         echo "Expected package: ThirdOpinion.Common.${{ steps.version.outputs.version }}.nupkg"
 
-  publish:
-    name: Publish to GitHub Packages
+  publish-dev:
+    name: Publish Development Packages
     runs-on: ubuntu-latest
     needs: [build-and-test, package]
     if: |
-      github.event_name == 'release' ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_packages == 'true') ||
-      github.ref_name == 'develop' ||
-      github.ref_name == 'main' ||
-      github.ref_name == 'master'
-    environment: production
+      github.ref_name == 'develop'
+    environment: development
+
+    permissions:
+      id-token: write
+      contents: write
+      packages: write
 
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
     - name: Download packages
       uses: actions/download-artifact@v4
       with:
         name: nuget-packages
         path: ./packages/
 
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ vars.AWS_CODEARTIFACT_ROLE_ARN }}
+        role-session-name: GitHubActions-Development
+        aws-region: ${{ vars.AWS_REGION || 'us-east-2' }}
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    - name: Get version info from package
+    - name: Install CodeArtifact Credential Provider
+      run: |
+        echo "Installing CodeArtifact NuGet Credential Provider..."
+        # Always install (will update if already exists)
+        dotnet tool install -g AWS.CodeArtifact.NuGet.CredentialProvider || \
+          dotnet tool update -g AWS.CodeArtifact.NuGet.CredentialProvider
+        echo "✅ CodeArtifact NuGet Credential Provider installed/updated"
+
+    - name: Configure CodeArtifact Credential Provider
+      run: |
+        echo "Configuring credential provider to use environment credentials..."
+        # Configure credential provider to use AWS credentials from environment
+        # (AWS credentials are configured by aws-actions/configure-aws-credentials above)
+        dotnet codeartifact-creds install
+        echo "✅ Credential provider configured"
+
+    - name: Configure CodeArtifact NuGet Source
+      id: codeartifact
+      run: |
+        # Get domain and repository from environment variables
+        DOMAIN="${{ vars.AWS_CODEARTIFACT_DOMAIN }}"
+        DOMAIN_OWNER="${{ vars.AWS_CODEARTIFACT_DOMAIN_OWNER }}"
+        REPOSITORY="${{ vars.AWS_CODEARTIFACT_REPOSITORY }}"
+
+        echo "Domain: $DOMAIN"
+        echo "Domain Owner: $DOMAIN_OWNER"
+        echo "Repository: $REPOSITORY"
+
+        # Get repository endpoint (returns base URL without /v3/index.json)
+        REPO_BASE_URL=$(aws codeartifact get-repository-endpoint \
+          --domain "$DOMAIN" \
+          --domain-owner "$DOMAIN_OWNER" \
+          --repository "$REPOSITORY" \
+          --format nuget \
+          --query repositoryEndpoint \
+          --output text)
+
+        # Append /v3/index.json for NuGet v3 protocol (matching PowerShell script)
+        REPO_URL="${REPO_BASE_URL%/}/v3/index.json"
+
+        echo "Repository URL: $REPO_URL"
+        echo "repo_url=$REPO_URL" >> $GITHUB_OUTPUT
+
+        # Remove existing source if present (matching PowerShell script behavior)
+        dotnet nuget remove source aws-codeartifact 2>/dev/null || true
+
+        # Add CodeArtifact source (authentication handled by credential provider)
+        echo "Adding NuGet source (authentication handled by credential provider)..."
+        dotnet nuget add source "$REPO_URL" --name aws-codeartifact
+
+    - name: Get package version
+      id: package-version
+      run: |
+        # Get the main package file to extract version
+        PACKAGE_FILE=$(ls ./packages/ThirdOpinion.Common.*.nupkg | grep -v "\\.Aws\\." | grep -v "\\.Fhir\\." | grep -v "\\.Misc\\." | grep -v "\\.Langfuse\\." | grep -v "\\.AthenaEhr\\." | grep -v "\\.Logging\\." | head -n 1)
+        if [[ -z "$PACKAGE_FILE" ]]; then
+          PACKAGE_FILE=$(ls ./packages/ThirdOpinion.Common.*.nupkg | head -n 1)
+        fi
+        # Remove .nupkg extension and extract version from filename
+        PACKAGE_BASE=$(basename "$PACKAGE_FILE" .nupkg)
+        VERSION=${PACKAGE_BASE#ThirdOpinion.Common.}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Package version: $VERSION"
+
+    - name: Publish to CodeArtifact (Development)
+      run: |
+        echo "Publishing package..."
+        VERSION=${{ steps.package-version.outputs.version }}
+        PACKAGE_FILE="packages/ThirdOpinion.Common.$VERSION.nupkg"
+        
+        # The --api-key any flag tells NuGet to use credential providers for authentication
+        # The credential provider will automatically get and inject the CodeArtifact token
+        dotnet nuget push "$PACKAGE_FILE" \
+          --source aws-codeartifact \
+          --api-key any \
+          --skip-duplicate
+        
+        # Commented out for future use - loop through all packages
+        # for package in ./packages/*.nupkg; do
+        #   echo "Publishing: $(basename "$package")"
+        #   dotnet nuget push "$package" \
+        #     --source aws-codeartifact \
+        #     --api-key any \
+        #     --skip-duplicate
+        # done
+        
+        echo "✅ Development packages published successfully"
+
+    - name: Publish to GitHub Packages (Development)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "Publishing package to GitHub Packages..."
+        VERSION=${{ steps.package-version.outputs.version }}
+        PACKAGE_FILE="packages/ThirdOpinion.Common.$VERSION.nupkg"
+        SYMBOL_FILE="packages/ThirdOpinion.Common.$VERSION.snupkg"
+        
+        # GitHub Packages NuGet endpoint
+        NUGET_SOURCE="https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+        
+        # Publish main package directly using API key (no credential storage needed)
+        dotnet nuget push "$PACKAGE_FILE" \
+          --source "$NUGET_SOURCE" \
+          --api-key "$GITHUB_TOKEN" \
+          --skip-duplicate
+        
+        # Publish symbol package if it exists
+        if [ -f "$SYMBOL_FILE" ]; then
+          dotnet nuget push "$SYMBOL_FILE" \
+            --source "$NUGET_SOURCE" \
+            --api-key "$GITHUB_TOKEN" \
+            --skip-duplicate
+        fi
+        
+        echo "✅ Development packages published to GitHub Packages"
+
+    - name: Create and push version tag
+      if: github.ref_name == 'develop'
+      run: |
+        VERSION=${{ steps.package-version.outputs.version }}
+        TAG_NAME="v${VERSION}"
+        
+        # Check if tag already exists
+        if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+          echo "⚠️ Tag $TAG_NAME already exists, skipping tag creation"
+          exit 0
+        fi
+        
+        # Configure git
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # Extract base version for preview tag message (e.g., "Preview version 1.1.11")
+        BASE_VERSION=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' || echo "$VERSION")
+        
+        # Create annotated tag for preview version
+        git tag -a "$TAG_NAME" -m "Preview version ${BASE_VERSION}"
+        echo "✅ Created preview tag: $TAG_NAME (Preview version ${BASE_VERSION})"
+        
+        # Push tag
+        git push origin "$TAG_NAME"
+        echo "✅ Pushed tag: $TAG_NAME to remote"
+
+  publish-release:
+    name: Publish Release Packages
+    runs-on: ubuntu-latest
+    needs: [build-and-test, package]
+    if: |
+      github.event_name == 'release' ||
+      github.ref_name == 'main' ||
+      github.ref_name == 'master'
+    environment: production
+
+    permissions:
+      id-token: write
+      contents: write
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Download packages
+      uses: actions/download-artifact@v4
+      with:
+        name: nuget-packages
+        path: ./packages/
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ vars.AWS_CODEARTIFACT_ROLE_ARN }}
+        role-session-name: GitHubActions-Production
+        aws-region: ${{ vars.AWS_REGION || 'us-east-2' }}
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install CodeArtifact Credential Provider
+      run: |
+        echo "Installing CodeArtifact NuGet Credential Provider..."
+        # Always install (will update if already exists)
+        dotnet tool install -g AWS.CodeArtifact.NuGet.CredentialProvider || \
+          dotnet tool update -g AWS.CodeArtifact.NuGet.CredentialProvider
+        echo "✅ CodeArtifact NuGet Credential Provider installed/updated"
+
+    - name: Configure CodeArtifact Credential Provider
+      run: |
+        echo "Configuring credential provider to use environment credentials..."
+        # Configure credential provider to use AWS credentials from environment
+        # (AWS credentials are configured by aws-actions/configure-aws-credentials above)
+        dotnet codeartifact-creds install
+        echo "✅ Credential provider configured"
+
+    - name: Get package information
       id: package-info
       run: |
-        PACKAGE_FILE=$(ls ./packages/*.nupkg | head -n 1)
-        if [[ $PACKAGE_FILE == *"-beta"* ]]; then
+        # Get the main meta-package for release information
+        MAIN_PACKAGE_FILE=$(ls ./packages/ThirdOpinion.Common.*.nupkg | grep -v "\\.Aws\\." | grep -v "\\.Fhir\\." | grep -v "\\.Misc\\." | grep -v "\\.Langfuse\\." | grep -v "\\.AthenaEhr\\." | grep -v "\\.Logging\\." | head -n 1)
+        if [[ -z "$MAIN_PACKAGE_FILE" ]]; then
+          # Fallback to any package if main package not found
+          MAIN_PACKAGE_FILE=$(ls ./packages/*.nupkg | head -n 1)
+        fi
+
+        PACKAGE_NAME=$(basename "$MAIN_PACKAGE_FILE" .nupkg)
+        # Extract version from package name (remove "ThirdOpinion.Common." prefix)
+        VERSION=${PACKAGE_NAME#ThirdOpinion.Common.}
+
+        echo "Main Package: $PACKAGE_NAME"
+        echo "Version: $VERSION"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+
+        # Count total packages
+        PACKAGE_COUNT=$(ls ./packages/*.nupkg | wc -l)
+        echo "package_count=$PACKAGE_COUNT" >> $GITHUB_OUTPUT
+        echo "Total packages to publish: $PACKAGE_COUNT"
+
+        if [[ $VERSION == *"-"* ]]; then
           echo "is_prerelease=true" >> $GITHUB_OUTPUT
         else
           echo "is_prerelease=false" >> $GITHUB_OUTPUT
         fi
-        echo "package_file=$PACKAGE_FILE" >> $GITHUB_OUTPUT
 
-    - name: Publish to GitHub Packages
+    - name: Configure CodeArtifact NuGet Source
+      id: codeartifact
       run: |
-        for package in ./packages/*.nupkg; do
-          echo "Publishing $package to GitHub Packages..."
-          dotnet nuget push "$package" \
-            --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
-            --api-key ${{ secrets.GITHUB_TOKEN }} \
+        # Use production repository for releases
+        DOMAIN="${{ vars.AWS_CODEARTIFACT_DOMAIN }}"
+        DOMAIN_OWNER="${{ vars.AWS_CODEARTIFACT_DOMAIN_OWNER }}"
+        REPOSITORY="${{ vars.AWS_CODEARTIFACT_REPOSITORY }}"
+
+        echo "Domain: $DOMAIN"
+        echo "Domain Owner: $DOMAIN_OWNER"
+        echo "Repository: $REPOSITORY"
+
+        # Get repository endpoint (returns base URL without /v3/index.json)
+        REPO_BASE_URL=$(aws codeartifact get-repository-endpoint \
+          --domain "$DOMAIN" \
+          --domain-owner "$DOMAIN_OWNER" \
+          --repository "$REPOSITORY" \
+          --format nuget \
+          --query repositoryEndpoint \
+          --output text)
+
+        # Append /v3/index.json for NuGet v3 protocol (matching PowerShell script)
+        REPO_URL="${REPO_BASE_URL%/}/v3/index.json"
+
+        echo "Repository URL: $REPO_URL"
+        echo "repo_url=$REPO_URL" >> $GITHUB_OUTPUT
+
+        # Remove existing source if present (matching PowerShell script behavior)
+        dotnet nuget remove source aws-codeartifact 2>/dev/null || true
+
+        # Add CodeArtifact source (authentication handled by credential provider)
+        echo "Adding NuGet source (authentication handled by credential provider)..."
+        dotnet nuget add source "$REPO_URL" --name aws-codeartifact
+
+    - name: Validate package before publishing
+      run: |
+        echo "Validating package before publication..."
+        VERSION=${{ steps.package-info.outputs.version }}
+        PACKAGE_FILE="packages/ThirdOpinion.Common.$VERSION.nupkg"
+        
+        echo "Validating: $(basename "$PACKAGE_FILE")"
+        # Check if package exists
+        if [[ ! -f "$PACKAGE_FILE" ]]; then
+          echo "❌ Package not found: $PACKAGE_FILE"
+          exit 1
+        fi
+        # Check if package is not empty
+        if [[ ! -s "$PACKAGE_FILE" ]]; then
+          echo "❌ Package is empty: $PACKAGE_FILE"
+          exit 1
+        fi
+        # Check package size (should be > 1KB)
+        size=$(stat -f%z "$PACKAGE_FILE" 2>/dev/null || stat -c%s "$PACKAGE_FILE" 2>/dev/null || echo 0)
+        if [[ $size -lt 1024 ]]; then
+          echo "❌ Package too small: $PACKAGE_FILE ($size bytes)"
+          exit 1
+        fi
+        echo "✅ Package validation passed: $PACKAGE_FILE ($size bytes)"
+        
+        # Commented out for future use - validate all packages
+        # for package in ./packages/*.nupkg; do
+        #   echo "Validating: $(basename "$package")"
+        #   # Check if package is not empty
+        #   if [[ ! -s "$package" ]]; then
+        #     echo "❌ Package is empty: $package"
+        #     exit 1
+        #   fi
+        #   # Check package size (should be > 1KB)
+        #   size=$(stat -f%z "$package" 2>/dev/null || stat -c%s "$package" 2>/dev/null || echo 0)
+        #   if [[ $size -lt 1024 ]]; then
+        #     echo "❌ Package too small: $package ($size bytes)"
+        #     exit 1
+        #   fi
+        #   echo "✅ Package validation passed: $package ($size bytes)"
+        # done
+
+    - name: Publish to CodeArtifact (Production)
+      run: |
+        echo "Publishing package..."
+        VERSION=${{ steps.package-info.outputs.version }}
+        PACKAGE_FILE="packages/ThirdOpinion.Common.$VERSION.nupkg"
+        
+        # The --api-key any flag tells NuGet to use credential providers for authentication
+        # The credential provider will automatically get and inject the CodeArtifact token
+        dotnet nuget push "$PACKAGE_FILE" \
+          --source aws-codeartifact \
+          --api-key any \
+          --skip-duplicate
+        
+        # Commented out for future use - loop through all packages
+        # for package in ./packages/*.nupkg; do
+        #   echo "Publishing: $(basename "$package")"
+        #   dotnet nuget push "$package" \
+        #     --source aws-codeartifact \
+        #     --api-key any \
+        #     --skip-duplicate
+        # done
+        
+        echo "✅ Release packages published successfully"
+
+    - name: Publish to GitHub Packages (Production)
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "Publishing package to GitHub Packages..."
+        VERSION=${{ steps.package-info.outputs.version }}
+        PACKAGE_FILE="packages/ThirdOpinion.Common.$VERSION.nupkg"
+        SYMBOL_FILE="packages/ThirdOpinion.Common.$VERSION.snupkg"
+        
+        # GitHub Packages NuGet endpoint
+        NUGET_SOURCE="https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+        
+        # Publish main package directly using API key (no credential storage needed)
+        dotnet nuget push "$PACKAGE_FILE" \
+          --source "$NUGET_SOURCE" \
+          --api-key "$GITHUB_TOKEN" \
+          --skip-duplicate
+        
+        # Publish symbol package if it exists
+        if [ -f "$SYMBOL_FILE" ]; then
+          dotnet nuget push "$SYMBOL_FILE" \
+            --source "$NUGET_SOURCE" \
+            --api-key "$GITHUB_TOKEN" \
             --skip-duplicate
+        fi
+        
+        echo "✅ Release packages published to GitHub Packages"
+
+    - name: Create and push version tag
+      if: github.ref_name == 'main' || github.ref_name == 'master'
+      run: |
+        VERSION=${{ steps.package-info.outputs.version }}
+        TAG_NAME="v${VERSION}"
+        
+        # Check if tag already exists
+        if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+          echo "⚠️ Tag $TAG_NAME already exists, skipping tag creation"
+          exit 0
+        fi
+        
+        # Configure git
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # Create annotated tag for release version (e.g., "Release version 1.2.0")
+        git tag -a "$TAG_NAME" -m "Release version ${VERSION}"
+        echo "✅ Created release tag: $TAG_NAME (Release version ${VERSION})"
+        
+        # Push tag
+        git push origin "$TAG_NAME"
+        echo "✅ Pushed tag: $TAG_NAME to remote"
+
+    - name: Create release summary
+      if: github.event_name == 'release'
+      run: |
+        echo "## 📦 Packages Published Successfully" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Version:** ${{ steps.package-info.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Total Packages:** ${{ steps.package-info.outputs.package_count }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Main Package:** ${{ steps.package-info.outputs.package_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Repository:** ${{ steps.codeartifact.outputs.repo_url }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Pre-release:** ${{ steps.package-info.outputs.is_prerelease }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Published Packages" >> $GITHUB_STEP_SUMMARY
+        for package in ./packages/*.nupkg; do
+          echo "- $(basename "$package")" >> $GITHUB_STEP_SUMMARY
         done
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Installation" >> $GITHUB_STEP_SUMMARY
+        echo '```bash' >> $GITHUB_STEP_SUMMARY
+        echo "aws codeartifact login --tool dotnet --domain ${{ vars.AWS_CODEARTIFACT_DOMAIN }} --repository ${{ vars.AWS_CODEARTIFACT_REPOSITORY }}" >> $GITHUB_STEP_SUMMARY
+        echo "dotnet add package ThirdOpinion.Common --version ${{ steps.package-info.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
 
 

@@ -1,0 +1,150 @@
+name: Version Tags
+
+# Triggers:
+# - Push to develop: Creates preview tag (e.g., v1.1.12-preview) with incremented patch version
+# - Push to main/master: Creates release tag (e.g., v1.2.0) with incremented minor version
+# Version calculation:
+# - For develop: Finds latest v*-preview tag, increments patch (1.1.11-preview → 1.1.12-preview)
+# - For main/master: Finds latest stable tag, increments minor, resets patch (1.1.12 → 1.2.0)
+# Tags are automatically created and pushed to the repository for use by CI/CD pipeline
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-versioning:
+    name: Test Version Calculation
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine version from tags
+        id: version
+        run: |
+          # Fetch all tags
+          git fetch --tags --force
+          
+          BRANCH_NAME="${{ github.ref_name }}"
+          
+          if [ "$BRANCH_NAME" == "develop" ]; then
+            # For develop: find latest preview tag (v*-preview)
+            LATEST_TAG=$(git tag -l "*-preview" | sort -V | tail -n1 || echo "")
+            
+            if [ -z "$LATEST_TAG" ]; then
+              # No preview tags found, check for stable tags and start from there
+              LATEST_STABLE=$(git tag -l "v*" | grep -v "preview" | sort -V | tail -n1 || echo "v1.0.0")
+              BASE_VERSION=$(echo "$LATEST_STABLE" | sed 's/^v//')
+              # Start from next patch version with preview
+              MAJOR=$(echo "$BASE_VERSION" | cut -d. -f1)
+              MINOR=$(echo "$BASE_VERSION" | cut -d. -f2)
+              PATCH=$(echo "$BASE_VERSION" | cut -d. -f3)
+              NEW_PATCH=$((PATCH + 1))
+              VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}-preview"
+            else
+              # Parse latest preview tag (e.g., v1.1.11-preview)
+              BASE_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//' | sed 's/-preview$//')
+              MAJOR=$(echo "$BASE_VERSION" | cut -d. -f1)
+              MINOR=$(echo "$BASE_VERSION" | cut -d. -f2)
+              PATCH=$(echo "$BASE_VERSION" | cut -d. -f3)
+              NEW_PATCH=$((PATCH + 1))
+              VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}-preview"
+            fi
+            
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+            echo "version_source=tag_develop" >> $GITHUB_OUTPUT
+            
+          elif [ "$BRANCH_NAME" == "main" ] || [ "$BRANCH_NAME" == "master" ]; then
+            # For main/master: find latest stable tag (v* excluding preview)
+            LATEST_TAG=$(git tag -l "v*" | grep -v "preview" | sort -V | tail -n1 || echo "")
+            
+            if [ -z "$LATEST_TAG" ]; then
+              # No stable tags found, start from 1.0.0
+              VERSION="1.0.0"
+            else
+              # Parse latest stable tag (e.g., v1.1.12)
+              BASE_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//')
+              MAJOR=$(echo "$BASE_VERSION" | cut -d. -f1)
+              MINOR=$(echo "$BASE_VERSION" | cut -d. -f2)
+              NEW_MINOR=$((MINOR + 1))
+              # Increment minor, reset patch to 0
+              VERSION="${MAJOR}.${NEW_MINOR}.0"
+            fi
+            
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+            echo "version_source=tag_main" >> $GITHUB_OUTPUT
+            
+          else
+            # For other branches: use latest tag as base with branch suffix
+            LATEST_TAG=$(git tag -l "v*" | sort -V | tail -n1 || echo "v1.0.0")
+            BASE_VERSION=$(echo "$LATEST_TAG" | sed 's/^v//' | sed 's/-.*$//')
+            RUN_NUMBER=${{ github.run_number }}
+            BRANCH_SAFE=$(echo "$BRANCH_NAME" | sed 's/[^a-zA-Z0-9]/-/g' | cut -c1-20)
+            VERSION="${BASE_VERSION}-${BRANCH_SAFE}.${RUN_NUMBER}"
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+            echo "version_source=tag_other" >> $GITHUB_OUTPUT
+          fi
+          
+          # Extract base version (without pre-release suffix)
+          BASE_VERSION=$(echo "$VERSION" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+' || echo "$VERSION")
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
+          echo "✅ Version determined: $VERSION (base: $BASE_VERSION)"
+          echo "   Branch: $BRANCH_NAME"
+          echo "   Latest tag: ${LATEST_TAG:-none}"
+
+      - name: Display version information
+        run: |
+          echo "## Version Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Base Version**: ${{ steps.version.outputs.base_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Is Pre-release**: ${{ steps.version.outputs.is_prerelease }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version Source**: ${{ steps.version.outputs.version_source }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          
+          echo ""
+          echo "📦 Version Information:"
+          echo "   Version: ${{ steps.version.outputs.version }}"
+          echo "   Base version: ${{ steps.version.outputs.base_version }}"
+          echo "   Is pre-release: ${{ steps.version.outputs.is_prerelease }}"
+          echo "   Source: ${{ steps.version.outputs.version_source }}"
+
+      - name: Create and push version tag
+        if: github.ref_name == 'develop' || github.ref_name == 'main' || github.ref_name == 'master'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG_NAME="v${VERSION}"
+          
+          # Check if tag already exists
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "⚠️ Tag $TAG_NAME already exists, skipping tag creation"
+            exit 0
+          fi
+          
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create annotated tag with appropriate message
+          if [ "${{ github.ref_name }}" == "develop" ]; then
+            # Preview tag for develop: use base version in message (e.g., "Preview version 1.1.11")
+            BASE_VERSION="${{ steps.version.outputs.base_version }}"
+            git tag -a "$TAG_NAME" -m "Preview version ${BASE_VERSION}"
+            echo "✅ Created preview tag: $TAG_NAME (Preview version ${BASE_VERSION})"
+          else
+            # Release tag for main/master: use full version in message (e.g., "Release version 1.2.0")
+            git tag -a "$TAG_NAME" -m "Release version ${VERSION}"
+            echo "✅ Created release tag: $TAG_NAME (Release version ${VERSION})"
+          fi
+          
+          # Push tag
+          git push origin "$TAG_NAME"
+          echo "✅ Pushed tag: $TAG_NAME to remote"
+

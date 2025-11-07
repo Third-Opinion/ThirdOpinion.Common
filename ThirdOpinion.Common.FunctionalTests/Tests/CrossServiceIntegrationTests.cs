@@ -1,3 +1,5 @@
+using System.Net;
+using System.Text.Json;
 using Amazon.CognitoIdentityProvider;
 using Amazon.CognitoIdentityProvider.Model;
 using Amazon.DynamoDBv2;
@@ -8,8 +10,7 @@ using Amazon.SQS.Model;
 using Microsoft.Extensions.Configuration;
 using ThirdOpinion.Common.FunctionalTests.Infrastructure;
 using Xunit.Abstractions;
-using Shouldly;
-using System.Text.Json;
+using ResourceNotFoundException = Amazon.DynamoDBv2.Model.ResourceNotFoundException;
 
 namespace ThirdOpinion.Common.FunctionalTests.Tests;
 
@@ -17,27 +18,28 @@ namespace ThirdOpinion.Common.FunctionalTests.Tests;
 public class CrossServiceIntegrationTests : BaseIntegrationTest
 {
     private readonly string _testPrefix;
-    private string? _userPoolId;
-    private string? _clientId;
-    private string? _tableName;
     private string? _bucketName;
+    private string? _clientId;
     private string? _queueUrl;
-    
+    private string? _tableName;
+    private string? _userPoolId;
+
     public CrossServiceIntegrationTests(ITestOutputHelper output) : base(output)
     {
-        _testPrefix = Configuration.GetValue<string>("TestSettings:TestResourcePrefix") ?? "functest";
+        _testPrefix = Configuration.GetValue<string>("TestSettings:TestResourcePrefix") ??
+                      "functest";
     }
 
     protected override async Task SetupTestResourcesAsync()
     {
         await base.SetupTestResourcesAsync();
-        
+
         // Create all AWS resources needed for cross-service testing
         await CreateCognitoResourcesAsync();
         await CreateDynamoDbResourcesAsync();
         await CreateS3ResourcesAsync();
         await CreateSqsResourcesAsync();
-        
+
         WriteOutput("All cross-service test resources created successfully");
     }
 
@@ -49,24 +51,23 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
         {
             // Cleanup Cognito
             if (!string.IsNullOrEmpty(_userPoolId))
-            {
                 cleanupTasks.Add(Task.Run(async () =>
                 {
                     try
                     {
-                        await CognitoClient.DeleteUserPoolAsync(new DeleteUserPoolRequest { UserPoolId = _userPoolId });
+                        await CognitoClient.DeleteUserPoolAsync(new DeleteUserPoolRequest
+                            { UserPoolId = _userPoolId });
                         WriteOutput($"Deleted user pool: {_userPoolId}");
                     }
                     catch (Exception ex)
                     {
-                        WriteOutput($"Warning: Failed to cleanup user pool {_userPoolId}: {ex.Message}");
+                        WriteOutput(
+                            $"Warning: Failed to cleanup user pool {_userPoolId}: {ex.Message}");
                     }
                 }));
-            }
 
             // Cleanup DynamoDB
             if (!string.IsNullOrEmpty(_tableName))
-            {
                 cleanupTasks.Add(Task.Run(async () =>
                 {
                     try
@@ -79,36 +80,33 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
                         WriteOutput($"Warning: Failed to cleanup table {_tableName}: {ex.Message}");
                     }
                 }));
-            }
 
             // Cleanup S3
             if (!string.IsNullOrEmpty(_bucketName))
-            {
                 cleanupTasks.Add(Task.Run(async () =>
                 {
                     try
                     {
                         // Delete all objects first
-                        var listResponse = await S3Client.ListObjectsV2Async(new ListObjectsV2Request { BucketName = _bucketName });
-                        foreach (var obj in listResponse.S3Objects)
-                        {
+                        ListObjectsV2Response? listResponse
+                            = await S3Client.ListObjectsV2Async(new ListObjectsV2Request
+                                { BucketName = _bucketName });
+                        foreach (S3Object? obj in listResponse.S3Objects)
                             await S3Client.DeleteObjectAsync(_bucketName, obj.Key);
-                        }
-                        
+
                         // Delete bucket
                         await S3Client.DeleteBucketAsync(_bucketName);
                         WriteOutput($"Deleted bucket: {_bucketName}");
                     }
                     catch (Exception ex)
                     {
-                        WriteOutput($"Warning: Failed to cleanup bucket {_bucketName}: {ex.Message}");
+                        WriteOutput(
+                            $"Warning: Failed to cleanup bucket {_bucketName}: {ex.Message}");
                     }
                 }));
-            }
 
             // Cleanup SQS
             if (!string.IsNullOrEmpty(_queueUrl))
-            {
                 cleanupTasks.Add(Task.Run(async () =>
                 {
                     try
@@ -121,7 +119,6 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
                         WriteOutput($"Warning: Failed to cleanup queue {_queueUrl}: {ex.Message}");
                     }
                 }));
-            }
 
             await Task.WhenAll(cleanupTasks);
         }
@@ -141,23 +138,25 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
         // 4. Send welcome notification via SQS
 
         // Arrange
-        var (email, password, attributes) = TestDataBuilder.CreateTestUser();
-        var profileData = TestDataBuilder.CreateDynamoDbTestData(email);
-        var profileImageData = TestDataBuilder.CreateBinaryTestData(1024);
+        (string email, string password, Dictionary<string, string> attributes)
+            = TestDataBuilder.CreateTestUser();
+        Dictionary<string, object> profileData = TestDataBuilder.CreateDynamoDbTestData(email);
+        byte[] profileImageData = TestDataBuilder.CreateBinaryTestData();
 
         // Act & Assert - Step 1: Create user in Cognito
-        var createUserResponse = await CognitoClient.AdminCreateUserAsync(new AdminCreateUserRequest
-        {
-            UserPoolId = _userPoolId,
-            Username = email,
-            MessageAction = "SUPPRESS",
-            TemporaryPassword = password,
-            UserAttributes = attributes.Select(attr => new AttributeType
+        AdminCreateUserResponse? createUserResponse = await CognitoClient.AdminCreateUserAsync(
+            new AdminCreateUserRequest
             {
-                Name = attr.Key,
-                Value = attr.Value
-            }).ToList()
-        });
+                UserPoolId = _userPoolId,
+                Username = email,
+                MessageAction = "SUPPRESS",
+                TemporaryPassword = password,
+                UserAttributes = attributes.Select(attr => new AttributeType
+                {
+                    Name = attr.Key,
+                    Value = attr.Value
+                }).ToList()
+            });
 
         await CognitoClient.AdminSetUserPasswordAsync(new AdminSetUserPasswordRequest
         {
@@ -171,7 +170,7 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
         WriteOutput($"Step 1: Created user in Cognito: {email}");
 
         // Act & Assert - Step 2: Store user profile in DynamoDB
-        var putItemResponse = await DynamoDbClient.PutItemAsync(new PutItemRequest
+        PutItemResponse? putItemResponse = await DynamoDbClient.PutItemAsync(new PutItemRequest
         {
             TableName = _tableName,
             Item = new Dictionary<string, AttributeValue>
@@ -185,25 +184,25 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
             }
         });
 
-        putItemResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        putItemResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
         WriteOutput($"Step 2: Stored user profile in DynamoDB for: {email}");
 
         // Act & Assert - Step 3: Upload profile image to S3
         var imageKey = $"profiles/{email}/avatar.jpg";
-        var putObjectResponse = await S3Client.PutObjectAsync(new PutObjectRequest
+        PutObjectResponse? putObjectResponse = await S3Client.PutObjectAsync(new PutObjectRequest
         {
             BucketName = _bucketName,
             Key = imageKey,
             InputStream = new MemoryStream(profileImageData),
             ContentType = "image/jpeg",
-            Metadata = 
+            Metadata =
             {
                 ["user-id"] = email,
                 ["upload-date"] = DateTime.UtcNow.ToString("O")
             }
         });
 
-        putObjectResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        putObjectResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
         WriteOutput($"Step 3: Uploaded profile image to S3: {imageKey}");
 
         // Act & Assert - Step 4: Send welcome notification via SQS
@@ -217,37 +216,39 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
             NotificationType = "Welcome"
         };
 
-        var sendMessageResponse = await SqsClient.SendMessageAsync(new SendMessageRequest
-        {
-            QueueUrl = _queueUrl,
-            MessageBody = JsonSerializer.Serialize(welcomeMessage),
-            MessageAttributes = new Dictionary<string, MessageAttributeValue>
+        SendMessageResponse? sendMessageResponse = await SqsClient.SendMessageAsync(
+            new SendMessageRequest
             {
-                ["UserId"] = new() { DataType = "String", StringValue = email },
-                ["NotificationType"] = new() { DataType = "String", StringValue = "Welcome" }
-            }
-        });
+                QueueUrl = _queueUrl,
+                MessageBody = JsonSerializer.Serialize(welcomeMessage),
+                MessageAttributes = new Dictionary<string, MessageAttributeValue>
+                {
+                    ["UserId"] = new() { DataType = "String", StringValue = email },
+                    ["NotificationType"] = new() { DataType = "String", StringValue = "Welcome" }
+                }
+            });
 
         sendMessageResponse.MessageId.ShouldNotBeNullOrEmpty();
         WriteOutput($"Step 4: Sent welcome notification via SQS: {sendMessageResponse.MessageId}");
 
         // Final verification - Ensure all data is accessible
-        var getItemResponse = await DynamoDbClient.GetItemAsync(new GetItemRequest
+        GetItemResponse? getItemResponse = await DynamoDbClient.GetItemAsync(new GetItemRequest
         {
             TableName = _tableName,
             Key = new Dictionary<string, AttributeValue> { ["Id"] = new() { S = email } }
         });
         getItemResponse.Item.ShouldNotBeEmpty();
 
-        var getObjectResponse = await S3Client.GetObjectAsync(_bucketName, imageKey);
+        GetObjectResponse? getObjectResponse = await S3Client.GetObjectAsync(_bucketName, imageKey);
         getObjectResponse.ContentLength.ShouldBe(profileImageData.Length);
 
-        var receiveMessageResponse = await SqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
-        {
-            QueueUrl = _queueUrl,
-            MaxNumberOfMessages = 1,
-            MessageAttributeNames = new List<string> { "All" }
-        });
+        ReceiveMessageResponse? receiveMessageResponse = await SqsClient.ReceiveMessageAsync(
+            new ReceiveMessageRequest
+            {
+                QueueUrl = _queueUrl,
+                MaxNumberOfMessages = 1,
+                MessageAttributeNames = new List<string> { "All" }
+            });
         receiveMessageResponse.Messages.ShouldNotBeEmpty();
 
         WriteOutput("End-to-end user registration workflow completed successfully!");
@@ -263,8 +264,9 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
         // 4. Queue processing notification in SQS
 
         // Arrange
-        var (email, password, attributes) = TestDataBuilder.CreateTestUser();
-        var documentData = TestDataBuilder.CreateBinaryTestData(2048);
+        (string email, string password, Dictionary<string, string> attributes)
+            = TestDataBuilder.CreateTestUser();
+        byte[] documentData = TestDataBuilder.CreateBinaryTestData(2048);
         var documentContent = "Document content for processing pipeline test";
 
         // Setup user
@@ -290,33 +292,34 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
         });
 
         // Act & Assert - Step 1: Authenticate user
-        var authResponse = await CognitoClient.AdminInitiateAuthAsync(new AdminInitiateAuthRequest
-        {
-            UserPoolId = _userPoolId,
-            ClientId = _clientId,
-            AuthFlow = AuthFlowType.ADMIN_USER_PASSWORD_AUTH,
-            AuthParameters = new Dictionary<string, string>
+        AdminInitiateAuthResponse? authResponse = await CognitoClient.AdminInitiateAuthAsync(
+            new AdminInitiateAuthRequest
             {
-                ["USERNAME"] = email,
-                ["PASSWORD"] = password
-            }
-        });
+                UserPoolId = _userPoolId,
+                ClientId = _clientId,
+                AuthFlow = AuthFlowType.ADMIN_USER_PASSWORD_AUTH,
+                AuthParameters = new Dictionary<string, string>
+                {
+                    ["USERNAME"] = email,
+                    ["PASSWORD"] = password
+                }
+            });
 
         authResponse.AuthenticationResult.ShouldNotBeNull();
-        var accessToken = authResponse.AuthenticationResult.AccessToken;
+        string? accessToken = authResponse.AuthenticationResult.AccessToken;
         WriteOutput($"Step 1: Authenticated user: {email}");
 
         // Act & Assert - Step 2: Upload document to S3
         var documentId = Guid.NewGuid().ToString();
         var documentKey = $"documents/{email}/{documentId}/document.txt";
-        
-        var uploadResponse = await S3Client.PutObjectAsync(new PutObjectRequest
+
+        PutObjectResponse? uploadResponse = await S3Client.PutObjectAsync(new PutObjectRequest
         {
             BucketName = _bucketName,
             Key = documentKey,
             ContentBody = documentContent,
             ContentType = "text/plain",
-            Metadata = 
+            Metadata =
             {
                 ["user-id"] = email,
                 ["document-id"] = documentId,
@@ -325,12 +328,12 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
             }
         });
 
-        uploadResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        uploadResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
         WriteOutput($"Step 2: Uploaded document to S3: {documentKey}");
 
         // Act & Assert - Step 3: Create processing job in DynamoDB
         var jobId = Guid.NewGuid().ToString();
-        var putJobResponse = await DynamoDbClient.PutItemAsync(new PutItemRequest
+        PutItemResponse? putJobResponse = await DynamoDbClient.PutItemAsync(new PutItemRequest
         {
             TableName = _tableName,
             Item = new Dictionary<string, AttributeValue>
@@ -345,7 +348,7 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
             }
         });
 
-        putJobResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        putJobResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
         WriteOutput($"Step 3: Created processing job in DynamoDB: {jobId}");
 
         // Act & Assert - Step 4: Queue processing notification
@@ -360,7 +363,7 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
             Timestamp = DateTime.UtcNow
         };
 
-        var queueResponse = await SqsClient.SendMessageAsync(new SendMessageRequest
+        SendMessageResponse? queueResponse = await SqsClient.SendMessageAsync(new SendMessageRequest
         {
             QueueUrl = _queueUrl,
             MessageBody = JsonSerializer.Serialize(processingMessage),
@@ -420,7 +423,7 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
 
         // Act & Assert - Step 1: Store original data in DynamoDB
         var originalId = originalData["Id"].ToString()!;
-        var putOriginalResponse = await DynamoDbClient.PutItemAsync(new PutItemRequest
+        PutItemResponse? putOriginalResponse = await DynamoDbClient.PutItemAsync(new PutItemRequest
         {
             TableName = _tableName,
             Item = new Dictionary<string, AttributeValue>
@@ -435,20 +438,21 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
             }
         });
 
-        putOriginalResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        putOriginalResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
         WriteOutput($"Step 1: Stored original data in DynamoDB: {originalId}");
 
         // Act & Assert - Step 2: Backup data to S3
         var backupKey = $"backups/{DateTime.UtcNow:yyyy/MM/dd}/{originalId}.json";
-        var backupData = JsonSerializer.Serialize(originalData, new JsonSerializerOptions { WriteIndented = true });
-        
-        var backupResponse = await S3Client.PutObjectAsync(new PutObjectRequest
+        string backupData = JsonSerializer.Serialize(originalData,
+            new JsonSerializerOptions { WriteIndented = true });
+
+        PutObjectResponse? backupResponse = await S3Client.PutObjectAsync(new PutObjectRequest
         {
             BucketName = _bucketName,
             Key = backupKey,
             ContentBody = backupData,
             ContentType = "application/json",
-            Metadata = 
+            Metadata =
             {
                 ["original-id"] = originalId,
                 ["backup-date"] = DateTime.UtcNow.ToString("O"),
@@ -456,7 +460,7 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
             }
         });
 
-        backupResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        backupResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
         WriteOutput($"Step 2: Backed up data to S3: {backupKey}");
 
         // Act & Assert - Step 3: Send backup notification
@@ -469,29 +473,31 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
             Status = "Completed"
         };
 
-        var notificationResponse = await SqsClient.SendMessageAsync(new SendMessageRequest
-        {
-            QueueUrl = _queueUrl,
-            MessageBody = JsonSerializer.Serialize(backupNotification),
-            MessageAttributes = new Dictionary<string, MessageAttributeValue>
+        SendMessageResponse? notificationResponse = await SqsClient.SendMessageAsync(
+            new SendMessageRequest
             {
-                ["OriginalId"] = new() { DataType = "String", StringValue = originalId },
-                ["Action"] = new() { DataType = "String", StringValue = "DataBackup" }
-            }
-        });
+                QueueUrl = _queueUrl,
+                MessageBody = JsonSerializer.Serialize(backupNotification),
+                MessageAttributes = new Dictionary<string, MessageAttributeValue>
+                {
+                    ["OriginalId"] = new() { DataType = "String", StringValue = originalId },
+                    ["Action"] = new() { DataType = "String", StringValue = "DataBackup" }
+                }
+            });
 
         notificationResponse.MessageId.ShouldNotBeNullOrEmpty();
         WriteOutput($"Step 3: Sent backup notification: {notificationResponse.MessageId}");
 
         // Act & Assert - Step 4: Restore data from S3
-        var restoreResponse = await S3Client.GetObjectAsync(_bucketName, backupKey);
+        GetObjectResponse? restoreResponse = await S3Client.GetObjectAsync(_bucketName, backupKey);
         using var reader = new StreamReader(restoreResponse.ResponseStream);
-        var restoredJsonData = await reader.ReadToEndAsync();
-        var restoredData = JsonSerializer.Deserialize<Dictionary<string, object>>(restoredJsonData)!;
+        string restoredJsonData = await reader.ReadToEndAsync();
+        var restoredData
+            = JsonSerializer.Deserialize<Dictionary<string, object>>(restoredJsonData)!;
 
         // Create new record with restored data
         var restoredId = Guid.NewGuid().ToString();
-        var putRestoredResponse = await DynamoDbClient.PutItemAsync(new PutItemRequest
+        PutItemResponse? putRestoredResponse = await DynamoDbClient.PutItemAsync(new PutItemRequest
         {
             TableName = _tableName,
             Item = new Dictionary<string, AttributeValue>
@@ -506,17 +512,17 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
             }
         });
 
-        putRestoredResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        putRestoredResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
         WriteOutput($"Step 4: Restored data to DynamoDB: {restoredId}");
 
         // Act & Assert - Step 5: Verify data integrity
-        var originalRecord = await DynamoDbClient.GetItemAsync(new GetItemRequest
+        GetItemResponse? originalRecord = await DynamoDbClient.GetItemAsync(new GetItemRequest
         {
             TableName = _tableName,
             Key = new Dictionary<string, AttributeValue> { ["Id"] = new() { S = originalId } }
         });
 
-        var restoredRecord = await DynamoDbClient.GetItemAsync(new GetItemRequest
+        GetItemResponse? restoredRecord = await DynamoDbClient.GetItemAsync(new GetItemRequest
         {
             TableName = _tableName,
             Key = new Dictionary<string, AttributeValue> { ["Id"] = new() { S = restoredId } }
@@ -534,42 +540,45 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
     private async Task CreateCognitoResourcesAsync()
     {
         var poolName = $"{_testPrefix}-cross-service-pool";
-        
-        var poolResponse = await CognitoClient.CreateUserPoolAsync(new CreateUserPoolRequest
-        {
-            PoolName = poolName,
-            Policies = new UserPoolPolicyType
+
+        CreateUserPoolResponse? poolResponse = await CognitoClient.CreateUserPoolAsync(
+            new CreateUserPoolRequest
             {
-                PasswordPolicy = new PasswordPolicyType
+                PoolName = poolName,
+                Policies = new UserPoolPolicyType
                 {
-                    MinimumLength = 8,
-                    RequireUppercase = true,
-                    RequireLowercase = true,
-                    RequireNumbers = true,
-                    RequireSymbols = false
-                }
-            },
-            UsernameAttributes = new List<string> { "email" },
-            AutoVerifiedAttributes = new List<string> { "email" }
-        });
-        
+                    PasswordPolicy = new PasswordPolicyType
+                    {
+                        MinimumLength = 8,
+                        RequireUppercase = true,
+                        RequireLowercase = true,
+                        RequireNumbers = true,
+                        RequireSymbols = false
+                    }
+                },
+                UsernameAttributes = new List<string> { "email" },
+                AutoVerifiedAttributes = new List<string> { "email" }
+            });
+
         _userPoolId = poolResponse.UserPool.Id;
 
-        var clientResponse = await CognitoClient.CreateUserPoolClientAsync(new CreateUserPoolClientRequest
-        {
-            UserPoolId = _userPoolId,
-            ClientName = $"{poolName}-client",
-            ExplicitAuthFlows = new List<string> { "ALLOW_ADMIN_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH" },
-            GenerateSecret = false
-        });
-        
+        CreateUserPoolClientResponse? clientResponse
+            = await CognitoClient.CreateUserPoolClientAsync(new CreateUserPoolClientRequest
+            {
+                UserPoolId = _userPoolId,
+                ClientName = $"{poolName}-client",
+                ExplicitAuthFlows = new List<string>
+                    { "ALLOW_ADMIN_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH" },
+                GenerateSecret = false
+            });
+
         _clientId = clientResponse.UserPoolClient.ClientId;
     }
 
     private async Task CreateDynamoDbResourcesAsync()
     {
         _tableName = GenerateTestResourceName("cross-service-table");
-        
+
         await DynamoDbClient.CreateTableAsync(new CreateTableRequest
         {
             TableName = _tableName,
@@ -591,7 +600,7 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
     private async Task CreateS3ResourcesAsync()
     {
         _bucketName = GenerateTestResourceName("cross-service-bucket").ToLowerInvariant();
-        
+
         await S3Client.PutBucketAsync(new PutBucketRequest
         {
             BucketName = _bucketName
@@ -603,9 +612,9 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
 
     private async Task CreateSqsResourcesAsync()
     {
-        var queueName = GenerateTestResourceName("cross-service-queue");
-        
-        var response = await SqsClient.CreateQueueAsync(new CreateQueueRequest
+        string queueName = GenerateTestResourceName("cross-service-queue");
+
+        CreateQueueResponse? response = await SqsClient.CreateQueueAsync(new CreateQueueRequest
         {
             QueueName = queueName,
             Attributes = new Dictionary<string, string>
@@ -614,7 +623,7 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
                 [QueueAttributeName.MessageRetentionPeriod] = "1209600"
             }
         });
-        
+
         _queueUrl = response.QueueUrl;
 
         // Wait for queue to be available
@@ -623,27 +632,25 @@ public class CrossServiceIntegrationTests : BaseIntegrationTest
 
     private async Task WaitForTableActiveAsync(string tableName)
     {
-        var timeout = TimeSpan.FromMinutes(2);
-        var start = DateTime.UtcNow;
-        
+        TimeSpan timeout = TimeSpan.FromMinutes(2);
+        DateTime start = DateTime.UtcNow;
+
         while (DateTime.UtcNow - start < timeout)
         {
             try
             {
-                var describeResponse = await DynamoDbClient.DescribeTableAsync(tableName);
-                if (describeResponse.Table.TableStatus == TableStatus.ACTIVE)
-                {
-                    return;
-                }
+                DescribeTableResponse? describeResponse
+                    = await DynamoDbClient.DescribeTableAsync(tableName);
+                if (describeResponse.Table.TableStatus == TableStatus.ACTIVE) return;
             }
-            catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+            catch (ResourceNotFoundException)
             {
                 // Table still creating
             }
-            
+
             await Task.Delay(1000);
         }
-        
+
         throw new TimeoutException($"Table {tableName} did not become active within timeout");
     }
 }

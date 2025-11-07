@@ -17,6 +17,9 @@ public class TestSuiteResult
     public int TotalTests => Results.Count;
     public int PassedTests => Results.Count(r => r.Success);
     public int FailedTests => Results.Count(r => !r.Success);
-    public TimeSpan TotalDuration => TimeSpan.FromMilliseconds(Results.Sum(r => r.Duration.TotalMilliseconds));
+
+    public TimeSpan TotalDuration =>
+        TimeSpan.FromMilliseconds(Results.Sum(r => r.Duration.TotalMilliseconds));
+
     public bool AllTestsPassed => FailedTests == 0;
 }

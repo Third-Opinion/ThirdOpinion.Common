@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>ThirdOpinion.Common.Fhir.Documents</RootNamespace>
+        <LangVersion>latest</LangVersion>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <IsPackable>true</IsPackable>
+        <PackageId>ThirdOpinion.Common.Fhir.Documents</PackageId>
+        <Version>1.0.0-alpha.5</Version>
+        <Authors>ThirdOpinion</Authors>
+        <Company>ThirdOpinion</Company>
+        <Description>FHIR document handling functionality for ThirdOpinion applications</Description>
+        <PackageTags>fhir;healthcare;documents</PackageTags>
+        <RepositoryUrl>https://github.com/thirdopinion/common</RepositoryUrl>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Hl7.Fhir.R4" Version="5.12.2"/>
+        <PackageReference Include="AWSSDK.S3" Version="4.0.7.6"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.9"/>
+        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0"/>
+        <PackageReference Include="System.Text.Json" Version="9.0.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../ThirdOpinion.Common.Fhir/ThirdOpinion.Common.Fhir.csproj"/>
+        <ProjectReference Include="../ThirdOpinion.Common.Aws.S3/ThirdOpinion.Common.Aws.S3.csproj"/>
+        <ProjectReference Include="../ThirdOpinion.Common.Aws.HealthLake/ThirdOpinion.Common.Aws.HealthLake.csproj"/>
+        <ProjectReference Include="../ThirdOpinion.Common.Misc/ThirdOpinion.Common.Misc.csproj"/>
+        <ProjectReference Include="../ThirdOpinion.Common.Logging/ThirdOpinion.Common.Logging.csproj"/>
+    </ItemGroup>
+
+</Project>

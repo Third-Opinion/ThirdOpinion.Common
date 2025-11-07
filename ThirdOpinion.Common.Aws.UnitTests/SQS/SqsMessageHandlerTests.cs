@@ -5,21 +5,21 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Shouldly;
 using ThirdOpinion.Common.Aws.DynamoDb;
 using ThirdOpinion.Common.Aws.SQS;
-using Xunit;
 
 namespace ThirdOpinion.Common.Aws.Tests.SQS;
 
 public class SqsMessageHandlerTests
 {
-    private readonly Mock<IAmazonSQS> _sqsClientMock;
-    private readonly Mock<ILogger<SqsMessageHandler>> _loggerMock;
     private readonly Mock<IConfiguration> _configurationMock;
-    private readonly Mock<IServiceProvider> _serviceProviderMock;
     private readonly Mock<IDynamoDbRepository> _dynamoRepositoryMock;
-    private readonly string _testQueueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
+    private readonly Mock<ILogger<SqsMessageHandler>> _loggerMock;
+    private readonly Mock<IServiceProvider> _serviceProviderMock;
+    private readonly Mock<IAmazonSQS> _sqsClientMock;
+
+    private readonly string _testQueueUrl
+        = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
 
     public SqsMessageHandlerTests()
     {
@@ -28,7 +28,7 @@ public class SqsMessageHandlerTests
         _configurationMock = new Mock<IConfiguration>();
         _serviceProviderMock = new Mock<IServiceProvider>();
         _dynamoRepositoryMock = new Mock<IDynamoDbRepository>();
-        
+
         // Setup configuration mock to return queue URL
         _configurationMock.Setup(x => x["AWS:SQS:QueueUrl"]).Returns(_testQueueUrl);
     }
@@ -48,7 +48,7 @@ public class SqsMessageHandlerTests
                 configMock.Object,
                 _serviceProviderMock.Object,
                 _dynamoRepositoryMock.Object));
-        
+
         exception.Message.ShouldContain("AWS:SQS:QueueUrl configuration is missing");
     }
 
@@ -86,7 +86,7 @@ public class SqsMessageHandlerTests
             ReceiptHandle = "receipt-handle-1"
         };
 
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
 
         // Act
         await handler.ProcessMessageAsync(testMessage, cancellationToken);
@@ -107,10 +107,12 @@ public class SqsMessageHandlerTests
             _dynamoRepositoryMock.Object);
 
         var receiptHandle = "receipt-handle-1";
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
 
-        _sqsClientMock.Setup(x => x.DeleteMessageAsync(It.IsAny<DeleteMessageRequest>(), It.IsAny<CancellationToken>()))
-                     .ReturnsAsync(new DeleteMessageResponse { HttpStatusCode = HttpStatusCode.OK });
+        _sqsClientMock.Setup(x =>
+                x.DeleteMessageAsync(It.IsAny<DeleteMessageRequest>(),
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DeleteMessageResponse { HttpStatusCode = HttpStatusCode.OK });
 
         // Act
         await handler.DeleteMessageAsync(receiptHandle, cancellationToken);
@@ -134,7 +136,7 @@ public class SqsMessageHandlerTests
             _serviceProviderMock.Object,
             _dynamoRepositoryMock.Object);
 
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
 
         // Act & Assert
         await Should.ThrowAsync<ArgumentNullException>(() =>
@@ -153,11 +155,13 @@ public class SqsMessageHandlerTests
             _dynamoRepositoryMock.Object);
 
         var receiptHandle = "receipt-handle-error";
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
         var sqsException = new AmazonSQSException("Delete failed");
 
-        _sqsClientMock.Setup(x => x.DeleteMessageAsync(It.IsAny<DeleteMessageRequest>(), It.IsAny<CancellationToken>()))
-                     .ThrowsAsync(sqsException);
+        _sqsClientMock.Setup(x =>
+                x.DeleteMessageAsync(It.IsAny<DeleteMessageRequest>(),
+                    It.IsAny<CancellationToken>()))
+            .ThrowsAsync(sqsException);
 
         // Act & Assert
         var exception = await Should.ThrowAsync<AmazonSQSException>(() =>
@@ -178,7 +182,7 @@ public class SqsMessageHandlerTests
             _serviceProviderMock.Object,
             _dynamoRepositoryMock.Object);
 
-        var cancellationToken = CancellationToken.None;
+        CancellationToken cancellationToken = CancellationToken.None;
 
         // Act & Assert - null receipt handle
         await Should.ThrowAsync<ArgumentException>(() =>
@@ -244,4 +248,3 @@ public class SqsMessageHandlerTests
             Times.AtLeastOnce);
     }
 }
-

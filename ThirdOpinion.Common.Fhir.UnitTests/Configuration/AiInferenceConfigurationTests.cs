@@ -15,7 +15,8 @@ public class AiInferenceConfigurationTests
         config.InferenceSystem.ShouldBe("http://thirdopinion.ai/fhir/CodeSystem/inference");
         config.CriteriaSystem.ShouldBe("http://thirdopinion.ai/fhir/CodeSystem/criteria");
         config.ModelSystem.ShouldBe("http://thirdopinion.ai/fhir/CodeSystem/model");
-        config.DocumentTrackingSystem.ShouldBe("http://thirdopinion.ai/fhir/CodeSystem/document-tracking");
+        config.DocumentTrackingSystem.ShouldBe(
+            "http://thirdopinion.ai/fhir/CodeSystem/document-tracking");
         config.ProvenanceSystem.ShouldBe("http://thirdopinion.ai/fhir/CodeSystem/provenance");
         config.DefaultModelVersion.ShouldBe("v1.0");
         config.OrganizationReference.ShouldBeNull();

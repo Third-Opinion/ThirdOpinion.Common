@@ -4,9 +4,9 @@ using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.DynamoDBv2.Model;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Shouldly;
 using ThirdOpinion.Common.Aws.DynamoDb;
-using Xunit;
+using QueryFilter = ThirdOpinion.Common.Aws.DynamoDb.Filters.QueryFilter;
+using ScanFilter = ThirdOpinion.Common.Aws.DynamoDb.Filters.ScanFilter;
 
 namespace ThirdOpinion.Common.Aws.Tests.DynamoDb;
 
@@ -22,7 +22,8 @@ public class DynamoDbRepositoryTests
         _contextMock = new Mock<IDynamoDBContext>();
         _dynamoDbClientMock = new Mock<IAmazonDynamoDB>();
         _loggerMock = new Mock<ILogger<DynamoDbRepository>>();
-        _repository = new DynamoDbRepository(_contextMock.Object, _dynamoDbClientMock.Object, _loggerMock.Object);
+        _repository = new DynamoDbRepository(_contextMock.Object, _dynamoDbClientMock.Object,
+            _loggerMock.Object);
     }
 
     [Fact]
@@ -30,15 +31,16 @@ public class DynamoDbRepositoryTests
     {
         // Arrange
         var testEntity = new TestEntity { Id = "test-id", Name = "Test Name" };
-        
+
         _contextMock.Setup(x => x.SaveAsync(testEntity, It.IsAny<CancellationToken>()))
-                   .Returns(Task.CompletedTask);
-        
+            .Returns(Task.CompletedTask);
+
         // Act
         await _repository.SaveAsync(testEntity);
 
         // Assert
-        _contextMock.Verify(x => x.SaveAsync(testEntity, It.IsAny<CancellationToken>()), Times.Once);
+        _contextMock.Verify(x => x.SaveAsync(testEntity, It.IsAny<CancellationToken>()),
+            Times.Once);
         VerifyLoggerDebugWasCalled("Saved entity of type TestEntity to DynamoDB");
     }
 
@@ -51,7 +53,7 @@ public class DynamoDbRepositoryTests
 
         // Setup mock to throw on save - this would require mocking the DynamoDBContext
         // For now, we'll test the error logging path differently
-        
+
         // Act & Assert
         // We can't easily test this without a more complex setup due to DynamoDBContext being created in constructor
         // This test demonstrates the intended behavior
@@ -64,9 +66,9 @@ public class DynamoDbRepositoryTests
         List<TestEntity>? entities = null;
 
         // Act & Assert
-        var exception = await Should.ThrowAsync<Exception>(async () => 
+        var exception = await Should.ThrowAsync<Exception>(async () =>
             await _repository.BatchSaveAsync(entities!));
-        
+
         exception.ShouldNotBeNull();
     }
 
@@ -76,15 +78,16 @@ public class DynamoDbRepositoryTests
         // Arrange
         var hashKey = "test-hash-key";
         var expectedEntity = new TestEntity { Id = hashKey, Name = "Test Name" };
-        
+
         _contextMock.Setup(x => x.LoadAsync<TestEntity>(hashKey, It.IsAny<CancellationToken>()))
-                   .ReturnsAsync(expectedEntity);
-        
+            .ReturnsAsync(expectedEntity);
+
         // Act
         var result = await _repository.LoadAsync<TestEntity>(hashKey);
 
         // Assert
-        _contextMock.Verify(x => x.LoadAsync<TestEntity>(hashKey, It.IsAny<CancellationToken>()), Times.Once);
+        _contextMock.Verify(x => x.LoadAsync<TestEntity>(hashKey, It.IsAny<CancellationToken>()),
+            Times.Once);
         result.ShouldNotBeNull();
         result.Id.ShouldBe(expectedEntity.Id);
         result.Name.ShouldBe(expectedEntity.Name);
@@ -97,15 +100,18 @@ public class DynamoDbRepositoryTests
         var hashKey = "test-hash-key";
         var rangeKey = "test-range-key";
         var expectedEntity = new TestEntity { Id = hashKey, Name = "Test Name" };
-        
-        _contextMock.Setup(x => x.LoadAsync<TestEntity>(hashKey, rangeKey, It.IsAny<CancellationToken>()))
-                   .ReturnsAsync(expectedEntity);
-        
+
+        _contextMock.Setup(x =>
+                x.LoadAsync<TestEntity>(hashKey, rangeKey, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedEntity);
+
         // Act
         var result = await _repository.LoadAsync<TestEntity>(hashKey, rangeKey);
 
         // Assert
-        _contextMock.Verify(x => x.LoadAsync<TestEntity>(hashKey, rangeKey, It.IsAny<CancellationToken>()), Times.Once);
+        _contextMock.Verify(
+            x => x.LoadAsync<TestEntity>(hashKey, rangeKey, It.IsAny<CancellationToken>()),
+            Times.Once);
         result.ShouldNotBeNull();
         result.Id.ShouldBe(expectedEntity.Id);
         result.Name.ShouldBe(expectedEntity.Name);
@@ -116,15 +122,16 @@ public class DynamoDbRepositoryTests
     {
         // Arrange
         var hashKey = "test-hash-key";
-        
+
         _contextMock.Setup(x => x.DeleteAsync<TestEntity>(hashKey, It.IsAny<CancellationToken>()))
-                   .Returns(Task.CompletedTask);
-        
+            .Returns(Task.CompletedTask);
+
         // Act
         await _repository.DeleteAsync<TestEntity>(hashKey);
 
         // Assert
-        _contextMock.Verify(x => x.DeleteAsync<TestEntity>(hashKey, It.IsAny<CancellationToken>()), Times.Once);
+        _contextMock.Verify(x => x.DeleteAsync<TestEntity>(hashKey, It.IsAny<CancellationToken>()),
+            Times.Once);
         VerifyLoggerDebugWasCalled("Deleted entity of type TestEntity with key test-hash-key/");
     }
 
@@ -134,16 +141,20 @@ public class DynamoDbRepositoryTests
         // Arrange
         var hashKey = "test-hash-key";
         var rangeKey = "test-range-key";
-        
-        _contextMock.Setup(x => x.DeleteAsync<TestEntity>(hashKey, rangeKey, It.IsAny<CancellationToken>()))
-                   .Returns(Task.CompletedTask);
-        
+
+        _contextMock.Setup(x =>
+                x.DeleteAsync<TestEntity>(hashKey, rangeKey, It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
         // Act
         await _repository.DeleteAsync<TestEntity>(hashKey, rangeKey);
 
         // Assert
-        _contextMock.Verify(x => x.DeleteAsync<TestEntity>(hashKey, rangeKey, It.IsAny<CancellationToken>()), Times.Once);
-        VerifyLoggerDebugWasCalled("Deleted entity of type TestEntity with key test-hash-key/test-range-key");
+        _contextMock.Verify(
+            x => x.DeleteAsync<TestEntity>(hashKey, rangeKey, It.IsAny<CancellationToken>()),
+            Times.Once);
+        VerifyLoggerDebugWasCalled(
+            "Deleted entity of type TestEntity with key test-hash-key/test-range-key");
     }
 
     [Fact]
@@ -159,13 +170,13 @@ public class DynamoDbRepositoryTests
 
         var asyncSearchMock = new Mock<AsyncSearch<TestEntity>>();
         asyncSearchMock.Setup(x => x.GetRemainingAsync(It.IsAny<CancellationToken>()))
-                      .ReturnsAsync(expectedEntities);
+            .ReturnsAsync(expectedEntities);
 
         _contextMock.Setup(x => x.QueryAsync<TestEntity>(hashKey))
-                   .Returns(asyncSearchMock.Object);
-        
+            .Returns(asyncSearchMock.Object);
+
         // Act
-        var results = await _repository.QueryAsync<TestEntity>(hashKey);
+        IEnumerable<TestEntity> results = await _repository.QueryAsync<TestEntity>(hashKey);
 
         // Assert
         _contextMock.Verify(x => x.QueryAsync<TestEntity>(hashKey), Times.Once);
@@ -186,18 +197,22 @@ public class DynamoDbRepositoryTests
 
         var asyncSearchMock = new Mock<AsyncSearch<TestEntity>>();
         asyncSearchMock.Setup(x => x.GetRemainingAsync(It.IsAny<CancellationToken>()))
-                      .ReturnsAsync(expectedEntities);
+            .ReturnsAsync(expectedEntities);
 
-        _contextMock.Setup(x => x.QueryAsync<TestEntity>(hashKey, QueryOperator.BeginsWith, It.IsAny<List<ScanCondition>>()))
-                   .Returns(asyncSearchMock.Object);
+        _contextMock.Setup(x =>
+                x.QueryAsync<TestEntity>(hashKey, QueryOperator.BeginsWith,
+                    It.IsAny<List<ScanCondition>>()))
+            .Returns(asyncSearchMock.Object);
 
-        var filter = new ThirdOpinion.Common.Aws.DynamoDb.Filters.QueryFilter();
-        
+        var filter = new QueryFilter();
+
         // Act
-        var results = await _repository.QueryAsync<TestEntity>(hashKey, filter);
+        IEnumerable<TestEntity> results = await _repository.QueryAsync<TestEntity>(hashKey, filter);
 
         // Assert
-        _contextMock.Verify(x => x.QueryAsync<TestEntity>(hashKey, QueryOperator.BeginsWith, It.IsAny<List<ScanCondition>>()), Times.Once);
+        _contextMock.Verify(
+            x => x.QueryAsync<TestEntity>(hashKey, QueryOperator.BeginsWith,
+                It.IsAny<List<ScanCondition>>()), Times.Once);
         results.ShouldNotBeNull();
         results.Count().ShouldBe(1);
         VerifyLoggerDebugWasCalled("Query returned 1 entities of type TestEntity");
@@ -229,11 +244,12 @@ public class DynamoDbRepositoryTests
             LastEvaluatedKey = new Dictionary<string, AttributeValue>()
         };
 
-        _dynamoDbClientMock.Setup(x => x.QueryAsync(It.IsAny<QueryRequest>(), It.IsAny<CancellationToken>()))
-                          .ReturnsAsync(mockResponse);
+        _dynamoDbClientMock.Setup(x =>
+                x.QueryAsync(It.IsAny<QueryRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockResponse);
 
         // Act
-        var result = await _repository.QueryAsync<TestEntity>(queryRequest);
+        QueryResult<TestEntity> result = await _repository.QueryAsync<TestEntity>(queryRequest);
 
         // Assert
         result.ShouldNotBeNull();
@@ -255,16 +271,17 @@ public class DynamoDbRepositoryTests
 
         var asyncSearchMock = new Mock<AsyncSearch<TestEntity>>();
         asyncSearchMock.Setup(x => x.GetRemainingAsync(It.IsAny<CancellationToken>()))
-                      .ReturnsAsync(expectedEntities);
+            .ReturnsAsync(expectedEntities);
 
         _contextMock.Setup(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>()))
-                   .Returns(asyncSearchMock.Object);
+            .Returns(asyncSearchMock.Object);
 
         // Act
-        var results = await _repository.ScanAsync<TestEntity>();
+        IEnumerable<TestEntity> results = await _repository.ScanAsync<TestEntity>();
 
         // Assert
-        _contextMock.Verify(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>()), Times.Once);
+        _contextMock.Verify(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>()),
+            Times.Once);
         results.ShouldNotBeNull();
         results.Count().ShouldBe(3);
         VerifyLoggerDebugWasCalled("Scan returned 3 entities of type TestEntity");
@@ -281,18 +298,19 @@ public class DynamoDbRepositoryTests
 
         var asyncSearchMock = new Mock<AsyncSearch<TestEntity>>();
         asyncSearchMock.Setup(x => x.GetRemainingAsync(It.IsAny<CancellationToken>()))
-                      .ReturnsAsync(expectedEntities);
+            .ReturnsAsync(expectedEntities);
 
         _contextMock.Setup(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>()))
-                   .Returns(asyncSearchMock.Object);
+            .Returns(asyncSearchMock.Object);
 
-        var filter = new ThirdOpinion.Common.Aws.DynamoDb.Filters.ScanFilter();
-        
+        var filter = new ScanFilter();
+
         // Act
-        var results = await _repository.ScanAsync<TestEntity>(filter);
+        IEnumerable<TestEntity> results = await _repository.ScanAsync<TestEntity>(filter);
 
         // Assert
-        _contextMock.Verify(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>()), Times.Once);
+        _contextMock.Verify(x => x.ScanAsync<TestEntity>(It.IsAny<List<ScanCondition>>()),
+            Times.Once);
         results.ShouldNotBeNull();
         results.Count().ShouldBe(1);
         VerifyLoggerDebugWasCalled("Scan returned 1 entities of type TestEntity");
@@ -309,23 +327,30 @@ public class DynamoDbRepositoryTests
         };
         var updates = new Dictionary<string, AttributeValueUpdate>
         {
-            { "Name", new AttributeValueUpdate { Action = AttributeAction.PUT, Value = new AttributeValue { S = "Updated Name" } } }
+            {
+                "Name",
+                new AttributeValueUpdate
+                {
+                    Action = AttributeAction.PUT, Value = new AttributeValue { S = "Updated Name" }
+                }
+            }
         };
 
-        _dynamoDbClientMock.Setup(x => x.UpdateItemAsync(It.IsAny<UpdateItemRequest>(), It.IsAny<CancellationToken>()))
-                          .ReturnsAsync(new UpdateItemResponse());
+        _dynamoDbClientMock.Setup(x =>
+                x.UpdateItemAsync(It.IsAny<UpdateItemRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UpdateItemResponse());
 
         // Act
         await _repository.UpdateItemAsync(tableName, key, updates);
 
         // Assert
         _dynamoDbClientMock.Verify(x => x.UpdateItemAsync(
-            It.Is<UpdateItemRequest>(r => 
-                r.TableName == tableName && 
-                r.Key == key && 
-                r.AttributeUpdates == updates), 
+            It.Is<UpdateItemRequest>(r =>
+                r.TableName == tableName &&
+                r.Key == key &&
+                r.AttributeUpdates == updates),
             It.IsAny<CancellationToken>()), Times.Once);
-        
+
         VerifyLoggerDebugWasCalled("Updated item in table TestTable");
     }
 
@@ -351,14 +376,18 @@ public class DynamoDbRepositoryTests
             }
         };
 
-        _dynamoDbClientMock.Setup(x => x.TransactWriteItemsAsync(It.IsAny<TransactWriteItemsRequest>(), It.IsAny<CancellationToken>()))
-                          .ReturnsAsync(new TransactWriteItemsResponse());
+        _dynamoDbClientMock.Setup(x =>
+                x.TransactWriteItemsAsync(It.IsAny<TransactWriteItemsRequest>(),
+                    It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TransactWriteItemsResponse());
 
         // Act
         await _repository.TransactWriteAsync(transactRequest);
 
         // Assert
-        _dynamoDbClientMock.Verify(x => x.TransactWriteItemsAsync(transactRequest, It.IsAny<CancellationToken>()), Times.Once);
+        _dynamoDbClientMock.Verify(
+            x => x.TransactWriteItemsAsync(transactRequest, It.IsAny<CancellationToken>()),
+            Times.Once);
         VerifyLoggerDebugWasCalled("Executed transactional write with 1 items");
     }
 
@@ -380,13 +409,13 @@ public class TestEntity
 {
     [DynamoDBHashKey]
     public string Id { get; set; } = string.Empty;
-    
+
     [DynamoDBProperty]
     public string Name { get; set; } = string.Empty;
-    
+
     [DynamoDBProperty]
     public DateTime CreatedDate { get; set; }
-    
+
     [DynamoDBProperty]
     public int Version { get; set; }
 }

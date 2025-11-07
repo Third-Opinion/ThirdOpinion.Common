@@ -14,21 +14,25 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AWSSDK.SSO" Version="4.0.0.19" />
-        <PackageReference Include="AWSSDK.SSOOIDC" Version="4.0.0.19" />
+        <PackageReference Include="AWSSDK.SSO" Version="4.0.0.19"/>
+        <PackageReference Include="AWSSDK.SSOOIDC" Version="4.0.0.19"/>
         <PackageReference Include="coverlet.collector" Version="6.0.0"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0"/>
         <PackageReference Include="xunit" Version="2.5.3"/>
         <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3"/>
         <PackageReference Include="Shouldly" Version="4.2.1"/>
-        
+
         <!-- AWS SDK packages -->
-        <PackageReference Include="AWSSDK.Core" Version="4.0.0.29"/>
+        <PackageReference Include="AWSSDK.Core" Version="4.0.1.3"/>
         <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="4.0.3.2"/>
         <PackageReference Include="AWSSDK.DynamoDBv2" Version="4.0.6.3"/>
-        <PackageReference Include="AWSSDK.S3" Version="4.0.7.4"/>
+        <PackageReference Include="AWSSDK.S3" Version="4.0.7.6"/>
         <PackageReference Include="AWSSDK.SQS" Version="4.0.1.5"/>
-        
+        <PackageReference Include="AWSSDK.Bedrock" Version="4.0.2"/>
+        <PackageReference Include="AWSSDK.BedrockRuntime" Version="4.0.2"/>
+        <PackageReference Include="AWSSDK.HealthLake" Version="4.0.3.1"/>
+        <PackageReference Include="AWSSDK.SecretsManager" Version="4.0.1.7"/>
+
         <!-- Configuration and Dependency Injection -->
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.9"/>
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.9"/>
@@ -37,11 +41,11 @@
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9"/>
         <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.9"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.9"/>
-        
-        
+
+
         <!-- Additional utilities -->
         <PackageReference Include="Bogus" Version="35.4.0"/>
-        <PackageReference Include="Polly" Version="8.2.0"/>
+        <PackageReference Include="Polly" Version="8.5.2"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -50,11 +54,19 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.Cognito\ThirdOpinion.Common.Aws.Cognito.csproj"/>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.DynamoDb\ThirdOpinion.Common.Aws.DynamoDb.csproj"/>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.S3\ThirdOpinion.Common.Aws.S3.csproj"/>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Aws.SQS\ThirdOpinion.Common.Aws.SQS.csproj"/>
-        <ProjectReference Include="..\src\ThirdOpinion.Common.Misc\ThirdOpinion.Common.Misc.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.AthenaEhr\ThirdOpinion.Common.AthenaEhr.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.Bedrock\ThirdOpinion.Common.Aws.Bedrock.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.Cognito\ThirdOpinion.Common.Aws.Cognito.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.DynamoDb\ThirdOpinion.Common.Aws.DynamoDb.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.HealthLake\ThirdOpinion.Common.Aws.HealthLake.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.Misc\ThirdOpinion.Common.Aws.Misc.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.S3\ThirdOpinion.Common.Aws.S3.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Aws.SQS\ThirdOpinion.Common.Aws.SQS.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Fhir\ThirdOpinion.Common.Fhir.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Fhir.Documents\ThirdOpinion.Common.Fhir.Documents.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Langfuse\ThirdOpinion.Common.Langfuse.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Logging\ThirdOpinion.Common.Logging.csproj"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.Misc\ThirdOpinion.Common.Misc.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

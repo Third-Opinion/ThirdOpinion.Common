@@ -1,11 +1,8 @@
 using Amazon.SQS;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Shouldly;
 using ThirdOpinion.Common.Aws.SQS;
-using Xunit;
 
 namespace ThirdOpinion.Common.Aws.Tests.SQS;
 
@@ -16,7 +13,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = new ServiceCollection();
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "SQS:ServiceUrl", "http://localhost:4566" },
@@ -27,7 +24,7 @@ public class ServiceCollectionExtensionsTests
         // Act
         services.AddLogging();
         services.AddSqsMessaging(configuration);
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Assert
         serviceProvider.GetService<IAmazonSQS>().ShouldNotBeNull();
@@ -48,12 +45,12 @@ public class ServiceCollectionExtensionsTests
             options.ServiceUrl = "http://localhost:4566";
             options.Region = "us-west-2";
         });
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Assert
         serviceProvider.GetService<IAmazonSQS>().ShouldNotBeNull();
         serviceProvider.GetService<ISqsMessageQueue>().ShouldNotBeNull();
-        
+
         var options = serviceProvider.GetService<IOptions<SqsOptions>>();
         options.ShouldNotBeNull();
         options.Value.ServiceUrl.ShouldBe("http://localhost:4566");
@@ -65,7 +62,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = new ServiceCollection();
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "SQS:ServiceUrl", "http://localhost:4566" },
@@ -76,7 +73,7 @@ public class ServiceCollectionExtensionsTests
         // Act
         services.AddLogging();
         services.AddSqsMessaging(configuration);
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Assert
         var sqsClient = serviceProvider.GetService<IAmazonSQS>();
@@ -89,7 +86,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = new ServiceCollection();
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "SQS:Region", "eu-west-1" }
@@ -99,7 +96,7 @@ public class ServiceCollectionExtensionsTests
         // Act
         services.AddLogging();
         services.AddSqsMessaging(configuration);
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Assert
         var sqsClient = serviceProvider.GetService<IAmazonSQS>();
@@ -112,14 +109,14 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = new ServiceCollection();
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>())
             .Build();
 
         // Act
         services.AddLogging();
         services.AddSqsMessaging(configuration);
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Assert
         var sqsClient = serviceProvider.GetService<IAmazonSQS>();
@@ -132,21 +129,21 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = new ServiceCollection();
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>())
             .Build();
 
         // Act
         services.AddLogging();
         services.AddSqsMessaging(configuration);
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Assert
         var sqsClient1 = serviceProvider.GetService<IAmazonSQS>();
         var sqsClient2 = serviceProvider.GetService<IAmazonSQS>();
         var messageQueue1 = serviceProvider.GetService<ISqsMessageQueue>();
         var messageQueue2 = serviceProvider.GetService<ISqsMessageQueue>();
-        
+
         sqsClient1.ShouldBeSameAs(sqsClient2);
         messageQueue1.ShouldBeSameAs(messageQueue2);
     }
@@ -156,7 +153,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = new ServiceCollection();
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "SQS:ServiceUrl", "https://sqs.custom-region.amazonaws.com" },
@@ -167,7 +164,7 @@ public class ServiceCollectionExtensionsTests
         // Act
         services.AddLogging();
         services.AddSqsMessaging(configuration);
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Assert
         var options = serviceProvider.GetService<IOptions<SqsOptions>>();
@@ -206,16 +203,13 @@ public class ServiceCollectionExtensionsTests
 
         // Act
         services.AddLogging();
-        services.AddSqsMessaging(options =>
-        {
-            options.Region = "ap-southeast-2";
-        });
-        var serviceProvider = services.BuildServiceProvider();
+        services.AddSqsMessaging(options => { options.Region = "ap-southeast-2"; });
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Assert
         var sqsClient = serviceProvider.GetService<IAmazonSQS>();
         sqsClient.ShouldNotBeNull();
-        
+
         // Verify the client was created without throwing exceptions
         sqsClient.ShouldBeOfType<AmazonSQSClient>();
     }
@@ -229,13 +223,10 @@ public class ServiceCollectionExtensionsTests
         // Act & Assert
         // This should not throw during registration
         services.AddLogging();
-        services.AddSqsMessaging(options =>
-        {
-            options.Region = "invalid-region";
-        });
-        
-        var serviceProvider = services.BuildServiceProvider();
-        
+        services.AddSqsMessaging(options => { options.Region = "invalid-region"; });
+
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
         // The client creation might fail with invalid region, but registration should succeed
         // In practice, AWS SDK will handle invalid regions gracefully or throw at runtime
         serviceProvider.GetService<ISqsMessageQueue>().ShouldNotBeNull();
@@ -272,7 +263,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = new ServiceCollection();
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "SQS:ServiceUrl", "http://localhost:9324" },
@@ -283,7 +274,7 @@ public class ServiceCollectionExtensionsTests
         // Act
         services.AddLogging();
         services.AddSqsMessaging(configuration);
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Assert
         var options = serviceProvider.GetService<IOptions<SqsOptions>>();
@@ -297,7 +288,7 @@ public class ServiceCollectionExtensionsTests
     {
         // Arrange
         var services = new ServiceCollection();
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>())
             .Build();
 
@@ -305,13 +296,13 @@ public class ServiceCollectionExtensionsTests
         services.AddLogging();
         services.AddSqsMessaging(configuration);
         services.AddSqsMessaging(configuration); // Second call
-        
-        var serviceProvider = services.BuildServiceProvider();
+
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Assert
-        var sqsServices = serviceProvider.GetServices<IAmazonSQS>().Count();
-        var queueServices = serviceProvider.GetServices<ISqsMessageQueue>().Count();
-        
+        int sqsServices = serviceProvider.GetServices<IAmazonSQS>().Count();
+        int queueServices = serviceProvider.GetServices<ISqsMessageQueue>().Count();
+
         // The second registration will override the first, but both should resolve to the same instance due to Singleton lifetime
         sqsServices.ShouldBe(1);
         queueServices.ShouldBe(1);

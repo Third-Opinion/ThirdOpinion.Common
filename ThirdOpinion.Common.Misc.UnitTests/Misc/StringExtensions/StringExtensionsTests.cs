@@ -1,4 +1,4 @@
-using Misc.StringExtensions;
+using ThirdOpinion.Common.Misc.StringExtensions;
 
 namespace ThirdOpinion.Common.UnitTests.Misc.StringExtensions;
 

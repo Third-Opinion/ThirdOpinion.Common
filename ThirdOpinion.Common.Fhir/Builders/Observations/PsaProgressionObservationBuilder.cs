@@ -6,47 +6,51 @@ using ThirdOpinion.Common.Fhir.Helpers;
 namespace ThirdOpinion.Common.Fhir.Builders.Observations;
 
 /// <summary>
-/// Builder for creating FHIR Observations for PSA progression assessment supporting ThirdOpinion.io and PCWG3 criteria
+///     Builder for creating FHIR Observations for PSA progression assessment supporting ThirdOpinion.io and PCWG3 criteria
 /// </summary>
 public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observation>
 {
     /// <summary>
-    /// Criteria types for PSA progression assessment
+    ///     Criteria types for PSA progression assessment
     /// </summary>
     public enum CriteriaType
     {
         /// <summary>
-        /// ThirdOpinion.io criteria
+        ///     ThirdOpinion.io criteria
         /// </summary>
         ThirdOpinionIO,
 
         /// <summary>
-        /// Prostate Cancer Working Group 3 criteria
+        ///     Prostate Cancer Working Group 3 criteria
         /// </summary>
         PCWG3
     }
 
-    private ResourceReference? _patientReference;
-    private ResourceReference? _deviceReference;
-    private readonly List<ResourceReference> _focusReferences;
-    private CriteriaType? _criteriaType;
-    private string? _criteriaVersion;
-    private string? _progressionStatus;
-    private FhirDateTime? _effectiveDate;
-    private readonly List<(ResourceReference reference, string role, decimal? value, string? unit)> _psaEvidence;
     private readonly List<Observation.ComponentComponent> _components;
+    private readonly List<ResourceReference> _focusReferences;
     private readonly List<string> _notes;
-    private float? _confidence;
+
+    private readonly List<(ResourceReference reference, string role, decimal? value, string? unit)>
+        _psaEvidence;
+
+    private decimal? _absoluteChange;
 
     // Calculated values from PSA evidence
     private decimal? _baselinePsa;
-    private decimal? _nadirPsa;
+    private float? _confidence;
+    private CriteriaType? _criteriaType;
+    private string? _criteriaVersion;
     private decimal? _currentPsa;
+    private ResourceReference? _deviceReference;
+    private FhirDateTime? _effectiveDate;
+    private decimal? _nadirPsa;
+
+    private ResourceReference? _patientReference;
     private decimal? _percentageChange;
-    private decimal? _absoluteChange;
+    private string? _progressionStatus;
 
     /// <summary>
-    /// Creates a new PSA Progression Observation builder
+    ///     Creates a new PSA Progression Observation builder
     /// </summary>
     /// <param name="configuration">The AI inference configuration</param>
     public PsaProgressionObservationBuilder(AiInferenceConfiguration configuration)
@@ -59,7 +63,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
     public new PsaProgressionObservationBuilder WithInferenceId(string id)
     {
@@ -68,16 +72,18 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
-    public new PsaProgressionObservationBuilder WithCriteria(string id, string display, string? system = null)
+    public new PsaProgressionObservationBuilder WithCriteria(string id,
+        string display,
+        string? system = null)
     {
         base.WithCriteria(id, display, system);
         return this;
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
     public new PsaProgressionObservationBuilder AddDerivedFrom(ResourceReference reference)
     {
@@ -86,16 +92,17 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
-    public new PsaProgressionObservationBuilder AddDerivedFrom(string reference, string? display = null)
+    public new PsaProgressionObservationBuilder AddDerivedFrom(string reference,
+        string? display = null)
     {
         base.AddDerivedFrom(reference, display);
         return this;
     }
 
     /// <summary>
-    /// Sets the patient reference for this observation
+    ///     Sets the patient reference for this observation
     /// </summary>
     /// <param name="patient">The patient resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -106,7 +113,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets the patient reference for this observation
+    ///     Sets the patient reference for this observation
     /// </summary>
     /// <param name="patientId">The patient ID</param>
     /// <param name="display">Optional display text</param>
@@ -125,7 +132,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets the device reference that performed the assessment
+    ///     Sets the device reference that performed the assessment
     /// </summary>
     /// <param name="device">The device resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -136,7 +143,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets the device reference that performed the assessment
+    ///     Sets the device reference that performed the assessment
     /// </summary>
     /// <param name="deviceId">The device ID</param>
     /// <param name="display">Optional display text</param>
@@ -155,7 +162,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets the focus references for this observation
+    ///     Sets the focus references for this observation
     /// </summary>
     /// <param name="focus">The focus resource references</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -170,7 +177,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets the criteria type and version for PSA progression assessment
+    ///     Sets the criteria type and version for PSA progression assessment
     /// </summary>
     /// <param name="criteriaType">The criteria type (ThirdOpinionIO or PCWG3)</param>
     /// <param name="version">The version of the criteria</param>
@@ -186,14 +193,17 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Adds PSA evidence observation reference
+    ///     Adds PSA evidence observation reference
     /// </summary>
     /// <param name="psaObservation">The PSA observation reference</param>
     /// <param name="role">The role of this PSA value (e.g., "baseline", "nadir", "current")</param>
     /// <param name="value">Optional PSA value for calculations</param>
     /// <param name="unit">Optional unit of measurement for the PSA value (defaults to "ng/mL")</param>
     /// <returns>This builder instance for method chaining</returns>
-    public PsaProgressionObservationBuilder AddPsaEvidence(ResourceReference psaObservation, string role, decimal? value = null, string? unit = "ng/mL")
+    public PsaProgressionObservationBuilder AddPsaEvidence(ResourceReference psaObservation,
+        string role,
+        decimal? value = null,
+        string? unit = "ng/mL")
     {
         if (psaObservation == null)
             throw new ArgumentNullException(nameof(psaObservation));
@@ -221,7 +231,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets the PSA progression status
+    ///     Sets the PSA progression status
     /// </summary>
     /// <param name="progressionStatus">The progression status: "true", "false", or "unknown"</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -229,18 +239,21 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     public PsaProgressionObservationBuilder WithProgression(string progressionStatus)
     {
         if (string.IsNullOrWhiteSpace(progressionStatus))
-            throw new ArgumentException("Progression status cannot be null or empty", nameof(progressionStatus));
+            throw new ArgumentException("Progression status cannot be null or empty",
+                nameof(progressionStatus));
 
-        var normalizedStatus = progressionStatus.ToLowerInvariant();
-        if (normalizedStatus != "true" && normalizedStatus != "false" && normalizedStatus != "unknown")
-            throw new ArgumentException("Progression status must be 'true', 'false', or 'unknown'", nameof(progressionStatus));
+        string normalizedStatus = progressionStatus.ToLowerInvariant();
+        if (normalizedStatus != "true" && normalizedStatus != "false" &&
+            normalizedStatus != "unknown")
+            throw new ArgumentException("Progression status must be 'true', 'false', or 'unknown'",
+                nameof(progressionStatus));
 
         _progressionStatus = normalizedStatus;
         return this;
     }
 
     /// <summary>
-    /// Adds a valid until component to the observation
+    ///     Adds a valid until component to the observation
     /// </summary>
     /// <param name="validUntil">The date until which the assessment is valid</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -252,7 +265,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
             {
                 Coding = new List<Coding>
                 {
-                    new Coding
+                    new()
                     {
                         System = "http://thirdopinion.ai/fhir/CodeSystem/psa-components",
                         Code = "valid-until",
@@ -271,7 +284,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Adds a threshold met component to the observation
+    ///     Adds a threshold met component to the observation
     /// </summary>
     /// <param name="thresholdMet">Whether the progression threshold was met</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -283,7 +296,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
             {
                 Coding = new List<Coding>
                 {
-                    new Coding
+                    new()
                     {
                         System = "http://thirdopinion.ai/fhir/CodeSystem/psa-components",
                         Code = "threshold-met",
@@ -299,7 +312,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Adds a detailed analysis note component
+    ///     Adds a detailed analysis note component
     /// </summary>
     /// <param name="note">The analysis note text</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -313,7 +326,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/psa-components",
                             Code = "analysis-note",
@@ -326,11 +339,12 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
 
             _components.Add(component);
         }
+
         return this;
     }
 
     /// <summary>
-    /// Adds a most recent PSA measurement component with observation reference
+    ///     Adds a most recent PSA measurement component with observation reference
     /// </summary>
     /// <param name="mostRecentDateTime">The date/time of the most recent measurement</param>
     /// <param name="mostRecentPsaValueText">The descriptive text for the most recent measurement</param>
@@ -342,8 +356,9 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
         ResourceReference mostRecentDateTimeObservation)
     {
         if (string.IsNullOrWhiteSpace(mostRecentPsaValueText))
-            throw new ArgumentException("Most recent PSA value text cannot be null or empty", nameof(mostRecentPsaValueText));
-        
+            throw new ArgumentException("Most recent PSA value text cannot be null or empty",
+                nameof(mostRecentPsaValueText));
+
         if (mostRecentDateTimeObservation == null)
             throw new ArgumentNullException(nameof(mostRecentDateTimeObservation));
 
@@ -353,7 +368,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
             {
                 Coding = new List<Coding>
                 {
-                    new Coding
+                    new()
                     {
                         System = "https://thirdopinion.io/result-code",
                         Code = "mostRecentMeasurement_v1",
@@ -365,7 +380,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
             Value = new FhirDateTime(mostRecentDateTime),
             Extension = new List<Extension>
             {
-                new Extension
+                new()
                 {
                     Url = "https://thirdopinion.io/fhir/StructureDefinition/source-observation",
                     Value = new ResourceReference
@@ -382,7 +397,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets the effective date/time of this observation
+    ///     Sets the effective date/time of this observation
     /// </summary>
     /// <param name="effectiveDate">The effective date/time</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -393,7 +408,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Sets the effective date/time of this observation
+    ///     Sets the effective date/time of this observation
     /// </summary>
     /// <param name="effectiveDate">The effective date/time as DateTimeOffset</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -404,61 +419,55 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    /// Adds a note to this observation
+    ///     Adds a note to this observation
     /// </summary>
     /// <param name="noteText">The note text</param>
     /// <returns>This builder instance for method chaining</returns>
     public PsaProgressionObservationBuilder AddNote(string noteText)
     {
-        if (!string.IsNullOrWhiteSpace(noteText))
-        {
-            _notes.Add(noteText);
-        }
+        if (!string.IsNullOrWhiteSpace(noteText)) _notes.Add(noteText);
         return this;
     }
 
     /// <summary>
-    /// Sets the AI confidence score for this observation
+    ///     Sets the AI confidence score for this observation
     /// </summary>
     /// <param name="confidence">The confidence score (0.0 to 1.0)</param>
     /// <returns>This builder instance for method chaining</returns>
     public PsaProgressionObservationBuilder WithConfidence(float confidence)
     {
         if (confidence < 0.0f || confidence > 1.0f)
-            throw new ArgumentOutOfRangeException(nameof(confidence), "Confidence must be between 0.0 and 1.0");
+            throw new ArgumentOutOfRangeException(nameof(confidence),
+                "Confidence must be between 0.0 and 1.0");
 
         _confidence = confidence;
         return this;
     }
 
     /// <summary>
-    /// Validates that required fields are set before building
+    ///     Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
     {
         if (_patientReference == null)
-        {
-            throw new InvalidOperationException("Patient reference is required. Call WithPatient() before Build().");
-        }
+            throw new InvalidOperationException(
+                "Patient reference is required. Call WithPatient() before Build().");
 
         if (_deviceReference == null)
-        {
-            throw new InvalidOperationException("Device reference is required. Call WithDevice() before Build().");
-        }
+            throw new InvalidOperationException(
+                "Device reference is required. Call WithDevice() before Build().");
 
         if (string.IsNullOrWhiteSpace(_progressionStatus))
-        {
-            throw new InvalidOperationException("Progression status is required. Call WithProgression() before Build().");
-        }
+            throw new InvalidOperationException(
+                "Progression status is required. Call WithProgression() before Build().");
 
         if (_psaEvidence.Count == 0)
-        {
-            throw new InvalidOperationException("At least one PSA evidence reference is required. Call AddPsaEvidence() before Build().");
-        }
+            throw new InvalidOperationException(
+                "At least one PSA evidence reference is required. Call AddPsaEvidence() before Build().");
     }
 
     /// <summary>
-    /// Builds the PSA Progression Observation
+    ///     Builds the PSA Progression Observation
     /// </summary>
     /// <returns>The completed Observation resource</returns>
     protected override Observation BuildCore()
@@ -473,11 +482,11 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
             // Category: laboratory
             Category = new List<CodeableConcept>
             {
-                new CodeableConcept
+                new()
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://terminology.hl7.org/CodeSystem/observation-category",
                             Code = "laboratory",
@@ -492,7 +501,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
             {
                 Coding = new List<Coding>
                 {
-                    new Coding
+                    new()
                     {
                         System = FhirCodingHelper.Systems.LOINC_SYSTEM,
                         Code = "97509-4",
@@ -520,30 +529,30 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
 
         // Add method based on criteria type
         if (_criteriaType.HasValue && !string.IsNullOrWhiteSpace(_criteriaVersion))
-        {
             observation.Method = CreateMethodForCriteria();
-        }
 
         // Add PSA evidence to derivedFrom with extensions for role and value
         if (_psaEvidence.Any() || DerivedFromReferences.Any())
         {
             observation.DerivedFrom.Clear();
-            
+
             // Add PSA evidence with role and value as extensions
-            foreach (var evidence in _psaEvidence)
+            foreach ((ResourceReference reference, string role, decimal? value, string? unit)
+                     evidence in _psaEvidence)
             {
-                var reference = new ResourceReference(evidence.reference.Reference, evidence.reference.Display);
-                
+                var reference = new ResourceReference(evidence.reference.Reference,
+                    evidence.reference.Display);
+
                 // Add role/type as extension
                 reference.Extension = new List<Extension>
                 {
-                    new Extension
+                    new()
                     {
                         Url = "http://thirdopinion.ai/fhir/StructureDefinition/psa-evidence-role",
                         Value = new FhirString(evidence.role)
                     }
                 };
-                
+
                 // Add value as extension if available
                 if (evidence.value.HasValue)
                 {
@@ -551,7 +560,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
                     {
                         Value = evidence.value.Value
                     };
-                    
+
                     // Add unit information if provided
                     if (!string.IsNullOrWhiteSpace(evidence.unit))
                     {
@@ -559,17 +568,17 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
                         quantity.System = "http://unitsofmeasure.org";
                         quantity.Code = evidence.unit;
                     }
-                    
+
                     reference.Extension.Add(new Extension
                     {
                         Url = "http://thirdopinion.ai/fhir/StructureDefinition/psa-evidence-value",
                         Value = quantity
                     });
                 }
-                
+
                 observation.DerivedFrom.Add(reference);
             }
-            
+
             observation.DerivedFrom.AddRange(DerivedFromReferences);
         }
 
@@ -577,10 +586,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
         AddCalculatedComponents();
 
         // Add all components
-        if (_components.Any())
-        {
-            observation.Component = _components;
-        }
+        if (_components.Any()) observation.Component = _components;
 
         // Add notes
         if (_notes.Any())
@@ -604,18 +610,15 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
             // PCWG3: Calculate from nadir
             _absoluteChange = _currentPsa.Value - _nadirPsa.Value;
             if (_nadirPsa.Value > 0)
-            {
-                _percentageChange = ((_currentPsa.Value - _nadirPsa.Value) / _nadirPsa.Value) * 100;
-            }
+                _percentageChange = (_currentPsa.Value - _nadirPsa.Value) / _nadirPsa.Value * 100;
         }
         else if (_baselinePsa.HasValue && _currentPsa.HasValue)
         {
             // ThirdOpinion.io or fallback: Calculate from baseline
             _absoluteChange = _currentPsa.Value - _baselinePsa.Value;
             if (_baselinePsa.Value > 0)
-            {
-                _percentageChange = ((_currentPsa.Value - _baselinePsa.Value) / _baselinePsa.Value) * 100;
-            }
+                _percentageChange = (_currentPsa.Value - _baselinePsa.Value) / _baselinePsa.Value *
+                                    100;
         }
     }
 
@@ -632,7 +635,8 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
             "unknown" => FhirCodingHelper.CreateSnomedConcept(
                 "261665006",
                 "Unknown"),
-            _ => throw new InvalidOperationException($"Invalid progression status: {_progressionStatus}")
+            _ => throw new InvalidOperationException(
+                $"Invalid progression status: {_progressionStatus}")
         };
     }
 
@@ -643,12 +647,14 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
 
         if (_criteriaType == CriteriaType.PCWG3)
         {
-            code = $"psa-progression-pcwg3-{InferenceId ?? Guid.NewGuid().ToString()}-v{_criteriaVersion}";
+            code
+                = $"psa-progression-pcwg3-{InferenceId ?? Guid.NewGuid().ToString()}-v{_criteriaVersion}";
             display = $"PSA Progression PCWG3 Criteria v{_criteriaVersion}";
         }
         else
         {
-            code = $"psa-progression-{InferenceId ?? Guid.NewGuid().ToString()}-v{_criteriaVersion}";
+            code
+                = $"psa-progression-{InferenceId ?? Guid.NewGuid().ToString()}-v{_criteriaVersion}";
             display = $"PSA Progression ThirdOpinion.io Criteria v{_criteriaVersion}";
         }
 
@@ -656,7 +662,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
         {
             Coding = new List<Coding>
             {
-                new Coding
+                new()
                 {
                     System = Configuration.CriteriaSystem,
                     Code = code,
@@ -671,14 +677,13 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     {
         // Add percentage change component if calculated
         if (_percentageChange.HasValue)
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/psa-components",
                             Code = "percentage-change",
@@ -694,18 +699,16 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
                     Code = "%"
                 }
             });
-        }
 
         // Add absolute change component if calculated
         if (_absoluteChange.HasValue)
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://thirdopinion.ai/fhir/CodeSystem/psa-components",
                             Code = "absolute-change",
@@ -721,10 +724,10 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
                     Code = "ng/mL"
                 }
             });
-        }
 
         // Add threshold analysis for PCWG3 if applicable
-        if (_criteriaType == CriteriaType.PCWG3 && _percentageChange.HasValue && !_components.Any(c => c.Code.Coding.Any(cd => cd.Code == "threshold-met")))
+        if (_criteriaType == CriteriaType.PCWG3 && _percentageChange.HasValue &&
+            !_components.Any(c => c.Code.Coding.Any(cd => cd.Code == "threshold-met")))
         {
             // PCWG3 uses 25% increase from nadir as threshold
             bool meetsThreshold = _percentageChange.Value >= 25;
@@ -733,14 +736,13 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
 
         // Add confidence component if specified
         if (_confidence.HasValue)
-        {
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
                 {
                     Coding = new List<Coding>
                     {
-                        new Coding
+                        new()
                         {
                             System = "http://loinc.org",
                             Code = "LA11892-6",
@@ -757,6 +759,167 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
                     Code = "1"
                 }
             });
+    }
+
+    /// <summary>
+    ///     Builds a FHIR Condition resource for PSA progression when progression is detected
+    /// </summary>
+    /// <param name="observation">The PSA progression observation to reference as evidence</param>
+    /// <returns>A Condition resource indicating PSA progression</returns>
+    public Condition? BuildCondition(Observation observation)
+    {
+        // Only create condition if progression is detected
+        if (_progressionStatus != "true") return null;
+
+        ValidateRequiredFields();
+
+        var condition = new Condition
+        {
+            // Clinical status: active (the progression is currently present)
+            ClinicalStatus = new CodeableConcept
+            {
+                Coding = new List<Coding>
+                {
+                    new()
+                    {
+                        System = "http://terminology.hl7.org/CodeSystem/condition-clinical",
+                        Code = "active",
+                        Display = "Active"
+                    }
+                }
+            },
+
+            // Verification status: confirmed (AI has confirmed the progression)
+            VerificationStatus = new CodeableConcept
+            {
+                Coding = new List<Coding>
+                {
+                    new()
+                    {
+                        System = "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+                        Code = "confirmed",
+                        Display = "Confirmed"
+                    }
+                }
+            },
+
+            // Category: encounter-diagnosis
+            Category = new List<CodeableConcept>
+            {
+                new()
+                {
+                    Coding = new List<Coding>
+                    {
+                        new()
+                        {
+                            System = "http://terminology.hl7.org/CodeSystem/condition-category",
+                            Code = "encounter-diagnosis",
+                            Display = "Encounter Diagnosis"
+                        }
+                    }
+                }
+            },
+
+            // Code: PSA progression using SNOMED codes
+            Code = CreatePsaProgressionConditionCode(),
+
+            // Subject (Patient)
+            Subject = _patientReference,
+
+            // Recorded date
+            RecordedDate = _effectiveDate?.ToString() ??
+                           DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:sszzz"),
+
+            // Recorder (Device)
+            Recorder = _deviceReference
+        };
+
+        // Add observation as evidence
+        condition.Evidence = new List<Condition.EvidenceComponent>
+        {
+            new()
+            {
+                Detail = new List<ResourceReference>
+                {
+                    new()
+                    {
+                        Reference = $"Observation/{observation.Id}",
+                        Display = "PSA Progression Assessment"
+                    }
+                }
+            }
+        };
+
+        // Add AI inference extensions
+        condition.Extension = new List<Extension>();
+
+        // Add confidence as an extension if specified
+        if (_confidence.HasValue)
+            condition.Extension.Add(new Extension(
+                "http://thirdopinion.ai/fhir/StructureDefinition/confidence",
+                new FhirDecimal((decimal)_confidence.Value)));
+
+        // Add criteria extension if specified
+        if (!string.IsNullOrWhiteSpace(CriteriaId))
+        {
+            var criteriaExtension = new Extension
+            {
+                Url = "http://thirdopinion.ai/fhir/StructureDefinition/assessment-criteria"
+            };
+            criteriaExtension.Extension.Add(new Extension("id", new FhirString(CriteriaId)));
+            criteriaExtension.Extension.Add(new Extension("display",
+                new FhirString(CriteriaDisplay ?? "")));
+            condition.Extension.Add(criteriaExtension);
         }
+
+        // Add AI inference marker extension
+        condition.Extension.Add(new Extension(
+            "http://thirdopinion.ai/fhir/StructureDefinition/ai-inferred",
+            new FhirBoolean(true)));
+
+        // Add notes if any
+        if (_notes.Any())
+            condition.Note = _notes.Select(noteText => new Annotation
+            {
+                Time = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:sszzz"),
+                Text = new Markdown(noteText)
+            }).ToList();
+
+        return condition;
+    }
+
+    /// <summary>
+    ///     Builds both the PSA Progression Observation and associated Condition (if progression detected)
+    /// </summary>
+    /// <returns>A tuple containing the Observation and optional Condition</returns>
+    public (Observation observation, Condition? condition) BuildWithCondition()
+    {
+        Observation observation = Build();
+        Condition? condition = BuildCondition(observation);
+
+        return (observation, condition);
+    }
+
+    private CodeableConcept CreatePsaProgressionConditionCode()
+    {
+        return new CodeableConcept
+        {
+            Coding = new List<Coding>
+            {
+                new()
+                {
+                    System = FhirCodingHelper.Systems.SNOMED_SYSTEM,
+                    Code = "428119001",
+                    Display = "Procedure to assess prostate specific antigen progression"
+                },
+                new()
+                {
+                    System = "http://hl7.org/fhir/sid/icd-10-cm",
+                    Code = "R97.21",
+                    Display = "Rising PSA following treatment for malignant neoplasm of prostate"
+                }
+            },
+            Text = "PSA Progression"
+        };
     }
 }

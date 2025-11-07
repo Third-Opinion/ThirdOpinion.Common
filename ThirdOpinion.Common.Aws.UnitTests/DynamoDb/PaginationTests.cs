@@ -13,7 +13,7 @@ public class PaginationTests
         var route = "/users";
 
         // Act
-        var result = PaginationHelper.GetPageUri(parameters, baseUri, route);
+        Uri result = PaginationHelper.GetPageUri(parameters, baseUri, route);
 
         // Assert
         Assert.Equal("https://api.example.com/users?pageNumber=2&pageSize=10", result.ToString());
@@ -30,7 +30,8 @@ public class PaginationTests
         var totalRecords = 25;
 
         // Act
-        var result = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route, totalRecords);
+        PagedResponse<string> result
+            = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route, totalRecords);
 
         // Assert
         result.Items.Count.ShouldBe(3);
@@ -40,7 +41,7 @@ public class PaginationTests
         result.Metadata.TotalPages.ShouldBe(3);
         result.Metadata.HasPrevious.ShouldBeFalse();
         result.Metadata.HasNext.ShouldBeTrue();
-        
+
         // Check links
         result.Metadata.Links.Keys.ShouldContain("nextPage");
         result.Metadata.Links.Keys.ShouldContain("firstPage");
@@ -59,7 +60,8 @@ public class PaginationTests
         var totalRecords = 25;
 
         // Act
-        var result = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route, totalRecords);
+        PagedResponse<string> result
+            = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route, totalRecords);
 
         // Assert
         result.Items.Count.ShouldBe(3);
@@ -69,7 +71,7 @@ public class PaginationTests
         result.Metadata.TotalPages.ShouldBe(3);
         result.Metadata.HasPrevious.ShouldBeTrue();
         result.Metadata.HasNext.ShouldBeTrue();
-        
+
         // Check links
         result.Metadata.Links.Keys.ShouldContain("previousPage");
         result.Metadata.Links.Keys.ShouldContain("nextPage");
@@ -88,7 +90,8 @@ public class PaginationTests
         var totalRecords = 25;
 
         // Act
-        var result = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route, totalRecords);
+        PagedResponse<string> result
+            = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route, totalRecords);
 
         // Assert
         result.Items.Count.ShouldBe(5);
@@ -98,7 +101,7 @@ public class PaginationTests
         result.Metadata.TotalPages.ShouldBe(3);
         result.Metadata.HasPrevious.ShouldBeTrue();
         result.Metadata.HasNext.ShouldBeFalse();
-        
+
         // Check links
         result.Metadata.Links.Keys.ShouldContain("previousPage");
         result.Metadata.Links.Keys.ShouldContain("firstPage");
@@ -117,7 +120,8 @@ public class PaginationTests
         var totalRecords = 0;
 
         // Act
-        var result = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route, totalRecords);
+        PagedResponse<string> result
+            = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route, totalRecords);
 
         // Assert
         result.Items.ShouldBeEmpty();
@@ -140,7 +144,8 @@ public class PaginationTests
         var totalRecords = 3;
 
         // Act
-        var result = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route, totalRecords);
+        PagedResponse<string> result
+            = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route, totalRecords);
 
         // Assert
         result.Items.Count.ShouldBe(3);
@@ -150,7 +155,7 @@ public class PaginationTests
         result.Metadata.TotalPages.ShouldBe(1);
         result.Metadata.HasPrevious.ShouldBeFalse();
         result.Metadata.HasNext.ShouldBeFalse();
-        
+
         // Check links
         result.Metadata.Links.Keys.ShouldContain("firstPage");
         result.Metadata.Links.Keys.ShouldContain("lastPage");
@@ -168,7 +173,8 @@ public class PaginationTests
         var route = "/users";
 
         // Act
-        var result = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route);
+        PagedResponse<string> result
+            = PaginationHelper.CreatePagedResponse(data, parameters, baseUri, route);
 
         // Assert
         result.Items.Count.ShouldBe(3);
@@ -178,7 +184,7 @@ public class PaginationTests
         result.Metadata.TotalPages.ShouldBeNull();
         result.Metadata.HasPrevious.ShouldBeFalse();
         result.Metadata.HasNext.ShouldBeFalse();
-        
+
         // Check links
         result.Metadata.Links.Keys.ShouldContain("firstPage");
         result.Metadata.Links.Keys.ShouldNotContain("lastPage");

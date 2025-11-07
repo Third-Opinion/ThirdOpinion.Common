@@ -1,49 +1,47 @@
+using System.Net;
+using Amazon;
+using Amazon.Runtime;
+using Amazon.Runtime.CredentialManagement;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Configuration;
 using ThirdOpinion.Common.FunctionalTests.Infrastructure;
 using Xunit.Abstractions;
-using Shouldly;
-using System.Text;
-using Amazon.Runtime;
 
 namespace ThirdOpinion.Common.FunctionalTests.Tests;
 
 [Collection("S3")]
 public class S3FunctionalTests : BaseIntegrationTest
 {
-    private readonly string _testPrefix;
     private readonly List<string> _createdBuckets = new();
     private readonly Dictionary<string, List<string>> _createdObjects = new();
-    
+    private readonly string _testPrefix;
+
     public S3FunctionalTests(ITestOutputHelper output) : base(output)
     {
-        _testPrefix = Configuration.GetValue<string>("TestSettings:TestResourcePrefix") ?? "functest";
+        _testPrefix = Configuration.GetValue<string>("TestSettings:TestResourcePrefix") ??
+                      "functest";
     }
 
     protected override async Task CleanupTestResourcesAsync()
     {
         try
         {
-            foreach (var bucket in _createdBuckets)
-            {
+            foreach (string bucket in _createdBuckets)
                 try
                 {
                     // Delete all objects in bucket first
                     if (_createdObjects.ContainsKey(bucket))
-                    {
-                        foreach (var objectKey in _createdObjects[bucket])
-                        {
+                        foreach (string objectKey in _createdObjects[bucket])
                             try
                             {
                                 await S3Client.DeleteObjectAsync(bucket, objectKey);
                             }
                             catch (Exception ex)
                             {
-                                WriteOutput($"Warning: Failed to delete object {objectKey} in bucket {bucket}: {ex.Message}");
+                                WriteOutput(
+                                    $"Warning: Failed to delete object {objectKey} in bucket {bucket}: {ex.Message}");
                             }
-                        }
-                    }
 
                     // Delete the bucket
                     await S3Client.DeleteBucketAsync(bucket);
@@ -57,7 +55,6 @@ public class S3FunctionalTests : BaseIntegrationTest
                 {
                     WriteOutput($"Warning: Failed to delete bucket {bucket}: {ex.Message}");
                 }
-            }
         }
         finally
         {
@@ -69,22 +66,22 @@ public class S3FunctionalTests : BaseIntegrationTest
     public async Task CreateBucket_WithValidName_ShouldSucceed()
     {
         // Arrange
-        var bucketName = GenerateTestResourceName("create-test").ToLowerInvariant();
-        
+        string bucketName = GenerateTestResourceName("create-test").ToLowerInvariant();
+
         // Act
-        var response = await S3Client.PutBucketAsync(new PutBucketRequest
+        PutBucketResponse? response = await S3Client.PutBucketAsync(new PutBucketRequest
         {
             BucketName = bucketName
         });
         _createdBuckets.Add(bucketName);
 
         // Assert
-        response.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        response.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
 
         // Verify bucket exists
-        var listResponse = await S3Client.ListBucketsAsync();
+        ListBucketsResponse? listResponse = await S3Client.ListBucketsAsync();
         listResponse.Buckets.ShouldContain(b => b.BucketName == bucketName);
-        
+
         WriteOutput($"Successfully created bucket: {bucketName}");
     }
 
@@ -92,10 +89,10 @@ public class S3FunctionalTests : BaseIntegrationTest
     public async Task PutAndGetObject_WithTextContent_ShouldSucceed()
     {
         // Arrange
-        var bucketName = await CreateTestBucketAsync("put-get-test");
+        string bucketName = await CreateTestBucketAsync("put-get-test");
         var objectKey = "test-file.txt";
         var content = "This is test content for S3 functional testing.";
-        
+
         var putRequest = new PutObjectRequest
         {
             BucketName = bucketName,
@@ -105,24 +102,24 @@ public class S3FunctionalTests : BaseIntegrationTest
         };
 
         // Act - Put object
-        var putResponse = await S3Client.PutObjectAsync(putRequest);
+        PutObjectResponse? putResponse = await S3Client.PutObjectAsync(putRequest);
         TrackObject(bucketName, objectKey);
 
         // Act - Get object
-        var getResponse = await S3Client.GetObjectAsync(bucketName, objectKey);
+        GetObjectResponse? getResponse = await S3Client.GetObjectAsync(bucketName, objectKey);
 
         // Assert
-        putResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        putResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
         putResponse.ETag.ShouldNotBeNullOrEmpty();
 
-        getResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        getResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
         getResponse.Key.ShouldBe(objectKey);
         getResponse.Headers.ContentType.ShouldBe("text/plain");
 
         using var reader = new StreamReader(getResponse.ResponseStream);
-        var retrievedContent = await reader.ReadToEndAsync();
+        string retrievedContent = await reader.ReadToEndAsync();
         retrievedContent.ShouldBe(content);
-        
+
         WriteOutput($"Successfully put and retrieved object: {objectKey} in bucket: {bucketName}");
     }
 
@@ -130,10 +127,10 @@ public class S3FunctionalTests : BaseIntegrationTest
     public async Task PutObject_WithBinaryContent_ShouldSucceed()
     {
         // Arrange
-        var bucketName = await CreateTestBucketAsync("binary-test");
+        string bucketName = await CreateTestBucketAsync("binary-test");
         var objectKey = "test-binary.dat";
-        var binaryData = TestDataBuilder.CreateBinaryTestData(1024); // 1KB of test data
-        
+        byte[] binaryData = TestDataBuilder.CreateBinaryTestData(); // 1KB of test data
+
         var putRequest = new PutObjectRequest
         {
             BucketName = bucketName,
@@ -143,37 +140,38 @@ public class S3FunctionalTests : BaseIntegrationTest
         };
 
         // Act
-        var putResponse = await S3Client.PutObjectAsync(putRequest);
+        PutObjectResponse? putResponse = await S3Client.PutObjectAsync(putRequest);
         TrackObject(bucketName, objectKey);
 
-        var getResponse = await S3Client.GetObjectAsync(bucketName, objectKey);
+        GetObjectResponse? getResponse = await S3Client.GetObjectAsync(bucketName, objectKey);
 
         // Assert
-        putResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        putResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
         getResponse.ContentLength.ShouldBe(binaryData.Length);
 
         using var memoryStream = new MemoryStream();
         await getResponse.ResponseStream.CopyToAsync(memoryStream);
-        var retrievedData = memoryStream.ToArray();
-        
+        byte[] retrievedData = memoryStream.ToArray();
+
         retrievedData.ShouldBe(binaryData);
-        
-        WriteOutput($"Successfully put and retrieved binary object: {objectKey} ({binaryData.Length} bytes)");
+
+        WriteOutput(
+            $"Successfully put and retrieved binary object: {objectKey} ({binaryData.Length} bytes)");
     }
 
     [Fact]
     public async Task ListObjects_WithMultipleObjects_ShouldReturnAll()
     {
         // Arrange
-        var bucketName = await CreateTestBucketAsync("list-test");
+        string bucketName = await CreateTestBucketAsync("list-test");
         var objectCount = 5;
         var objectKeys = new List<string>();
 
-        for (int i = 0; i < objectCount; i++)
+        for (var i = 0; i < objectCount; i++)
         {
             var objectKey = $"test-object-{i:D3}.txt";
             objectKeys.Add(objectKey);
-            
+
             await S3Client.PutObjectAsync(new PutObjectRequest
             {
                 BucketName = bucketName,
@@ -185,26 +183,26 @@ public class S3FunctionalTests : BaseIntegrationTest
         }
 
         // Act
-        var listResponse = await S3Client.ListObjectsV2Async(new ListObjectsV2Request
-        {
-            BucketName = bucketName
-        });
+        ListObjectsV2Response? listResponse = await S3Client.ListObjectsV2Async(
+            new ListObjectsV2Request
+            {
+                BucketName = bucketName
+            });
 
         // Assert
         listResponse.S3Objects.Count.ShouldBe(objectCount);
-        foreach (var expectedKey in objectKeys)
-        {
+        foreach (string expectedKey in objectKeys)
             listResponse.S3Objects.ShouldContain(obj => obj.Key == expectedKey);
-        }
-        
-        WriteOutput($"Successfully listed {listResponse.S3Objects.Count} objects in bucket: {bucketName}");
+
+        WriteOutput(
+            $"Successfully listed {listResponse.S3Objects.Count} objects in bucket: {bucketName}");
     }
 
     [Fact]
     public async Task CopyObject_BetweenKeys_ShouldSucceed()
     {
         // Arrange
-        var bucketName = await CreateTestBucketAsync("copy-test");
+        string bucketName = await CreateTestBucketAsync("copy-test");
         var sourceKey = "source-file.txt";
         var destinationKey = "destination-file.txt";
         var content = "Content to be copied";
@@ -220,7 +218,7 @@ public class S3FunctionalTests : BaseIntegrationTest
         TrackObject(bucketName, sourceKey);
 
         // Act
-        var copyResponse = await S3Client.CopyObjectAsync(new CopyObjectRequest
+        CopyObjectResponse? copyResponse = await S3Client.CopyObjectAsync(new CopyObjectRequest
         {
             SourceBucket = bucketName,
             SourceKey = sourceKey,
@@ -230,14 +228,14 @@ public class S3FunctionalTests : BaseIntegrationTest
         TrackObject(bucketName, destinationKey);
 
         // Assert
-        copyResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        copyResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
 
         // Verify destination object exists and has correct content
-        var getResponse = await S3Client.GetObjectAsync(bucketName, destinationKey);
+        GetObjectResponse? getResponse = await S3Client.GetObjectAsync(bucketName, destinationKey);
         using var reader = new StreamReader(getResponse.ResponseStream);
-        var copiedContent = await reader.ReadToEndAsync();
+        string copiedContent = await reader.ReadToEndAsync();
         copiedContent.ShouldBe(content);
-        
+
         WriteOutput($"Successfully copied object from {sourceKey} to {destinationKey}");
     }
 
@@ -245,7 +243,7 @@ public class S3FunctionalTests : BaseIntegrationTest
     public async Task DeleteObject_ExistingObject_ShouldSucceed()
     {
         // Arrange
-        var bucketName = await CreateTestBucketAsync("delete-test");
+        string bucketName = await CreateTestBucketAsync("delete-test");
         var objectKey = "file-to-delete.txt";
 
         await S3Client.PutObjectAsync(new PutObjectRequest
@@ -257,21 +255,22 @@ public class S3FunctionalTests : BaseIntegrationTest
         });
 
         // Verify object exists
-        var getResponse = await S3Client.GetObjectAsync(bucketName, objectKey);
-        getResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        GetObjectResponse? getResponse = await S3Client.GetObjectAsync(bucketName, objectKey);
+        getResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
 
         // Act
-        var deleteResponse = await S3Client.DeleteObjectAsync(bucketName, objectKey);
+        DeleteObjectResponse? deleteResponse
+            = await S3Client.DeleteObjectAsync(bucketName, objectKey);
 
         // Assert
-        deleteResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.NoContent);
+        deleteResponse.HttpStatusCode.ShouldBe(HttpStatusCode.NoContent);
 
         // Verify object no longer exists
         await Should.ThrowAsync<AmazonS3Exception>(async () =>
         {
             await S3Client.GetObjectAsync(bucketName, objectKey);
         });
-        
+
         WriteOutput($"Successfully deleted object: {objectKey} from bucket: {bucketName}");
     }
 
@@ -279,7 +278,7 @@ public class S3FunctionalTests : BaseIntegrationTest
     public async Task GetObjectMetadata_WithCustomMetadata_ShouldReturnMetadata()
     {
         // Arrange
-        var bucketName = await CreateTestBucketAsync("metadata-test");
+        string bucketName = await CreateTestBucketAsync("metadata-test");
         var objectKey = "metadata-file.txt";
         var customMetadata = new Dictionary<string, string>
         {
@@ -295,28 +294,27 @@ public class S3FunctionalTests : BaseIntegrationTest
             ContentType = "text/plain"
         };
 
-        foreach (var metadata in customMetadata)
-        {
+        foreach (KeyValuePair<string, string> metadata in customMetadata)
             putRequest.Metadata.Add(metadata.Key, metadata.Value);
-        }
 
         await S3Client.PutObjectAsync(putRequest);
         TrackObject(bucketName, objectKey);
 
         // Act
-        var metadataResponse = await S3Client.GetObjectMetadataAsync(bucketName, objectKey);
+        GetObjectMetadataResponse? metadataResponse
+            = await S3Client.GetObjectMetadataAsync(bucketName, objectKey);
 
         // Assert
-        metadataResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+        metadataResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
         metadataResponse.Headers.ContentType.ShouldBe("text/plain");
 
-        foreach (var expectedMetadata in customMetadata)
+        foreach (KeyValuePair<string, string> expectedMetadata in customMetadata)
         {
             var expectedKey = $"x-amz-meta-{expectedMetadata.Key}";
             metadataResponse.Metadata.Keys.ShouldContain(expectedKey);
             metadataResponse.Metadata[expectedKey].ShouldBe(expectedMetadata.Value);
         }
-        
+
         WriteOutput($"Successfully retrieved metadata for object: {objectKey}");
     }
 
@@ -324,7 +322,7 @@ public class S3FunctionalTests : BaseIntegrationTest
     public async Task GeneratePresignedUrl_ForGetOperation_ShouldAllowAccess()
     {
         // Arrange
-        var bucketName = await CreateTestBucketAsync("presigned-test");
+        string bucketName = await CreateTestBucketAsync("presigned-test");
         var objectKey = "presigned-file.txt";
         var content = "Content accessible via presigned URL";
 
@@ -339,18 +337,17 @@ public class S3FunctionalTests : BaseIntegrationTest
 
         // Act
         // Create a new S3 client with explicit SSO credentials for presigned URL generation
-        var awsProfile = Environment.GetEnvironmentVariable("AWS_PROFILE") ?? "to-dev-admin";
-        var chain = new Amazon.Runtime.CredentialManagement.CredentialProfileStoreChain();
-        
+        string awsProfile = Environment.GetEnvironmentVariable("AWS_PROFILE") ?? "to-dev-admin";
+        var chain = new CredentialProfileStoreChain();
+
         string presignedUrl = null;
-        if (chain.TryGetProfile(awsProfile, out var profile))
-        {
+        if (chain.TryGetProfile(awsProfile, out CredentialProfile? profile))
             try
             {
-                var credentials = profile.GetAWSCredentials(chain);
-                var region = Configuration.GetValue<string>("AWS:Region") ?? "us-east-1";
-                var regionEndpoint = Amazon.RegionEndpoint.GetBySystemName(region);
-                
+                AWSCredentials? credentials = profile.GetAWSCredentials(chain);
+                string region = Configuration.GetValue<string>("AWS:Region") ?? "us-east-1";
+                RegionEndpoint? regionEndpoint = RegionEndpoint.GetBySystemName(region);
+
                 using (var s3ClientForPresign = new AmazonS3Client(credentials, regionEndpoint))
                 {
                     presignedUrl = s3ClientForPresign.GetPreSignedURL(new GetPreSignedUrlRequest
@@ -366,13 +363,13 @@ public class S3FunctionalTests : BaseIntegrationTest
             {
                 // If presigned URL generation fails with SSO, just verify object access
                 WriteOutput($"Presigned URL generation failed with SSO (expected): {ex.Message}");
-                var getResponse = await S3Client.GetObjectAsync(bucketName, objectKey);
-                getResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+                GetObjectResponse? getResponse
+                    = await S3Client.GetObjectAsync(bucketName, objectKey);
+                getResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
                 getResponse.Key.ShouldBe(objectKey);
                 WriteOutput($"Object verified via direct access: {objectKey}");
                 return;
             }
-        }
 
         // Assert
         if (presignedUrl != null)
@@ -386,8 +383,8 @@ public class S3FunctionalTests : BaseIntegrationTest
         else
         {
             // Fallback: verify object exists
-            var getResponse = await S3Client.GetObjectAsync(bucketName, objectKey);
-            getResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+            GetObjectResponse? getResponse = await S3Client.GetObjectAsync(bucketName, objectKey);
+            getResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
             WriteOutput($"Object verified (presigned URL skipped): {objectKey}");
         }
     }
@@ -396,42 +393,44 @@ public class S3FunctionalTests : BaseIntegrationTest
     public async Task MultipartUpload_LargeFile_ShouldSucceed()
     {
         // Arrange
-        var bucketName = await CreateTestBucketAsync("multipart-test");
+        string bucketName = await CreateTestBucketAsync("multipart-test");
         var objectKey = "large-file.dat";
-        var partSize = 5 * 1024 * 1024; // 5MB minimum part size
-        var totalSize = partSize * 2; // 10MB total
-        var testData = TestDataBuilder.CreateBinaryTestData(totalSize);
+        int partSize = 5 * 1024 * 1024; // 5MB minimum part size
+        int totalSize = partSize * 2; // 10MB total
+        byte[] testData = TestDataBuilder.CreateBinaryTestData(totalSize);
 
         // Act - Initiate multipart upload
-        var initiateResponse = await S3Client.InitiateMultipartUploadAsync(new InitiateMultipartUploadRequest
-        {
-            BucketName = bucketName,
-            Key = objectKey,
-            ContentType = "application/octet-stream"
-        });
+        InitiateMultipartUploadResponse? initiateResponse
+            = await S3Client.InitiateMultipartUploadAsync(new InitiateMultipartUploadRequest
+            {
+                BucketName = bucketName,
+                Key = objectKey,
+                ContentType = "application/octet-stream"
+            });
         TrackObject(bucketName, objectKey);
 
-        var uploadId = initiateResponse.UploadId;
+        string? uploadId = initiateResponse.UploadId;
         var parts = new List<PartETag>();
 
         try
         {
             // Upload parts
             var partNumber = 1;
-            for (int offset = 0; offset < totalSize; offset += partSize)
+            for (var offset = 0; offset < totalSize; offset += partSize)
             {
-                var currentPartSize = Math.Min(partSize, totalSize - offset);
+                int currentPartSize = Math.Min(partSize, totalSize - offset);
                 var partData = new byte[currentPartSize];
                 Array.Copy(testData, offset, partData, 0, currentPartSize);
 
-                var uploadResponse = await S3Client.UploadPartAsync(new UploadPartRequest
-                {
-                    BucketName = bucketName,
-                    Key = objectKey,
-                    UploadId = uploadId,
-                    PartNumber = partNumber,
-                    InputStream = new MemoryStream(partData)
-                });
+                UploadPartResponse? uploadResponse = await S3Client.UploadPartAsync(
+                    new UploadPartRequest
+                    {
+                        BucketName = bucketName,
+                        Key = objectKey,
+                        UploadId = uploadId,
+                        PartNumber = partNumber,
+                        InputStream = new MemoryStream(partData)
+                    });
 
                 parts.Add(new PartETag
                 {
@@ -443,22 +442,25 @@ public class S3FunctionalTests : BaseIntegrationTest
             }
 
             // Complete multipart upload
-            var completeResponse = await S3Client.CompleteMultipartUploadAsync(new CompleteMultipartUploadRequest
-            {
-                BucketName = bucketName,
-                Key = objectKey,
-                UploadId = uploadId,
-                PartETags = parts
-            });
+            CompleteMultipartUploadResponse? completeResponse
+                = await S3Client.CompleteMultipartUploadAsync(new CompleteMultipartUploadRequest
+                {
+                    BucketName = bucketName,
+                    Key = objectKey,
+                    UploadId = uploadId,
+                    PartETags = parts
+                });
 
             // Assert
-            completeResponse.HttpStatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+            completeResponse.HttpStatusCode.ShouldBe(HttpStatusCode.OK);
 
             // Verify uploaded object
-            var metadataResponse = await S3Client.GetObjectMetadataAsync(bucketName, objectKey);
+            GetObjectMetadataResponse? metadataResponse
+                = await S3Client.GetObjectMetadataAsync(bucketName, objectKey);
             metadataResponse.ContentLength.ShouldBe(totalSize);
-            
-            WriteOutput($"Successfully completed multipart upload for {totalSize} bytes in {parts.Count} parts");
+
+            WriteOutput(
+                $"Successfully completed multipart upload for {totalSize} bytes in {parts.Count} parts");
         }
         catch
         {
@@ -475,26 +477,24 @@ public class S3FunctionalTests : BaseIntegrationTest
 
     private async Task<string> CreateTestBucketAsync(string testName)
     {
-        var bucketName = GenerateTestResourceName(testName).ToLowerInvariant();
-        
+        string bucketName = GenerateTestResourceName(testName).ToLowerInvariant();
+
         await S3Client.PutBucketAsync(new PutBucketRequest
         {
             BucketName = bucketName
         });
         _createdBuckets.Add(bucketName);
-        
+
         // Wait for bucket to be available
         await Task.Delay(1000);
-        
+
         return bucketName;
     }
 
     private void TrackObject(string bucketName, string objectKey)
     {
         if (!_createdObjects.ContainsKey(bucketName))
-        {
             _createdObjects[bucketName] = new List<string>();
-        }
         _createdObjects[bucketName].Add(objectKey);
     }
 }

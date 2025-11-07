@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <IsPackable>true</IsPackable>
+        <PackageId>ThirdOpinion.Common.Aws.HealthLake</PackageId>
+        <Version>1.0.0-alpha.5</Version>
+        <Authors>ThirdOpinion</Authors>
+        <Company>ThirdOpinion</Company>
+        <Description>AWS HealthLake FHIR datastore integration for ThirdOpinion applications</Description>
+        <PackageTags>aws;healthlake;fhir;hl7</PackageTags>
+        <RepositoryUrl>https://github.com/thirdopinion/common</RepositoryUrl>
+        <TargetFramework>net8.0</TargetFramework>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <NoWarn>1591</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AWSSDK.Core" Version="4.0.1.3"/>
+        <PackageReference Include="AWSSDK.HealthLake" Version="4.0.3.1"/>
+        <PackageReference Include="AwsSignatureVersion4" Version="5.0.1"/>
+        <PackageReference Include="Hl7.Fhir.R4" Version="5.12.2"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.9"/>
+        <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.9"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.9"/>
+        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.9"/>
+        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0"/>
+        <PackageReference Include="Polly" Version="8.5.1"/>
+        <PackageReference Include="System.Threading.RateLimiting" Version="9.0.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
+
+</Project>

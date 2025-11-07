@@ -9,10 +9,10 @@ namespace ThirdOpinion.Common.Fhir.UnitTests.Builders.Observations;
 
 public class PsaProgressionObservationBuilderTests
 {
-    private readonly AiInferenceConfiguration _configuration;
-    private readonly ResourceReference _patientReference;
-    private readonly ResourceReference _deviceReference;
     private readonly ResourceReference _conditionReference;
+    private readonly AiInferenceConfiguration _configuration;
+    private readonly ResourceReference _deviceReference;
+    private readonly ResourceReference _patientReference;
 
     public PsaProgressionObservationBuilderTests()
     {
@@ -31,13 +31,13 @@ public class PsaProgressionObservationBuilderTests
         var psaCurrent = new ResourceReference("Observation/psa-current", "Current PSA");
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_conditionReference)
             .WithCriteria(CriteriaType.PCWG3, "1.0")
             .AddPsaEvidence(psaNadir, "nadir", 2.0m)
-            .AddPsaEvidence(psaCurrent, "current", 3.5m)  // 75% increase from nadir
+            .AddPsaEvidence(psaCurrent, "current", 3.5m) // 75% increase from nadir
             .WithProgression("true")
             .WithEffectiveDate(new DateTime(2024, 1, 15))
             .Build();
@@ -72,32 +72,36 @@ public class PsaProgressionObservationBuilderTests
 
         // Check PSA evidence in derivedFrom
         observation.DerivedFrom.Count.ShouldBe(2);
-        
+
         // Check nadir reference
         observation.DerivedFrom[0].Reference.ShouldBe(psaNadir.Reference);
         observation.DerivedFrom[0].Display.ShouldBe(psaNadir.Display);
         observation.DerivedFrom[0].Extension.ShouldNotBeNull();
         observation.DerivedFrom[0].Extension.Count.ShouldBe(2); // role + value
-        
-        var nadirRoleExt = observation.DerivedFrom[0].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-role"));
+
+        Extension? nadirRoleExt = observation.DerivedFrom[0].Extension
+            .FirstOrDefault(e => e.Url.Contains("psa-evidence-role"));
         nadirRoleExt.ShouldNotBeNull();
         ((FhirString)nadirRoleExt.Value).Value.ShouldBe("nadir");
-        
-        var nadirValueExt = observation.DerivedFrom[0].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
+
+        Extension? nadirValueExt = observation.DerivedFrom[0].Extension
+            .FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
         nadirValueExt.ShouldNotBeNull();
         ((Quantity)nadirValueExt.Value).Value.ShouldBe(2.0m);
-        
+
         // Check current reference
         observation.DerivedFrom[1].Reference.ShouldBe(psaCurrent.Reference);
         observation.DerivedFrom[1].Display.ShouldBe(psaCurrent.Display);
         observation.DerivedFrom[1].Extension.ShouldNotBeNull();
         observation.DerivedFrom[1].Extension.Count.ShouldBe(2); // role + value
-        
-        var currentRoleExt = observation.DerivedFrom[1].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-role"));
+
+        Extension? currentRoleExt = observation.DerivedFrom[1].Extension
+            .FirstOrDefault(e => e.Url.Contains("psa-evidence-role"));
         currentRoleExt.ShouldNotBeNull();
         ((FhirString)currentRoleExt.Value).Value.ShouldBe("current");
-        
-        var currentValueExt = observation.DerivedFrom[1].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
+
+        Extension? currentValueExt = observation.DerivedFrom[1].Extension
+            .FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
         currentValueExt.ShouldNotBeNull();
         ((Quantity)currentValueExt.Value).Value.ShouldBe(3.5m);
 
@@ -105,24 +109,27 @@ public class PsaProgressionObservationBuilderTests
         observation.Component.ShouldNotBeNull();
 
         // Should have percentage change component
-        var percentageComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "percentage-change"));
+        Observation.ComponentComponent? percentageComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "percentage-change"));
         percentageComponent.ShouldNotBeNull();
         var percentageValue = percentageComponent.Value as Quantity;
         percentageValue.ShouldNotBeNull();
         percentageValue.Value.ShouldBe(75m); // (3.5 - 2.0) / 2.0 * 100 = 75%
 
         // Should have absolute change component
-        var absoluteComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "absolute-change"));
+        Observation.ComponentComponent? absoluteComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "absolute-change"));
         absoluteComponent.ShouldNotBeNull();
         var absoluteValue = absoluteComponent.Value as Quantity;
         absoluteValue.ShouldNotBeNull();
         absoluteValue.Value.ShouldBe(1.5m); // 3.5 - 2.0 = 1.5
 
         // Should have threshold met component (75% > 25% threshold)
-        var thresholdComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "threshold-met"));
+        Observation.ComponentComponent? thresholdComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "threshold-met"));
         thresholdComponent.ShouldNotBeNull();
         var thresholdValue = thresholdComponent.Value as FhirBoolean;
         thresholdValue.ShouldNotBeNull();
@@ -138,12 +145,12 @@ public class PsaProgressionObservationBuilderTests
         var psaCurrent = new ResourceReference("Observation/psa-current", "Current PSA");
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient("patient-123", "John Doe")
             .WithDevice("device-456", "Analysis AI")
             .WithCriteria(CriteriaType.ThirdOpinionIO, "2.0")
             .AddPsaEvidence(psaBaseline, "baseline", 5.0m)
-            .AddPsaEvidence(psaCurrent, "current", 6.0m)  // 20% increase
+            .AddPsaEvidence(psaCurrent, "current", 6.0m) // 20% increase
             .WithProgression("false") // Not considered progression
             .Build();
 
@@ -158,8 +165,9 @@ public class PsaProgressionObservationBuilderTests
         valueCodeableConcept.Coding[0].Code.ShouldBe("359746009"); // Stable disease
 
         // Check percentage calculation
-        var percentageComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "percentage-change"));
+        Observation.ComponentComponent? percentageComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "percentage-change"));
         var percentageValue = percentageComponent?.Value as Quantity;
         percentageValue.ShouldNotBeNull();
         percentageValue.Value.ShouldBe(20m); // (6.0 - 5.0) / 5.0 * 100 = 20%
@@ -172,7 +180,7 @@ public class PsaProgressionObservationBuilderTests
         var builder = new PsaProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/1"), "baseline", 4.5m)
@@ -183,14 +191,16 @@ public class PsaProgressionObservationBuilderTests
             .Build();
 
         // Assert - PCWG3 calculates from nadir
-        var percentageComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "percentage-change"));
+        Observation.ComponentComponent? percentageComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "percentage-change"));
         var percentageValue = percentageComponent?.Value as Quantity;
         percentageValue.ShouldNotBeNull();
         percentageValue.Value.ShouldBe(100m); // (2.4 - 1.2) / 1.2 * 100 = 100%
 
-        var absoluteComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "absolute-change"));
+        Observation.ComponentComponent? absoluteComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "absolute-change"));
         var absoluteValue = absoluteComponent?.Value as Quantity;
         absoluteValue.ShouldNotBeNull();
         absoluteValue.Value.ShouldBe(1.2m); // 2.4 - 1.2 = 1.2
@@ -205,7 +215,7 @@ public class PsaProgressionObservationBuilderTests
         var condition2 = new ResourceReference("Condition/2", "Metastatic Disease");
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(condition1, condition2)
@@ -228,7 +238,7 @@ public class PsaProgressionObservationBuilderTests
         var validUntil = new DateTime(2024, 6, 30);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
@@ -237,8 +247,9 @@ public class PsaProgressionObservationBuilderTests
             .Build();
 
         // Assert
-        var validUntilComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "valid-until"));
+        Observation.ComponentComponent? validUntilComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "valid-until"));
         validUntilComponent.ShouldNotBeNull();
         var period = validUntilComponent.Value as Period;
         period.ShouldNotBeNull();
@@ -252,7 +263,7 @@ public class PsaProgressionObservationBuilderTests
         var builder = new PsaProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
@@ -261,8 +272,9 @@ public class PsaProgressionObservationBuilderTests
             .Build();
 
         // Assert
-        var thresholdComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "threshold-met"));
+        Observation.ComponentComponent? thresholdComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "threshold-met"));
         thresholdComponent.ShouldNotBeNull();
         var boolValue = thresholdComponent.Value as FhirBoolean;
         boolValue.ShouldNotBeNull();
@@ -277,7 +289,7 @@ public class PsaProgressionObservationBuilderTests
         var analysisNote = "PSA velocity exceeds expected range based on treatment response";
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
@@ -286,8 +298,9 @@ public class PsaProgressionObservationBuilderTests
             .Build();
 
         // Assert
-        var analysisComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "analysis-note"));
+        Observation.ComponentComponent? analysisComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "analysis-note"));
         analysisComponent.ShouldNotBeNull();
         var stringValue = analysisComponent.Value as FhirString;
         stringValue.ShouldNotBeNull();
@@ -413,7 +426,7 @@ public class PsaProgressionObservationBuilderTests
         var builder = new PsaProgressionObservationBuilder(_configuration);
 
         // Act - 30% increase, above PCWG3 25% threshold
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithCriteria(CriteriaType.PCWG3, "1.0")
@@ -423,8 +436,9 @@ public class PsaProgressionObservationBuilderTests
             .Build();
 
         // Assert
-        var thresholdComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "threshold-met"));
+        Observation.ComponentComponent? thresholdComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "threshold-met"));
         thresholdComponent.ShouldNotBeNull();
         var boolValue = thresholdComponent.Value as FhirBoolean;
         boolValue.Value.ShouldBe(true); // 30% > 25% threshold
@@ -437,7 +451,7 @@ public class PsaProgressionObservationBuilderTests
         var builder = new PsaProgressionObservationBuilder(_configuration);
 
         // Act - 20% increase, below PCWG3 25% threshold
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithCriteria(CriteriaType.PCWG3, "1.0")
@@ -447,8 +461,9 @@ public class PsaProgressionObservationBuilderTests
             .Build();
 
         // Assert
-        var thresholdComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "threshold-met"));
+        Observation.ComponentComponent? thresholdComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "threshold-met"));
         thresholdComponent.ShouldNotBeNull();
         var boolValue = thresholdComponent.Value as FhirBoolean;
         boolValue.Value.ShouldBe(false); // 20% < 25% threshold
@@ -458,7 +473,7 @@ public class PsaProgressionObservationBuilderTests
     public void FluentInterface_SupportsCompleteChaining()
     {
         // Arrange & Act
-        var observation = new PsaProgressionObservationBuilder(_configuration)
+        Observation observation = new PsaProgressionObservationBuilder(_configuration)
             .WithInferenceId("psa-prog-001")
             .WithPatient("Patient/p123", "Jane Smith")
             .WithDevice("Device/d456", "PSA Analyzer")
@@ -490,7 +505,7 @@ public class PsaProgressionObservationBuilderTests
     {
         // Arrange
         var builder = new PsaProgressionObservationBuilder(_configuration);
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithCriteria(CriteriaType.PCWG3, "1.0")
@@ -503,7 +518,7 @@ public class PsaProgressionObservationBuilderTests
 
         // Act
         var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
-        var json = serializer.SerializeToString(observation);
+        string json = serializer.SerializeToString(observation);
 
         // Assert
         json.ShouldNotBeNullOrEmpty();
@@ -532,7 +547,7 @@ public class PsaProgressionObservationBuilderTests
         var builder = new PsaProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
@@ -556,7 +571,7 @@ public class PsaProgressionObservationBuilderTests
         var builder = new PsaProgressionObservationBuilder(_configuration);
 
         // Act - baseline is 0, should handle division by zero
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/baseline"), "baseline", 0m)
@@ -565,16 +580,222 @@ public class PsaProgressionObservationBuilderTests
             .Build();
 
         // Assert - Should have absolute change but no percentage change
-        var absoluteComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "absolute-change"));
+        Observation.ComponentComponent? absoluteComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "absolute-change"));
         absoluteComponent.ShouldNotBeNull();
         var absoluteValue = absoluteComponent.Value as Quantity;
         absoluteValue.Value.ShouldBe(2.0m);
 
         // Percentage component should not be added when baseline is 0
-        var percentageComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "percentage-change"));
+        Observation.ComponentComponent? percentageComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "percentage-change"));
         percentageComponent.ShouldBeNull();
+    }
+
+    [Fact]
+    public void BuildCondition_WithProgression_CreatesCorrectCondition()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_conditionReference)
+            .WithCriteria(CriteriaType.PCWG3, "3.0")
+            .AddPsaEvidence(new ResourceReference("Observation/psa-nadir"), "nadir", 2.0m)
+            .AddPsaEvidence(new ResourceReference("Observation/psa-current"), "current", 3.5m)
+            .WithProgression("true")
+            .WithEffectiveDate(new DateTime(2024, 1, 15))
+            .WithConfidence(0.85f)
+            .AddNote("PSA progression detected")
+            .Build();
+
+        // Act
+        Condition? condition = builder.BuildCondition(observation);
+
+        // Assert
+        condition.ShouldNotBeNull();
+        condition.ClinicalStatus.Coding[0].Code.ShouldBe("active");
+        condition.VerificationStatus.Coding[0].Code.ShouldBe("confirmed");
+
+        // Check category
+        condition.Category.ShouldHaveSingleItem();
+        condition.Category[0].Coding[0].Code.ShouldBe("encounter-diagnosis");
+
+        // Check SNOMED code for PSA progression
+        condition.Code.Coding.ShouldContain(c =>
+            c.System == FhirCodingHelper.Systems.SNOMED_SYSTEM);
+        Coding? snomedCode
+            = condition.Code.Coding.First(c => c.System == FhirCodingHelper.Systems.SNOMED_SYSTEM);
+        snomedCode.Code.ShouldBe("428119001");
+        snomedCode.Display.ShouldBe("Procedure to assess prostate specific antigen progression");
+
+        // Check ICD-10 code
+        condition.Code.Coding.ShouldContain(c => c.System == "http://hl7.org/fhir/sid/icd-10-cm");
+        Coding? icd10Code
+            = condition.Code.Coding.First(c => c.System == "http://hl7.org/fhir/sid/icd-10-cm");
+        icd10Code.Code.ShouldBe("R97.21");
+        icd10Code.Display.ShouldBe(
+            "Rising PSA following treatment for malignant neoplasm of prostate");
+
+        // Check text
+        condition.Code.Text.ShouldBe("PSA Progression");
+
+        // Check subject and recorder
+        condition.Subject.ShouldBe(_patientReference);
+        condition.Recorder.ShouldBe(_deviceReference);
+
+        // Check evidence references the observation
+        condition.Evidence.ShouldNotBeNull();
+        condition.Evidence.Count.ShouldBe(1);
+        condition.Evidence[0].Detail.Count.ShouldBe(1);
+        condition.Evidence[0].Detail[0].Reference.ShouldBe($"Observation/{observation.Id}");
+        condition.Evidence[0].Detail[0].Display.ShouldBe("PSA Progression Assessment");
+
+        // Check AI inference extension
+        condition.Extension.ShouldNotBeNull();
+        Extension? aiInferredExtension = condition.Extension.FirstOrDefault(e =>
+            e.Url == "http://thirdopinion.ai/fhir/StructureDefinition/ai-inferred");
+        aiInferredExtension.ShouldNotBeNull();
+        var aiInferredValue = aiInferredExtension.Value as FhirBoolean;
+        aiInferredValue.ShouldNotBeNull();
+        aiInferredValue.Value.ShouldBe(true);
+
+        // Check confidence extension
+        Extension? confidenceExtension = condition.Extension.FirstOrDefault(e =>
+            e.Url == "http://thirdopinion.ai/fhir/StructureDefinition/confidence");
+        confidenceExtension.ShouldNotBeNull();
+        var confidenceValue = confidenceExtension.Value as FhirDecimal;
+        confidenceValue.ShouldNotBeNull();
+        confidenceValue.Value.ShouldBe(0.85m);
+
+        // Check notes
+        condition.Note.ShouldNotBeNull();
+        condition.Note.Count.ShouldBe(1);
+        condition.Note[0].Text.ShouldBe("PSA progression detected");
+    }
+
+    [Fact]
+    public void BuildCondition_WithoutProgression_ReturnsNull()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_conditionReference)
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 2.0m)
+            .WithProgression("false") // No progression
+            .Build();
+
+        // Act
+        Condition? condition = builder.BuildCondition(observation);
+
+        // Assert
+        condition.ShouldBeNull();
+    }
+
+    [Fact]
+    public void BuildWithCondition_WithProgression_ReturnsBothResources()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+
+        // Act
+        (Observation observation, Condition? condition) = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_conditionReference)
+            .WithCriteria(CriteriaType.ThirdOpinionIO, "2.0")
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
+            .WithProgression("true")
+            .WithConfidence(0.92f)
+            .BuildWithCondition();
+
+        // Assert
+        observation.ShouldNotBeNull();
+        condition.ShouldNotBeNull();
+
+        // Verify observation
+        observation.Status.ShouldBe(ObservationStatus.Final);
+        var progressionValue = observation.Value as CodeableConcept;
+        progressionValue.Coding[0].Code.ShouldBe("277022003"); // Progressive disease
+
+        // Verify condition
+        condition.ClinicalStatus.Coding[0].Code.ShouldBe("active");
+        condition.Evidence[0].Detail[0].Reference.ShouldBe($"Observation/{observation.Id}");
+
+        // Both should have same confidence
+        var obsConfidence = observation.Component.FirstOrDefault(c =>
+            c.Code.Text == "AI Confidence Score")?.Value as Quantity;
+        var condConfidence = condition.Extension.FirstOrDefault(e =>
+                e.Url == "http://thirdopinion.ai/fhir/StructureDefinition/confidence")
+            ?.Value as FhirDecimal;
+
+        obsConfidence.ShouldNotBeNull();
+        condConfidence.ShouldNotBeNull();
+        condConfidence.Value.ShouldBe(0.92m);
+    }
+
+    [Fact]
+    public void BuildWithCondition_WithoutProgression_ReturnsObservationOnly()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+
+        // Act
+        (Observation observation, Condition? condition) = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 2.0m)
+            .WithProgression("false") // No progression
+            .BuildWithCondition();
+
+        // Assert
+        observation.ShouldNotBeNull();
+        condition.ShouldBeNull();
+
+        // Verify observation shows stable disease
+        var stableValue = observation.Value as CodeableConcept;
+        stableValue.Coding[0].Code.ShouldBe("359746009"); // Stable disease
+    }
+
+    [Fact]
+    public void BuildCondition_WithCriteriaExtension_IncludesCriteriaInCondition()
+    {
+        // Arrange
+        var builder = new PsaProgressionObservationBuilder(_configuration);
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithCriteria("test-criteria-id", "Test Criteria Display")
+            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
+            .WithProgression("true")
+            .Build();
+
+        // Act
+        Condition? condition = builder.BuildCondition(observation);
+
+        // Assert
+        condition.ShouldNotBeNull();
+        condition.Extension.ShouldNotBeNull();
+
+        Extension? criteriaExtension = condition.Extension.FirstOrDefault(e =>
+            e.Url == "http://thirdopinion.ai/fhir/StructureDefinition/assessment-criteria");
+        criteriaExtension.ShouldNotBeNull();
+
+        Extension? idExtension = criteriaExtension.Extension.FirstOrDefault(e => e.Url == "id");
+        idExtension.ShouldNotBeNull();
+        var idValue = idExtension.Value as FhirString;
+        idValue.Value.ShouldBe("test-criteria-id");
+
+        Extension? displayExtension
+            = criteriaExtension.Extension.FirstOrDefault(e => e.Url == "display");
+        displayExtension.ShouldNotBeNull();
+        var displayValue = displayExtension.Value as FhirString;
+        displayValue.Value.ShouldBe("Test Criteria Display");
     }
 
     [Fact]
@@ -584,7 +805,7 @@ public class PsaProgressionObservationBuilderTests
         var builder = new PsaProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
@@ -643,7 +864,7 @@ public class PsaProgressionObservationBuilderTests
         var builder3 = new PsaProgressionObservationBuilder(_configuration);
 
         // Act & Assert - Should accept various cases
-        var obs1 = builder1
+        Observation obs1 = builder1
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
@@ -652,7 +873,7 @@ public class PsaProgressionObservationBuilderTests
         var value1 = obs1.Value as CodeableConcept;
         value1?.Coding[0].Code.ShouldBe("277022003"); // Progressive disease
 
-        var obs2 = builder2
+        Observation obs2 = builder2
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
@@ -661,7 +882,7 @@ public class PsaProgressionObservationBuilderTests
         var value2 = obs2.Value as CodeableConcept;
         value2?.Coding[0].Code.ShouldBe("359746009"); // Stable disease
 
-        var obs3 = builder3
+        Observation obs3 = builder3
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
@@ -678,7 +899,7 @@ public class PsaProgressionObservationBuilderTests
         var builder = new PsaProgressionObservationBuilder(_configuration);
 
         // Act - Use custom unit
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa1"), "baseline", 4.5m, "ug/L")
@@ -688,7 +909,8 @@ public class PsaProgressionObservationBuilderTests
 
         // Assert - Check custom unit is preserved
         observation.DerivedFrom[0].Extension.ShouldNotBeNull();
-        var valueExt1 = observation.DerivedFrom[0].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
+        Extension? valueExt1 = observation.DerivedFrom[0].Extension
+            .FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
         valueExt1.ShouldNotBeNull();
         var quantity1 = valueExt1.Value as Quantity;
         quantity1.ShouldNotBeNull();
@@ -697,7 +919,8 @@ public class PsaProgressionObservationBuilderTests
         quantity1.Code.ShouldBe("ug/L");
 
         observation.DerivedFrom[1].Extension.ShouldNotBeNull();
-        var valueExt2 = observation.DerivedFrom[1].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
+        Extension? valueExt2 = observation.DerivedFrom[1].Extension
+            .FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
         valueExt2.ShouldNotBeNull();
         var quantity2 = valueExt2.Value as Quantity;
         quantity2.ShouldNotBeNull();
@@ -713,7 +936,7 @@ public class PsaProgressionObservationBuilderTests
         var builder = new PsaProgressionObservationBuilder(_configuration);
 
         // Act - Don't specify unit, should default to ng/mL
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
@@ -721,7 +944,8 @@ public class PsaProgressionObservationBuilderTests
             .Build();
 
         // Assert - Check default unit is ng/mL
-        var valueExt = observation.DerivedFrom[0].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
+        Extension? valueExt = observation.DerivedFrom[0].Extension
+            .FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
         valueExt.ShouldNotBeNull();
         var quantity = valueExt.Value as Quantity;
         quantity.ShouldNotBeNull();
@@ -737,7 +961,7 @@ public class PsaProgressionObservationBuilderTests
         var builder = new PsaProgressionObservationBuilder(_configuration);
 
         // Act - Explicitly pass null for unit
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m, null)
@@ -745,7 +969,8 @@ public class PsaProgressionObservationBuilderTests
             .Build();
 
         // Assert - Check no unit information is present
-        var valueExt = observation.DerivedFrom[0].Extension.FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
+        Extension? valueExt = observation.DerivedFrom[0].Extension
+            .FirstOrDefault(e => e.Url.Contains("psa-evidence-value"));
         valueExt.ShouldNotBeNull();
         var quantity = valueExt.Value as Quantity;
         quantity.ShouldNotBeNull();
@@ -761,11 +986,13 @@ public class PsaProgressionObservationBuilderTests
         // Arrange
         var builder = new PsaProgressionObservationBuilder(_configuration);
         var mostRecentDate = new DateTime(2025, 1, 1);
-        var mostRecentText = "The most recent result used in the analysis is 2025-01-01 with a value of 7 ng/mL";
-        var mostRecentObservation = new ResourceReference("Observation/some-measurement-3", "Most Recent PSA");
+        var mostRecentText
+            = "The most recent result used in the analysis is 2025-01-01 with a value of 7 ng/mL";
+        var mostRecentObservation
+            = new ResourceReference("Observation/some-measurement-3", "Most Recent PSA");
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
@@ -775,27 +1002,30 @@ public class PsaProgressionObservationBuilderTests
 
         // Assert
         observation.Component.ShouldNotBeNull();
-        var mostRecentComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "mostRecentMeasurement_v1"));
-        
+        Observation.ComponentComponent? mostRecentComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "mostRecentMeasurement_v1"));
+
         mostRecentComponent.ShouldNotBeNull();
-        
+
         // Verify code
         mostRecentComponent.Code.Coding[0].System.ShouldBe("https://thirdopinion.io/result-code");
         mostRecentComponent.Code.Coding[0].Code.ShouldBe("mostRecentMeasurement_v1");
-        mostRecentComponent.Code.Coding[0].Display.ShouldBe("The most recent measurement used in the analysis");
+        mostRecentComponent.Code.Coding[0].Display
+            .ShouldBe("The most recent measurement used in the analysis");
         mostRecentComponent.Code.Text.ShouldBe(mostRecentText);
-        
+
         // Verify value
         var dateTimeValue = mostRecentComponent.Value as FhirDateTime;
         dateTimeValue.ShouldNotBeNull();
         dateTimeValue.Value.ShouldStartWith("2025-01-01");
-        
+
         // Verify extension
         mostRecentComponent.Extension.ShouldNotBeNull();
         mostRecentComponent.Extension.Count.ShouldBe(1);
-        mostRecentComponent.Extension[0].Url.ShouldBe("https://thirdopinion.io/fhir/StructureDefinition/source-observation");
-        
+        mostRecentComponent.Extension[0].Url
+            .ShouldBe("https://thirdopinion.io/fhir/StructureDefinition/source-observation");
+
         var extensionReference = mostRecentComponent.Extension[0].Value as ResourceReference;
         extensionReference.ShouldNotBeNull();
         extensionReference.Reference.ShouldBe("Observation/some-measurement-3");
@@ -813,7 +1043,7 @@ public class PsaProgressionObservationBuilderTests
         // Act & Assert
         var exception = Should.Throw<ArgumentException>(() =>
             builder.WithMostRecentPsaValue(mostRecentDate, null!, mostRecentObservation));
-        
+
         exception.Message.ShouldContain("Most recent PSA value text cannot be null or empty");
     }
 
@@ -828,7 +1058,7 @@ public class PsaProgressionObservationBuilderTests
         // Act & Assert
         var exception = Should.Throw<ArgumentException>(() =>
             builder.WithMostRecentPsaValue(mostRecentDate, "", mostRecentObservation));
-        
+
         exception.Message.ShouldContain("Most recent PSA value text cannot be null or empty");
     }
 
@@ -838,7 +1068,8 @@ public class PsaProgressionObservationBuilderTests
         // Arrange
         var builder = new PsaProgressionObservationBuilder(_configuration);
         var mostRecentDate = new DateTime(2025, 1, 1);
-        var mostRecentText = "The most recent result used in the analysis is 2025-01-01 with a value of 7 ng/mL";
+        var mostRecentText
+            = "The most recent result used in the analysis is 2025-01-01 with a value of 7 ng/mL";
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
@@ -849,7 +1080,7 @@ public class PsaProgressionObservationBuilderTests
     public void WithMostRecentPsaValue_IntegratesWithCompleteBuilder()
     {
         // Arrange & Act
-        var observation = new PsaProgressionObservationBuilder(_configuration)
+        Observation observation = new PsaProgressionObservationBuilder(_configuration)
             .WithPatient("Patient/p123", "Jane Smith")
             .WithDevice("Device/d456", "PSA Analyzer")
             .WithFocus(_conditionReference)
@@ -868,23 +1099,27 @@ public class PsaProgressionObservationBuilderTests
         // Assert
         observation.ShouldNotBeNull();
         observation.Component.ShouldNotBeNull();
-        
+
         // Verify most recent component exists alongside other components
-        var mostRecentComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "mostRecentMeasurement_v1"));
+        Observation.ComponentComponent? mostRecentComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "mostRecentMeasurement_v1"));
         mostRecentComponent.ShouldNotBeNull();
-        
+
         // Verify other components still exist
-        var percentageComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "percentage-change"));
+        Observation.ComponentComponent? percentageComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "percentage-change"));
         percentageComponent.ShouldNotBeNull();
-        
-        var validUntilComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "valid-until"));
+
+        Observation.ComponentComponent? validUntilComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "valid-until"));
         validUntilComponent.ShouldNotBeNull();
-        
-        var analysisComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "analysis-note"));
+
+        Observation.ComponentComponent? analysisComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "analysis-note"));
         analysisComponent.ShouldNotBeNull();
     }
 
@@ -893,7 +1128,7 @@ public class PsaProgressionObservationBuilderTests
     {
         // Arrange
         var builder = new PsaProgressionObservationBuilder(_configuration);
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 7.0m)
@@ -906,7 +1141,7 @@ public class PsaProgressionObservationBuilderTests
 
         // Act
         var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
-        var json = serializer.SerializeToString(observation);
+        string json = serializer.SerializeToString(observation);
 
         // Assert
         json.ShouldNotBeNullOrEmpty();
@@ -922,9 +1157,10 @@ public class PsaProgressionObservationBuilderTests
         var parser = new FhirJsonParser();
         var deserializedObs = parser.Parse<Observation>(json);
         deserializedObs.ShouldNotBeNull();
-        
-        var mostRecentComponent = deserializedObs.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "mostRecentMeasurement_v1"));
+
+        Observation.ComponentComponent? mostRecentComponent
+            = deserializedObs.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "mostRecentMeasurement_v1"));
         mostRecentComponent.ShouldNotBeNull();
         mostRecentComponent.Extension.Count.ShouldBe(1);
     }

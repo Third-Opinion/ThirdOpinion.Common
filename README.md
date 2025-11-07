@@ -5,12 +5,14 @@ A comprehensive .NET library providing common utilities and AWS service integrat
 ## Features
 
 ### AWS Service Integration
+
 - **Amazon S3**: File storage and retrieval utilities
 - **Amazon DynamoDB**: Repository patterns and type converters
 - **Amazon SQS**: Message queue management and handlers
 - **Amazon Cognito**: Authentication and authorization utilities
 
 ### Utilities
+
 - String extensions and manipulations
 - Patient matching algorithms
 - Common data models and helpers
@@ -48,6 +50,7 @@ services.AddCognito();
 ### Examples
 
 #### S3 Storage
+
 ```csharp
 public class FileService
 {
@@ -66,6 +69,7 @@ public class FileService
 ```
 
 #### DynamoDB Repository
+
 ```csharp
 public class UserRepository : IDynamoDbRepository<User>
 {
@@ -84,6 +88,7 @@ public class UserRepository : IDynamoDbRepository<User>
 ```
 
 #### SQS Message Queue
+
 ```csharp
 public class NotificationService
 {

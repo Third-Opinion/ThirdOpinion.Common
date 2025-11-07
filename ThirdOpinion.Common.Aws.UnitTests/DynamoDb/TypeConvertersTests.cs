@@ -21,7 +21,7 @@ public class TypeConvertersTests
         var enumValue = TestEnum.Second;
 
         // Act
-        var result = converter.ToEntry(enumValue);
+        DynamoDBEntry result = converter.ToEntry(enumValue);
 
         // Assert
         var primitive = result.ShouldBeOfType<Primitive>();
@@ -35,7 +35,7 @@ public class TypeConvertersTests
         var converter = new EnumConverter<TestEnum>();
 
         // Act
-        var result = converter.ToEntry(null);
+        DynamoDBEntry result = converter.ToEntry(null);
 
         // Assert
         var primitive = result.ShouldBeOfType<Primitive>();
@@ -50,7 +50,8 @@ public class TypeConvertersTests
         var invalidValue = "not an enum";
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.ToEntry(invalidValue));
+        var exception
+            = Should.Throw<ArgumentException>(() => converter.ToEntry(invalidValue));
         exception.Message.ShouldBe("Value must be an enum or null");
     }
 
@@ -62,7 +63,7 @@ public class TypeConvertersTests
         var primitive = new Primitive { Value = "Third" };
 
         // Act
-        var result = converter.FromEntry(primitive);
+        object result = converter.FromEntry(primitive);
 
         // Assert
         result.ShouldBe(TestEnum.Third);
@@ -75,7 +76,7 @@ public class TypeConvertersTests
         var converter = new EnumConverter<TestEnum>();
 
         // Act
-        var result = converter.FromEntry(null);
+        object result = converter.FromEntry(null);
 
         // Assert
         result.ShouldBeNull();
@@ -89,7 +90,7 @@ public class TypeConvertersTests
         var primitive = new Primitive { Value = null };
 
         // Act
-        var result = converter.FromEntry(primitive);
+        object result = converter.FromEntry(primitive);
 
         // Assert
         result.ShouldBeNull();
@@ -103,7 +104,7 @@ public class TypeConvertersTests
         var primitive = new Primitive { Value = "" };
 
         // Act
-        var result = converter.FromEntry(primitive);
+        object result = converter.FromEntry(primitive);
 
         // Assert
         result.ShouldBeNull();
@@ -117,7 +118,8 @@ public class TypeConvertersTests
         var primitive = new Primitive { Value = 123 };
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.FromEntry(primitive));
+        var exception
+            = Should.Throw<ArgumentException>(() => converter.FromEntry(primitive));
         exception.Message.ShouldBe("Value must be a string");
     }
 
@@ -129,7 +131,8 @@ public class TypeConvertersTests
         var primitive = new Primitive { Value = "InvalidEnum" };
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentOutOfRangeException>(() => converter.FromEntry(primitive));
+        var exception
+            = Should.Throw<ArgumentOutOfRangeException>(() => converter.FromEntry(primitive));
         exception.Message.ShouldContain("Value InvalidEnum is not a valid enum");
     }
 
@@ -141,8 +144,8 @@ public class TypeConvertersTests
         var originalValue = TestEnum.First;
 
         // Act
-        var entry = converter.ToEntry(originalValue);
-        var result = converter.FromEntry(entry);
+        DynamoDBEntry entry = converter.ToEntry(originalValue);
+        object result = converter.FromEntry(entry);
 
         // Assert
         result.ShouldBe(originalValue);
@@ -156,7 +159,7 @@ public class TypeConvertersTests
         TestEnum? enumValue = TestEnum.Second;
 
         // Act
-        var result = converter.ToEntry(enumValue);
+        DynamoDBEntry result = converter.ToEntry(enumValue);
 
         // Assert
         var primitive = result.ShouldBeOfType<Primitive>();
@@ -171,7 +174,7 @@ public class TypeConvertersTests
         TestEnum? enumValue = null;
 
         // Act
-        var result = converter.ToEntry(enumValue);
+        DynamoDBEntry result = converter.ToEntry(enumValue);
 
         // Assert
         var primitive = result.ShouldBeOfType<Primitive>();
@@ -186,7 +189,7 @@ public class TypeConvertersTests
         var enumValue = TestEnum.Third;
 
         // Act
-        var result = converter.ToEntry(enumValue);
+        DynamoDBEntry result = converter.ToEntry(enumValue);
 
         // Assert
         var primitive = result.ShouldBeOfType<Primitive>();
@@ -201,7 +204,7 @@ public class TypeConvertersTests
         var primitive = new Primitive { Value = "First" };
 
         // Act
-        var result = converter.FromEntry(primitive);
+        object result = converter.FromEntry(primitive);
 
         // Assert
         result.ShouldNotBeNull();
@@ -218,7 +221,7 @@ public class TypeConvertersTests
         var primitive = new Primitive { Value = null };
 
         // Act
-        var result = converter.FromEntry(primitive);
+        object result = converter.FromEntry(primitive);
 
         // Assert
         result.ShouldBeNull();
@@ -232,8 +235,8 @@ public class TypeConvertersTests
         TestEnum? originalValue = TestEnum.Second;
 
         // Act
-        var entry = converter.ToEntry(originalValue);
-        var result = converter.FromEntry(entry);
+        DynamoDBEntry entry = converter.ToEntry(originalValue);
+        object result = converter.FromEntry(entry);
 
         // Assert
         // When a nullable enum has a value, it gets boxed as the underlying enum type
@@ -249,8 +252,8 @@ public class TypeConvertersTests
         TestEnum? originalValue = null;
 
         // Act
-        var entry = converter.ToEntry(originalValue);
-        var result = converter.FromEntry(entry);
+        DynamoDBEntry entry = converter.ToEntry(originalValue);
+        object result = converter.FromEntry(entry);
 
         // Assert
         result.ShouldBeNull();
@@ -264,7 +267,7 @@ public class TypeConvertersTests
         var dateTime = new DateTime(2023, 12, 25, 10, 30, 45, DateTimeKind.Utc);
 
         // Act
-        var result = converter.ToEntry(dateTime);
+        DynamoDBEntry result = converter.ToEntry(dateTime);
 
         // Assert
         var primitive = result.ShouldBeOfType<Primitive>();
@@ -279,7 +282,7 @@ public class TypeConvertersTests
         var dateTime = new DateTime(2023, 12, 25, 10, 30, 45, DateTimeKind.Unspecified);
 
         // Act
-        var result = converter.ToEntry(dateTime);
+        DynamoDBEntry result = converter.ToEntry(dateTime);
 
         // Assert
         var primitive = result.ShouldBeOfType<Primitive>();
@@ -294,7 +297,7 @@ public class TypeConvertersTests
         var localDateTime = new DateTime(2023, 12, 25, 10, 30, 45, DateTimeKind.Local);
 
         // Act
-        var result = converter.ToEntry(localDateTime);
+        DynamoDBEntry result = converter.ToEntry(localDateTime);
 
         // Assert
         var primitive = result.ShouldBeOfType<Primitive>();
@@ -311,7 +314,8 @@ public class TypeConvertersTests
         var invalidValue = "not a datetime";
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.ToEntry(invalidValue));
+        var exception
+            = Should.Throw<ArgumentException>(() => converter.ToEntry(invalidValue));
         exception.Message.ShouldBe("Value must be a DateTime (Parameter 'value')");
     }
 
@@ -323,7 +327,7 @@ public class TypeConvertersTests
         var primitive = new Primitive { Value = "2023-12-25T10:30:45.0000000Z" };
 
         // Act
-        var result = converter.FromEntry(primitive);
+        object result = converter.FromEntry(primitive);
 
         // Assert
         var dateTime = result.ShouldBeOfType<DateTime>();
@@ -339,8 +343,10 @@ public class TypeConvertersTests
         var primitive = new Primitive { Value = "invalid-date" };
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.FromEntry(primitive));
-        exception.Message.ShouldBe("Entry must be a string primitive containing a valid DateTime (Parameter 'entry')");
+        var exception
+            = Should.Throw<ArgumentException>(() => converter.FromEntry(primitive));
+        exception.Message.ShouldBe(
+            "Entry must be a string primitive containing a valid DateTime (Parameter 'entry')");
     }
 
     [Fact]
@@ -351,8 +357,10 @@ public class TypeConvertersTests
         var document = new Document();
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.FromEntry(document));
-        exception.Message.ShouldBe("Entry must be a string primitive containing a valid DateTime (Parameter 'entry')");
+        var exception
+            = Should.Throw<ArgumentException>(() => converter.FromEntry(document));
+        exception.Message.ShouldBe(
+            "Entry must be a string primitive containing a valid DateTime (Parameter 'entry')");
     }
 
     [Fact]
@@ -363,8 +371,8 @@ public class TypeConvertersTests
         var originalDateTime = new DateTime(2023, 6, 15, 14, 30, 0, DateTimeKind.Utc);
 
         // Act
-        var entry = converter.ToEntry(originalDateTime);
-        var result = converter.FromEntry(entry);
+        DynamoDBEntry entry = converter.ToEntry(originalDateTime);
+        object result = converter.FromEntry(entry);
 
         // Assert
         var resultDateTime = result.ShouldBeOfType<DateTime>();
@@ -377,10 +385,10 @@ public class TypeConvertersTests
     {
         // Arrange
         var converter = new GuidTypeConverter();
-        var guid = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
+        Guid guid = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
 
         // Act
-        var result = converter.ToEntry(guid);
+        DynamoDBEntry result = converter.ToEntry(guid);
 
         // Assert
         var primitive = result.ShouldBeOfType<Primitive>();
@@ -395,7 +403,7 @@ public class TypeConvertersTests
         var primitive = new Primitive { Value = "550e8400-e29b-41d4-a716-446655440000" };
 
         // Act
-        var result = converter.FromEntry(primitive);
+        object result = converter.FromEntry(primitive);
 
         // Assert
         var guid = result.ShouldBeOfType<Guid>();
@@ -410,7 +418,8 @@ public class TypeConvertersTests
         var invalidValue = "not a guid";
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.ToEntry(invalidValue));
+        var exception
+            = Should.Throw<ArgumentException>(() => converter.ToEntry(invalidValue));
         exception.Message.ShouldBe("Value must be a Guid (Parameter 'value')");
     }
 
@@ -422,8 +431,10 @@ public class TypeConvertersTests
         var primitive = new Primitive { Value = "invalid-guid" };
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.FromEntry(primitive));
-        exception.Message.ShouldBe("Entry must be a string primitive containing a valid Guid (Parameter 'entry')");
+        var exception
+            = Should.Throw<ArgumentException>(() => converter.FromEntry(primitive));
+        exception.Message.ShouldBe(
+            "Entry must be a string primitive containing a valid Guid (Parameter 'entry')");
     }
 
     [Fact]
@@ -434,8 +445,10 @@ public class TypeConvertersTests
         var document = new Document();
 
         // Act & Assert
-        var exception = Should.Throw<ArgumentException>(() => converter.FromEntry(document));
-        exception.Message.ShouldBe("Entry must be a string primitive containing a valid Guid (Parameter 'entry')");
+        var exception
+            = Should.Throw<ArgumentException>(() => converter.FromEntry(document));
+        exception.Message.ShouldBe(
+            "Entry must be a string primitive containing a valid Guid (Parameter 'entry')");
     }
 
     [Fact]
@@ -446,8 +459,8 @@ public class TypeConvertersTests
         var originalGuid = Guid.NewGuid();
 
         // Act
-        var entry = converter.ToEntry(originalGuid);
-        var result = converter.FromEntry(entry);
+        DynamoDBEntry entry = converter.ToEntry(originalGuid);
+        object result = converter.FromEntry(entry);
 
         // Assert
         result.ShouldBe(originalGuid);

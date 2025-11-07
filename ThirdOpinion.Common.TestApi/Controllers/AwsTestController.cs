@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Amazon.CognitoIdentityProvider;
+using Amazon.CognitoIdentityProvider.Model;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.DynamoDBv2.Model;
@@ -21,14 +22,14 @@ namespace ThirdOpinion.Common.TestApi.Controllers;
 public class AwsTestController : ControllerBase
 {
     private readonly IAmazonCognitoIdentityProvider _cognitoClient;
-    private readonly IDynamoDbRepository _dynamoDbRepository;
-    private readonly IS3Storage _s3Storage;
-    private readonly ISqsMessageQueue _sqsMessageQueue;
-    private readonly IAmazonS3 _s3Client;
-    private readonly IAmazonSQS _sqsClient;
-    private readonly IAmazonDynamoDB _dynamoDbClient;
-    private readonly ILogger<AwsTestController> _logger;
     private readonly IConfiguration _configuration;
+    private readonly IAmazonDynamoDB _dynamoDbClient;
+    private readonly IDynamoDbRepository _dynamoDbRepository;
+    private readonly ILogger<AwsTestController> _logger;
+    private readonly IAmazonS3 _s3Client;
+    private readonly IS3Storage _s3Storage;
+    private readonly IAmazonSQS _sqsClient;
+    private readonly ISqsMessageQueue _sqsMessageQueue;
 
     public AwsTestController(
         IAmazonCognitoIdentityProvider cognitoClient,
@@ -56,10 +57,10 @@ public class AwsTestController : ControllerBase
     public async Task<ActionResult<TestSuiteResult>> TestS3()
     {
         var results = new TestSuiteResult { ServiceName = "S3" };
-        var testBucket = _configuration["AWS:S3:TestBucket"] ?? "test-bucket-" + Guid.NewGuid().ToString();
+        string testBucket = _configuration["AWS:S3:TestBucket"] ?? "test-bucket-" + Guid.NewGuid();
 
         // Test 1: Create bucket
-        var createBucketTest = await RunTest("Create Bucket", async () =>
+        TestResult createBucketTest = await RunTest("Create Bucket", async () =>
         {
             await _s3Storage.CreateBucketIfNotExistsAsync(testBucket);
             return new { BucketName = testBucket };
@@ -69,17 +70,18 @@ public class AwsTestController : ControllerBase
         // Test 2: Put object
         var testKey = $"test-object-{Guid.NewGuid()}.txt";
         var testContent = "This is a test object content";
-        var putObjectTest = await RunTest("Put Object", async () =>
+        TestResult putObjectTest = await RunTest("Put Object", async () =>
         {
-            var response = await _s3Storage.PutObjectAsync(testBucket, testKey, testContent, "text/plain");
-            return new { Key = testKey, ETag = response.ETag };
+            PutObjectResponse response
+                = await _s3Storage.PutObjectAsync(testBucket, testKey, testContent, "text/plain");
+            return new { Key = testKey, response.ETag };
         });
         results.Results.Add(putObjectTest);
 
         // Test 3: Get object
-        var getObjectTest = await RunTest("Get Object", async () =>
+        TestResult getObjectTest = await RunTest("Get Object", async () =>
         {
-            var content = await _s3Storage.GetObjectAsStringAsync(testBucket, testKey);
+            string content = await _s3Storage.GetObjectAsStringAsync(testBucket, testKey);
             if (content != testContent)
                 throw new Exception($"Content mismatch. Expected: {testContent}, Got: {content}");
             return new { Content = content };
@@ -87,10 +89,10 @@ public class AwsTestController : ControllerBase
         results.Results.Add(getObjectTest);
 
         // Test 4: List objects
-        var listObjectsTest = await RunTest("List Objects", async () =>
+        TestResult listObjectsTest = await RunTest("List Objects", async () =>
         {
-            var objects = await _s3Storage.ListObjectsAsync(testBucket);
-            var count = objects.Count();
+            IEnumerable<S3Object> objects = await _s3Storage.ListObjectsAsync(testBucket);
+            int count = objects.Count();
             if (count == 0)
                 throw new Exception("No objects found");
             return new { ObjectCount = count };
@@ -98,10 +100,10 @@ public class AwsTestController : ControllerBase
         results.Results.Add(listObjectsTest);
 
         // Test 5: Delete object
-        var deleteObjectTest = await RunTest("Delete Object", async () =>
+        TestResult deleteObjectTest = await RunTest("Delete Object", async () =>
         {
             await _s3Storage.DeleteObjectAsync(testBucket, testKey);
-            var exists = await _s3Storage.ObjectExistsAsync(testBucket, testKey);
+            bool exists = await _s3Storage.ObjectExistsAsync(testBucket, testKey);
             if (exists)
                 throw new Exception("Object still exists after deletion");
             return new { Deleted = true };
@@ -125,10 +127,11 @@ public class AwsTestController : ControllerBase
     public async Task<ActionResult<TestSuiteResult>> TestDynamoDB()
     {
         var results = new TestSuiteResult { ServiceName = "DynamoDB" };
-        var testTableName = _configuration["AWS:DynamoDB:TestTable"] ?? "test-table-" + Guid.NewGuid().ToString();
+        string testTableName
+            = _configuration["AWS:DynamoDB:TestTable"] ?? "test-table-" + Guid.NewGuid();
 
         // Test 1: Create table
-        var createTableTest = await RunTest("Create Table", async () =>
+        TestResult createTableTest = await RunTest("Create Table", async () =>
         {
             var request = new CreateTableRequest
             {
@@ -148,7 +151,7 @@ public class AwsTestController : ControllerBase
 
             // Wait for table to be active
             await WaitForTableToBeActiveAsync(testTableName);
-            
+
             return new { TableName = testTableName };
         });
         results.Results.Add(createTableTest);
@@ -162,7 +165,7 @@ public class AwsTestController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
 
-        var saveItemTest = await RunTest("Save Item", async () =>
+        TestResult saveItemTest = await RunTest("Save Item", async () =>
         {
             var config = new DynamoDBOperationConfig
             {
@@ -174,13 +177,14 @@ public class AwsTestController : ControllerBase
         results.Results.Add(saveItemTest);
 
         // Test 3: Load item
-        var loadItemTest = await RunTest("Load Item", async () =>
+        TestResult loadItemTest = await RunTest("Load Item", async () =>
         {
             var config = new DynamoDBOperationConfig
             {
                 OverrideTableName = testTableName
             };
-            var item = await _dynamoDbRepository.LoadAsync<TestDynamoItem>(testItem.Id, null, config);
+            var item = await _dynamoDbRepository.LoadAsync<TestDynamoItem>(testItem.Id, null,
+                config);
             if (item == null)
                 throw new Exception("Item not found");
             if (item.Name != testItem.Name)
@@ -190,14 +194,15 @@ public class AwsTestController : ControllerBase
         results.Results.Add(loadItemTest);
 
         // Test 4: Delete item
-        var deleteItemTest = await RunTest("Delete Item", async () =>
+        TestResult deleteItemTest = await RunTest("Delete Item", async () =>
         {
             var config = new DynamoDBOperationConfig
             {
                 OverrideTableName = testTableName
             };
             await _dynamoDbRepository.DeleteAsync<TestDynamoItem>(testItem.Id, null, config);
-            var item = await _dynamoDbRepository.LoadAsync<TestDynamoItem>(testItem.Id, null, config);
+            var item = await _dynamoDbRepository.LoadAsync<TestDynamoItem>(testItem.Id, null,
+                config);
             if (item != null)
                 throw new Exception("Item still exists after deletion");
             return new { Deleted = true };
@@ -222,13 +227,14 @@ public class AwsTestController : ControllerBase
     public async Task<ActionResult<TestSuiteResult>> TestSQS()
     {
         var results = new TestSuiteResult { ServiceName = "SQS" };
-        var testQueueName = _configuration["AWS:SQS:TestQueue"] ?? "test-queue-" + Guid.NewGuid().ToString();
+        string testQueueName
+            = _configuration["AWS:SQS:TestQueue"] ?? "test-queue-" + Guid.NewGuid();
         string? queueUrl = null;
 
         // Test 1: Create queue
-        var createQueueTest = await RunTest("Create Queue", async () =>
+        TestResult createQueueTest = await RunTest("Create Queue", async () =>
         {
-            var response = await _sqsClient.CreateQueueAsync(new CreateQueueRequest
+            CreateQueueResponse? response = await _sqsClient.CreateQueueAsync(new CreateQueueRequest
             {
                 QueueName = testQueueName
             });
@@ -237,10 +243,7 @@ public class AwsTestController : ControllerBase
         });
         results.Results.Add(createQueueTest);
 
-        if (queueUrl == null)
-        {
-            return Ok(results);
-        }
+        if (queueUrl == null) return Ok(results);
 
         // Test 2: Send message
         var testMessage = new TestMessage
@@ -250,37 +253,40 @@ public class AwsTestController : ControllerBase
             Timestamp = DateTime.UtcNow
         };
 
-        var sendMessageTest = await RunTest("Send Message", async () =>
+        TestResult sendMessageTest = await RunTest("Send Message", async () =>
         {
-            var response = await _sqsMessageQueue.SendMessageAsync(queueUrl, testMessage);
-            return new { MessageId = response.MessageId };
+            SendMessageResponse response
+                = await _sqsMessageQueue.SendMessageAsync(queueUrl, testMessage);
+            return new { response.MessageId };
         });
         results.Results.Add(sendMessageTest);
 
         // Test 3: Receive message
-        var receiveMessageTest = await RunTest("Receive Message", async () =>
+        TestResult receiveMessageTest = await RunTest("Receive Message", async () =>
         {
             // Wait a bit for message to be available in SQS
             await Task.Delay(1000);
 
-            var response = await _sqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
-            {
-                QueueUrl = queueUrl,
-                MaxNumberOfMessages = 1,
-                WaitTimeSeconds = 10
-            });
+            ReceiveMessageResponse? response = await _sqsClient.ReceiveMessageAsync(
+                new ReceiveMessageRequest
+                {
+                    QueueUrl = queueUrl,
+                    MaxNumberOfMessages = 1,
+                    WaitTimeSeconds = 10
+                });
 
             if (response.Messages.Count == 0)
                 throw new Exception("No messages received");
 
-            var message = response.Messages.First();
+            Message? message = response.Messages.First();
 
             // Use the same JsonSerializer options as SqsMessageQueue (camelCase)
             var jsonOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
-            var receivedMessage = JsonSerializer.Deserialize<TestMessage>(message.Body, jsonOptions);
+            var receivedMessage
+                = JsonSerializer.Deserialize<TestMessage>(message.Body, jsonOptions);
 
             // Since SQS doesn't guarantee message order, just verify we got a valid message
             if (receivedMessage?.Id == null || string.IsNullOrEmpty(receivedMessage.Id))
@@ -294,7 +300,7 @@ public class AwsTestController : ControllerBase
         results.Results.Add(receiveMessageTest);
 
         // Test 4: Send batch messages
-        var batchMessages = Enumerable.Range(1, 5)
+        List<TestMessage> batchMessages = Enumerable.Range(1, 5)
             .Select(i => new TestMessage
             {
                 Id = Guid.NewGuid().ToString(),
@@ -303,19 +309,21 @@ public class AwsTestController : ControllerBase
             })
             .ToList();
 
-        var sendBatchTest = await RunTest("Send Batch Messages", async () =>
+        TestResult sendBatchTest = await RunTest("Send Batch Messages", async () =>
         {
-            var entries = batchMessages.Select((msg, idx) => new SendMessageBatchRequestEntry
-            {
-                Id = idx.ToString(),
-                MessageBody = JsonSerializer.Serialize(msg)
-            }).ToList();
+            List<SendMessageBatchRequestEntry> entries = batchMessages.Select((msg, idx) =>
+                new SendMessageBatchRequestEntry
+                {
+                    Id = idx.ToString(),
+                    MessageBody = JsonSerializer.Serialize(msg)
+                }).ToList();
 
-            var response = await _sqsClient.SendMessageBatchAsync(new SendMessageBatchRequest
-            {
-                QueueUrl = queueUrl,
-                Entries = entries
-            });
+            SendMessageBatchResponse? response = await _sqsClient.SendMessageBatchAsync(
+                new SendMessageBatchRequest
+                {
+                    QueueUrl = queueUrl,
+                    Entries = entries
+                });
 
             if (response.Failed?.Count > 0)
                 throw new Exception($"Failed to send {response.Failed.Count} messages");
@@ -343,34 +351,35 @@ public class AwsTestController : ControllerBase
         var results = new TestSuiteResult { ServiceName = "Cognito" };
 
         // Test 1: List User Pools
-        var listUserPoolsTest = await RunTest("List User Pools", async () =>
+        TestResult listUserPoolsTest = await RunTest("List User Pools", async () =>
         {
-            var response = await _cognitoClient.ListUserPoolsAsync(new Amazon.CognitoIdentityProvider.Model.ListUserPoolsRequest
-            {
-                MaxResults = 10
-            });
+            ListUserPoolsResponse? response = await _cognitoClient.ListUserPoolsAsync(
+                new ListUserPoolsRequest
+                {
+                    MaxResults = 10
+                });
             return new { UserPoolCount = response.UserPools.Count };
         });
         results.Results.Add(listUserPoolsTest);
 
         // Test 2: Describe User Pool (if any exists)
-        var describePoolTest = await RunTest("Describe User Pool", async () =>
+        TestResult describePoolTest = await RunTest("Describe User Pool", async () =>
         {
-            var listResponse = await _cognitoClient.ListUserPoolsAsync(new Amazon.CognitoIdentityProvider.Model.ListUserPoolsRequest
-            {
-                MaxResults = 1
-            });
+            ListUserPoolsResponse? listResponse = await _cognitoClient.ListUserPoolsAsync(
+                new ListUserPoolsRequest
+                {
+                    MaxResults = 1
+                });
 
             if (listResponse.UserPools.Count == 0)
-            {
                 return new { Message = "No user pools available to test" };
-            }
 
-            var poolId = listResponse.UserPools.First().Id;
-            var describeResponse = await _cognitoClient.DescribeUserPoolAsync(new Amazon.CognitoIdentityProvider.Model.DescribeUserPoolRequest
-            {
-                UserPoolId = poolId
-            });
+            string? poolId = listResponse.UserPools.First().Id;
+            DescribeUserPoolResponse? describeResponse = await _cognitoClient.DescribeUserPoolAsync(
+                new DescribeUserPoolRequest
+                {
+                    UserPoolId = poolId
+                });
 
             return new
             {
@@ -393,34 +402,31 @@ public class AwsTestController : ControllerBase
 
         tasks.Add(Task.Run(async () =>
         {
-            var result = await TestS3();
+            ActionResult<TestSuiteResult> result = await TestS3();
             return ("S3", ((OkObjectResult)result.Result!).Value as TestSuiteResult)!;
         }));
 
         tasks.Add(Task.Run(async () =>
         {
-            var result = await TestDynamoDB();
+            ActionResult<TestSuiteResult> result = await TestDynamoDB();
             return ("DynamoDB", ((OkObjectResult)result.Result!).Value as TestSuiteResult)!;
         }));
 
         tasks.Add(Task.Run(async () =>
         {
-            var result = await TestSQS();
+            ActionResult<TestSuiteResult> result = await TestSQS();
             return ("SQS", ((OkObjectResult)result.Result!).Value as TestSuiteResult)!;
         }));
 
         tasks.Add(Task.Run(async () =>
         {
-            var result = await TestCognito();
+            ActionResult<TestSuiteResult> result = await TestCognito();
             return ("Cognito", ((OkObjectResult)result.Result!).Value as TestSuiteResult)!;
         }));
 
-        var results = await Task.WhenAll(tasks);
+        (string, TestSuiteResult)[] results = await Task.WhenAll(tasks);
 
-        foreach (var (service, result) in results)
-        {
-            allResults[service] = result;
-        }
+        foreach ((string service, TestSuiteResult result) in results) allResults[service] = result;
 
         return Ok(allResults);
     }
@@ -432,24 +438,24 @@ public class AwsTestController : ControllerBase
 
         try
         {
-            var details = await testAction();
+            object details = await testAction();
             stopwatch.Stop();
-            
+
             result.Success = true;
             result.Duration = stopwatch.Elapsed;
             result.Message = "Test passed successfully";
-            result.Details = details as Dictionary<string, object> ?? 
-                           new Dictionary<string, object> { ["Result"] = details };
+            result.Details = details as Dictionary<string, object> ??
+                             new Dictionary<string, object> { ["Result"] = details };
         }
         catch (Exception ex)
         {
             stopwatch.Stop();
-            
+
             result.Success = false;
             result.Duration = stopwatch.Elapsed;
             result.Message = "Test failed";
             result.Error = ex.Message;
-            
+
             _logger.LogError(ex, "Test {TestName} failed", testName);
         }
 
@@ -458,21 +464,22 @@ public class AwsTestController : ControllerBase
 
     private async Task WaitForTableToBeActiveAsync(string tableName, int maxWaitTimeSeconds = 60)
     {
-        var startTime = DateTime.UtcNow;
-        var maxWaitTime = TimeSpan.FromSeconds(maxWaitTimeSeconds);
+        DateTime startTime = DateTime.UtcNow;
+        TimeSpan maxWaitTime = TimeSpan.FromSeconds(maxWaitTimeSeconds);
 
         while (DateTime.UtcNow - startTime < maxWaitTime)
-        {
             try
             {
-                var describeResponse = await _dynamoDbClient.DescribeTableAsync(tableName);
+                DescribeTableResponse? describeResponse
+                    = await _dynamoDbClient.DescribeTableAsync(tableName);
                 if (describeResponse.Table.TableStatus == TableStatus.ACTIVE)
                 {
                     _logger.LogDebug("Table {TableName} is now active", tableName);
                     return;
                 }
 
-                _logger.LogDebug("Table {TableName} status: {Status}, waiting...", tableName, describeResponse.Table.TableStatus);
+                _logger.LogDebug("Table {TableName} status: {Status}, waiting...", tableName,
+                    describeResponse.Table.TableStatus);
                 await Task.Delay(2000); // Wait 2 seconds before checking again
             }
             catch (Exception ex)
@@ -480,9 +487,9 @@ public class AwsTestController : ControllerBase
                 _logger.LogWarning(ex, "Error checking table status for {TableName}", tableName);
                 await Task.Delay(2000);
             }
-        }
 
-        throw new TimeoutException($"Table {tableName} did not become active within {maxWaitTimeSeconds} seconds");
+        throw new TimeoutException(
+            $"Table {tableName} did not become active within {maxWaitTimeSeconds} seconds");
     }
 }
 
@@ -492,7 +499,7 @@ public class TestDynamoItem
 {
     [DynamoDBHashKey]
     public string Id { get; set; } = string.Empty;
-    
+
     public string Name { get; set; } = string.Empty;
     public int Value { get; set; }
     public DateTime CreatedAt { get; set; }

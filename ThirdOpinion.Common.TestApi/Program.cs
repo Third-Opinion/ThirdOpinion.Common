@@ -1,16 +1,14 @@
-using Amazon;
 using Amazon.CognitoIdentityProvider;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.Extensions.NETCore.Setup;
-using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.SQS;
 using ThirdOpinion.Common.Aws.DynamoDb;
 using ThirdOpinion.Common.Aws.S3;
 using ThirdOpinion.Common.Aws.SQS;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -18,7 +16,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Configure AWS Options
-var awsOptions = builder.Configuration.GetAWSOptions();
+AWSOptions? awsOptions = builder.Configuration.GetAWSOptions();
 
 // Register AWS services
 builder.Services.AddDefaultAWSOptions(awsOptions);
@@ -46,7 +44,7 @@ builder.Services.AddLogging(config =>
     config.AddDebug();
 });
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -62,4 +60,6 @@ app.MapControllers();
 app.Run();
 
 // Make the Program class accessible to test projects
-public partial class Program { }
+public partial class Program
+{
+}

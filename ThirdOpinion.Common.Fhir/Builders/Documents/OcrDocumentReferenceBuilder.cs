@@ -7,19 +7,19 @@ using ThirdOpinion.Common.Fhir.Helpers;
 namespace ThirdOpinion.Common.Fhir.Builders.Documents;
 
 /// <summary>
-/// Builder for creating FHIR DocumentReference resources for OCR-extracted text documents
+///     Builder for creating FHIR DocumentReference resources for OCR-extracted text documents
 /// </summary>
 public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReference>
 {
-    private ResourceReference? _patientReference;
-    private ResourceReference? _deviceReference;
-    private ResourceReference? _originalDocumentReference;
     private readonly List<DocumentReference.ContentComponent> _contents;
+    private ResourceReference? _deviceReference;
     private bool _hasInlineContent;
     private bool _hasUrlContent;
+    private ResourceReference? _originalDocumentReference;
+    private ResourceReference? _patientReference;
 
     /// <summary>
-    /// Creates a new OCR DocumentReference builder
+    ///     Creates a new OCR DocumentReference builder
     /// </summary>
     /// <param name="configuration">The AI inference configuration</param>
     public OcrDocumentReferenceBuilder(AiInferenceConfiguration configuration)
@@ -31,7 +31,7 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
     public new OcrDocumentReferenceBuilder WithInferenceId(string id)
     {
@@ -40,16 +40,18 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
-    public new OcrDocumentReferenceBuilder WithCriteria(string id, string display, string? system = null)
+    public new OcrDocumentReferenceBuilder WithCriteria(string id,
+        string display,
+        string? system = null)
     {
         base.WithCriteria(id, display, system);
         return this;
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
     public new OcrDocumentReferenceBuilder AddDerivedFrom(ResourceReference reference)
     {
@@ -58,7 +60,7 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
     public new OcrDocumentReferenceBuilder AddDerivedFrom(string reference, string? display = null)
     {
@@ -67,7 +69,7 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
     }
 
     /// <summary>
-    /// Sets the patient reference for this document
+    ///     Sets the patient reference for this document
     /// </summary>
     /// <param name="patient">The patient resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -78,7 +80,7 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
     }
 
     /// <summary>
-    /// Sets the patient reference for this document
+    ///     Sets the patient reference for this document
     /// </summary>
     /// <param name="patientId">The patient ID</param>
     /// <param name="display">Optional display text</param>
@@ -97,7 +99,7 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
     }
 
     /// <summary>
-    /// Sets the OCR device reference that processed the document
+    ///     Sets the OCR device reference that processed the document
     /// </summary>
     /// <param name="device">The OCR device resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -108,7 +110,7 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
     }
 
     /// <summary>
-    /// Sets the OCR device reference that processed the document
+    ///     Sets the OCR device reference that processed the document
     /// </summary>
     /// <param name="deviceId">The OCR device ID</param>
     /// <param name="display">Optional display text</param>
@@ -127,37 +129,41 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
     }
 
     /// <summary>
-    /// Sets the original document that this OCR document transforms
+    ///     Sets the original document that this OCR document transforms
     /// </summary>
     /// <param name="originalDocument">The original document reference</param>
     /// <returns>This builder instance for method chaining</returns>
     public OcrDocumentReferenceBuilder WithOriginalDocument(ResourceReference originalDocument)
     {
-        _originalDocumentReference = originalDocument ?? throw new ArgumentNullException(nameof(originalDocument));
+        _originalDocumentReference = originalDocument ??
+                                     throw new ArgumentNullException(nameof(originalDocument));
         return this;
     }
 
     /// <summary>
-    /// Sets the original document that this OCR document transforms
+    ///     Sets the original document that this OCR document transforms
     /// </summary>
     /// <param name="documentId">The original document ID</param>
     /// <param name="display">Optional display text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public OcrDocumentReferenceBuilder WithOriginalDocument(string documentId, string? display = null)
+    public OcrDocumentReferenceBuilder WithOriginalDocument(string documentId,
+        string? display = null)
     {
         if (string.IsNullOrWhiteSpace(documentId))
             throw new ArgumentException("Document ID cannot be null or empty", nameof(documentId));
 
         _originalDocumentReference = new ResourceReference
         {
-            Reference = documentId.StartsWith("DocumentReference/") ? documentId : $"DocumentReference/{documentId}",
+            Reference = documentId.StartsWith("DocumentReference/")
+                ? documentId
+                : $"DocumentReference/{documentId}",
             Display = display
         };
         return this;
     }
 
     /// <summary>
-    /// Adds extracted text content as inline Base64 encoded data
+    ///     Adds extracted text content as inline Base64 encoded data
     /// </summary>
     /// <param name="text">The extracted text content</param>
     /// <param name="title">Optional title for the content</param>
@@ -168,10 +174,11 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
             throw new ArgumentException("Text content cannot be null or empty", nameof(text));
 
         if (_hasUrlContent)
-            throw new InvalidOperationException("Cannot add inline content when URL content has already been set. Use either inline OR URL content, not both.");
+            throw new InvalidOperationException(
+                "Cannot add inline content when URL content has already been set. Use either inline OR URL content, not both.");
 
-        var textBytes = Encoding.UTF8.GetBytes(text);
-        var base64Text = Convert.ToBase64String(textBytes);
+        byte[] textBytes = Encoding.UTF8.GetBytes(text);
+        string base64Text = Convert.ToBase64String(textBytes);
 
         var content = new DocumentReference.ContentComponent
         {
@@ -189,7 +196,7 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
     }
 
     /// <summary>
-    /// Adds extracted text content via S3 URL reference
+    ///     Adds extracted text content via S3 URL reference
     /// </summary>
     /// <param name="s3Url">The S3 URL to the extracted text file</param>
     /// <param name="title">Optional title for the content</param>
@@ -200,7 +207,8 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
             throw new ArgumentException("S3 URL cannot be null or empty", nameof(s3Url));
 
         if (_hasInlineContent)
-            throw new InvalidOperationException("Cannot add URL content when inline content has already been set. Use either inline OR URL content, not both.");
+            throw new InvalidOperationException(
+                "Cannot add URL content when inline content has already been set. Use either inline OR URL content, not both.");
 
         var content = new DocumentReference.ContentComponent
         {
@@ -218,18 +226,21 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
     }
 
     /// <summary>
-    /// Adds raw Textract output URL reference
+    ///     Adds raw Textract output URL reference
     /// </summary>
     /// <param name="textractRawUrl">The S3 URL to the raw Textract JSON output</param>
     /// <param name="title">Optional title for the content</param>
     /// <returns>This builder instance for method chaining</returns>
-    public OcrDocumentReferenceBuilder WithTextractRawUrl(string textractRawUrl, string? title = null)
+    public OcrDocumentReferenceBuilder WithTextractRawUrl(string textractRawUrl,
+        string? title = null)
     {
         if (string.IsNullOrWhiteSpace(textractRawUrl))
-            throw new ArgumentException("Textract raw URL cannot be null or empty", nameof(textractRawUrl));
+            throw new ArgumentException("Textract raw URL cannot be null or empty",
+                nameof(textractRawUrl));
 
         if (_hasInlineContent)
-            throw new InvalidOperationException("Cannot add URL content when inline content has already been set. Use either inline OR URL content, not both.");
+            throw new InvalidOperationException(
+                "Cannot add URL content when inline content has already been set. Use either inline OR URL content, not both.");
 
         var content = new DocumentReference.ContentComponent
         {
@@ -247,18 +258,21 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
     }
 
     /// <summary>
-    /// Adds simplified Textract output URL reference
+    ///     Adds simplified Textract output URL reference
     /// </summary>
     /// <param name="textractSimpleUrl">The S3 URL to the simplified Textract output</param>
     /// <param name="title">Optional title for the content</param>
     /// <returns>This builder instance for method chaining</returns>
-    public OcrDocumentReferenceBuilder WithTextractSimpleUrl(string textractSimpleUrl, string? title = null)
+    public OcrDocumentReferenceBuilder WithTextractSimpleUrl(string textractSimpleUrl,
+        string? title = null)
     {
         if (string.IsNullOrWhiteSpace(textractSimpleUrl))
-            throw new ArgumentException("Textract simple URL cannot be null or empty", nameof(textractSimpleUrl));
+            throw new ArgumentException("Textract simple URL cannot be null or empty",
+                nameof(textractSimpleUrl));
 
         if (_hasInlineContent)
-            throw new InvalidOperationException("Cannot add URL content when inline content has already been set. Use either inline OR URL content, not both.");
+            throw new InvalidOperationException(
+                "Cannot add URL content when inline content has already been set. Use either inline OR URL content, not both.");
 
         var content = new DocumentReference.ContentComponent
         {
@@ -276,33 +290,29 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
     }
 
     /// <summary>
-    /// Validates that required fields are set before building
+    ///     Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
     {
         if (_patientReference == null)
-        {
-            throw new InvalidOperationException("Patient reference is required. Call WithPatient() before Build().");
-        }
+            throw new InvalidOperationException(
+                "Patient reference is required. Call WithPatient() before Build().");
 
         if (_deviceReference == null)
-        {
-            throw new InvalidOperationException("OCR device reference is required. Call WithOcrDevice() before Build().");
-        }
+            throw new InvalidOperationException(
+                "OCR device reference is required. Call WithOcrDevice() before Build().");
 
         if (_originalDocumentReference == null)
-        {
-            throw new InvalidOperationException("Original document reference is required. Call WithOriginalDocument() before Build().");
-        }
+            throw new InvalidOperationException(
+                "Original document reference is required. Call WithOriginalDocument() before Build().");
 
         if (_contents.Count == 0)
-        {
-            throw new InvalidOperationException("At least one content attachment is required. Call WithExtractedText(), WithExtractedTextUrl(), WithTextractRawUrl(), or WithTextractSimpleUrl() before Build().");
-        }
+            throw new InvalidOperationException(
+                "At least one content attachment is required. Call WithExtractedText(), WithExtractedTextUrl(), WithTextractRawUrl(), or WithTextractSimpleUrl() before Build().");
     }
 
     /// <summary>
-    /// Builds the OCR DocumentReference
+    ///     Builds the OCR DocumentReference
     /// </summary>
     /// <returns>The completed DocumentReference resource</returns>
     protected override DocumentReference BuildCore()
@@ -316,7 +326,7 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
             {
                 Coding = new List<Coding>
                 {
-                    new Coding
+                    new()
                     {
                         System = FhirCodingHelper.Systems.LOINC_SYSTEM,
                         Code = "18842-5",
@@ -338,22 +348,18 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
 
         // Add relatesTo for original document with 'transforms' code
         if (_originalDocumentReference != null)
-        {
             documentReference.RelatesTo = new List<DocumentReference.RelatesToComponent>
             {
-                new DocumentReference.RelatesToComponent
+                new()
                 {
                     Code = DocumentRelationshipType.Transforms,
                     Target = _originalDocumentReference
                 }
             };
-        }
 
         // Add author (OCR device)
         if (_deviceReference != null)
-        {
             documentReference.Author = new List<ResourceReference> { _deviceReference };
-        }
 
         return documentReference;
     }

@@ -3,17 +3,19 @@ using Hl7.Fhir.Serialization;
 using ThirdOpinion.Common.Fhir.Builders.Observations;
 using ThirdOpinion.Common.Fhir.Configuration;
 using ThirdOpinion.Common.Fhir.Helpers;
+using ThirdOpinion.Common.Fhir.Models;
 
 namespace ThirdOpinion.Common.Fhir.UnitTests.Builders.Observations;
 
 public class RecistProgressionObservationBuilderTests
 {
     private readonly AiInferenceConfiguration _configuration;
-    private readonly ResourceReference _patientReference;
     private readonly ResourceReference _deviceReference;
-    private readonly ResourceReference _tumorReference;
     private readonly ResourceReference _imagingStudyReference;
+    private readonly ResourceReference _patientReference;
     private readonly ResourceReference _radiologyReportReference;
+    private readonly Fact[] _sampleFacts;
+    private readonly ResourceReference _tumorReference;
 
     public RecistProgressionObservationBuilderTests()
     {
@@ -22,7 +24,32 @@ public class RecistProgressionObservationBuilderTests
         _deviceReference = new ResourceReference("Device/ai-device", "RECIST Analysis Device");
         _tumorReference = new ResourceReference("Condition/tumor-123", "Primary Tumor");
         _imagingStudyReference = new ResourceReference("ImagingStudy/ct-123", "CT Chest/Abdomen");
-        _radiologyReportReference = new ResourceReference("DiagnosticReport/rad-456", "Radiology Report");
+        _radiologyReportReference
+            = new ResourceReference("DiagnosticReport/rad-456", "Radiology Report");
+
+        _sampleFacts = new[]
+        {
+            new Fact
+            {
+                factGuid = "aa10e02a-f391-4614-96e4-35cbe47d2a85",
+                factDocumentReference = "DocumentReference/ct-report-001",
+                type = "measurement",
+                fact = "Target lesion 1 measures 45.2 mm (previously 38.5 mm)",
+                @ref = new[] { "1.123" },
+                timeRef = "2025-01-15",
+                relevance = "Demonstrates progression in target lesion"
+            },
+            new Fact
+            {
+                factGuid = "bb10e02a-f391-4614-96e4-35cbe47d2a86",
+                factDocumentReference = "DocumentReference/ct-report-002",
+                type = "finding",
+                fact = "New liver metastasis identified measuring 12 mm",
+                @ref = new[] { "2.456" },
+                timeRef = "2025-01-15",
+                relevance = "New lesion indicating disease progression"
+            }
+        };
     }
 
     [Fact]
@@ -32,15 +59,26 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
             .WithCriteria("1.1")
-            .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE, "Progressive Disease")
-            .AddComponent("33728-8", new Quantity { Value = 45.2m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
-            .AddComponent("nadir-sld", new Quantity { Value = 38.5m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
-            .AddComponent("percent-change", new Quantity { Value = 17.4m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
+            .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE,
+                "Progressive Disease")
+            .AddComponent("33728-8",
+                new Quantity
+                {
+                    Value = 45.2m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm"
+                })
+            .AddComponent("nadir-sld",
+                new Quantity
+                {
+                    Value = 38.5m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm"
+                })
+            .AddComponent("percent-change",
+                new Quantity
+                    { Value = 17.4m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
             .AddComponent("new-lesions", true)
             .AddImagingStudy(_imagingStudyReference)
             .AddRadiologyReport(_radiologyReportReference)
@@ -57,11 +95,13 @@ public class RecistProgressionObservationBuilderTests
 
         // Check codes - should have both LOINC 21976-6 and NCI C111544
         observation.Code.Coding.Count.ShouldBe(2);
-        var loincCoding = observation.Code.Coding.First(c => c.System == FhirCodingHelper.Systems.LOINC_SYSTEM);
+        Coding? loincCoding
+            = observation.Code.Coding.First(c => c.System == FhirCodingHelper.Systems.LOINC_SYSTEM);
         loincCoding.Code.ShouldBe("21976-6");
         loincCoding.Display.ShouldBe("Cancer disease status");
 
-        var nciCoding = observation.Code.Coding.First(c => c.System == FhirCodingHelper.Systems.NCI_SYSTEM);
+        Coding? nciCoding
+            = observation.Code.Coding.First(c => c.System == FhirCodingHelper.Systems.NCI_SYSTEM);
         nciCoding.Code.ShouldBe("C111544");
         nciCoding.Display.ShouldBe("RECIST 1.1");
 
@@ -93,15 +133,16 @@ public class RecistProgressionObservationBuilderTests
         observation.Component.Count.ShouldBe(4);
 
         // Check SLD component
-        var sldComponent = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? sldComponent = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "33728-8"));
         sldComponent.ShouldNotBeNull();
         var sldValue = sldComponent.Value as Quantity;
         sldValue.Value.ShouldBe(45.2m);
 
         // Check new lesions component
-        var newLesionsComponent = observation.Component.FirstOrDefault(c =>
-            c.Code.Coding.Any(cd => cd.Code == "new-lesions"));
+        Observation.ComponentComponent? newLesionsComponent
+            = observation.Component.FirstOrDefault(c =>
+                c.Code.Coding.Any(cd => cd.Code == "new-lesions"));
         newLesionsComponent.ShouldNotBeNull();
         var newLesionsValue = newLesionsComponent.Value as FhirBoolean;
         newLesionsValue.Value.ShouldBe(true);
@@ -114,13 +155,19 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient("patient-456", "Jane Doe")
             .WithDevice("device-789", "AI Imaging Analyzer")
             .WithCriteria("1.1")
             .WithRecistResponse(FhirCodingHelper.NciCodes.STABLE_DISEASE, "Stable Disease")
-            .AddComponent("33728-8", new Quantity { Value = 42.0m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
-            .AddComponent("percent-change", new Quantity { Value = -5.2m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
+            .AddComponent("33728-8",
+                new Quantity
+                {
+                    Value = 42.0m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm"
+                })
+            .AddComponent("percent-change",
+                new Quantity
+                    { Value = -5.2m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
             .AddComponent("new-lesions", false)
             .Build();
 
@@ -129,7 +176,7 @@ public class RecistProgressionObservationBuilderTests
         valueCodeableConcept.ShouldNotBeNull();
         valueCodeableConcept.Coding[0].Code.ShouldBe(FhirCodingHelper.NciCodes.STABLE_DISEASE);
 
-        var percentComponent = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? percentComponent = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "percent-change"));
         var percentValue = percentComponent?.Value as Quantity;
         percentValue.Value.ShouldBe(-5.2m);
@@ -140,17 +187,18 @@ public class RecistProgressionObservationBuilderTests
     {
         // Arrange
         var builder = new RecistProgressionObservationBuilder(_configuration);
-        var quantity = new Quantity { Value = 25.5m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" };
+        var quantity = new Quantity
+            { Value = 25.5m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" };
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddComponent("33728-8", quantity)
             .Build();
 
         // Assert
-        var component = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? component = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "33728-8"));
         component.ShouldNotBeNull();
         var componentValue = component.Value as Quantity;
@@ -164,14 +212,14 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddComponent("44666-9", true)
             .Build();
 
         // Assert
-        var component = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? component = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "44666-9"));
         component.ShouldNotBeNull();
         var componentValue = component.Value as FhirBoolean;
@@ -183,17 +231,17 @@ public class RecistProgressionObservationBuilderTests
     {
         // Arrange
         var builder = new RecistProgressionObservationBuilder(_configuration);
-        var concept = FhirCodingHelper.CreateSnomedConcept("123456789", "Test Concept");
+        CodeableConcept concept = FhirCodingHelper.CreateSnomedConcept("123456789", "Test Concept");
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddComponent("test-code", concept)
             .Build();
 
         // Assert
-        var component = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? component = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "test-code"));
         component.ShouldNotBeNull();
         var componentValue = component.Value as CodeableConcept;
@@ -207,7 +255,7 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithBodySite("39607008", "Lung structure")
@@ -228,7 +276,7 @@ public class RecistProgressionObservationBuilderTests
         var tumor2 = new ResourceReference("Condition/tumor-2", "Metastatic Lesion");
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(tumor1, tumor2)
@@ -249,7 +297,7 @@ public class RecistProgressionObservationBuilderTests
         var study2 = new ResourceReference("ImagingStudy/ct-2", "Follow-up CT");
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddImagingStudy(study1)
@@ -270,7 +318,7 @@ public class RecistProgressionObservationBuilderTests
         var report = new ResourceReference("DiagnosticReport/rad-report", "Imaging Report");
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .AddRadiologyReport(report)
@@ -318,7 +366,7 @@ public class RecistProgressionObservationBuilderTests
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
-            builder.WithPatient((ResourceReference)null!));
+            builder.WithPatient(null!));
     }
 
     [Fact]
@@ -340,7 +388,7 @@ public class RecistProgressionObservationBuilderTests
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
-            builder.WithDevice((ResourceReference)null!));
+            builder.WithDevice(null!));
     }
 
     [Fact]
@@ -480,14 +528,16 @@ public class RecistProgressionObservationBuilderTests
     public void FluentInterface_SupportsCompleteChaining()
     {
         // Arrange & Act
-        var observation = new RecistProgressionObservationBuilder(_configuration)
+        Observation observation = new RecistProgressionObservationBuilder(_configuration)
             .WithInferenceId("recist-001")
             .WithPatient("Patient/p789", "John Smith")
             .WithDevice("Device/d123", "RECIST AI Device")
             .WithFocus(_tumorReference)
             .WithCriteria("1.1")
             .WithRecistResponse(FhirCodingHelper.NciCodes.COMPLETE_RESPONSE, "Complete Response")
-            .AddComponent("33728-8", new Quantity { Value = 0m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
+            .AddComponent("33728-8",
+                new Quantity
+                    { Value = 0m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
             .AddComponent("new-lesions", false)
             .WithBodySite("39607008", "Lung structure")
             .AddImagingStudy(_imagingStudyReference)
@@ -500,7 +550,7 @@ public class RecistProgressionObservationBuilderTests
         observation.Subject.Reference.ShouldBe("Patient/p789");
         observation.Device.Reference.ShouldBe("Device/d123");
         observation.Focus[0].ShouldBe(_tumorReference);
-                observation.DerivedFrom.Count.ShouldBe(3); // imaging + report + derived
+        observation.DerivedFrom.Count.ShouldBe(3); // imaging + report + derived
         observation.Component.Count.ShouldBe(2);
 
         var responseValue = observation.Value as CodeableConcept;
@@ -512,14 +562,21 @@ public class RecistProgressionObservationBuilderTests
     {
         // Arrange
         var builder = new RecistProgressionObservationBuilder(_configuration);
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
             .WithCriteria("1.1")
-            .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE, "Progressive Disease")
-            .AddComponent("33728-8", new Quantity { Value = 55.7m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
-            .AddComponent("percent-change", new Quantity { Value = 23.5m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
+            .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE,
+                "Progressive Disease")
+            .AddComponent("33728-8",
+                new Quantity
+                {
+                    Value = 55.7m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm"
+                })
+            .AddComponent("percent-change",
+                new Quantity
+                    { Value = 23.5m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
             .AddComponent("new-lesions", true)
             .WithBodySite("39607008", "Lung structure")
             .AddImagingStudy(_imagingStudyReference)
@@ -528,7 +585,7 @@ public class RecistProgressionObservationBuilderTests
 
         // Act
         var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
-        var json = serializer.SerializeToString(observation);
+        string json = serializer.SerializeToString(observation);
 
         // Assert
         json.ShouldNotBeNullOrEmpty();
@@ -560,14 +617,16 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
-            .AddComponent("33359-2", new Quantity { Value = 15.5m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
+            .AddComponent("33359-2",
+                new Quantity
+                    { Value = 15.5m, Unit = "%", System = "http://unitsofmeasure.org", Code = "%" })
             .Build();
 
         // Assert
-        var component = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? component = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "33359-2"));
         component.ShouldNotBeNull();
         component.Code.Coding[0].System.ShouldBe(FhirCodingHelper.Systems.LOINC_SYSTEM);
@@ -581,14 +640,18 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
-            .AddComponent("371508000", new Quantity { Value = 45.2m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
+            .AddComponent("371508000",
+                new Quantity
+                {
+                    Value = 45.2m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm"
+                })
             .Build();
 
         // Assert
-        var component = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? component = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "371508000"));
         component.ShouldNotBeNull();
         component.Code.Coding[0].System.ShouldBe(FhirCodingHelper.Systems.SNOMED_SYSTEM);
@@ -602,17 +665,22 @@ public class RecistProgressionObservationBuilderTests
         var builder = new RecistProgressionObservationBuilder(_configuration);
 
         // Act
-        var observation = builder
+        Observation observation = builder
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
-            .AddComponent("nadir-sld", new Quantity { Value = 38.5m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm" })
+            .AddComponent("nadir-sld",
+                new Quantity
+                {
+                    Value = 38.5m, Unit = "mm", System = "http://unitsofmeasure.org", Code = "mm"
+                })
             .Build();
 
         // Assert
-        var component = observation.Component.FirstOrDefault(c =>
+        Observation.ComponentComponent? component = observation.Component.FirstOrDefault(c =>
             c.Code.Coding.Any(cd => cd.Code == "nadir-sld"));
         component.ShouldNotBeNull();
-        component.Code.Coding[0].System.ShouldBe("http://thirdopinion.ai/fhir/CodeSystem/recist-components");
+        component.Code.Coding[0].System
+            .ShouldBe("http://thirdopinion.ai/fhir/CodeSystem/recist-components");
         component.Code.Coding[0].Display.ShouldBe("Nadir sum of longest diameters");
     }
 
@@ -620,7 +688,7 @@ public class RecistProgressionObservationBuilderTests
     public void Build_WithAllRecistResponseTypes_SupportsAllNciCodes()
     {
         // Test Complete Response
-        var crObservation = new RecistProgressionObservationBuilder(_configuration)
+        Observation crObservation = new RecistProgressionObservationBuilder(_configuration)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithRecistResponse("C18213", "Complete Response")
@@ -630,7 +698,7 @@ public class RecistProgressionObservationBuilderTests
         crValue.Coding[0].Code.ShouldBe("C18213");
 
         // Test Partial Response
-        var prObservation = new RecistProgressionObservationBuilder(_configuration)
+        Observation prObservation = new RecistProgressionObservationBuilder(_configuration)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithRecistResponse("C18058", "Partial Response")
@@ -640,7 +708,7 @@ public class RecistProgressionObservationBuilderTests
         prValue.Coding[0].Code.ShouldBe("C18058");
 
         // Test Stable Disease
-        var sdObservation = new RecistProgressionObservationBuilder(_configuration)
+        Observation sdObservation = new RecistProgressionObservationBuilder(_configuration)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithRecistResponse("C18052", "Stable Disease")
@@ -648,5 +716,561 @@ public class RecistProgressionObservationBuilderTests
 
         var sdValue = sdObservation.Value as CodeableConcept;
         sdValue.Coding[0].Code.ShouldBe("C18052");
+    }
+
+    [Fact]
+    public void WithDetermination_True_CreatesComponentCorrectly()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("True")
+            .WithConfidence(0.92f)
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+
+        // Check determination component
+        Observation.ComponentComponent? determinationComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "determination"));
+        determinationComponent.ShouldNotBeNull();
+        ((FhirString)determinationComponent.Value).Value.ShouldBe("True");
+
+        // Check confidence component
+        Observation.ComponentComponent? confidenceComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "LA11892-6"));
+        confidenceComponent.ShouldNotBeNull();
+        ((Quantity)confidenceComponent.Value).Value.ShouldBe(0.92m);
+    }
+
+    [Fact]
+    public void WithDetermination_False_CreatesComponentCorrectly()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("False")
+            .WithConfidence(0.88f)
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+
+        // Check determination component
+        Observation.ComponentComponent? determinationComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "determination"));
+        determinationComponent.ShouldNotBeNull();
+        ((FhirString)determinationComponent.Value).Value.ShouldBe("False");
+    }
+
+    [Fact]
+    public void WithDetermination_Inconclusive_CreatesComponentCorrectly()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("Inconclusive")
+            .WithConfidence(0.5f)
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+
+        // Check determination component
+        Observation.ComponentComponent? determinationComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "determination"));
+        determinationComponent.ShouldNotBeNull();
+        ((FhirString)determinationComponent.Value).Value.ShouldBe("Inconclusive");
+    }
+
+    [Fact]
+    public void WithMeasurementChange_CreatesComponentCorrectly()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("True")
+            .WithMeasurementChange("Target lesions increased from 38.5mm to 45.2mm")
+            .Build();
+
+        // Assert
+        Observation.ComponentComponent? measurementComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "measurement-change"));
+        measurementComponent.ShouldNotBeNull();
+        ((FhirString)measurementComponent.Value).Value.ShouldBe(
+            "Target lesions increased from 38.5mm to 45.2mm");
+    }
+
+    [Fact]
+    public void WithImagingType_CreatesComponentCorrectly()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("True")
+            .WithImagingType("CT Chest/Abdomen/Pelvis with contrast")
+            .Build();
+
+        // Assert
+        Observation.ComponentComponent? imagingTypeComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "imaging-type"));
+        imagingTypeComponent.ShouldNotBeNull();
+        ((FhirString)imagingTypeComponent.Value).Value.ShouldBe(
+            "CT Chest/Abdomen/Pelvis with contrast");
+    }
+
+    [Fact]
+    public void WithConfirmationDate_CreatesComponentCorrectly()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+        var confirmationDate = new DateTime(2025, 2, 15);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("True")
+            .WithConfirmationDate(confirmationDate)
+            .Build();
+
+        // Assert
+        Observation.ComponentComponent? confirmationDateComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "confirmation-date"));
+        confirmationDateComponent.ShouldNotBeNull();
+        var dateValue = confirmationDateComponent.Value as FhirDateTime;
+        dateValue.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void WithSupportingFacts_AddsClinicalFactExtensions()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("True")
+            .WithSupportingFacts(_sampleFacts)
+            .Build();
+
+        // Assert
+        observation.Extension.ShouldNotBeEmpty();
+
+        // Check that clinical fact extensions were added
+        List<Extension> clinicalFactExtensions = observation.Extension
+            .Where(e => e.Url == "https://thirdopinion.io/clinical-fact")
+            .ToList();
+
+        clinicalFactExtensions.Count.ShouldBe(1);
+
+        // Verify first fact extension has nested extensions
+        Extension firstFactExtension = clinicalFactExtensions[0];
+        firstFactExtension.Extension.ShouldNotBeEmpty();
+
+        // Check for factGuid in nested extensions
+        // Extension? factGuidExtension = firstFactExtension.Extension
+        //     .FirstOrDefault(e => e.Url == "factGuid");
+        // factGuidExtension.ShouldNotBeNull();
+        // ((FhirString)factGuidExtension.Value).Value.ShouldBe(
+        //     "aa10e02a-f391-4614-96e4-35cbe47d2a85");
+        //
+        // // Verify second fact extension has nested extensions
+        // Extension secondFactExtension = clinicalFactExtensions[1];
+        // secondFactExtension.Extension.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public void WithConfidence_WithInvalidRange_ThrowsArgumentOutOfRangeException()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act & Assert
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.WithConfidence(-0.1f));
+        Should.Throw<ArgumentOutOfRangeException>(() => builder.WithConfidence(1.1f));
+    }
+
+    [Fact]
+    public void Build_WithAllEnhancedComponents_CreatesCompleteObservation()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+        var confirmationDate = new DateTime(2025, 3, 20);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("True")
+            .WithMeasurementChange("Target lesions increased by 17.4%")
+            .WithImagingType("CT Chest/Abdomen/Pelvis")
+            .WithConfirmationDate(confirmationDate)
+            .WithSupportingFacts(_sampleFacts)
+            .WithConfidence(0.89f)
+            .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE,
+                "Progressive Disease")
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+
+        // Check value shows progression from WithRecistResponse
+        var valueCodeableConcept = observation.Value as CodeableConcept;
+        valueCodeableConcept.ShouldNotBeNull();
+        valueCodeableConcept.Coding.First().Code
+            .ShouldBe(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE);
+
+        // Check all enhanced components are present
+        Observation.ComponentComponent? measurementComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "measurement-change"));
+        measurementComponent.ShouldNotBeNull();
+
+        Observation.ComponentComponent? imagingComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "imaging-type"));
+        imagingComponent.ShouldNotBeNull();
+
+        Observation.ComponentComponent? confirmationComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "confirmation-date"));
+        confirmationComponent.ShouldNotBeNull();
+
+        Observation.ComponentComponent? confidenceComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "LA11892-6"));
+        confidenceComponent.ShouldNotBeNull();
+
+        // Check supporting facts extensions
+        observation.Extension.Any(e => e.Url == "https://thirdopinion.io/clinical-fact")
+            .ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Build_WithoutIdentified_SucceedsWithoutException()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+        // No identified component should be present
+        Observation.ComponentComponent? identifiedComponent = observation.Component
+            ?.FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "identified"));
+        identifiedComponent.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Build_HasAiastSecurityLabel()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("True")
+            .Build();
+
+        // Assert
+        observation.Meta.Security.ShouldNotBeNull();
+        observation.Meta.Security.Any(s => s.Code == "AIAST").ShouldBeTrue();
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_AddsExtensionCorrectly()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+        var timepointsJson = @"{
+            ""patientId"": ""P-001"",
+            ""timepoints"": [
+                {
+                    ""timepointId"": ""TP-BASELINE"",
+                    ""assessmentDate"": ""2025-01-01"",
+                    ""isBaseline"": true,
+                    ""imagingModality"": ""CT"",
+                    ""sliceThickness"": 5,
+                    ""targetLesions"": [
+                        {
+                            ""lesionId"": ""TL-001"",
+                            ""lesionType"": ""non-nodal"",
+                            ""anatomicalLocation"": ""Right lung upper lobe"",
+                            ""organ"": ""lung"",
+                            ""measurementAxis"": ""long_axis"",
+                            ""measurementMM"": 45.5
+                        }
+                    ],
+                    ""sumOfDiameters"": 45.5
+                }
+            ]
+        }";
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithRecistTimepointsJson(timepointsJson)
+            .Build();
+
+        // Assert
+        observation.Extension.ShouldNotBeEmpty();
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldNotBeNull();
+
+        // Verify nested extension contains the JSON
+        Extension? jsonExtension = timepointsExtension.Extension
+            .FirstOrDefault(e => e.Url == "timepointsJson");
+        jsonExtension.ShouldNotBeNull();
+        var jsonValue = jsonExtension.Value as FhirString;
+        jsonValue.ShouldNotBeNull();
+        jsonValue.Value.ShouldContain("TP-BASELINE");
+        jsonValue.Value.ShouldContain("TL-001");
+        jsonValue.Value.ShouldContain("lung");
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_NullJson_DoesNotAddExtension()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithRecistTimepointsJson(null)
+            .Build();
+
+        // Assert
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_EmptyString_DoesNotAddExtension()
+    {
+        // Arrange
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithRecistTimepointsJson("   ")
+            .Build();
+
+        // Assert
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_FluentInterfaceChaining_Works()
+    {
+        // Arrange
+        var timepointsJson = @"{""timepoints"":[{""timepointId"":""TP-001""}]}";
+
+        // Act
+        Observation observation = new RecistProgressionObservationBuilder(_configuration)
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithRecistTimepointsJson(timepointsJson)
+            .WithRecistResponse(FhirCodingHelper.NciCodes.PROGRESSIVE_DISEASE, "Progressive Disease")
+            .WithConfidence(0.95f)
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldNotBeNull();
+
+        // Verify other properties still work
+        observation.Subject.ShouldBe(_patientReference);
+        observation.Device.ShouldBe(_deviceReference);
+        observation.Focus[0].ShouldBe(_tumorReference);
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_SerializesAndDeserializes()
+    {
+        // Arrange
+        var timepointsJson = @"{
+            ""patientId"": ""P-123"",
+            ""timepoints"": [
+                {
+                    ""timepointId"": ""TP-001"",
+                    ""assessmentDate"": ""2025-02-15"",
+                    ""isBaseline"": false,
+                    ""sumOfDiameters"": 52.3
+                }
+            ]
+        }";
+
+        var builder = new RecistProgressionObservationBuilder(_configuration);
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithRecistTimepointsJson(timepointsJson)
+            .Build();
+
+        // Act - Serialize
+        var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
+        string json = serializer.SerializeToString(observation);
+
+        // Assert - Verify serialization
+        json.ShouldContain("https://thirdopinion.io/recist-timepoints");
+        json.ShouldContain("timepointsJson");
+        json.ShouldContain("TP-001");
+
+        // Act - Deserialize
+        var parser = new FhirJsonParser();
+        var deserializedObs = parser.Parse<Observation>(json);
+
+        // Assert - Verify deserialization
+        deserializedObs.ShouldNotBeNull();
+        Extension? deserializedExtension = deserializedObs.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        deserializedExtension.ShouldNotBeNull();
+
+        Extension? jsonExt = deserializedExtension.Extension
+            .FirstOrDefault(e => e.Url == "timepointsJson");
+        jsonExt.ShouldNotBeNull();
+        var deserializedJsonValue = jsonExt.Value as FhirString;
+        deserializedJsonValue.Value.ShouldContain("P-123");
+        deserializedJsonValue.Value.ShouldContain("TP-001");
+    }
+
+    [Fact]
+    public void Build_WithoutRecistTimepointsJson_MaintainsBackwardCompatibility()
+    {
+        // Arrange & Act - Build without using the new feature
+        Observation observation = new RecistProgressionObservationBuilder(_configuration)
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithRecistResponse(FhirCodingHelper.NciCodes.STABLE_DISEASE, "Stable Disease")
+            .Build();
+
+        // Assert - Should work exactly as before
+        observation.ShouldNotBeNull();
+        observation.Status.ShouldBe(ObservationStatus.Final);
+        observation.Subject.ShouldBe(_patientReference);
+        observation.Device.ShouldBe(_deviceReference);
+
+        // No timepoints extension should be present
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldBeNull();
+    }
+
+    [Fact]
+    public void WithRecistTimepointsJson_ComplexJson_StoresCorrectly()
+    {
+        // Arrange - Test with complex nested JSON structure
+        var complexJson = @"{
+            ""patientId"": ""P-456"",
+            ""timepoints"": [
+                {
+                    ""timepointId"": ""TP-BASELINE"",
+                    ""assessmentDate"": ""2025-01-01"",
+                    ""isBaseline"": true,
+                    ""imagingModality"": ""CT"",
+                    ""targetLesions"": [
+                        {
+                            ""lesionId"": ""TL-001"",
+                            ""anatomicalLocation"": ""Liver segment 6"",
+                            ""measurementMM"": 35.0
+                        },
+                        {
+                            ""lesionId"": ""TL-002"",
+                            ""anatomicalLocation"": ""Right lung"",
+                            ""measurementMM"": 22.5
+                        }
+                    ],
+                    ""nonTargetLesions"": [
+                        {
+                            ""anatomicalSite"": ""Bone"",
+                            ""description"": ""Multiple sclerotic lesions"",
+                            ""status"": ""present""
+                        }
+                    ],
+                    ""newLesionAssessment"": {
+                        ""present"": false,
+                        ""lesions"": []
+                    },
+                    ""sumOfDiameters"": 57.5,
+                    ""notes"": ""Baseline assessment complete""
+                }
+            ]
+        }";
+
+        // Act
+        Observation observation = new RecistProgressionObservationBuilder(_configuration)
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithRecistTimepointsJson(complexJson)
+            .Build();
+
+        // Assert
+        Extension? timepointsExtension = observation.Extension
+            .FirstOrDefault(e => e.Url == "https://thirdopinion.io/recist-timepoints");
+        timepointsExtension.ShouldNotBeNull();
+
+        Extension? jsonExtension = timepointsExtension.Extension
+            .FirstOrDefault(e => e.Url == "timepointsJson");
+        var storedJson = (jsonExtension?.Value as FhirString)?.Value;
+        storedJson.ShouldNotBeNull();
+
+        // Verify all components are preserved
+        storedJson.ShouldContain("TL-001");
+        storedJson.ShouldContain("TL-002");
+        storedJson.ShouldContain("Liver segment 6");
+        storedJson.ShouldContain("Right lung");
+        storedJson.ShouldContain("nonTargetLesions");
+        storedJson.ShouldContain("newLesionAssessment");
+        storedJson.ShouldContain("Baseline assessment complete");
     }
 }

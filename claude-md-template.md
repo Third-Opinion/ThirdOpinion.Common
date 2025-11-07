@@ -1,16 +1,20 @@
 # CLAUDE.md - thirdopinion.common Package Context
 
 ## Package Overview
-thirdopinion.common is a reusable .NET library providing unified interfaces for AWS services (S3, DynamoDB, Cognito) with built-in retry logic, logging, and error handling optimized for production workloads.
+
+thirdopinion.common is a reusable .NET library providing unified interfaces for AWS services (S3, DynamoDB, Cognito)
+with built-in retry logic, logging, and error handling optimized for production workloads.
 
 ## Installation & Setup
 
 ### 1. Install Package
+
 ```bash
 dotnet add package thirdopinion.common --version 1.0.0
 ```
 
 ### 2. Required Dependencies
+
 ```xml
 <PackageReference Include="AWSSDK.S3" Version="3.7.*" />
 <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.*" />
@@ -20,6 +24,7 @@ dotnet add package thirdopinion.common --version 1.0.0
 ```
 
 ### 3. Configure in Program.cs (NET 8)
+
 ```csharp
 using ThirdOpinion.Common;
 using ThirdOpinion.Common.Extensions;
@@ -36,6 +41,7 @@ var app = builder.Build();
 ```
 
 ### 4. appsettings.json Configuration
+
 ```json
 {
   "AWS": {
@@ -64,6 +70,7 @@ var app = builder.Build();
 ## Service Interfaces
 
 ### IS3Service - S3 Operations
+
 ```csharp
 public interface IS3Service
 {
@@ -91,6 +98,7 @@ public interface IS3Service
 ```
 
 ### IDynamoDBService - DynamoDB Operations
+
 ```csharp
 public interface IDynamoDBService
 {
@@ -121,6 +129,7 @@ public interface IDynamoDBService
 ```
 
 ### ICognitoService - Authentication & User Management
+
 ```csharp
 public interface ICognitoService
 {
@@ -162,6 +171,7 @@ public interface ICognitoService
 ## Common Usage Patterns
 
 ### Pattern 1: File Upload with Progress
+
 ```csharp
 [ApiController]
 [Route("api/[controller]")]
@@ -200,6 +210,7 @@ public class DocumentController : ControllerBase
 ```
 
 ### Pattern 2: DynamoDB CRUD Operations
+
 ```csharp
 public class UserRepository
 {
@@ -251,6 +262,7 @@ public class UserRepository
 ```
 
 ### Pattern 3: Cognito Authentication Flow
+
 ```csharp
 public class AuthService
 {
@@ -340,6 +352,7 @@ catch (ThirdOpinion.Common.Exceptions.RetryExhaustedException ex)
 ## Testing & Local Development
 
 ### LocalStack Configuration
+
 ```json
 {
   "AWS": {
@@ -351,6 +364,7 @@ catch (ThirdOpinion.Common.Exceptions.RetryExhaustedException ex)
 ```
 
 ### Unit Testing with Mocks
+
 ```csharp
 [Test]
 public async Task UploadAsync_ValidFile_ReturnsResult()
@@ -380,6 +394,7 @@ public async Task UploadAsync_ValidFile_ReturnsResult()
 ## IAM Permissions Required
 
 ### S3 Service
+
 ```json
 {
   "Version": "2012-10-17",
@@ -402,6 +417,7 @@ public async Task UploadAsync_ValidFile_ReturnsResult()
 ```
 
 ### DynamoDB Service
+
 ```json
 {
   "Version": "2012-10-17",
@@ -424,6 +440,7 @@ public async Task UploadAsync_ValidFile_ReturnsResult()
 ```
 
 ### Cognito Service
+
 ```json
 {
   "Version": "2012-10-17",
@@ -454,26 +471,28 @@ public async Task UploadAsync_ValidFile_ReturnsResult()
 ### Common Issues
 
 1. **"Unable to find credentials"**
-   - Check AWS profile in appsettings.json
-   - Verify environment variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
-   - Ensure IAM role attached if running on EC2/ECS
+    - Check AWS profile in appsettings.json
+    - Verify environment variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+    - Ensure IAM role attached if running on EC2/ECS
 
 2. **"The specified bucket does not exist"**
-   - Verify bucket name in configuration
-   - Check region settings match bucket location
-   - Ensure bucket exists and is accessible
+    - Verify bucket name in configuration
+    - Check region settings match bucket location
+    - Ensure bucket exists and is accessible
 
 3. **"User pool does not exist"**
-   - Confirm UserPoolId in configuration
-   - Verify region matches Cognito user pool region
-   - Check ClientId and ClientSecret are correct
+    - Confirm UserPoolId in configuration
+    - Verify region matches Cognito user pool region
+    - Check ClientId and ClientSecret are correct
 
 ## Package Maintainers
+
 - Repository: https://github.com/thirdopinion/thirdopinion.common
 - NuGet: https://www.nuget.org/packages/thirdopinion.common
 - Issues: https://github.com/thirdopinion/thirdopinion.common/issues
 
 ## Version History
+
 - 1.0.0: Initial release with S3, DynamoDB, Cognito support
 - 1.1.0: Added retry policies and circuit breaker patterns
 - 1.2.0: Performance improvements and batch operation support

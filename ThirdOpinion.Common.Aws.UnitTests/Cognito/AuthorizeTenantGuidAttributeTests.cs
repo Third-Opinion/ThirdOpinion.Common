@@ -9,30 +9,32 @@ namespace ThirdOpinion.Common.Aws.Tests.Cognito;
 
 public class AuthorizeTenantGuidAttributeTests
 {
-    private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
-    private readonly Mock<IOptions<GlobalAppSettingsOptions>> _optionsMock;
-    private readonly Mock<HttpContext> _httpContextMock;
-    private readonly GlobalAppSettingsOptions _globalSettings;
     private readonly AuthorizeTenantGuidAttribute _attribute;
+    private readonly GlobalAppSettingsOptions _globalSettings;
+    private readonly Mock<IHttpContextAccessor> _httpContextAccessorMock;
+    private readonly Mock<HttpContext> _httpContextMock;
+    private readonly Mock<IOptions<GlobalAppSettingsOptions>> _optionsMock;
 
     public AuthorizeTenantGuidAttributeTests()
     {
         _httpContextAccessorMock = new Mock<IHttpContextAccessor>();
         _optionsMock = new Mock<IOptions<GlobalAppSettingsOptions>>();
         _httpContextMock = new Mock<HttpContext>();
-        
+
         _globalSettings = new GlobalAppSettingsOptions
         {
             Tenants = new GlobalAppSettingsOptions.TenantOptions
             {
                 TenantGroups = new Dictionary<string, List<string>>
                 {
-                    { "550e8400-e29b-41d4-a716-446655440000", new List<string> { "Admin", "User" } },
+                    {
+                        "550e8400-e29b-41d4-a716-446655440000", new List<string> { "Admin", "User" }
+                    },
                     { "550e8400-e29b-41d4-a716-446655440001", new List<string> { "Manager" } }
                 }
             }
         };
-        
+
         _optionsMock.Setup(o => o.Value).Returns(_globalSettings);
         _attribute = new AuthorizeTenantGuidAttribute();
     }
@@ -41,11 +43,12 @@ public class AuthorizeTenantGuidAttributeTests
     public void IsValid_ValidTenantGuidAndMatchingGroups_ReturnsSuccess()
     {
         // Arrange
-        var tenantGuid = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
-        var validationContext = CreateValidationContext(new List<string> { "Admin", "TestGroup" }, true);
+        Guid tenantGuid = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
+        ValidationContext validationContext
+            = CreateValidationContext(new List<string> { "Admin", "TestGroup" }, true);
 
         // Act
-        var result = _attribute.GetValidationResult(tenantGuid, validationContext);
+        ValidationResult? result = _attribute.GetValidationResult(tenantGuid, validationContext);
 
         // Assert
         result.ShouldBe(ValidationResult.Success);
@@ -55,11 +58,12 @@ public class AuthorizeTenantGuidAttributeTests
     public void IsValid_ValidTenantGuidButNoMatchingGroups_ReturnsValidationError()
     {
         // Arrange
-        var tenantGuid = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
-        var validationContext = CreateValidationContext(new List<string> { "WrongGroup" }, true);
+        Guid tenantGuid = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
+        ValidationContext validationContext
+            = CreateValidationContext(new List<string> { "WrongGroup" }, true);
 
         // Act
-        var result = _attribute.GetValidationResult(tenantGuid, validationContext);
+        ValidationResult? result = _attribute.GetValidationResult(tenantGuid, validationContext);
 
         // Assert
         result.ShouldNotBe(ValidationResult.Success);
@@ -70,11 +74,12 @@ public class AuthorizeTenantGuidAttributeTests
     public void IsValid_UnauthenticatedUser_ReturnsValidationError()
     {
         // Arrange
-        var tenantGuid = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
-        var validationContext = CreateValidationContext(new List<string> { "Admin" }, false);
+        Guid tenantGuid = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
+        ValidationContext validationContext
+            = CreateValidationContext(new List<string> { "Admin" }, false);
 
         // Act
-        var result = _attribute.GetValidationResult(tenantGuid, validationContext);
+        ValidationResult? result = _attribute.GetValidationResult(tenantGuid, validationContext);
 
         // Assert
         result.ShouldNotBe(ValidationResult.Success);
@@ -85,11 +90,11 @@ public class AuthorizeTenantGuidAttributeTests
     public void IsValid_UserHasNoGroups_ReturnsValidationError()
     {
         // Arrange
-        var tenantGuid = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
-        var validationContext = CreateValidationContext(null, true);
+        Guid tenantGuid = Guid.Parse("550e8400-e29b-41d4-a716-446655440000");
+        ValidationContext validationContext = CreateValidationContext(null, true);
 
         // Act
-        var result = _attribute.GetValidationResult(tenantGuid, validationContext);
+        ValidationResult? result = _attribute.GetValidationResult(tenantGuid, validationContext);
 
         // Assert
         result.ShouldNotBe(ValidationResult.Success);
@@ -100,11 +105,12 @@ public class AuthorizeTenantGuidAttributeTests
     public void IsValid_TenantGuidNotInConfig_ReturnsValidationError()
     {
         // Arrange
-        var tenantGuid = Guid.Parse("550e8400-e29b-41d4-a716-446655440999");
-        var validationContext = CreateValidationContext(new List<string> { "Admin" }, true);
+        Guid tenantGuid = Guid.Parse("550e8400-e29b-41d4-a716-446655440999");
+        ValidationContext validationContext
+            = CreateValidationContext(new List<string> { "Admin" }, true);
 
         // Act
-        var result = _attribute.GetValidationResult(tenantGuid, validationContext);
+        ValidationResult? result = _attribute.GetValidationResult(tenantGuid, validationContext);
 
         // Assert
         result.ShouldNotBe(ValidationResult.Success);
@@ -115,12 +121,14 @@ public class AuthorizeTenantGuidAttributeTests
     public void IsValid_EmptyTenantGroups_ReturnsValidationError()
     {
         // Arrange
-        _globalSettings.Tenants.TenantGroups["550e8400-e29b-41d4-a716-446655440002"] = new List<string>();
-        var tenantGuid = Guid.Parse("550e8400-e29b-41d4-a716-446655440002");
-        var validationContext = CreateValidationContext(new List<string> { "Admin" }, true);
+        _globalSettings.Tenants.TenantGroups["550e8400-e29b-41d4-a716-446655440002"]
+            = new List<string>();
+        Guid tenantGuid = Guid.Parse("550e8400-e29b-41d4-a716-446655440002");
+        ValidationContext validationContext
+            = CreateValidationContext(new List<string> { "Admin" }, true);
 
         // Act
-        var result = _attribute.GetValidationResult(tenantGuid, validationContext);
+        ValidationResult? result = _attribute.GetValidationResult(tenantGuid, validationContext);
 
         // Assert
         result.ShouldNotBe(ValidationResult.Success);
@@ -131,29 +139,29 @@ public class AuthorizeTenantGuidAttributeTests
     public void IsValid_MultiTenantScenario_ValidatesCorrectly()
     {
         // Arrange
-        var tenantGuid = Guid.Parse("550e8400-e29b-41d4-a716-446655440001");
-        var validationContext = CreateValidationContext(new List<string> { "Manager", "User" }, true);
+        Guid tenantGuid = Guid.Parse("550e8400-e29b-41d4-a716-446655440001");
+        ValidationContext validationContext
+            = CreateValidationContext(new List<string> { "Manager", "User" }, true);
 
         // Act
-        var result = _attribute.GetValidationResult(tenantGuid, validationContext);
+        ValidationResult? result = _attribute.GetValidationResult(tenantGuid, validationContext);
 
         // Assert
         result.ShouldBe(ValidationResult.Success);
     }
 
-    private ValidationContext CreateValidationContext(List<string>? userGroups, bool isAuthenticated)
+    private ValidationContext CreateValidationContext(List<string>? userGroups,
+        bool isAuthenticated)
     {
         var claims = new List<Claim>();
         if (userGroups != null)
-        {
             claims.Add(new Claim("cognito:groups", string.Join(",", userGroups)));
-        }
 
-        var claimsIdentity = isAuthenticated 
-            ? new ClaimsIdentity(claims, "TestAuthType") 
+        ClaimsIdentity claimsIdentity = isAuthenticated
+            ? new ClaimsIdentity(claims, "TestAuthType")
             : new ClaimsIdentity(claims);
         var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-        
+
         _httpContextMock.Setup(h => h.User).Returns(claimsPrincipal);
         _httpContextAccessorMock.Setup(h => h.HttpContext).Returns(_httpContextMock.Object);
 
@@ -163,6 +171,7 @@ public class AuthorizeTenantGuidAttributeTests
         serviceProvider.Setup(sp => sp.GetService(typeof(IOptions<GlobalAppSettingsOptions>)))
             .Returns(_optionsMock.Object);
 
-        return new ValidationContext(new object(), serviceProvider.Object, new Dictionary<object, object?>());
+        return new ValidationContext(new object(), serviceProvider.Object,
+            new Dictionary<object, object?>());
     }
 }

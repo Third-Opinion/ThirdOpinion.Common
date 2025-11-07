@@ -1,0 +1,672 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ThirdOpinion.Common.Aws.Bedrock</name>
+    </assembly>
+    <members>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationRequest">
+            <summary>
+                Request model for invoking a Bedrock model
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationRequest.ModelId">
+            <summary>
+                The identifier of the model to invoke
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationRequest.Prompt">
+            <summary>
+                The prompt to send to the model
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationRequest.Parameters">
+            <summary>
+                Additional parameters for model invocation
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationRequest.MaxTokens">
+            <summary>
+                Maximum number of tokens to generate
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationRequest.Temperature">
+            <summary>
+                Temperature for response randomness (0.0 to 1.0)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationRequest.TopP">
+            <summary>
+                Top-p nucleus sampling parameter
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationRequest.StopSequences">
+            <summary>
+                Stop sequences to halt generation
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationRequest.SystemPrompt">
+            <summary>
+                System prompt for Claude models
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationRequest.Messages">
+            <summary>
+                Messages for conversational models (Claude)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationRequest.ToolConfiguration">
+            <summary>
+                Tool configuration for structured output (Claude models)
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationResponse">
+            <summary>
+                Response model from a Bedrock model invocation
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationResponse.Content">
+            <summary>
+                The generated text content
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationResponse.Usage">
+            <summary>
+                Usage statistics for the invocation
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationResponse.ModelId">
+            <summary>
+                The model that was invoked
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationResponse.StopReason">
+            <summary>
+                Stop reason for generation ending
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationResponse.RequestId">
+            <summary>
+                Request ID for tracking
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationResponse.Duration">
+            <summary>
+                Duration of the model invocation
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelInvocationResponse.RawResponse">
+            <summary>
+                Raw response body from the model (for debugging)
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ModelUsage">
+            <summary>
+                Usage statistics for a model invocation
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelUsage.InputTokens">
+            <summary>
+                Number of input tokens
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelUsage.OutputTokens">
+            <summary>
+                Number of output tokens
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ModelUsage.TotalTokens">
+            <summary>
+                Total number of tokens
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ChatMessage">
+            <summary>
+                Chat message for conversational models
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ChatMessage.Role">
+            <summary>
+                Role of the message sender (user, assistant, system)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ChatMessage.Content">
+            <summary>
+                Content of the message
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ClaudeRequest">
+            <summary>
+                Claude-specific request format
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ClaudeMessage">
+            <summary>
+                Claude message format
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ClaudeResponse">
+            <summary>
+                Claude response format
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ClaudeContent">
+            <summary>
+                Claude content block
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ClaudeUsage">
+            <summary>
+                Claude usage statistics
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.TitanTextRequest">
+            <summary>
+                Titan text request format
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.TitanTextGenerationConfig">
+            <summary>
+                Titan text generation configuration
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.TitanTextResponse">
+            <summary>
+                Titan text response format
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.TitanResult">
+            <summary>
+                Titan result format
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.BedrockModels">
+            <summary>
+                Known Bedrock model identifiers and utilities
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockModels.IsClaudeModel(System.String)">
+            <summary>
+                Determines if a model uses Claude format
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockModels.IsTitanModel(System.String)">
+            <summary>
+                Determines if a model uses Titan format
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockModels.IsLlamaModel(System.String)">
+            <summary>
+                Determines if a model uses Llama format
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockModels.IsClaude4Model(System.String)">
+            <summary>
+                Determines if a model is a supported Claude 4.x model
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockModels.IsUnsupportedClaude3Model(System.String)">
+            <summary>
+                Determines if a model is an unsupported Claude 3.x model
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.BedrockFoundationModel">
+            <summary>
+                Information about a Bedrock foundation model
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.BedrockFoundationModel.ModelId">
+            <summary>
+                The model identifier
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.BedrockFoundationModel.ModelName">
+            <summary>
+                The model name
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.BedrockFoundationModel.ProviderName">
+            <summary>
+                The provider of the model (e.g., Anthropic, Amazon, Meta)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.BedrockFoundationModel.ModelArn">
+            <summary>
+                Model ARN
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.BedrockFoundationModel.InputModalities">
+            <summary>
+                Supported input modalities (TEXT, IMAGE, etc.)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.BedrockFoundationModel.OutputModalities">
+            <summary>
+                Supported output modalities (TEXT, IMAGE, etc.)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.BedrockFoundationModel.ResponseStreamingSupported">
+            <summary>
+                Whether the model supports streaming
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.BedrockFoundationModel.Customizations">
+            <summary>
+                Supported customizations (FINE_TUNING, etc.)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.BedrockFoundationModel.InferenceTypes">
+            <summary>
+                Supported inference types (ON_DEMAND, PROVISIONED)
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ListFoundationModelsResponse">
+            <summary>
+                Response from listing foundation models
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ListFoundationModelsResponse.ModelSummaries">
+            <summary>
+                List of available foundation models
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.ListFoundationModelsResponse.NextToken">
+            <summary>
+                Token for pagination
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ClaudeTool">
+            <summary>
+                Claude tool definition for JSON request
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ClaudeToolChoice">
+            <summary>
+                Claude tool choice configuration
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ClaudeToolUse">
+            <summary>
+                Claude tool use result in message content
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ClaudeToolResult">
+            <summary>
+                Claude tool result in message content (for responses from tool calls)
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ToolConfigurationHelper">
+            <summary>
+                Helper class for converting between Bedrock ToolConfiguration and Claude tool formats
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.ToolConfigurationHelper.ConvertToClaudeTools(Amazon.BedrockRuntime.Model.ToolConfiguration)">
+            <summary>
+                Converts a Bedrock ToolConfiguration to Claude tools format
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.ToolConfigurationHelper.ConvertInputSchema(Amazon.BedrockRuntime.Model.ToolInputSchema)">
+            <summary>
+                Converts Bedrock ToolInputSchema to Claude input schema format
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.LlmRecord">
+            <summary>
+                Represents a simplified LLM processing record without document downloads
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.LlmRecord.PatientId">
+            <summary>
+                Patient ID for context (required)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.LlmRecord.PracticeId">
+            <summary>
+                Practice/Organization ID for context (required)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.LlmRecord.Metadata">
+            <summary>
+                Optional metadata as key-value pairs (format: "key1=value1;key2=value2")
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.LlmRecord.SequenceNumber">
+            <summary>
+                Sequence number for tracking
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.LlmRecord.ParseMetadata">
+            <summary>
+                Parse metadata string into dictionary
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.LlmRecord.ToString">
+            <summary>
+                Returns a string representation of the record
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.IBedrockPricingService">
+            <summary>
+                Service for managing Bedrock model pricing and cost calculations
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.IBedrockPricingService.CalculateCost(System.String,System.Int32,System.Int32,System.String)">
+            <summary>
+                Calculates the cost for a Bedrock model invocation
+            </summary>
+            <param name="modelId">Bedrock model identifier</param>
+            <param name="inputTokens">Number of input tokens</param>
+            <param name="outputTokens">Number of output tokens</param>
+            <param name="region">AWS region (optional, defaults to us-east-1)</param>
+            <returns>Cost calculation result</returns>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.IBedrockPricingService.GetModelPricing(System.String,System.String)">
+            <summary>
+                Gets pricing information for a specific model
+            </summary>
+            <param name="modelId">Bedrock model identifier</param>
+            <param name="region">AWS region (optional)</param>
+            <returns>Pricing information if available</returns>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.IBedrockPricingService.GetAllModelPricing">
+            <summary>
+                Gets all available model pricing information
+            </summary>
+            <returns>Dictionary of model pricing keyed by model ID</returns>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.BedrockPricingService">
+            <summary>
+                Implementation of Bedrock pricing service with current AWS pricing
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockPricingService.RemoveRegionPrefix(System.String)">
+            <summary>
+                Removes region prefixes (us., eu., etc.) from model IDs
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockPricingService.NormalizeModelId(System.String)">
+            <summary>
+                Normalizes model IDs by handling different naming patterns
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.BedrockService">
+            <summary>
+                Service for invoking AI models via AWS Bedrock runtime
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.#ctor(Amazon.BedrockRuntime.IAmazonBedrockRuntime,Amazon.Bedrock.IAmazonBedrock,ThirdOpinion.Common.Misc.RateLimiting.IRateLimiterService,ThirdOpinion.Common.Misc.Retry.IRetryPolicyService,Microsoft.Extensions.Logging.ILogger{ThirdOpinion.Common.Aws.Bedrock.BedrockService},ThirdOpinion.Common.Logging.ICorrelationIdProvider,Microsoft.Extensions.Options.IOptions{ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig},ThirdOpinion.Common.Langfuse.ILangfuseService,ThirdOpinion.Common.Aws.Bedrock.IBedrockPricingService)">
+            <summary>
+                Initializes a new instance of the BedrockService
+            </summary>
+            <param name="bedrockRuntimeClient">The AWS Bedrock runtime client</param>
+            <param name="bedrockClient">The AWS Bedrock client</param>
+            <param name="rateLimiterService">Rate limiter service</param>
+            <param name="retryPolicyService">Retry policy service</param>
+            <param name="logger">Logger instance</param>
+            <param name="correlationIdProvider">Correlation ID provider</param>
+            <param name="config">Bedrock configuration</param>
+            <param name="langfuseService">Optional Langfuse service for tracing</param>
+            <param name="pricingService">Optional pricing service for cost calculation</param>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.InvokeModelAsync(System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object},System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.InvokeModelAsync(ThirdOpinion.Common.Aws.Bedrock.ModelInvocationRequest,System.String,System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.GetAvailableModelsAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.TestConnectivityAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.GetFoundationModelsAsync(System.String,System.Boolean,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.GetModelInfoAsync(System.String,System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.SubstitutePromptVariables(System.String,ThirdOpinion.Common.Aws.Bedrock.LlmRecord)">
+            <summary>
+                Substitutes variables in a prompt template using values from an LlmRecord
+            </summary>
+            <param name="promptTemplate">The prompt template with {{variable}} placeholders</param>
+            <param name="record">The LlmRecord containing variable values</param>
+            <returns>The prompt with all variables substituted</returns>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.SubstitutePromptVariables(System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+                Substitutes variables in a prompt template using values from a provided dictionary
+            </summary>
+            <param name="promptTemplate">The prompt template with {{variable}} placeholders</param>
+            <param name="variableValues">Dictionary of variable names to values</param>
+            <returns>The prompt with all variables substituted</returns>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.ExtractPromptVariables(System.String)">
+            <summary>
+                Extracts variable names from a prompt template
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.GetVariableValue(System.String,ThirdOpinion.Common.Aws.Bedrock.LlmRecord,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+                Gets the value for a variable from the record or metadata
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.ReplaceIgnoreCase(System.String,System.String,System.String)">
+            <summary>
+                Replaces a string with another string (case-insensitive)
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.ExtractLangfuseConfig(System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>
+                Extracts configuration values from a Langfuse config dictionary
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.BedrockService.GetModelConfiguration(System.String)">
+            <summary>
+                Gets model configuration for a specific model ID
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.BedrockServiceException">
+            <summary>
+                Exception thrown by BedrockService operations
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig">
+            <summary>
+                Configuration for AWS Bedrock service
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.Region">
+            <summary>
+                AWS region for Bedrock service
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.MaxRetries">
+            <summary>
+                Maximum number of retries for API calls
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.TimeoutSeconds">
+            <summary>
+                Timeout in seconds for API calls
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.RequestTimeoutSeconds">
+            <summary>
+                Request timeout in seconds (alias for TimeoutSeconds)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.DefaultModelId">
+            <summary>
+                Default model ID to use if none specified
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.DefaultMaxTokens">
+            <summary>
+                Default maximum tokens for completions
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.DefaultTemperature">
+            <summary>
+                Default temperature for model responses
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.EnableDebugLogging">
+            <summary>
+                Enable debug logging
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.RateLimitPerMinute">
+            <summary>
+                Rate limit for Bedrock API calls per minute
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.ModelConfigurations">
+            <summary>
+                Model-specific configurations
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.Enabled">
+            <summary>
+                Whether the service is enabled
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.BedrockConfig.IsValid">
+            <summary>
+                Validates that the configuration is properly set up
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig">
+            <summary>
+                Configuration for specific models
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.ModelId">
+            <summary>
+                The actual model ID to use with Bedrock (e.g., "anthropic.claude-opus-4-1-20250805-v1:0")
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.DisplayName">
+            <summary>
+                Human-readable display name for this model
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.MaxTokens">
+            <summary>
+                Maximum tokens for this model
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.Temperature">
+            <summary>
+                Default temperature for this model
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.Enabled">
+            <summary>
+                Whether this model is enabled
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.RateLimitPerMinute">
+            <summary>
+                Custom rate limit for this model
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.CostPer1KInputTokens">
+            <summary>
+                Cost per 1000 input tokens (for monitoring)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.CostPer1KOutputTokens">
+            <summary>
+                Cost per 1000 output tokens (for monitoring)
+            </summary>
+        </member>
+        <member name="P:ThirdOpinion.Common.Aws.Bedrock.Configuration.ModelConfig.SearchTermsDocument">
+            <summary>
+                Search terms for document processing (from Langfuse configuration)
+            </summary>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.IBedrockService">
+            <summary>
+                Service for invoking AI models via AWS Bedrock runtime
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.IBedrockService.InvokeModelAsync(System.String,System.String,System.Collections.Generic.Dictionary{System.String,System.Object},System.Threading.CancellationToken)">
+            <summary>
+                Invokes a model on AWS Bedrock with the provided prompt and parameters
+            </summary>
+            <param name="modelId">The identifier of the model to invoke (e.g., anthropic.claude-3-sonnet-20240229-v1:0)</param>
+            <param name="prompt">The prompt to send to the model</param>
+            <param name="parameters">Additional parameters for model invocation (temperature, max_tokens, etc.)</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Model invocation response containing the generated content and metadata</returns>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.IBedrockService.InvokeModelAsync(ThirdOpinion.Common.Aws.Bedrock.ModelInvocationRequest,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+                Invokes a model with a structured request object
+            </summary>
+            <param name="request">The model invocation request</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <param name="promptName">Prompt name for tracing (required)</param>
+            <param name="promptVersion">Prompt version for tracing (required)</param>
+            <returns>Model invocation response</returns>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.IBedrockService.GetAvailableModelsAsync(System.Threading.CancellationToken)">
+            <summary>
+                Gets the list of available models that can be invoked (Claude 4.x models only)
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of available model identifiers</returns>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.IBedrockService.GetFoundationModelsAsync(System.String,System.Boolean,System.Threading.CancellationToken)">
+            <summary>
+                Gets detailed information about available foundation models
+            </summary>
+            <param name="byProvider">Optional provider filter (e.g., "Anthropic", "Amazon", "Meta")</param>
+            <param name="includeUnsupportedClaude3">Whether to include unsupported Claude 3.x models</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>List of foundation model details</returns>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.IBedrockService.GetModelInfoAsync(System.String,System.Threading.CancellationToken)">
+            <summary>
+                Gets information about a specific model
+            </summary>
+            <param name="modelId">The model identifier</param>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>Model information if found, null otherwise</returns>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.IBedrockService.TestConnectivityAsync(System.Threading.CancellationToken)">
+            <summary>
+                Tests connectivity to AWS Bedrock service
+            </summary>
+            <param name="cancellationToken">Cancellation token</param>
+            <returns>True if service is accessible, false otherwise</returns>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.IBedrockService.SubstitutePromptVariables(System.String,System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+                Substitutes variables in a prompt template using {{variable}} syntax
+            </summary>
+            <param name="promptTemplate">The prompt template with {{variable}} placeholders</param>
+            <param name="variableValues">Dictionary of variable names to values</param>
+            <returns>The prompt with all variables substituted</returns>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.ServiceCollectionExtensions">
+            <summary>
+                Extension methods for registering Bedrock services in the dependency injection container
+            </summary>
+        </member>
+        <member name="M:ThirdOpinion.Common.Aws.Bedrock.ServiceCollectionExtensions.AddBedrockServices(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+                Adds Bedrock services to the service collection
+            </summary>
+            <param name="services">The service collection</param>
+            <param name="configuration">The configuration</param>
+            <returns>The service collection for chaining</returns>
+        </member>
+        <member name="T:ThirdOpinion.Common.Aws.Bedrock.SimpleCorrelationIdProvider">
+            <summary>
+                Simple implementation of ICorrelationIdProvider for Bedrock service
+            </summary>
+        </member>
+    </members>
+</doc>

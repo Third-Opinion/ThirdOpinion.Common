@@ -7,19 +7,20 @@ using Amazon.S3.Model;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Microsoft.Extensions.Logging;
+using ResourceNotFoundException = Amazon.DynamoDBv2.Model.ResourceNotFoundException;
 
 namespace ThirdOpinion.Common.FunctionalTests.Infrastructure;
 
 /// <summary>
-/// Utility class for cleaning up AWS resources created during testing
+///     Utility class for cleaning up AWS resources created during testing
 /// </summary>
 public class AwsResourceCleaner
 {
     private readonly IAmazonCognitoIdentityProvider _cognitoClient;
     private readonly IAmazonDynamoDB _dynamoDbClient;
+    private readonly ILogger<AwsResourceCleaner> _logger;
     private readonly IAmazonS3 _s3Client;
     private readonly IAmazonSQS _sqsClient;
-    private readonly ILogger<AwsResourceCleaner> _logger;
 
     public AwsResourceCleaner(
         IAmazonCognitoIdentityProvider cognitoClient,
@@ -36,7 +37,7 @@ public class AwsResourceCleaner
     }
 
     /// <summary>
-    /// Clean up all test resources created with the specified prefix
+    ///     Clean up all test resources created with the specified prefix
     /// </summary>
     public async Task CleanupTestResourcesAsync(string testPrefix)
     {
@@ -48,42 +49,44 @@ public class AwsResourceCleaner
                 CleanupSqsQueuesAsync(testPrefix),
                 CleanupCognitoUserPoolsAsync(testPrefix)
             );
-            
-            _logger.LogInformation("Successfully cleaned up all test resources with prefix: {TestPrefix}", testPrefix);
+
+            _logger.LogInformation(
+                "Successfully cleaned up all test resources with prefix: {TestPrefix}", testPrefix);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error cleaning up test resources with prefix: {TestPrefix}", testPrefix);
+            _logger.LogError(ex, "Error cleaning up test resources with prefix: {TestPrefix}",
+                testPrefix);
             throw;
         }
     }
 
     /// <summary>
-    /// Clean up DynamoDB tables
+    ///     Clean up DynamoDB tables
     /// </summary>
     private async Task CleanupDynamoDbTablesAsync(string testPrefix)
     {
         try
         {
-            var tablesResponse = await _dynamoDbClient.ListTablesAsync();
-            var testTables = tablesResponse.TableNames.Where(name => name.StartsWith(testPrefix, StringComparison.OrdinalIgnoreCase));
+            ListTablesResponse? tablesResponse = await _dynamoDbClient.ListTablesAsync();
+            IEnumerable<string> testTables = tablesResponse.TableNames.Where(name =>
+                name.StartsWith(testPrefix, StringComparison.OrdinalIgnoreCase));
 
-            foreach (var tableName in testTables)
-            {
+            foreach (string tableName in testTables)
                 try
                 {
                     await _dynamoDbClient.DeleteTableAsync(tableName);
                     _logger.LogInformation("Deleted DynamoDB table: {TableName}", tableName);
                 }
-                catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+                catch (ResourceNotFoundException)
                 {
                     // Table already deleted, ignore
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to delete DynamoDB table: {TableName}", tableName);
+                    _logger.LogWarning(ex, "Failed to delete DynamoDB table: {TableName}",
+                        tableName);
                 }
-            }
         }
         catch (Exception ex)
         {
@@ -92,22 +95,22 @@ public class AwsResourceCleaner
     }
 
     /// <summary>
-    /// Clean up S3 buckets
+    ///     Clean up S3 buckets
     /// </summary>
     private async Task CleanupS3BucketsAsync(string testPrefix)
     {
         try
         {
-            var bucketsResponse = await _s3Client.ListBucketsAsync();
-            var testBuckets = bucketsResponse.Buckets.Where(bucket => bucket.BucketName.StartsWith(testPrefix, StringComparison.OrdinalIgnoreCase));
+            ListBucketsResponse? bucketsResponse = await _s3Client.ListBucketsAsync();
+            IEnumerable<S3Bucket> testBuckets = bucketsResponse.Buckets.Where(bucket =>
+                bucket.BucketName.StartsWith(testPrefix, StringComparison.OrdinalIgnoreCase));
 
-            foreach (var bucket in testBuckets)
-            {
+            foreach (S3Bucket bucket in testBuckets)
                 try
                 {
                     // Delete all objects in the bucket first
                     await DeleteAllObjectsInBucketAsync(bucket.BucketName);
-                    
+
                     // Delete the bucket
                     await _s3Client.DeleteBucketAsync(bucket.BucketName);
                     _logger.LogInformation("Deleted S3 bucket: {BucketName}", bucket.BucketName);
@@ -118,9 +121,9 @@ public class AwsResourceCleaner
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to delete S3 bucket: {BucketName}", bucket.BucketName);
+                    _logger.LogWarning(ex, "Failed to delete S3 bucket: {BucketName}",
+                        bucket.BucketName);
                 }
-            }
         }
         catch (Exception ex)
         {
@@ -129,7 +132,7 @@ public class AwsResourceCleaner
     }
 
     /// <summary>
-    /// Delete all objects in an S3 bucket
+    ///     Delete all objects in an S3 bucket
     /// </summary>
     private async Task DeleteAllObjectsInBucketAsync(string bucketName)
     {
@@ -141,43 +144,45 @@ public class AwsResourceCleaner
             do
             {
                 listResponse = await _s3Client.ListObjectsV2Async(listRequest);
-                
+
                 if (listResponse.S3Objects.Count > 0)
                 {
                     var deleteRequest = new DeleteObjectsRequest
                     {
                         BucketName = bucketName,
-                        Objects = listResponse.S3Objects.Select(obj => new KeyVersion { Key = obj.Key }).ToList()
+                        Objects = listResponse.S3Objects
+                            .Select(obj => new KeyVersion { Key = obj.Key }).ToList()
                     };
-                    
+
                     await _s3Client.DeleteObjectsAsync(deleteRequest);
                 }
-                
+
                 listRequest.ContinuationToken = listResponse.NextContinuationToken;
             } while (listResponse.IsTruncated == true);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to delete objects in S3 bucket: {BucketName}", bucketName);
+            _logger.LogWarning(ex, "Failed to delete objects in S3 bucket: {BucketName}",
+                bucketName);
         }
     }
 
     /// <summary>
-    /// Clean up SQS queues
+    ///     Clean up SQS queues
     /// </summary>
     private async Task CleanupSqsQueuesAsync(string testPrefix)
     {
         try
         {
-            var queuesResponse = await _sqsClient.ListQueuesAsync(new Amazon.SQS.Model.ListQueuesRequest());
-            var testQueues = queuesResponse.QueueUrls.Where(url => 
+            ListQueuesResponse? queuesResponse
+                = await _sqsClient.ListQueuesAsync(new ListQueuesRequest());
+            IEnumerable<string> testQueues = queuesResponse.QueueUrls.Where(url =>
             {
-                var queueName = url.Split('/').Last();
+                string queueName = url.Split('/').Last();
                 return queueName.StartsWith(testPrefix, StringComparison.OrdinalIgnoreCase);
             });
 
-            foreach (var queueUrl in testQueues)
-            {
+            foreach (string queueUrl in testQueues)
                 try
                 {
                     await _sqsClient.DeleteQueueAsync(queueUrl);
@@ -191,7 +196,6 @@ public class AwsResourceCleaner
                 {
                     _logger.LogWarning(ex, "Failed to delete SQS queue: {QueueUrl}", queueUrl);
                 }
-            }
         }
         catch (Exception ex)
         {
@@ -200,31 +204,38 @@ public class AwsResourceCleaner
     }
 
     /// <summary>
-    /// Clean up Cognito User Pools
+    ///     Clean up Cognito User Pools
     /// </summary>
     private async Task CleanupCognitoUserPoolsAsync(string testPrefix)
     {
         try
         {
-            var userPoolsResponse = await _cognitoClient.ListUserPoolsAsync(new ListUserPoolsRequest { MaxResults = 60 });
-            var testUserPools = userPoolsResponse.UserPools.Where(pool => pool.Name.StartsWith(testPrefix, StringComparison.OrdinalIgnoreCase));
+            ListUserPoolsResponse? userPoolsResponse
+                = await _cognitoClient.ListUserPoolsAsync(new ListUserPoolsRequest
+                    { MaxResults = 60 });
+            IEnumerable<UserPoolDescriptionType> testUserPools
+                = userPoolsResponse.UserPools.Where(pool =>
+                    pool.Name.StartsWith(testPrefix, StringComparison.OrdinalIgnoreCase));
 
-            foreach (var userPool in testUserPools)
-            {
+            foreach (UserPoolDescriptionType userPool in testUserPools)
                 try
                 {
-                    await _cognitoClient.DeleteUserPoolAsync(new DeleteUserPoolRequest { UserPoolId = userPool.Id });
-                    _logger.LogInformation("Deleted Cognito User Pool: {UserPoolName} ({UserPoolId})", userPool.Name, userPool.Id);
+                    await _cognitoClient.DeleteUserPoolAsync(new DeleteUserPoolRequest
+                        { UserPoolId = userPool.Id });
+                    _logger.LogInformation(
+                        "Deleted Cognito User Pool: {UserPoolName} ({UserPoolId})", userPool.Name,
+                        userPool.Id);
                 }
-                catch (Amazon.DynamoDBv2.Model.ResourceNotFoundException)
+                catch (ResourceNotFoundException)
                 {
                     // User pool already deleted, ignore
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to delete Cognito User Pool: {UserPoolName} ({UserPoolId})", userPool.Name, userPool.Id);
+                    _logger.LogWarning(ex,
+                        "Failed to delete Cognito User Pool: {UserPoolName} ({UserPoolId})",
+                        userPool.Name, userPool.Id);
                 }
-            }
         }
         catch (Exception ex)
         {
@@ -233,7 +244,7 @@ public class AwsResourceCleaner
     }
 
     /// <summary>
-    /// Check AWS service health
+    ///     Check AWS service health
     /// </summary>
     public async Task<Dictionary<string, bool>> CheckServiceHealthAsync()
     {
@@ -264,7 +275,7 @@ public class AwsResourceCleaner
         // Check SQS
         try
         {
-            await _sqsClient.ListQueuesAsync(new Amazon.SQS.Model.ListQueuesRequest());
+            await _sqsClient.ListQueuesAsync(new ListQueuesRequest());
             healthStatus["SQS"] = true;
         }
         catch

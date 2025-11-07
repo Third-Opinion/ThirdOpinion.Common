@@ -1,17 +1,18 @@
+using System.Text.Json;
 using Bogus;
 using Misc.patients.PatientHuid;
 
 namespace ThirdOpinion.Common.FunctionalTests.Infrastructure;
 
 /// <summary>
-/// Builder for generating consistent test data across functional tests
+///     Builder for generating consistent test data across functional tests
 /// </summary>
 public static class TestDataBuilder
 {
     private static readonly Faker _faker = new();
 
     /// <summary>
-    /// Create a test patient with realistic data
+    ///     Create a test patient with realistic data
     /// </summary>
     public static Patient CreateTestPatient(
         string? firstName = null,
@@ -21,7 +22,7 @@ public static class TestDataBuilder
         Demographics.SexEnum? sex = null,
         string? phoneNumber = null)
     {
-        var patientFaker = new Faker<Patient>()
+        Faker<Patient>? patientFaker = new Faker<Patient>()
             .RuleFor(p => p.TenantGuid, _ => Guid.NewGuid())
             .RuleFor(p => p.PatientGuid, _ => Guid.NewGuid())
             .RuleFor(p => p.PatientHuid, f => $"P{f.Random.AlphaNumeric(10).ToUpper()}")
@@ -32,7 +33,8 @@ public static class TestDataBuilder
                 LastName = lastName ?? _faker.Name.LastName(),
                 MiddleName = middleName ?? (_faker.Random.Bool() ? null : _faker.Name.FirstName()),
                 Sex = sex ?? _faker.PickRandom<Demographics.SexEnum>(),
-                BirthDate = birthDate ?? _faker.Date.Between(DateTime.Now.AddYears(-80), DateTime.Now.AddYears(-18)),
+                BirthDate = birthDate ?? _faker.Date.Between(DateTime.Now.AddYears(-80),
+                    DateTime.Now.AddYears(-18)),
                 PhoneNumber = phoneNumber ?? GenerateValidPhoneNumber()
             });
 
@@ -40,7 +42,7 @@ public static class TestDataBuilder
     }
 
     /// <summary>
-    /// Create a list of test patients
+    ///     Create a list of test patients
     /// </summary>
     public static List<Patient> CreateTestPatients(int count)
     {
@@ -50,7 +52,7 @@ public static class TestDataBuilder
     }
 
     /// <summary>
-    /// Create test data for AWS DynamoDB
+    ///     Create test data for AWS DynamoDB
     /// </summary>
     public static Dictionary<string, object> CreateDynamoDbTestData(string? id = null)
     {
@@ -62,7 +64,7 @@ public static class TestDataBuilder
             ["CreatedAt"] = DateTime.UtcNow.ToString("O"),
             ["Age"] = _faker.Random.Int(18, 80),
             ["IsActive"] = _faker.Random.Bool(),
-            ["Tags"] = _faker.Lorem.Words(3).Distinct().ToList(),
+            ["Tags"] = _faker.Lorem.Words().Distinct().ToList(),
             ["Metadata"] = new Dictionary<string, object>
             {
                 ["Source"] = "FunctionalTest",
@@ -73,7 +75,7 @@ public static class TestDataBuilder
     }
 
     /// <summary>
-    /// Create test file content for S3 testing
+    ///     Create test file content for S3 testing
     /// </summary>
     public static byte[] CreateBinaryTestData(int sizeInBytes = 1024)
     {
@@ -81,7 +83,7 @@ public static class TestDataBuilder
     }
 
     /// <summary>
-    /// Create test JSON content
+    ///     Create test JSON content
     /// </summary>
     public static string CreateTestJsonContent()
     {
@@ -99,14 +101,14 @@ public static class TestDataBuilder
             }
         };
 
-        return System.Text.Json.JsonSerializer.Serialize(testObject, new System.Text.Json.JsonSerializerOptions
+        return JsonSerializer.Serialize(testObject, new JsonSerializerOptions
         {
             WriteIndented = true
         });
     }
 
     /// <summary>
-    /// Create test message for SQS
+    ///     Create test message for SQS
     /// </summary>
     public static string CreateTestMessage(string? messageType = null)
     {
@@ -123,16 +125,17 @@ public static class TestDataBuilder
             }
         };
 
-        return System.Text.Json.JsonSerializer.Serialize(message);
+        return JsonSerializer.Serialize(message);
     }
 
     /// <summary>
-    /// Create test user data for Cognito
+    ///     Create test user data for Cognito
     /// </summary>
-    public static (string email, string password, Dictionary<string, string> attributes) CreateTestUser()
+    public static (string email, string password, Dictionary<string, string> attributes)
+        CreateTestUser()
     {
-        var email = _faker.Internet.Email();
-        var password = GenerateValidPassword();
+        string? email = _faker.Internet.Email();
+        string password = GenerateValidPassword();
         var attributes = new Dictionary<string, string>
         {
             ["given_name"] = _faker.Name.FirstName(),
@@ -144,45 +147,42 @@ public static class TestDataBuilder
     }
 
     /// <summary>
-    /// Generate a password that meets common requirements
+    ///     Generate a password that meets common requirements
     /// </summary>
     private static string GenerateValidPassword()
     {
         // Generate a simple password without problematic regex
-        var basePassword = _faker.Internet.Password(8, false);
-        
+        string? basePassword = _faker.Internet.Password(8);
+
         // Build a password that meets AWS Cognito requirements
         var password = string.Empty;
         password += _faker.Random.Char('A', 'Z'); // Uppercase
         password += _faker.Random.Char('a', 'z'); // Lowercase  
         password += _faker.Random.Char('0', '9'); // Number
         password += _faker.PickRandom("!@#$%^&*"); // Special character
-        
+
         // Add random alphanumeric characters to reach minimum length
-        for (int i = 4; i < 8; i++)
-        {
-            password += _faker.Random.AlphaNumeric(1);
-        }
-        
+        for (var i = 4; i < 8; i++) password += _faker.Random.AlphaNumeric(1);
+
         // Shuffle the password characters to randomize order
         return new string(password.OrderBy(x => _faker.Random.Int()).ToArray());
     }
 
     /// <summary>
-    /// Generate a phone number that meets AWS Cognito requirements (E.164 format)
+    ///     Generate a phone number that meets AWS Cognito requirements (E.164 format)
     /// </summary>
     private static string GenerateValidPhoneNumber()
     {
         // Generate a valid US phone number in E.164 format (+1XXXXXXXXXX)
-        var areaCode = _faker.Random.Int(201, 999); // Valid US area codes
-        var exchangeCode = _faker.Random.Int(200, 999); // Valid exchange codes
-        var lineNumber = _faker.Random.Int(1000, 9999); // Valid line numbers
-        
+        int areaCode = _faker.Random.Int(201, 999); // Valid US area codes
+        int exchangeCode = _faker.Random.Int(200, 999); // Valid exchange codes
+        int lineNumber = _faker.Random.Int(1000, 9999); // Valid line numbers
+
         return $"+1{areaCode}{exchangeCode}{lineNumber}";
     }
 
     /// <summary>
-    /// Create test configuration data
+    ///     Create test configuration data
     /// </summary>
     public static Dictionary<string, string> CreateTestConfiguration()
     {

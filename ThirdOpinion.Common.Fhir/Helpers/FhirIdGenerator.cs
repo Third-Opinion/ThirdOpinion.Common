@@ -1,15 +1,15 @@
 namespace ThirdOpinion.Common.Fhir.Helpers;
 
 /// <summary>
-/// Provides methods for generating FHIR resource IDs with consistent formatting
+///     Provides methods for generating FHIR resource IDs with consistent formatting
 /// </summary>
 public static class FhirIdGenerator
 {
-    private static int _sequenceCounter = 0;
+    private static int _sequenceCounter;
     private static readonly object _sequenceLock = new();
 
     /// <summary>
-    /// Generates an inference ID with GUID format: to.ai-inference-{guid}
+    ///     Generates an inference ID with GUID format: to.ai-inference-{guid}
     /// </summary>
     /// <returns>A unique inference ID</returns>
     public static string GenerateInferenceId()
@@ -18,7 +18,7 @@ public static class FhirIdGenerator
     }
 
     /// <summary>
-    /// Generates an inference ID with sequential number format: to.ai-inference-{number:D6}
+    ///     Generates an inference ID with sequential number format: to.ai-inference-{number:D6}
     /// </summary>
     /// <param name="sequenceNumber">The sequence number to use</param>
     /// <returns>A sequential inference ID</returns>
@@ -28,7 +28,7 @@ public static class FhirIdGenerator
     }
 
     /// <summary>
-    /// Generates a provenance ID with GUID format: to.ai-provenance-{guid}
+    ///     Generates a provenance ID with GUID format: to.ai-provenance-{guid}
     /// </summary>
     /// <returns>A unique provenance ID</returns>
     public static string GenerateProvenanceId()
@@ -37,19 +37,19 @@ public static class FhirIdGenerator
     }
 
     /// <summary>
-    /// Generates a document ID with type and GUID format: to.ai-document-{type}-{guid}
+    ///     Generates a document ID with type and GUID format: to.ai-document-{type}-{guid}
     /// </summary>
     /// <param name="type">The document type</param>
     /// <returns>A unique document ID</returns>
     public static string GenerateDocumentId(string type)
     {
         ArgumentException.ThrowIfNullOrEmpty(type);
-        var sanitizedType = type.ToLowerInvariant().Replace(" ", "-");
+        string sanitizedType = type.ToLowerInvariant().Replace(" ", "-");
         return $"to.ai-document-{sanitizedType}-{Guid.NewGuid().ToString().ToLowerInvariant()}";
     }
 
     /// <summary>
-    /// Generates a resource ID with custom prefix and optional GUID
+    ///     Generates a resource ID with custom prefix and optional GUID
     /// </summary>
     /// <param name="prefix">The prefix for the ID</param>
     /// <param name="guid">Optional GUID to use, generates new if null</param>
@@ -57,12 +57,12 @@ public static class FhirIdGenerator
     public static string GenerateResourceId(string prefix, string? guid = null)
     {
         ArgumentException.ThrowIfNullOrEmpty(prefix);
-        var guidToUse = guid ?? Guid.NewGuid().ToString();
+        string guidToUse = guid ?? Guid.NewGuid().ToString();
         return $"{prefix}-{guidToUse.ToLowerInvariant()}";
     }
 
     /// <summary>
-    /// Generates a sequential ID with auto-incrementing number
+    ///     Generates a sequential ID with auto-incrementing number
     /// </summary>
     /// <param name="prefix">The prefix for the ID</param>
     /// <returns>A sequential ID with incremented number</returns>
@@ -78,7 +78,7 @@ public static class FhirIdGenerator
     }
 
     /// <summary>
-    /// Generates a sequential ID with specified sequence number
+    ///     Generates a sequential ID with specified sequence number
     /// </summary>
     /// <param name="prefix">The prefix for the ID</param>
     /// <param name="sequence">The sequence number to use</param>
@@ -87,16 +87,13 @@ public static class FhirIdGenerator
     {
         ArgumentException.ThrowIfNullOrEmpty(prefix);
 
-        if (sequence.HasValue)
-        {
-            return $"{prefix}-{sequence.Value:D6}";
-        }
+        if (sequence.HasValue) return $"{prefix}-{sequence.Value:D6}";
 
         return GenerateSequentialId(prefix);
     }
 
     /// <summary>
-    /// Resets the internal sequence counter (useful for testing)
+    ///     Resets the internal sequence counter (useful for testing)
     /// </summary>
     public static void ResetSequenceCounter()
     {

@@ -8,20 +8,20 @@ using ThirdOpinion.Common.Fhir.Helpers;
 namespace ThirdOpinion.Common.Fhir.Builders.Documents;
 
 /// <summary>
-/// Builder for creating FHIR DocumentReference resources for fact extraction results
+///     Builder for creating FHIR DocumentReference resources for fact extraction results
 /// </summary>
 public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReference>
 {
-    private ResourceReference? _patientReference;
-    private ResourceReference? _deviceReference;
-    private ResourceReference? _originalDocumentReference;
-    private ResourceReference? _ocrDocumentReference;
     private readonly List<DocumentReference.ContentComponent> _contents;
+    private ResourceReference? _deviceReference;
     private bool _hasInlineContent;
     private bool _hasUrlContent;
+    private ResourceReference? _ocrDocumentReference;
+    private ResourceReference? _originalDocumentReference;
+    private ResourceReference? _patientReference;
 
     /// <summary>
-    /// Creates a new Fact Extraction DocumentReference builder
+    ///     Creates a new Fact Extraction DocumentReference builder
     /// </summary>
     /// <param name="configuration">The AI inference configuration</param>
     public FactExtractionDocumentReferenceBuilder(AiInferenceConfiguration configuration)
@@ -33,7 +33,7 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
     public new FactExtractionDocumentReferenceBuilder WithInferenceId(string id)
     {
@@ -42,16 +42,18 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
-    public new FactExtractionDocumentReferenceBuilder WithCriteria(string id, string display, string? system = null)
+    public new FactExtractionDocumentReferenceBuilder WithCriteria(string id,
+        string display,
+        string? system = null)
     {
         base.WithCriteria(id, display, system);
         return this;
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
     public new FactExtractionDocumentReferenceBuilder AddDerivedFrom(ResourceReference reference)
     {
@@ -60,16 +62,17 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
     }
 
     /// <summary>
-    /// Override base class methods to maintain fluent interface
+    ///     Override base class methods to maintain fluent interface
     /// </summary>
-    public new FactExtractionDocumentReferenceBuilder AddDerivedFrom(string reference, string? display = null)
+    public new FactExtractionDocumentReferenceBuilder AddDerivedFrom(string reference,
+        string? display = null)
     {
         base.AddDerivedFrom(reference, display);
         return this;
     }
 
     /// <summary>
-    /// Sets the patient reference for this document
+    ///     Sets the patient reference for this document
     /// </summary>
     /// <param name="patient">The patient resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -80,12 +83,13 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
     }
 
     /// <summary>
-    /// Sets the patient reference for this document
+    ///     Sets the patient reference for this document
     /// </summary>
     /// <param name="patientId">The patient ID</param>
     /// <param name="display">Optional display text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public FactExtractionDocumentReferenceBuilder WithPatient(string patientId, string? display = null)
+    public FactExtractionDocumentReferenceBuilder WithPatient(string patientId,
+        string? display = null)
     {
         if (string.IsNullOrWhiteSpace(patientId))
             throw new ArgumentException("Patient ID cannot be null or empty", nameof(patientId));
@@ -99,7 +103,7 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
     }
 
     /// <summary>
-    /// Sets the fact extraction device reference that processed the document
+    ///     Sets the fact extraction device reference that processed the document
     /// </summary>
     /// <param name="device">The extraction device resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -110,12 +114,13 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
     }
 
     /// <summary>
-    /// Sets the fact extraction device reference that processed the document
+    ///     Sets the fact extraction device reference that processed the document
     /// </summary>
     /// <param name="deviceId">The extraction device ID</param>
     /// <param name="display">Optional display text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public FactExtractionDocumentReferenceBuilder WithExtractionDevice(string deviceId, string? display = null)
+    public FactExtractionDocumentReferenceBuilder WithExtractionDevice(string deviceId,
+        string? display = null)
     {
         if (string.IsNullOrWhiteSpace(deviceId))
             throw new ArgumentException("Device ID cannot be null or empty", nameof(deviceId));
@@ -129,37 +134,42 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
     }
 
     /// <summary>
-    /// Sets the original document that this fact extraction document relates to
+    ///     Sets the original document that this fact extraction document relates to
     /// </summary>
     /// <param name="originalDocument">The original document reference</param>
     /// <returns>This builder instance for method chaining</returns>
-    public FactExtractionDocumentReferenceBuilder WithOriginalDocument(ResourceReference originalDocument)
+    public FactExtractionDocumentReferenceBuilder WithOriginalDocument(
+        ResourceReference originalDocument)
     {
-        _originalDocumentReference = originalDocument ?? throw new ArgumentNullException(nameof(originalDocument));
+        _originalDocumentReference = originalDocument ??
+                                     throw new ArgumentNullException(nameof(originalDocument));
         return this;
     }
 
     /// <summary>
-    /// Sets the original document that this fact extraction document relates to
+    ///     Sets the original document that this fact extraction document relates to
     /// </summary>
     /// <param name="documentId">The original document ID</param>
     /// <param name="display">Optional display text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public FactExtractionDocumentReferenceBuilder WithOriginalDocument(string documentId, string? display = null)
+    public FactExtractionDocumentReferenceBuilder WithOriginalDocument(string documentId,
+        string? display = null)
     {
         if (string.IsNullOrWhiteSpace(documentId))
             throw new ArgumentException("Document ID cannot be null or empty", nameof(documentId));
 
         _originalDocumentReference = new ResourceReference
         {
-            Reference = documentId.StartsWith("DocumentReference/") ? documentId : $"DocumentReference/{documentId}",
+            Reference = documentId.StartsWith("DocumentReference/")
+                ? documentId
+                : $"DocumentReference/{documentId}",
             Display = display
         };
         return this;
     }
 
     /// <summary>
-    /// Sets the OCR document that this fact extraction document relates to
+    ///     Sets the OCR document that this fact extraction document relates to
     /// </summary>
     /// <param name="ocrDocument">The OCR document reference</param>
     /// <returns>This builder instance for method chaining</returns>
@@ -170,26 +180,29 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
     }
 
     /// <summary>
-    /// Sets the OCR document that this fact extraction document relates to
+    ///     Sets the OCR document that this fact extraction document relates to
     /// </summary>
     /// <param name="documentId">The OCR document ID</param>
     /// <param name="display">Optional display text</param>
     /// <returns>This builder instance for method chaining</returns>
-    public FactExtractionDocumentReferenceBuilder WithOcrDocument(string documentId, string? display = null)
+    public FactExtractionDocumentReferenceBuilder WithOcrDocument(string documentId,
+        string? display = null)
     {
         if (string.IsNullOrWhiteSpace(documentId))
             throw new ArgumentException("Document ID cannot be null or empty", nameof(documentId));
 
         _ocrDocumentReference = new ResourceReference
         {
-            Reference = documentId.StartsWith("DocumentReference/") ? documentId : $"DocumentReference/{documentId}",
+            Reference = documentId.StartsWith("DocumentReference/")
+                ? documentId
+                : $"DocumentReference/{documentId}",
             Display = display
         };
         return this;
     }
 
     /// <summary>
-    /// Adds extracted facts as JSON content from an object with automatic serialization
+    ///     Adds extracted facts as JSON content from an object with automatic serialization
     /// </summary>
     /// <param name="facts">The facts object to serialize and store</param>
     /// <param name="title">Optional title for the content</param>
@@ -200,11 +213,12 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
             throw new ArgumentNullException(nameof(facts));
 
         if (_hasUrlContent)
-            throw new InvalidOperationException("Cannot add inline content when URL content has already been set. Use either inline OR URL content, not both.");
+            throw new InvalidOperationException(
+                "Cannot add inline content when URL content has already been set. Use either inline OR URL content, not both.");
 
         try
         {
-            var jsonString = JsonSerializer.Serialize(facts, new JsonSerializerOptions
+            string jsonString = JsonSerializer.Serialize(facts, new JsonSerializerOptions
             {
                 WriteIndented = true
             });
@@ -213,23 +227,26 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
         }
         catch (JsonException ex)
         {
-            throw new ArgumentException("Failed to serialize facts object to JSON", nameof(facts), ex);
+            throw new ArgumentException("Failed to serialize facts object to JSON", nameof(facts),
+                ex);
         }
     }
 
     /// <summary>
-    /// Adds extracted facts as JSON content from a pre-serialized JSON string
+    ///     Adds extracted facts as JSON content from a pre-serialized JSON string
     /// </summary>
     /// <param name="jsonString">The JSON string containing extracted facts</param>
     /// <param name="title">Optional title for the content</param>
     /// <returns>This builder instance for method chaining</returns>
-    public FactExtractionDocumentReferenceBuilder WithFactsJson(string jsonString, string? title = null)
+    public FactExtractionDocumentReferenceBuilder WithFactsJson(string jsonString,
+        string? title = null)
     {
         if (string.IsNullOrEmpty(jsonString))
             throw new ArgumentException("JSON string cannot be null or empty", nameof(jsonString));
 
         if (_hasUrlContent)
-            throw new InvalidOperationException("Cannot add inline content when URL content has already been set. Use either inline OR URL content, not both.");
+            throw new InvalidOperationException(
+                "Cannot add inline content when URL content has already been set. Use either inline OR URL content, not both.");
 
         // Validate JSON format
         try
@@ -241,7 +258,7 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
             throw new ArgumentException("Invalid JSON format", nameof(jsonString), ex);
         }
 
-        var jsonBytes = Encoding.UTF8.GetBytes(jsonString);
+        byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonString);
 
         var content = new DocumentReference.ContentComponent
         {
@@ -259,18 +276,20 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
     }
 
     /// <summary>
-    /// Adds extracted facts via S3 URL reference
+    ///     Adds extracted facts via S3 URL reference
     /// </summary>
     /// <param name="s3Url">The S3 URL to the facts JSON file</param>
     /// <param name="title">Optional title for the content</param>
     /// <returns>This builder instance for method chaining</returns>
-    public FactExtractionDocumentReferenceBuilder WithFactsJsonUrl(string s3Url, string? title = null)
+    public FactExtractionDocumentReferenceBuilder WithFactsJsonUrl(string s3Url,
+        string? title = null)
     {
         if (string.IsNullOrWhiteSpace(s3Url))
             throw new ArgumentException("S3 URL cannot be null or empty", nameof(s3Url));
 
         if (_hasInlineContent)
-            throw new InvalidOperationException("Cannot add URL content when inline content has already been set. Use either inline OR URL content, not both.");
+            throw new InvalidOperationException(
+                "Cannot add URL content when inline content has already been set. Use either inline OR URL content, not both.");
 
         var content = new DocumentReference.ContentComponent
         {
@@ -288,28 +307,25 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
     }
 
     /// <summary>
-    /// Validates that required fields are set before building
+    ///     Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
     {
         if (_patientReference == null)
-        {
-            throw new InvalidOperationException("Patient reference is required. Call WithPatient() before Build().");
-        }
+            throw new InvalidOperationException(
+                "Patient reference is required. Call WithPatient() before Build().");
 
         if (_deviceReference == null)
-        {
-            throw new InvalidOperationException("Extraction device reference is required. Call WithExtractionDevice() before Build().");
-        }
+            throw new InvalidOperationException(
+                "Extraction device reference is required. Call WithExtractionDevice() before Build().");
 
         if (_contents.Count == 0)
-        {
-            throw new InvalidOperationException("At least one facts content attachment is required. Call WithFactsJson() or WithFactsJsonUrl() before Build().");
-        }
+            throw new InvalidOperationException(
+                "At least one facts content attachment is required. Call WithFactsJson() or WithFactsJsonUrl() before Build().");
     }
 
     /// <summary>
-    /// Builds the Fact Extraction DocumentReference
+    ///     Builds the Fact Extraction DocumentReference
     /// </summary>
     /// <returns>The completed DocumentReference resource</returns>
     protected override DocumentReference BuildCore()
@@ -323,7 +339,7 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
             {
                 Coding = new List<Coding>
                 {
-                    new Coding
+                    new()
                     {
                         System = FhirCodingHelper.Systems.LOINC_SYSTEM,
                         Code = "11506-3",
@@ -347,33 +363,24 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
         var relatesTo = new List<DocumentReference.RelatesToComponent>();
 
         if (_originalDocumentReference != null)
-        {
             relatesTo.Add(new DocumentReference.RelatesToComponent
             {
                 Code = DocumentRelationshipType.Transforms,
                 Target = _originalDocumentReference
             });
-        }
 
         if (_ocrDocumentReference != null)
-        {
             relatesTo.Add(new DocumentReference.RelatesToComponent
             {
                 Code = DocumentRelationshipType.Transforms,
                 Target = _ocrDocumentReference
             });
-        }
 
-        if (relatesTo.Any())
-        {
-            documentReference.RelatesTo = relatesTo;
-        }
+        if (relatesTo.Any()) documentReference.RelatesTo = relatesTo;
 
         // Add author (extraction device)
         if (_deviceReference != null)
-        {
             documentReference.Author = new List<ResourceReference> { _deviceReference };
-        }
 
         return documentReference;
     }

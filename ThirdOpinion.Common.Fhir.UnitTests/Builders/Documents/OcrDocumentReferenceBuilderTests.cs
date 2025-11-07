@@ -1,3 +1,4 @@
+using System.Text;
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
 using ThirdOpinion.Common.Fhir.Builders.Documents;
@@ -9,16 +10,17 @@ namespace ThirdOpinion.Common.Fhir.UnitTests.Builders.Documents;
 public class OcrDocumentReferenceBuilderTests
 {
     private readonly AiInferenceConfiguration _configuration;
-    private readonly ResourceReference _patientReference;
     private readonly ResourceReference _deviceReference;
     private readonly ResourceReference _originalDocumentReference;
+    private readonly ResourceReference _patientReference;
 
     public OcrDocumentReferenceBuilderTests()
     {
         _configuration = AiInferenceConfiguration.CreateDefault();
         _patientReference = new ResourceReference("Patient/test-patient", "Test Patient");
         _deviceReference = new ResourceReference("Device/ocr-device", "OCR Processing Device");
-        _originalDocumentReference = new ResourceReference("DocumentReference/original-doc", "Original Document");
+        _originalDocumentReference
+            = new ResourceReference("DocumentReference/original-doc", "Original Document");
     }
 
     [Fact]
@@ -29,7 +31,7 @@ public class OcrDocumentReferenceBuilderTests
         var extractedText = "This is the extracted text from the document.";
 
         // Act
-        var document = builder
+        DocumentReference document = builder
             .WithPatient(_patientReference)
             .WithOcrDevice(_deviceReference)
             .WithOriginalDocument(_originalDocumentReference)
@@ -62,13 +64,13 @@ public class OcrDocumentReferenceBuilderTests
         // Check content
         document.Content.ShouldNotBeNull();
         document.Content.Count.ShouldBe(1);
-        var content = document.Content[0];
+        DocumentReference.ContentComponent? content = document.Content[0];
         content.Attachment.ContentType.ShouldBe("text/plain");
         content.Attachment.Title.ShouldBe("Extracted Text Title");
         content.Attachment.Data.ShouldNotBeNull();
 
         // Verify Base64 encoding
-        var decodedText = System.Text.Encoding.UTF8.GetString(content.Attachment.Data);
+        string decodedText = Encoding.UTF8.GetString(content.Attachment.Data);
         decodedText.ShouldBe(extractedText);
     }
 
@@ -80,7 +82,7 @@ public class OcrDocumentReferenceBuilderTests
         var s3Url = "https://bucket.s3.amazonaws.com/extracted-text.txt";
 
         // Act
-        var document = builder
+        DocumentReference document = builder
             .WithPatient(_patientReference)
             .WithOcrDevice(_deviceReference)
             .WithOriginalDocument(_originalDocumentReference)
@@ -89,7 +91,7 @@ public class OcrDocumentReferenceBuilderTests
 
         // Assert
         document.Content.Count.ShouldBe(1);
-        var content = document.Content[0];
+        DocumentReference.ContentComponent? content = document.Content[0];
         content.Attachment.ContentType.ShouldBe("text/plain");
         content.Attachment.Url.ShouldBe(s3Url);
         content.Attachment.Data.ShouldBeNull();
@@ -103,7 +105,7 @@ public class OcrDocumentReferenceBuilderTests
         var textractUrl = "https://bucket.s3.amazonaws.com/textract-raw-output.json";
 
         // Act
-        var document = builder
+        DocumentReference document = builder
             .WithPatient(_patientReference)
             .WithOcrDevice(_deviceReference)
             .WithOriginalDocument(_originalDocumentReference)
@@ -112,7 +114,7 @@ public class OcrDocumentReferenceBuilderTests
 
         // Assert
         document.Content.Count.ShouldBe(1);
-        var content = document.Content[0];
+        DocumentReference.ContentComponent? content = document.Content[0];
         content.Attachment.ContentType.ShouldBe("application/json");
         content.Attachment.Url.ShouldBe(textractUrl);
         content.Attachment.Title.ShouldBe("Textract Raw");
@@ -126,7 +128,7 @@ public class OcrDocumentReferenceBuilderTests
         var textractUrl = "https://bucket.s3.amazonaws.com/textract-simple-output.json";
 
         // Act
-        var document = builder
+        DocumentReference document = builder
             .WithPatient(_patientReference)
             .WithOcrDevice(_deviceReference)
             .WithOriginalDocument(_originalDocumentReference)
@@ -135,7 +137,7 @@ public class OcrDocumentReferenceBuilderTests
 
         // Assert
         document.Content.Count.ShouldBe(1);
-        var content = document.Content[0];
+        DocumentReference.ContentComponent? content = document.Content[0];
         content.Attachment.ContentType.ShouldBe("application/json");
         content.Attachment.Url.ShouldBe(textractUrl);
         content.Attachment.Title.ShouldBe("Textract Simplified Output");
@@ -156,7 +158,8 @@ public class OcrDocumentReferenceBuilderTests
                 .WithExtractedTextUrl("https://example.com/text.txt")
                 .WithExtractedText("Some text"));
 
-        exception.Message.ShouldContain("Cannot add inline content when URL content has already been set");
+        exception.Message.ShouldContain(
+            "Cannot add inline content when URL content has already been set");
     }
 
     [Fact]
@@ -174,7 +177,8 @@ public class OcrDocumentReferenceBuilderTests
                 .WithExtractedText("Some text")
                 .WithExtractedTextUrl("https://example.com/text.txt"));
 
-        exception.Message.ShouldContain("Cannot add URL content when inline content has already been set");
+        exception.Message.ShouldContain(
+            "Cannot add URL content when inline content has already been set");
     }
 
     [Fact]
@@ -253,7 +257,7 @@ public class OcrDocumentReferenceBuilderTests
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
-            builder.WithPatient((ResourceReference)null!));
+            builder.WithPatient(null!));
     }
 
     [Fact]
@@ -275,7 +279,7 @@ public class OcrDocumentReferenceBuilderTests
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() =>
-            builder.WithOcrDevice((ResourceReference)null!));
+            builder.WithOcrDevice(null!));
     }
 
     [Fact]
@@ -304,7 +308,7 @@ public class OcrDocumentReferenceBuilderTests
     public void FluentInterface_SupportsCompleteChaining()
     {
         // Arrange & Act
-        var document = new OcrDocumentReferenceBuilder(_configuration)
+        DocumentReference document = new OcrDocumentReferenceBuilder(_configuration)
             .WithInferenceId("ocr-001")
             .WithPatient("Patient/p123", "John Doe")
             .WithOcrDevice("Device/d456", "OCR AI Device")
@@ -327,7 +331,7 @@ public class OcrDocumentReferenceBuilderTests
     {
         // Arrange
         var builder = new OcrDocumentReferenceBuilder(_configuration);
-        var document = builder
+        DocumentReference document = builder
             .WithPatient(_patientReference)
             .WithOcrDevice(_deviceReference)
             .WithOriginalDocument(_originalDocumentReference)
@@ -336,7 +340,7 @@ public class OcrDocumentReferenceBuilderTests
 
         // Act
         var serializer = new FhirJsonSerializer(new SerializerSettings { Pretty = true });
-        var json = serializer.SerializeToString(document);
+        string json = serializer.SerializeToString(document);
 
         // Assert
         json.ShouldNotBeNullOrEmpty();
@@ -363,7 +367,7 @@ public class OcrDocumentReferenceBuilderTests
         var builder = new OcrDocumentReferenceBuilder(_configuration);
 
         // Act
-        var document = builder
+        DocumentReference document = builder
             .WithPatient("123", "Test Patient")
             .WithOcrDevice(_deviceReference)
             .WithOriginalDocument(_originalDocumentReference)
@@ -382,7 +386,7 @@ public class OcrDocumentReferenceBuilderTests
         var builder = new OcrDocumentReferenceBuilder(_configuration);
 
         // Act
-        var document = builder
+        DocumentReference document = builder
             .WithPatient(_patientReference)
             .WithOcrDevice("456", "OCR Device")
             .WithOriginalDocument(_originalDocumentReference)
@@ -401,7 +405,7 @@ public class OcrDocumentReferenceBuilderTests
         var builder = new OcrDocumentReferenceBuilder(_configuration);
 
         // Act
-        var document = builder
+        DocumentReference document = builder
             .WithPatient(_patientReference)
             .WithOcrDevice(_deviceReference)
             .WithOriginalDocument("789", "Original Doc")
@@ -420,7 +424,7 @@ public class OcrDocumentReferenceBuilderTests
         var builder = new OcrDocumentReferenceBuilder(_configuration);
 
         // Act
-        var document = builder
+        DocumentReference document = builder
             .WithPatient(_patientReference)
             .WithOcrDevice(_deviceReference)
             .WithOriginalDocument(_originalDocumentReference)
