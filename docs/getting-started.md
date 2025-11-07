@@ -33,7 +33,7 @@ Add AWS configuration to your `appsettings.json`:
 ```json
 {
   "AWS": {
-    "Region": "us-east-1",
+    "Region": "us-east-2",
     "Profile": "default" // Optional: specify AWS profile
   },
   "ThirdOpinion": {
@@ -44,7 +44,7 @@ Add AWS configuration to your `appsettings.json`:
       "TablePrefix": "prod-"
     },
     "Cognito": {
-      "UserPoolId": "us-east-1_xxxxx",
+      "UserPoolId": "us-east-2_xxxxx",
       "ClientId": "your-client-id"
     }
   }
@@ -191,7 +191,7 @@ public class AuthService
 public class MessageProcessor
 {
     private readonly ISQSService _sqs;
-    private const string QueueUrl = "https://sqs.us-east-1.amazonaws.com/123456789/my-queue";
+    private const string QueueUrl = "https://sqs.us-east-2.amazonaws.com/123456789/my-queue";
     
     public MessageProcessor(ISQSService sqs)
     {
@@ -231,7 +231,7 @@ public class MessageProcessor
 
 The library supports configuration through environment variables:
 
-- `AWS_REGION`: AWS region (e.g., "us-east-1")
+- `AWS_REGION`: AWS region (e.g., "us-east-2")
 - `AWS_ACCESS_KEY_ID`: AWS access key
 - `AWS_SECRET_ACCESS_KEY`: AWS secret key
 - `AWS_SESSION_TOKEN`: AWS session token (for temporary credentials)

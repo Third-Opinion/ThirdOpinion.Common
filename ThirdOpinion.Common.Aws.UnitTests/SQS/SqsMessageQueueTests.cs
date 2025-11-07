@@ -25,7 +25,7 @@ public class SqsMessageQueueTests
     public async Task SendMessageAsync_WithGenericType_SerializesAndSendsMessage()
     {
         // Arrange
-        var queueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
+        var queueUrl = "https://sqs.us-east-2.amazonaws.com/123456789012/test-queue";
         var message = new TestMessage { Id = "test-id", Content = "test content" };
         var expectedResponse = new SendMessageResponse
         {
@@ -56,7 +56,7 @@ public class SqsMessageQueueTests
     public async Task SendMessageAsync_WithStringMessage_SendsDirectly()
     {
         // Arrange
-        var queueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
+        var queueUrl = "https://sqs.us-east-2.amazonaws.com/123456789012/test-queue";
         var messageBody = "plain text message";
         var messageAttributes = new Dictionary<string, MessageAttributeValue>
         {
@@ -97,7 +97,7 @@ public class SqsMessageQueueTests
     public async Task SendMessageAsync_Exception_LogsErrorAndRethrows()
     {
         // Arrange
-        var queueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
+        var queueUrl = "https://sqs.us-east-2.amazonaws.com/123456789012/test-queue";
         var messageBody = "test message";
         var expectedException = new AmazonSQSException("SQS error");
 
@@ -117,7 +117,7 @@ public class SqsMessageQueueTests
     public async Task SendMessageBatchAsync_WithGenericMessages_SerializesAndSendsBatch()
     {
         // Arrange
-        var queueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
+        var queueUrl = "https://sqs.us-east-2.amazonaws.com/123456789012/test-queue";
         var messages = new List<TestMessage>
         {
             new() { Id = "msg-1", Content = "content 1" },
@@ -161,7 +161,7 @@ public class SqsMessageQueueTests
     public async Task SendMessageBatchAsync_WithFailedMessages_LogsWarning()
     {
         // Arrange
-        var queueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
+        var queueUrl = "https://sqs.us-east-2.amazonaws.com/123456789012/test-queue";
         var entries = new List<SendMessageBatchRequestEntry>
         {
             new() { Id = "1", MessageBody = "message 1" },
@@ -199,7 +199,7 @@ public class SqsMessageQueueTests
     public async Task ReceiveMessagesAsync_SuccessfulReceive_ReturnsMessages()
     {
         // Arrange
-        var queueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
+        var queueUrl = "https://sqs.us-east-2.amazonaws.com/123456789012/test-queue";
         var maxMessages = 5;
         var waitTimeSeconds = 20;
         var visibilityTimeout = 30;
@@ -243,7 +243,7 @@ public class SqsMessageQueueTests
     public async Task ReceiveMessagesAsync_WithMessageHandler_ProcessesMessages()
     {
         // Arrange
-        var queueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
+        var queueUrl = "https://sqs.us-east-2.amazonaws.com/123456789012/test-queue";
         var processedMessages = new List<TestMessage>();
 
         Func<TestMessage, Task<bool>> messageHandler = async msg =>
@@ -306,7 +306,7 @@ public class SqsMessageQueueTests
     public async Task DeleteMessageAsync_SuccessfulDelete_ReturnsResponse()
     {
         // Arrange
-        var queueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
+        var queueUrl = "https://sqs.us-east-2.amazonaws.com/123456789012/test-queue";
         var receiptHandle = "receipt-handle-123";
 
         var expectedResponse = new DeleteMessageResponse { HttpStatusCode = HttpStatusCode.OK };
@@ -334,7 +334,7 @@ public class SqsMessageQueueTests
     public async Task DeleteMessageBatchAsync_SuccessfulDelete_ReturnsResponse()
     {
         // Arrange
-        var queueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
+        var queueUrl = "https://sqs.us-east-2.amazonaws.com/123456789012/test-queue";
         var entries = new List<DeleteMessageBatchRequestEntry>
         {
             new() { Id = "1", ReceiptHandle = "handle-1" },
@@ -369,7 +369,7 @@ public class SqsMessageQueueTests
     public async Task ChangeMessageVisibilityAsync_ValidRequest_ReturnsResponse()
     {
         // Arrange
-        var queueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
+        var queueUrl = "https://sqs.us-east-2.amazonaws.com/123456789012/test-queue";
         var receiptHandle = "receipt-handle-123";
         var visibilityTimeout = 60;
 
@@ -399,7 +399,7 @@ public class SqsMessageQueueTests
     public async Task GetQueueAttributesAsync_ValidRequest_ReturnsAttributes()
     {
         // Arrange
-        var queueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
+        var queueUrl = "https://sqs.us-east-2.amazonaws.com/123456789012/test-queue";
         var attributeNames = new List<string> { "VisibilityTimeout", "MessageRetentionPeriod" };
 
         var expectedResponse = new GetQueueAttributesResponse
@@ -443,7 +443,7 @@ public class SqsMessageQueueTests
         var expectedResponse = new CreateQueueResponse
         {
             HttpStatusCode = HttpStatusCode.OK,
-            QueueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"
+            QueueUrl = "https://sqs.us-east-2.amazonaws.com/123456789012/test-queue"
         };
 
         _sqsClientMock.Setup(x =>
@@ -470,7 +470,7 @@ public class SqsMessageQueueTests
     {
         // Arrange
         var queueName = "test-queue";
-        var expectedQueueUrl = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
+        var expectedQueueUrl = "https://sqs.us-east-2.amazonaws.com/123456789012/test-queue";
 
         var expectedResponse = new GetQueueUrlResponse
         {

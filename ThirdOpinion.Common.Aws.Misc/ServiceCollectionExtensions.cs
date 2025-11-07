@@ -33,10 +33,10 @@ public static class ServiceCollectionExtensions
             var config = configuration.GetSection("AWS:SecretsManager").Get<SecretsManagerConfig>();
             if (config == null || string.IsNullOrEmpty(config.Region))
             {
-                // Use default region from environment or us-east-1
+                // Use default region from environment or us-east-2
                 string region = Environment.GetEnvironmentVariable("AWS_REGION")
                                 ?? Environment.GetEnvironmentVariable("AWS_DEFAULT_REGION")
-                                ?? "us-east-1";
+                                ?? "us-east-2";
                 return new AmazonSecretsManagerClient(RegionEndpoint.GetBySystemName(region));
             }
 
@@ -88,7 +88,7 @@ public static class ServiceCollectionExtensions
             string region = options.SecretsManagerConfig?.Region
                             ?? Environment.GetEnvironmentVariable("AWS_REGION")
                             ?? Environment.GetEnvironmentVariable("AWS_DEFAULT_REGION")
-                            ?? "us-east-1";
+                            ?? "us-east-2";
 
             return new AmazonSecretsManagerClient(RegionEndpoint.GetBySystemName(region));
         });

@@ -52,11 +52,11 @@ public class GlobalAppSettingsOptionsTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "TablePrefix", "TestPrefix_" },
-                { "Cognito:Region", "us-east-1" },
+                { "Cognito:Region", "us-east-2" },
                 { "Cognito:ClientId", "test-client-id" },
                 {
                     "Cognito:Authority",
-                    "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_TestPool"
+                    "https://cognito-idp.us-east-2.amazonaws.com/us-east-2_TestPool"
                 },
                 { "Tenants:TenantGroups:tenant1:0", "Admin" },
                 { "Tenants:TenantGroups:tenant1:1", "User" },
@@ -75,10 +75,10 @@ public class GlobalAppSettingsOptionsTests
 
         // Assert
         options.TablePrefix.ShouldBe("TestPrefix_");
-        options.Cognito.Region.ShouldBe("us-east-1");
+        options.Cognito.Region.ShouldBe("us-east-2");
         options.Cognito.ClientId.ShouldBe("test-client-id");
         options.Cognito.Authority.ShouldBe(
-            "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_TestPool");
+            "https://cognito-idp.us-east-2.amazonaws.com/us-east-2_TestPool");
         options.Tenants.TenantGroups.Count.ShouldBe(2);
         options.Tenants.TenantGroups.Keys.ShouldContain("tenant1");
         options.Tenants.TenantGroups.Keys.ShouldContain("tenant2");

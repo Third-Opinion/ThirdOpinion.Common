@@ -129,7 +129,7 @@ All tests now run against the AWS Dev Account with the following settings:
 {
   "AWS": {
     "UseLocalStack": false,
-    "Region": "us-east-1",
+    "Region": "us-east-2",
     "AccountId": "615299752206"
   },
   "TestSettings": {
@@ -264,7 +264,7 @@ The project includes a comprehensive GitHub Actions workflow:
   with:
     role-to-assume: arn:aws:iam::615299752206:role/dev-cdk-role-ue2-github-actions
     role-session-name: GitHubActions
-    aws-region: us-east-1
+    aws-region: us-east-2
 
 - name: Run integration tests
   run: dotnet test ThirdOpinion.Common.FunctionalTests

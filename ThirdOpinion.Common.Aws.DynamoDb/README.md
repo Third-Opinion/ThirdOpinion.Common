@@ -47,7 +47,7 @@ public class MyService
 {
   "DynamoDb": {
     "ServiceUrl": "http://localhost:8000",
-    "Region": "us-east-1"
+    "Region": "us-east-2"
   }
 }
 ```

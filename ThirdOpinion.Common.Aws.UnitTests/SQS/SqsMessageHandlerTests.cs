@@ -19,7 +19,7 @@ public class SqsMessageHandlerTests
     private readonly Mock<IAmazonSQS> _sqsClientMock;
 
     private readonly string _testQueueUrl
-        = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
+        = "https://sqs.us-east-2.amazonaws.com/123456789012/test-queue";
 
     public SqsMessageHandlerTests()
     {

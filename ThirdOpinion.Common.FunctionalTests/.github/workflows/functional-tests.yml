@@ -30,7 +30,7 @@ env:
   DOTNET_VERSION: '8.0.x'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_NOLOGO: true
-  AWS_REGION: us-east-1
+  AWS_REGION: us-east-2
   AWS_ACCOUNT_ID: '615299752206'
 
 jobs:
@@ -163,7 +163,7 @@ jobs:
           echo "## Functional Test Results 🧪" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Environment:** AWS Dev Account (615299752206)" >> $GITHUB_STEP_SUMMARY
-          echo "**Region:** us-east-1" >> $GITHUB_STEP_SUMMARY
+          echo "**Region:** us-east-2" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
@@ -178,4 +178,3 @@ jobs:
           
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Test artifacts have been uploaded and are available for download." >> $GITHUB_STEP_SUMMARY
-

@@ -105,7 +105,7 @@ if (!writeResult.Success)
 ```csharp
 services.Configure<HealthLakeConfig>(options =>
 {
-    options.Region = "us-east-1";
+    options.Region = "us-east-2";
     options.DatastoreId = "your-datastore-id";
     options.ValidationLevel = "strict"; // or "relaxed"
     options.MaxConcurrentRequests = 10;

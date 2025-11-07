@@ -34,11 +34,11 @@ public class AwsSignatureServiceTests
     {
         // Arrange
         var request = new HttpRequestMessage(HttpMethod.Put,
-            "https://healthlake.us-east-1.amazonaws.com/datastore/test/r4/Patient/123");
+            "https://healthlake.us-east-2.amazonaws.com/datastore/test/r4/Patient/123");
 
         // Act
         HttpRequestMessage signedRequest
-            = await _service.SignRequestAsync(request, "healthlake", "us-east-1");
+            = await _service.SignRequestAsync(request, "healthlake", "us-east-2");
 
         // Assert
         signedRequest.ShouldNotBeNull();
@@ -53,11 +53,11 @@ public class AwsSignatureServiceTests
     {
         // Arrange
         var request = new HttpRequestMessage(HttpMethod.Put,
-            "https://healthlake.us-east-1.amazonaws.com/datastore/test/r4/Patient/123");
+            "https://healthlake.us-east-2.amazonaws.com/datastore/test/r4/Patient/123");
 
         // Act
         HttpRequestMessage signedRequest
-            = await _service.SignRequestAsync(request, "healthlake", "us-east-1");
+            = await _service.SignRequestAsync(request, "healthlake", "us-east-2");
 
         // Assert - Authorization can be set as either typed header or raw header
         string authValue = null;
@@ -79,13 +79,13 @@ public class AwsSignatureServiceTests
     {
         // Arrange
         var request = new HttpRequestMessage(HttpMethod.Put,
-            "https://healthlake.us-east-1.amazonaws.com/datastore/test/r4/Patient/123");
+            "https://healthlake.us-east-2.amazonaws.com/datastore/test/r4/Patient/123");
         var requestBody = "{\"resourceType\":\"Patient\",\"id\":\"123\"}";
 
         // Act
         HttpRequestMessage signedRequest
             = await _service.SignRequestWithBodyAsync(request, requestBody, "healthlake",
-                "us-east-1");
+                "us-east-2");
 
         // Assert
         signedRequest.ShouldNotBeNull();
@@ -107,11 +107,11 @@ public class AwsSignatureServiceTests
     {
         // Arrange
         var request = new HttpRequestMessage(HttpMethod.Get,
-            "https://healthlake.us-east-1.amazonaws.com/datastore/test/r4/Patient/123");
+            "https://healthlake.us-east-2.amazonaws.com/datastore/test/r4/Patient/123");
 
         // Act
         HttpRequestMessage signedRequest
-            = await _service.SignRequestAsync(request, "healthlake", "us-east-1");
+            = await _service.SignRequestAsync(request, "healthlake", "us-east-2");
 
         // Assert
         // For GET requests, X-Amz-Content-Sha256 header is not added per AWS best practices
@@ -127,13 +127,13 @@ public class AwsSignatureServiceTests
     {
         // Arrange
         var request = new HttpRequestMessage(HttpMethod.Put,
-            "https://healthlake.us-east-1.amazonaws.com/datastore/test/r4/Patient/123");
+            "https://healthlake.us-east-2.amazonaws.com/datastore/test/r4/Patient/123");
         request.Headers.Add("X-Correlation-ID", "test-correlation-123");
         request.Headers.Add("User-Agent", "FhirTools/1.0");
 
         // Act
         HttpRequestMessage signedRequest
-            = await _service.SignRequestAsync(request, "healthlake", "us-east-1");
+            = await _service.SignRequestAsync(request, "healthlake", "us-east-2");
 
         // Assert
         signedRequest.Headers.Contains("X-Correlation-ID").ShouldBeTrue();
@@ -165,16 +165,16 @@ public class AwsSignatureServiceTests
     {
         // Arrange
         var request = new HttpRequestMessage(HttpMethod.Get,
-            "https://s3.us-east-1.amazonaws.com/mybucket/mykey");
+            "https://s3.us-east-2.amazonaws.com/mybucket/mykey");
 
         // Act
         HttpRequestMessage signedRequest
-            = await _service.SignRequestAsync(request, "s3", "us-east-1");
+            = await _service.SignRequestAsync(request, "s3", "us-east-2");
 
         // Assert
         string? authValue = signedRequest.Headers.GetValues("Authorization").FirstOrDefault();
         authValue.ShouldNotBeNull();
-        authValue.ShouldContain("/us-east-1/s3/aws4_request");
+        authValue.ShouldContain("/us-east-2/s3/aws4_request");
     }
 
     [Fact]
@@ -188,11 +188,11 @@ public class AwsSignatureServiceTests
 
         var service = new AwsSignatureService(_loggerMock.Object, credentialsMock.Object);
         var request = new HttpRequestMessage(HttpMethod.Get,
-            "https://healthlake.us-east-1.amazonaws.com/datastore/test/r4/Patient");
+            "https://healthlake.us-east-2.amazonaws.com/datastore/test/r4/Patient");
 
         // Act & Assert
         await Should.ThrowAsync<AmazonServiceException>(async () =>
-            await service.SignRequestAsync(request, "healthlake", "us-east-1"));
+            await service.SignRequestAsync(request, "healthlake", "us-east-2"));
     }
 
     [Fact]
@@ -200,7 +200,7 @@ public class AwsSignatureServiceTests
     {
         // Arrange
         var request = new HttpRequestMessage(HttpMethod.Put,
-            "https://healthlake.us-east-1.amazonaws.com/datastore/test/r4/Patient/123");
+            "https://healthlake.us-east-2.amazonaws.com/datastore/test/r4/Patient/123");
         var cts = new CancellationTokenSource();
 
         // Setup the credentials mock to throw when cancelled
@@ -221,6 +221,6 @@ public class AwsSignatureServiceTests
 
         // Act & Assert
         await Should.ThrowAsync<OperationCanceledException>(async () =>
-            await _service.SignRequestAsync(request, "healthlake", "us-east-1", cts.Token));
+            await _service.SignRequestAsync(request, "healthlake", "us-east-2", cts.Token));
     }
 }

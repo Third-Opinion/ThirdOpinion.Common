@@ -356,7 +356,7 @@
             <param name="modelId">Bedrock model identifier</param>
             <param name="inputTokens">Number of input tokens</param>
             <param name="outputTokens">Number of output tokens</param>
-            <param name="region">AWS region (optional, defaults to us-east-1)</param>
+            <param name="region">AWS region (optional, defaults to us-east-2)</param>
             <returns>Cost calculation result</returns>
         </member>
         <member name="M:ThirdOpinion.Common.Aws.Bedrock.IBedrockPricingService.GetModelPricing(System.String,System.String)">

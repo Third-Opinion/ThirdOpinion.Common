@@ -8,12 +8,12 @@ public class tS3RefTests
     public void Constructor_WithValidParameters_SetsPropertiesCorrectly()
     {
         // Arrange & Act
-        var s3Ref = new S3Ref("test-bucket", "path/to/file.txt", "us-east-1", "123456789012");
+        var s3Ref = new S3Ref("test-bucket", "path/to/file.txt", "us-east-2", "123456789012");
 
         // Assert
         s3Ref.Bucket.ShouldBe("test-bucket");
         s3Ref.Key.ShouldBe("path/to/file.txt");
-        s3Ref.Region.ShouldBe("us-east-1");
+        s3Ref.Region.ShouldBe("us-east-2");
         s3Ref.AccountId.ShouldBe("123456789012");
         s3Ref.FileName.ShouldBe("file.txt");
     }
@@ -22,7 +22,7 @@ public class tS3RefTests
     public void Constructor_WithKeyWithoutSlash_SetsFileNameAsKey()
     {
         // Arrange & Act
-        var s3Ref = new S3Ref("test-bucket", "file.txt", "us-east-1", "123456789012");
+        var s3Ref = new S3Ref("test-bucket", "file.txt", "us-east-2", "123456789012");
 
         // Assert
         s3Ref.FileName.ShouldBe("file.txt");
@@ -32,7 +32,7 @@ public class tS3RefTests
     public void Constructor_WithValidArn_ParsesCorrectly()
     {
         // Arrange
-        var arn = "arn:aws:s3:us-east-1:123456789012:test-bucket/path/to/file.txt";
+        var arn = "arn:aws:s3:us-east-2:123456789012:test-bucket/path/to/file.txt";
 
         // Act
         var s3Ref = new S3Ref(arn);
@@ -40,7 +40,7 @@ public class tS3RefTests
         // Assert
         s3Ref.Bucket.ShouldBe("test-bucket");
         s3Ref.Key.ShouldBe("path/to/file.txt");
-        s3Ref.Region.ShouldBe("us-east-1");
+        s3Ref.Region.ShouldBe("us-east-2");
         s3Ref.AccountId.ShouldBe("123456789012");
         s3Ref.FileName.ShouldBe("file.txt");
     }
@@ -75,7 +75,7 @@ public class tS3RefTests
     public void ToS3Path_ReturnsCorrectPath()
     {
         // Arrange
-        var s3Ref = new S3Ref("data-bucket", "analytics/2023/report.csv", "us-east-1",
+        var s3Ref = new S3Ref("data-bucket", "analytics/2023/report.csv", "us-east-2",
             "123456789012");
 
         // Act
@@ -171,7 +171,7 @@ public class tS3RefTests
     public void ParseArn_NonS3Arn_ThrowsArgumentException()
     {
         // Arrange
-        var nonS3Arn = "arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0";
+        var nonS3Arn = "arn:aws:ec2:us-east-2:123456789012:instance/i-1234567890abcdef0";
 
         // Act & Assert
         var exception
@@ -183,7 +183,7 @@ public class tS3RefTests
     public void ParseObjectUri_ValidS3Uri_ReturnsCorrectS3Ref()
     {
         // Arrange
-        var uri = "https://my-bucket.s3.us-east-1.amazonaws.com/folder/document.pdf";
+        var uri = "https://my-bucket.s3.us-east-2.amazonaws.com/folder/document.pdf";
 
         // Act
         S3Ref result = S3Ref.ParseObjectUri(uri);
@@ -191,7 +191,7 @@ public class tS3RefTests
         // Assert
         result.Bucket.ShouldBe("my-bucket");
         result.Key.ShouldBe("folder/document.pdf");
-        result.Region.ShouldBe("us-east-1");
+        result.Region.ShouldBe("us-east-2");
         result.AccountId.ShouldBeNull();
         result.FileName.ShouldBe("document.pdf");
     }
@@ -271,7 +271,7 @@ public class tS3RefTests
     public void TryParseArn_ValidArn_ReturnsTrue()
     {
         // Arrange
-        var validArn = "arn:aws:s3:us-east-1:123456789012:my-bucket/my-key";
+        var validArn = "arn:aws:s3:us-east-2:123456789012:my-bucket/my-key";
 
         // Act
         bool success = S3Ref.TryParseArn(validArn, out S3Ref? result);
@@ -331,7 +331,7 @@ public class tS3RefTests
     public void IsValidS3Arn_ValidS3Arn_ReturnsTrue()
     {
         // Arrange
-        var validArn = "arn:aws:s3:us-east-1:123456789012:bucket/key";
+        var validArn = "arn:aws:s3:us-east-2:123456789012:bucket/key";
 
         // Act
         bool result = validArn.IsValidS3Arn();
@@ -344,7 +344,7 @@ public class tS3RefTests
     public void IsValidS3Arn_ValidS3BucketArn_ReturnsTrue()
     {
         // Arrange
-        var validBucketArn = "arn:aws:s3:us-east-1:123456789012:bucket";
+        var validBucketArn = "arn:aws:s3:us-east-2:123456789012:bucket";
 
         // Act
         bool result = validBucketArn.IsValidS3Arn();

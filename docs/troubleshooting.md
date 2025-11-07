@@ -27,7 +27,7 @@ This guide covers common issues you might encounter when using ThirdOpinion.Comm
    ```bash
    export AWS_ACCESS_KEY_ID=your_access_key
    export AWS_SECRET_ACCESS_KEY=your_secret_key
-   export AWS_REGION=us-east-1
+   export AWS_REGION=us-east-2
    ```
 
 3. **Use AWS Profile:**
@@ -36,7 +36,7 @@ This guide covers common issues you might encounter when using ThirdOpinion.Comm
    {
      "AWS": {
        "Profile": "your-profile-name",
-       "Region": "us-east-1"
+       "Region": "us-east-2"
      }
    }
    ```
@@ -462,7 +462,7 @@ builder.Logging.AddAWSProvider(builder.Configuration.GetAWSLoggingConfigSection(
 // appsettings.json
 {
   "AWS.Logging": {
-    "Region": "us-east-1",
+    "Region": "us-east-2",
     "LogLevel": {
       "Default": "Debug",
       "Amazon": "Information"

@@ -13,7 +13,7 @@ public interface IBedrockPricingService
     /// <param name="modelId">Bedrock model identifier</param>
     /// <param name="inputTokens">Number of input tokens</param>
     /// <param name="outputTokens">Number of output tokens</param>
-    /// <param name="region">AWS region (optional, defaults to us-east-1)</param>
+    /// <param name="region">AWS region (optional, defaults to us-east-2)</param>
     /// <returns>Cost calculation result</returns>
     BedrockCostCalculation CalculateCost(string modelId,
         int inputTokens,
@@ -50,7 +50,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Anthropic",
             InputTokensPer1K = 0.003m,
             OutputTokensPer1K = 0.015m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["us.anthropic.claude-sonnet-4-5-20250929-v1:0"] = new BedrockModelPricing
         {
@@ -59,7 +59,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Anthropic",
             InputTokensPer1K = 0.003m,
             OutputTokensPer1K = 0.015m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["anthropic.claude-haiku-4-5-20250929-v1:0"] = new BedrockModelPricing
         {
@@ -68,7 +68,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Anthropic",
             InputTokensPer1K = 0.00025m,
             OutputTokensPer1K = 0.00125m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["us.anthropic.claude-haiku-4-5-20250929-v1:0"] = new BedrockModelPricing
         {
@@ -77,7 +77,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Anthropic",
             InputTokensPer1K = 0.00025m,
             OutputTokensPer1K = 0.00125m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["anthropic.claude-opus-4-1-20250805-v1:0"] = new BedrockModelPricing
         {
@@ -86,7 +86,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Anthropic",
             InputTokensPer1K = 0.015m,
             OutputTokensPer1K = 0.075m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["us.anthropic.claude-opus-4-1-20250805-v1:0"] = new BedrockModelPricing
         {
@@ -95,7 +95,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Anthropic",
             InputTokensPer1K = 0.015m,
             OutputTokensPer1K = 0.075m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
 
         // Anthropic Claude 3.x Models (Legacy)
@@ -106,7 +106,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Anthropic",
             InputTokensPer1K = 0.003m,
             OutputTokensPer1K = 0.015m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["us.anthropic.claude-3-5-sonnet-20241022-v2:0"] = new BedrockModelPricing
         {
@@ -115,7 +115,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Anthropic",
             InputTokensPer1K = 0.003m,
             OutputTokensPer1K = 0.015m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["anthropic.claude-3-opus-20240229-v1:0"] = new BedrockModelPricing
         {
@@ -124,7 +124,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Anthropic",
             InputTokensPer1K = 0.015m,
             OutputTokensPer1K = 0.075m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["us.anthropic.claude-3-opus-20240229-v1:0"] = new BedrockModelPricing
         {
@@ -133,7 +133,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Anthropic",
             InputTokensPer1K = 0.015m,
             OutputTokensPer1K = 0.075m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["anthropic.claude-3-haiku-20240307-v1:0"] = new BedrockModelPricing
         {
@@ -142,7 +142,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Anthropic",
             InputTokensPer1K = 0.00025m,
             OutputTokensPer1K = 0.00125m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["us.anthropic.claude-3-haiku-20240307-v1:0"] = new BedrockModelPricing
         {
@@ -151,7 +151,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Anthropic",
             InputTokensPer1K = 0.00025m,
             OutputTokensPer1K = 0.00125m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
 
         // Amazon Titan Models
@@ -162,7 +162,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Amazon",
             InputTokensPer1K = 0.0002m,
             OutputTokensPer1K = 0.0006m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["amazon.titan-text-lite-v1"] = new BedrockModelPricing
         {
@@ -171,7 +171,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Amazon",
             InputTokensPer1K = 0.00015m,
             OutputTokensPer1K = 0.0002m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["amazon.titan-embed-text-v1"] = new BedrockModelPricing
         {
@@ -180,7 +180,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Amazon",
             InputTokensPer1K = 0.0001m,
             OutputTokensPer1K = 0.0m, // Embeddings don't have output tokens
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
 
         // Amazon Nova Models (as of December 2024)
@@ -191,7 +191,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Amazon",
             InputTokensPer1K = 0.0008m,
             OutputTokensPer1K = 0.0032m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["amazon.nova-lite-v1:0"] = new BedrockModelPricing
         {
@@ -200,7 +200,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Amazon",
             InputTokensPer1K = 0.00006m,
             OutputTokensPer1K = 0.00024m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["amazon.nova-micro-v1:0"] = new BedrockModelPricing
         {
@@ -209,7 +209,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Amazon",
             InputTokensPer1K = 0.000035m,
             OutputTokensPer1K = 0.00014m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["amazon.nova-premier-v1:0"] = new BedrockModelPricing
         {
@@ -218,7 +218,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Amazon",
             InputTokensPer1K = 0.003m,
             OutputTokensPer1K = 0.012m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
 
         // Meta Llama Models
@@ -229,7 +229,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Meta",
             InputTokensPer1K = 0.00065m,
             OutputTokensPer1K = 0.00065m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["meta.llama2-13b-chat-v1"] = new BedrockModelPricing
         {
@@ -238,7 +238,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Meta",
             InputTokensPer1K = 0.00075m,
             OutputTokensPer1K = 0.001m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["meta.llama2-70b-chat-v1"] = new BedrockModelPricing
         {
@@ -247,7 +247,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Meta",
             InputTokensPer1K = 0.00195m,
             OutputTokensPer1K = 0.00256m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["meta.llama3-2-3b-instruct-v1:0"] = new BedrockModelPricing
         {
@@ -256,7 +256,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Meta",
             InputTokensPer1K = 0.0005m,
             OutputTokensPer1K = 0.0005m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         },
         ["us.meta.llama3-2-3b-instruct-v1:0"] = new BedrockModelPricing
         {
@@ -265,7 +265,7 @@ public class BedrockPricingService : IBedrockPricingService
             Provider = "Meta",
             InputTokensPer1K = 0.0005m,
             OutputTokensPer1K = 0.0005m,
-            Region = "us-east-1"
+            Region = "us-east-2"
         }
     };
 

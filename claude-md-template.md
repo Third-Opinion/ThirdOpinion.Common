@@ -46,7 +46,7 @@ var app = builder.Build();
 {
   "AWS": {
     "Profile": "default",
-    "Region": "us-east-1",
+    "Region": "us-east-2",
     "S3": {
       "DefaultBucket": "thirdopinion-storage",
       "UseTransferUtility": true,
@@ -59,7 +59,7 @@ var app = builder.Build();
       "MaxBatchSize": 25
     },
     "Cognito": {
-      "UserPoolId": "us-east-1_xxxxx",
+      "UserPoolId": "us-east-2_xxxxx",
       "ClientId": "xxxxxxxxxxxxx",
       "ClientSecret": "xxxxxxxxxxxxx"
     }
@@ -433,7 +433,7 @@ public async Task UploadAsync_ValidFile_ReturnsResult()
         "dynamodb:Scan",
         "dynamodb:BatchWriteItem"
       ],
-      "Resource": "arn:aws:dynamodb:us-east-1:*:table/thirdopinion_*"
+      "Resource": "arn:aws:dynamodb:us-east-2:*:table/thirdopinion_*"
     }
   ]
 }
@@ -454,7 +454,7 @@ public async Task UploadAsync_ValidFile_ReturnsResult()
         "cognito-idp:AdminUpdateUserAttributes",
         "cognito-idp:AdminSetUserPassword"
       ],
-      "Resource": "arn:aws:cognito-idp:us-east-1:*:userpool/*"
+      "Resource": "arn:aws:cognito-idp:us-east-2:*:userpool/*"
     }
   ]
 }

@@ -32,7 +32,7 @@ Configure AWS services in your `appsettings.json`:
 ```json
 {
   "AWS": {
-    "Region": "us-east-1"
+    "Region": "us-east-2"
   }
 }
 ```

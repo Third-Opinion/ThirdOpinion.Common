@@ -56,7 +56,7 @@ public class MyService
 ```json
 {
   "SQS": {
-    "Region": "us-east-1",
+    "Region": "us-east-2",
     "ServiceUrl": "http://localhost:4566"
   }
 }

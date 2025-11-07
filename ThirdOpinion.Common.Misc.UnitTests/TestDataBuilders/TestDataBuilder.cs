@@ -179,6 +179,6 @@ public static class TestData
         public const string TestBucketName = "test-bucket";
 
         public const string TestQueueUrl
-            = "https://sqs.us-east-1.amazonaws.com/123456789012/test-queue";
+            = "https://sqs.us-east-2.amazonaws.com/123456789012/test-queue";
     }
 }

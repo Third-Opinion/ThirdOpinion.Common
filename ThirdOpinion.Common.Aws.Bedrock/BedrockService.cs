@@ -137,7 +137,7 @@ public class BedrockService : IBedrockService, IDisposable
             var traceMetadata = new BedrockTraceMetadata
             {
                 CorrelationId = correlationId,
-                Region = Environment.GetEnvironmentVariable("AWS_REGION") ?? "us-east-1",
+                Region = Environment.GetEnvironmentVariable("AWS_REGION") ?? "us-east-2",
                 Environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ??
                               "Production"
             };

@@ -345,7 +345,7 @@ public class S3FunctionalTests : BaseIntegrationTest
             try
             {
                 AWSCredentials? credentials = profile.GetAWSCredentials(chain);
-                string region = Configuration.GetValue<string>("AWS:Region") ?? "us-east-1";
+                string region = Configuration.GetValue<string>("AWS:Region") ?? "us-east-2";
                 RegionEndpoint? regionEndpoint = RegionEndpoint.GetBySystemName(region);
 
                 using (var s3ClientForPresign = new AmazonS3Client(credentials, regionEndpoint))

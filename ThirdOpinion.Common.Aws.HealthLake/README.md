@@ -44,7 +44,7 @@ Configure in appsettings.json:
   "AWS": {
     "HealthLake": {
       "DatastoreId": "your-datastore-id",
-      "Region": "us-east-1"
+      "Region": "us-east-2"
     }
   }
 }
