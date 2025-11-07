@@ -375,6 +375,71 @@ public class RadiographicObservationBuilderTests
         observation.DerivedFrom.ShouldContain(radiologyReportRef);
     }
 
+    [Fact]
+    public void Build_ObservedWithObservedChanges_AddsObservedChangesComponent()
+    {
+        // Arrange
+        var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.Observed);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("Inconclusive")
+            .WithObservedChanges("Progression")
+            .WithSummary("RECIST criteria inconclusive, but clear progression observed")
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+
+        // Check that observedChanges component was added
+        Observation.ComponentComponent? observedChangesComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(coding => coding.Code == "observed-changes"));
+
+        observedChangesComponent.ShouldNotBeNull();
+        observedChangesComponent.Code.Coding[0].System.ShouldBe(
+            "http://thirdopinion.ai/fhir/CodeSystem/radiographic-components");
+        observedChangesComponent.Code.Coding[0].Code.ShouldBe("observed-changes");
+        observedChangesComponent.Code.Coding[0].Display.ShouldBe("Observed Changes");
+
+        var valueString = observedChangesComponent.Value as FhirString;
+        valueString.ShouldNotBeNull();
+        valueString.Value.ShouldBe("Progression");
+
+        // Check that determination is Inconclusive
+        Observation.ComponentComponent? determinationComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(coding => coding.Code == "determination"));
+        determinationComponent.ShouldNotBeNull();
+        var determinationValue = determinationComponent.Value as FhirString;
+        determinationValue?.Value.ShouldBe("Inconclusive");
+    }
+
+    [Fact]
+    public void Build_ObservedWithoutObservedChanges_DoesNotAddComponent()
+    {
+        // Arrange
+        var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.Observed);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("True")
+            .Build();
+
+        // Assert
+        observation.ShouldNotBeNull();
+
+        // Check that observedChanges component was NOT added
+        Observation.ComponentComponent? observedChangesComponent = observation.Component
+            .FirstOrDefault(c => c.Code.Coding.Any(coding => coding.Code == "observed-changes"));
+
+        observedChangesComponent.ShouldBeNull();
+    }
+
     #endregion
 
     #region Common Functionality Tests

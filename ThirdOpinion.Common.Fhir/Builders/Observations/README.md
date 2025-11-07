@@ -351,6 +351,24 @@ var observedProgression = new RadiographicObservationBuilder(config, Radiographi
     .Build();
 ```
 
+**Inconclusive RECIST with Observed Changes Example:**
+
+When RECIST criteria are inconclusive but progression is observed:
+
+```csharp
+var inconclusiveWithProgression = new RadiographicObservationBuilder(config, RadiographicStandard.Observed)
+    .WithInferenceId("observed-assessment-002")
+    .WithPatient("Patient/patient-789", "John Smith")
+    .WithDevice("Device/radiologist-review", "Radiologist Review")
+    .WithFocus(new ResourceReference("Condition/prostate-cancer"))
+    .WithDetermination("Inconclusive") // RECIST criteria inconclusive
+    .WithObservedChanges("Progression") // But progression is clearly observed
+    .AddImagingStudy(new ResourceReference("ImagingStudy/ct-456", "CT Scan"))
+    .WithSummary("RECIST criteria inconclusive due to measurement variability, but clear progression observed")
+    .WithConfidence(0.80f)
+    .Build();
+```
+
 #### Common Methods (Available for All Standards)
 
 These methods work with all three assessment standards:
@@ -415,6 +433,34 @@ var pcwg3Obs = new RadiographicObservationBuilder(config, RadiographicStandard.P
     .WithConfidence(0.93f)
     .Build();
 ```
+
+#### Observed-Specific Methods
+
+Additional methods available when using `RadiographicStandard.Observed`:
+
+```csharp
+.WithObservedChanges(string? observedChanges)
+```
+
+**Purpose:** Describes observed radiographic changes when formal criteria (like RECIST) are inconclusive but changes are evident.
+
+**Example:**
+```csharp
+var observedObs = new RadiographicObservationBuilder(config, RadiographicStandard.Observed)
+    .WithPatient("Patient/patient-003")
+    .WithDevice("Device/radiologist-review")
+    .WithDetermination("Inconclusive") // Formal criteria unclear
+    .WithObservedChanges("Progression") // But progression is observed
+    .WithSummary("Clear progression observed despite measurement variability")
+    .WithConfidence(0.85f)
+    .Build();
+```
+
+**Use Cases:**
+- RECIST criteria inconclusive due to measurement variability, but visual progression clear
+- Mixed response (some lesions progress, others stable)
+- New lesions below size threshold but clinically significant
+- Qualitative changes not captured by formal criteria
 
 #### RECIST-Specific Methods
 
@@ -564,6 +610,11 @@ public RadiographicObservationBuilder WithInitialScanDate(DateTime? initialScanD
 public RadiographicObservationBuilder WithConfirmationLesions(string? confirmationLesions)
 public RadiographicObservationBuilder AddEvidence(ResourceReference reference, string? display = null)
 public RadiographicObservationBuilder AddEvidence(string referenceString, string? display = null)
+```
+
+##### Observed-Specific Methods
+```csharp
+public RadiographicObservationBuilder WithObservedChanges(string? observedChanges)
 ```
 
 ##### RECIST-Specific Methods

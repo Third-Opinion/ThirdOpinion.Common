@@ -49,6 +49,9 @@ public class RadiographicObservationBuilder : AiResourceBuilderBase<Observation>
     private CodeableConcept? _recistResponse;
     private string? _recistTimepointsJson;
 
+    // Observed-specific fields
+    private string? _observedChanges;
+
     /// <summary>
     ///     Creates a new Radiographic Observation builder
     /// </summary>
@@ -273,6 +276,17 @@ public class RadiographicObservationBuilder : AiResourceBuilderBase<Observation>
     public RadiographicObservationBuilder WithSummary(string? summary)
     {
         _summary = summary;
+        return this;
+    }
+
+    /// <summary>
+    ///     Sets the observed changes description (Observed standard)
+    /// </summary>
+    /// <param name="observedChanges">Description of observed changes (e.g., "Progression", "Stable", "Regression")</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public RadiographicObservationBuilder WithObservedChanges(string? observedChanges)
+    {
+        _observedChanges = observedChanges;
         return this;
     }
 
@@ -902,6 +916,9 @@ public class RadiographicObservationBuilder : AiResourceBuilderBase<Observation>
             case RadiographicStandard.RECIST_1_1:
                 AddRecistSpecificComponents();
                 break;
+            case RadiographicStandard.Observed:
+                AddObservedSpecificComponents();
+                break;
         }
     }
 
@@ -1183,6 +1200,30 @@ public class RadiographicObservationBuilder : AiResourceBuilderBase<Observation>
                     }
                 },
                 Value = new FhirDateTime(_imagingDate.Value)
+            });
+    }
+
+    private void AddObservedSpecificComponents()
+    {
+        const string componentSystem = "http://thirdopinion.ai/fhir/CodeSystem/radiographic-components";
+
+        // Add observed changes component
+        if (!string.IsNullOrWhiteSpace(_observedChanges))
+            _components.Add(new Observation.ComponentComponent
+            {
+                Code = new CodeableConcept
+                {
+                    Coding = new List<Coding>
+                    {
+                        new()
+                        {
+                            System = componentSystem,
+                            Code = "observed-changes",
+                            Display = "Observed Changes"
+                        }
+                    }
+                },
+                Value = new FhirString(_observedChanges)
             });
     }
 
