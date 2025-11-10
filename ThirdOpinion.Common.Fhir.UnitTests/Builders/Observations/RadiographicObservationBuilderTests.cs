@@ -832,4 +832,208 @@ public class RadiographicObservationBuilderTests
     }
 
     #endregion
+
+    #region JSON Serialization Tests
+
+    [Fact]
+    public void Build_PCWG3WithProgressionExample_SerializesToJson()
+    {
+        // Arrange
+        var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.PCWG3);
+
+        var supportingFacts = new[]
+        {
+            new Fact
+            {
+                factGuid = "fact-001",
+                factDocumentReference = "DocumentReference/psma-2024-07-03",
+                type = "imaging",
+                fact = "PSMA imaging from 2024-07-03 showed 'progression of metastatic disease'",
+                @ref = new[] { "1.100" },
+                timeRef = "2024-07-03",
+                relevance = "Initial progression documentation"
+            },
+            new Fact
+            {
+                factGuid = "fact-002",
+                factDocumentReference = "DocumentReference/psma-2025-03-10",
+                type = "imaging",
+                fact = "PSMA from 2025-03-10 demonstrating 'widespread progression of bone metastases'",
+                @ref = new[] { "1.101" },
+                timeRef = "2025-03-10",
+                relevance = "Confirmation of widespread progression"
+            },
+            new Fact
+            {
+                factGuid = "fact-003",
+                factDocumentReference = "DocumentReference/radiation-c-spine",
+                type = "treatment",
+                fact = "Patient developed new symptomatic sites requiring palliative radiation (C-spine pain documented 2025-03-17, treated with RT completed 2025-04-25)",
+                @ref = new[] { "1.102" },
+                timeRef = "2025-03-17",
+                relevance = "New symptomatic bone lesions requiring treatment"
+            }
+        };
+
+        // Act
+        Observation observation = builder
+            .WithPatient("Patient/example-patient", "Example Patient")
+            .WithDevice("Device/ai-pcwg3-analyzer", "AI PCWG3 Assessment Device")
+            .WithFocus(new ResourceReference("Condition/prostate-cancer", "Metastatic Prostate Cancer"))
+            .WithDetermination("PD")
+            .WithConfidence(0.9f)
+            .WithSummary("<div xmlns='http://www.w3.org/1999/xhtml'><p><strong>PCWG3 Bone Progression: True</strong></p><p><strong>Rationale:</strong> The patient demonstrates clear bone disease progression meeting PCWG3 criteria based on serial PSMA PET imaging:</p><p><strong>Evidence of Progression:</strong></p><ul><li><strong>Initial Disease:</strong> Patient had documented bone metastases requiring palliative radiation to T10-T11 vertebrae (completed April 2023) and later to C-spine (completed 2025-04-25).</li><li><strong>Progression Documentation:</strong> PSMA imaging from 2024-07-03 showed 'progression of metastatic disease', followed by PSMA from 2025-03-10 demonstrating 'widespread progression of bone metastases'.</li><li><strong>Clinical Correlation:</strong> Patient developed new symptomatic sites requiring palliative radiation (C-spine pain documented 2025-03-17, treated with RT completed 2025-04-25), indicating new or progressive bone lesions.</li><li><strong>Treatment Escalation:</strong> Progression through multiple lines of therapy (ADT + Xtandi, ADT + Zytiga, chemotherapy, now Pluvicto) with continued bone disease progression supports PCWG3 progression.</li></ul><p><strong>PCWG3 2+2 Rule Consideration:</strong> While the documentation does not explicitly state '2 or more new lesions confirmed on subsequent scan', the clinical narrative of 'widespread progression' on serial PSMA scans, new symptomatic sites requiring radiation, and progression through multiple therapies strongly indicates bone progression meeting PCWG3 criteria. PSMA PET is more sensitive than traditional bone scan and the terminology 'widespread progression' implies multiple new or enlarging lesions.</p></div>")
+            .WithInitialLesions("Multiple (T10, T11 vertebrae documented, widespread disease)")
+            .WithConfirmationDate(new DateTime(2025, 3, 10))
+            .WithSupportingFacts(supportingFacts)
+            .WithEffectiveDate(new DateTime(2025, 3, 10))
+            .Build();
+
+        // Serialize to JSON
+        var json = new Hl7.Fhir.Serialization.FhirJsonSerializer().SerializeToString(observation);
+
+        // Output to console
+        Console.WriteLine("=== PCWG3 Progression Example ===");
+        Console.WriteLine(json);
+        Console.WriteLine();
+
+        // Assert
+        observation.ShouldNotBeNull();
+        observation.Value.ShouldNotBeNull();
+        var valueCodeableConcept = observation.Value as CodeableConcept;
+        valueCodeableConcept.ShouldNotBeNull();
+        valueCodeableConcept.Coding.First().Code.ShouldBe("277022003"); // Progressive disease
+    }
+
+    [Fact]
+    public void Build_RECISTWithProgressionExample_SerializesToJson()
+    {
+        // Arrange
+        var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.RECIST_1_1);
+
+        var supportingFacts = new[]
+        {
+            new Fact
+            {
+                factGuid = "fact-101",
+                factDocumentReference = "DocumentReference/ct-2024-12-20",
+                type = "imaging",
+                fact = "CT scan on 12/20/2024 revealed a new polypoid mass contiguous with the bladder and prostate, representing new soft tissue disease",
+                @ref = new[] { "2.200" },
+                timeRef = "2024-12-20",
+                relevance = "New lesion constitutes RECIST progression"
+            },
+            new Fact
+            {
+                factGuid = "fact-102",
+                factDocumentReference = "DocumentReference/ct-lymph-nodes",
+                type = "imaging",
+                fact = "Persistent bilateral pelvic and paraaortic lymphadenopathy documented on imaging",
+                @ref = new[] { "2.201" },
+                timeRef = "2024-12-20",
+                relevance = "Persistent disease burden"
+            }
+        };
+
+        // Act
+        Observation observation = builder
+            .WithPatient("Patient/example-patient-2", "Example Patient 2")
+            .WithDevice("Device/ai-recist-analyzer", "AI RECIST 1.1 Assessment Device")
+            .WithFocus(new ResourceReference("Condition/prostate-cancer-2", "Metastatic Prostate Cancer"))
+            .WithDetermination("PD")
+            .WithConfidence(0.75f)
+            .WithSummary("<div xmlns='http://www.w3.org/1999/xhtml'><p><strong>RECIST 1.1 Progression: TRUE</strong></p><p><strong>Evidence:</strong></p><ul><li>CT scan on 12/20/2024 revealed a new polypoid mass contiguous with the bladder and prostate, representing new soft tissue disease.</li><li>Persistent bilateral pelvic and paraaortic lymphadenopathy documented on imaging.</li><li>The appearance of a new polypoid mass meets RECIST 1.1 criteria for progressive disease (new lesions constitute progression regardless of target lesion measurements).</li></ul><p><strong>Assessment:</strong> The identification of a new soft tissue mass (polypoid lesion) on CT imaging constitutes radiographic progression by RECIST 1.1 criteria. While specific measurements and comparison to prior imaging are not provided in the documentation, the presence of new lesions is sufficient for a determination of progressive disease. Confidence is moderate-high (0.75) due to clear documentation of new soft tissue findings, though formal radiology reports with measurements would increase certainty.</p></div>")
+            .WithSupportingFacts(supportingFacts)
+            .WithImagingType("CT")
+            .WithImagingDate(new DateTime(2024, 12, 20))
+            .WithEffectiveDate(new DateTime(2024, 12, 20))
+            .AddRadiologyReport(new ResourceReference("DocumentReference/ct-2024-12-20", "CT Abdomen/Pelvis"))
+            .Build();
+
+        // Serialize to JSON
+        var json = new Hl7.Fhir.Serialization.FhirJsonSerializer().SerializeToString(observation);
+
+        // Output to console
+        Console.WriteLine("=== RECIST 1.1 Progression Example ===");
+        Console.WriteLine(json);
+        Console.WriteLine();
+
+        // Assert
+        observation.ShouldNotBeNull();
+        observation.Value.ShouldNotBeNull();
+        var valueCodeableConcept = observation.Value as CodeableConcept;
+        valueCodeableConcept.ShouldNotBeNull();
+        valueCodeableConcept.Coding.First().Code.ShouldBe("277022003"); // Progressive disease
+    }
+
+    [Fact]
+    public void Build_PCWG3CompleteResponseExample_SerializesToJson()
+    {
+        // Arrange
+        var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.PCWG3);
+
+        // Act
+        Observation observation = builder
+            .WithPatient("Patient/cr-patient", "CR Patient")
+            .WithDevice("Device/ai-pcwg3-analyzer", "AI PCWG3 Assessment Device")
+            .WithFocus(new ResourceReference("Condition/prostate-cancer-cr", "Prostate Cancer"))
+            .WithDetermination("CR")
+            .WithConfidence(0.95f)
+            .WithSummary("<div xmlns='http://www.w3.org/1999/xhtml'><p>Complete resolution of all bone lesions on follow-up imaging. No new lesions identified.</p></div>")
+            .WithInitialLesions("Multiple bone metastases at T10, T11, L3")
+            .WithConfirmationDate(new DateTime(2025, 6, 15))
+            .WithEffectiveDate(new DateTime(2025, 6, 15))
+            .Build();
+
+        // Serialize to JSON
+        var json = new Hl7.Fhir.Serialization.FhirJsonSerializer().SerializeToString(observation);
+
+        // Output to console
+        Console.WriteLine("=== PCWG3 Complete Response Example ===");
+        Console.WriteLine(json);
+        Console.WriteLine();
+
+        // Assert
+        observation.ShouldNotBeNull();
+        var valueCodeableConcept = observation.Value as CodeableConcept;
+        valueCodeableConcept.ShouldNotBeNull();
+        valueCodeableConcept.Coding.First().Code.ShouldBe("268910001"); // Complete response
+    }
+
+    [Fact]
+    public void Build_RECISTStableDiseaseExample_SerializesToJson()
+    {
+        // Arrange
+        var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.RECIST_1_1);
+
+        // Act
+        Observation observation = builder
+            .WithPatient("Patient/sd-patient", "SD Patient")
+            .WithDevice("Device/ai-recist-analyzer", "AI RECIST 1.1 Assessment Device")
+            .WithFocus(new ResourceReference("Condition/lung-cancer", "Non-Small Cell Lung Cancer"))
+            .WithDetermination("SD")
+            .WithConfidence(0.88f)
+            .WithSummary("<div xmlns='http://www.w3.org/1999/xhtml'><p>Target lesions remain stable with <10% change in sum of longest diameters. No new lesions.</p></div>")
+            .WithMeasurementChange("+5% change in SLD from baseline")
+            .WithImagingType("CT Chest")
+            .WithImagingDate(new DateTime(2025, 4, 1))
+            .WithEffectiveDate(new DateTime(2025, 4, 1))
+            .Build();
+
+        // Serialize to JSON
+        var json = new Hl7.Fhir.Serialization.FhirJsonSerializer().SerializeToString(observation);
+
+        // Output to console
+        Console.WriteLine("=== RECIST 1.1 Stable Disease Example ===");
+        Console.WriteLine(json);
+        Console.WriteLine();
+
+        // Assert
+        observation.ShouldNotBeNull();
+        var valueCodeableConcept = observation.Value as CodeableConcept;
+        valueCodeableConcept.ShouldNotBeNull();
+        valueCodeableConcept.Coding.First().Code.ShouldBe("359746009"); // Stable disease
+    }
+
+    #endregion
 }
