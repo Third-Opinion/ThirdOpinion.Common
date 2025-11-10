@@ -49,7 +49,7 @@ public class RadiographicObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .WithDetermination("True")
+            .WithDetermination("PD")
             .WithInitialLesions("2 new bone lesions identified")
             .WithConfirmationDate(new DateTime(2025, 1, 15))
             .WithAdditionalLesions("3 additional lesions on confirmation scan")
@@ -114,7 +114,7 @@ public class RadiographicObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .WithDetermination("True")
+            .WithDetermination("PD")
             .WithInitialLesions("2 new bone lesions")
             .WithInitialScanDate(new DateTime(2024, 10, 1))
             .WithConfirmationDate(new DateTime(2025, 1, 15))
@@ -301,7 +301,7 @@ public class RadiographicObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .WithDetermination("True")
+            .WithDetermination("PD")
             .WithSummary("Observed radiographic progression without formal criteria")
             .WithConfidence(0.75f)
             .Build();
@@ -426,7 +426,7 @@ public class RadiographicObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .WithDetermination("True")
+            .WithDetermination("PD")
             .Build();
 
         // Assert
@@ -542,7 +542,7 @@ public class RadiographicObservationBuilderTests
     #region Common Functionality Tests
 
     [Fact]
-    public void Build_WithDeterminationTrue_CreatesProgressiveDiseaseValue()
+    public void Build_WithDeterminationPD_CreatesProgressiveDiseaseValue()
     {
         // Arrange
         var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.PCWG3);
@@ -552,7 +552,7 @@ public class RadiographicObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .WithDetermination("True")
+            .WithDetermination("PD")
             .Build();
 
         // Assert
@@ -563,7 +563,7 @@ public class RadiographicObservationBuilderTests
     }
 
     [Fact]
-    public void Build_WithDeterminationFalse_CreatesStableDiseaseValue()
+    public void Build_WithDeterminationSD_CreatesStableDiseaseValue()
     {
         // Arrange
         var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.PCWG3);
@@ -573,7 +573,7 @@ public class RadiographicObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .WithDetermination("False")
+            .WithDetermination("SD")
             .Build();
 
         // Assert
@@ -581,6 +581,69 @@ public class RadiographicObservationBuilderTests
         valueCodeableConcept.ShouldNotBeNull();
         valueCodeableConcept.Coding[0].Code.ShouldBe("359746009"); // Stable disease
         valueCodeableConcept.Coding[0].Display.ShouldBe("Stable disease");
+    }
+
+    [Fact]
+    public void Build_WithDeterminationCR_CreatesCompleteResponseValue()
+    {
+        // Arrange
+        var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.PCWG3);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("CR")
+            .Build();
+
+        // Assert
+        var valueCodeableConcept = observation.Value as CodeableConcept;
+        valueCodeableConcept.ShouldNotBeNull();
+        valueCodeableConcept.Coding[0].Code.ShouldBe("268910001"); // Complete response
+        valueCodeableConcept.Coding[0].Display.ShouldBe("Complete response");
+    }
+
+    [Fact]
+    public void Build_WithDeterminationPR_CreatesPartialResponseValue()
+    {
+        // Arrange
+        var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.PCWG3);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("PR")
+            .Build();
+
+        // Assert
+        var valueCodeableConcept = observation.Value as CodeableConcept;
+        valueCodeableConcept.ShouldNotBeNull();
+        valueCodeableConcept.Coding[0].Code.ShouldBe("268905007"); // Partial response
+        valueCodeableConcept.Coding[0].Display.ShouldBe("Partial response");
+    }
+
+    [Fact]
+    public void Build_WithDeterminationBaseline_CreatesBaselineValue()
+    {
+        // Arrange
+        var builder = new RadiographicObservationBuilder(_configuration, RadiographicStandard.PCWG3);
+
+        // Act
+        Observation observation = builder
+            .WithPatient(_patientReference)
+            .WithDevice(_deviceReference)
+            .WithFocus(_tumorReference)
+            .WithDetermination("Baseline")
+            .Build();
+
+        // Assert
+        var valueCodeableConcept = observation.Value as CodeableConcept;
+        valueCodeableConcept.ShouldNotBeNull();
+        valueCodeableConcept.Coding[0].Code.ShouldBe("261935009"); // Baseline
+        valueCodeableConcept.Coding[0].Display.ShouldBe("Baseline (qualifier value)");
     }
 
     [Fact]
@@ -712,7 +775,7 @@ public class RadiographicObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .WithDetermination("True")
+            .WithDetermination("PD")
             .WithConfidence(0.9f)
             .WithConfidenceRationale("High confidence")
             .WithSummary("Summary text")

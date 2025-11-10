@@ -319,7 +319,7 @@ var pcwg3Observation = new RadiographicObservationBuilder(config, RadiographicSt
     .WithPatient("Patient/patient-789", "David Wilson")
     .WithDevice("Device/pcwg3-bone-scan-ai", "PCWG3 Bone Scan AI v2.0")
     .WithFocus(new ResourceReference("Condition/prostate-cancer-with-bone-mets"))
-    .WithDetermination("True") // Progression identified
+    .WithDetermination("PD") // Progressive Disease
     .WithInitialLesions("New lesion at L5 vertebra")
     .WithConfirmationDate(new DateTime(2025, 2, 15))
     .WithTimeBetweenScans("8 weeks")
@@ -341,7 +341,7 @@ var observedProgression = new RadiographicObservationBuilder(config, Radiographi
     .WithPatient("Patient/patient-456", "Sarah Johnson")
     .WithDevice("Device/radiologist-review", "Radiologist Review")
     .WithFocus(new ResourceReference("Condition/lung-cancer"))
-    .WithDetermination("True") // Progression observed
+    .WithDetermination("PD") // Progressive Disease observed
     .AddImagingStudy(new ResourceReference("ImagingStudy/pet-ct-001", "PET-CT"))
     .AddRadiologyReport(new ResourceReference("DiagnosticReport/pet-report-001"))
     .WithSummary("Increased FDG uptake in mediastinal lymph nodes suggesting progression")
@@ -383,7 +383,7 @@ These methods work with all three assessment standards:
 .WithFocus(params ResourceReference[] focuses)
 
 // Assessment details
-.WithDetermination(string determination)  // "True", "False", or "Inconclusive"
+.WithDetermination(string determination)  // "CR", "PR", "SD", "PD", "Baseline", or "Inconclusive"
 .WithConfidence(float confidence)         // 0.0 to 1.0
 .WithConfidenceRationale(string? rationale)
 .WithConfirmationDate(DateTime? date)
@@ -425,7 +425,7 @@ Additional methods available when using `RadiographicStandard.PCWG3`:
 var pcwg3Obs = new RadiographicObservationBuilder(config, RadiographicStandard.PCWG3)
     .WithPatient("Patient/patient-001")
     .WithDevice("Device/bone-scan-ai")
-    .WithDetermination("True")
+    .WithDetermination("PD")
     .WithInitialLesions("2 new bone lesions at L3 and T10")
     .WithConfirmationDate(DateTime.Parse("2025-02-01"))
     .WithTimeBetweenScans("8 weeks")
@@ -648,7 +648,7 @@ All standards require:
 
 Standard-specific requirements:
 - **RECIST 1.1**: At least one component or RECIST response recommended
-- **PCWG3**: Determination ("True"/"False"/"Inconclusive") or supporting facts recommended
+- **PCWG3**: Determination (CR/PR/SD/PD/Baseline/Inconclusive) or supporting facts recommended
 - **Observed**: Summary or notes recommended to document findings
 
 #### Migration Guide
@@ -678,16 +678,16 @@ var observation = new Pcwg3ProgressionObservationBuilder(config)
     .WithIdentified(true)
     .Build();
 
-// New code - Add standard parameter, use WithDetermination instead of WithIdentified
+// New code - Add standard parameter, use WithDetermination with RECIST codes
 var observation = new RadiographicObservationBuilder(config, RadiographicStandard.PCWG3)
     .WithPatient(...)
-    .WithDetermination("True")  // Replaces WithIdentified(true)
+    .WithDetermination("PD")  // Replaces WithIdentified(true), uses Progressive Disease
     .Build();
 ```
 
 **Key Changes:**
 - Add `RadiographicStandard` enum parameter to constructor
-- `WithIdentified(bool)` is now `WithDetermination("True"/"False"/"Inconclusive")`
+- `WithIdentified(bool)` is now `WithDetermination()` with RECIST response codes: CR, PR, SD, PD, Baseline, or Inconclusive
 - `AddImagingStudy()` and `AddRadiologyReport()` now available for **all** standards
 - All other method names remain the same
 

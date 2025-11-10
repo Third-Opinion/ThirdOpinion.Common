@@ -384,16 +384,16 @@ public class RecistProgressionObservationBuilder : AiResourceBuilderBase<Observa
     }
 
     /// <summary>
-    ///     Sets the determination result ("True", "False", or "Inconclusive")
+    ///     Sets the determination result (CR, PR, SD, PD, Baseline, Inconclusive)
     /// </summary>
-    /// <param name="determination">The determination value: "True", "False", or "Inconclusive"</param>
+    /// <param name="determination">The determination value: CR, PR, SD, PD, Baseline, Inconclusive</param>
     /// <returns>This builder instance for method chaining</returns>
     public RecistProgressionObservationBuilder WithDetermination(string? determination)
     {
         if (determination != null &&
-            !new[] { "True", "False", "Inconclusive" }.Contains(determination))
+            !new[] { "CR", "PR", "SD", "PD", "Baseline", "Inconclusive" }.Contains(determination))
             throw new ArgumentException(
-                $"Invalid determination value: {determination}. Must be 'True', 'False', or 'Inconclusive'.",
+                $"Invalid determination value: {determination}. Must be one of: CR, PR, SD, PD, Baseline, Inconclusive.",
                 nameof(determination));
         _determination = determination;
         return this;

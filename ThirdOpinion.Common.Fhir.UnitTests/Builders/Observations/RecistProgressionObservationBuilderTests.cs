@@ -729,7 +729,7 @@ public class RecistProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .WithDetermination("True")
+            .WithDetermination("PD")
             .WithConfidence(0.92f)
             .Build();
 
@@ -740,7 +740,7 @@ public class RecistProgressionObservationBuilderTests
         Observation.ComponentComponent? determinationComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "determination"));
         determinationComponent.ShouldNotBeNull();
-        ((FhirString)determinationComponent.Value).Value.ShouldBe("True");
+        ((FhirString)determinationComponent.Value).Value.ShouldBe("PD");
 
         // Check confidence component
         Observation.ComponentComponent? confidenceComponent = observation.Component
@@ -760,7 +760,7 @@ public class RecistProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .WithDetermination("False")
+            .WithDetermination("SD")
             .WithConfidence(0.88f)
             .Build();
 
@@ -771,7 +771,7 @@ public class RecistProgressionObservationBuilderTests
         Observation.ComponentComponent? determinationComponent = observation.Component
             .FirstOrDefault(c => c.Code.Coding.Any(cd => cd.Code == "determination"));
         determinationComponent.ShouldNotBeNull();
-        ((FhirString)determinationComponent.Value).Value.ShouldBe("False");
+        ((FhirString)determinationComponent.Value).Value.ShouldBe("SD");
     }
 
     [Fact]
@@ -810,7 +810,7 @@ public class RecistProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .WithDetermination("True")
+            .WithDetermination("PD")
             .WithMeasurementChange("Target lesions increased from 38.5mm to 45.2mm")
             .Build();
 
@@ -833,7 +833,7 @@ public class RecistProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .WithDetermination("True")
+            .WithDetermination("PD")
             .WithImagingType("CT Chest/Abdomen/Pelvis with contrast")
             .Build();
 
@@ -857,7 +857,7 @@ public class RecistProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .WithDetermination("True")
+            .WithDetermination("PD")
             .WithConfirmationDate(confirmationDate)
             .Build();
 
@@ -880,7 +880,7 @@ public class RecistProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .WithDetermination("True")
+            .WithDetermination("PD")
             .WithSupportingFacts(_sampleFacts)
             .Build();
 
@@ -933,7 +933,7 @@ public class RecistProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .WithDetermination("True")
+            .WithDetermination("PD")
             .WithMeasurementChange("Target lesions increased by 17.4%")
             .WithImagingType("CT Chest/Abdomen/Pelvis")
             .WithConfirmationDate(confirmationDate)
@@ -1006,7 +1006,7 @@ public class RecistProgressionObservationBuilderTests
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithFocus(_tumorReference)
-            .WithDetermination("True")
+            .WithDetermination("PD")
             .Build();
 
         // Assert

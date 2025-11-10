@@ -324,16 +324,16 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
     }
 
     /// <summary>
-    ///     Sets the determination result ("True", "False", or "Inconclusive")
+    ///     Sets the determination result (CR, PR, SD, PD, Baseline, Inconclusive)
     /// </summary>
-    /// <param name="determination">The determination value: "True", "False", or "Inconclusive"</param>
+    /// <param name="determination">The determination value: CR, PR, SD, PD, Baseline, Inconclusive</param>
     /// <returns>This builder instance for method chaining</returns>
     public Pcwg3ProgressionObservationBuilder WithDetermination(string? determination)
     {
         if (determination != null &&
-            !new[] { "True", "False", "Inconclusive" }.Contains(determination))
+            !new[] { "CR", "PR", "SD", "PD", "Baseline", "Inconclusive" }.Contains(determination))
             throw new ArgumentException(
-                $"Invalid determination value: {determination}. Must be 'True', 'False', or 'Inconclusive'.",
+                $"Invalid determination value: {determination}. Must be one of: CR, PR, SD, PD, Baseline, Inconclusive.",
                 nameof(determination));
         _determination = determination;
         return this;
@@ -517,23 +517,44 @@ public class Pcwg3ProgressionObservationBuilder : AiResourceBuilderBase<Observat
         if (string.IsNullOrWhiteSpace(_determination))
             return null; // No value if determination not set
 
-        if (_determination == "True")
-            // Progressive disease
-            return FhirCodingHelper.CreateSnomedConcept(
-                "277022003",
-                "Progressive disease");
+        // Support RECIST response categories: CR, PR, SD, PD, Baseline, Inconclusive
+        return _determination switch
+        {
+            // Complete Response
+            "CR" => FhirCodingHelper.CreateSnomedConcept(
+                "268910001",
+                "Complete response"),
 
-        if (_determination == "False")
-            // Stable disease
-            return FhirCodingHelper.CreateSnomedConcept(
+            // Partial Response
+            "PR" => FhirCodingHelper.CreateSnomedConcept(
+                "268905007",
+                "Partial response"),
+
+            // Stable Disease
+            "SD" => FhirCodingHelper.CreateSnomedConcept(
                 "359746009",
-                "Stable disease");
+                "Stable disease"),
 
-        // "Inconclusive"
-        // Inconclusive
-        return FhirCodingHelper.CreateSnomedConcept(
-            "373067005",
-            "Inconclusive");
+            // Progressive Disease
+            "PD" => FhirCodingHelper.CreateSnomedConcept(
+                "277022003",
+                "Progressive disease"),
+
+            // Baseline
+            "Baseline" => FhirCodingHelper.CreateSnomedConcept(
+                "261935009",
+                "Baseline (qualifier value)"),
+
+            // Inconclusive
+            "Inconclusive" => FhirCodingHelper.CreateSnomedConcept(
+                "419984006",
+                "Inconclusive (qualifier value)"),
+
+            // Unknown value
+            _ => throw new ArgumentException(
+                $"Invalid determination value: {_determination}. Must be one of: CR, PR, SD, PD, Baseline, Inconclusive.",
+                nameof(_determination))
+        };
     }
 
     private CodeableConcept CreatePcwg3Method()
