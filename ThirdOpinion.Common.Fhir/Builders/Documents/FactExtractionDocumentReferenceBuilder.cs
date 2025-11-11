@@ -10,15 +10,13 @@ namespace ThirdOpinion.Common.Fhir.Builders.Documents;
 /// <summary>
 ///     Builder for creating FHIR DocumentReference resources for fact extraction results
 /// </summary>
-public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReference>
+public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReference, FactExtractionDocumentReferenceBuilder>
 {
     private readonly List<DocumentReference.ContentComponent> _contents;
-    private ResourceReference? _deviceReference;
     private bool _hasInlineContent;
     private bool _hasUrlContent;
     private ResourceReference? _ocrDocumentReference;
     private ResourceReference? _originalDocumentReference;
-    private ResourceReference? _patientReference;
 
     /// <summary>
     ///     Creates a new Fact Extraction DocumentReference builder
@@ -33,84 +31,13 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
     }
 
     /// <summary>
-    ///     Override base class methods to maintain fluent interface
-    /// </summary>
-    public new FactExtractionDocumentReferenceBuilder WithInferenceId(string id)
-    {
-        base.WithInferenceId(id);
-        return this;
-    }
-
-    /// <summary>
-    ///     Override base class methods to maintain fluent interface
-    /// </summary>
-    public new FactExtractionDocumentReferenceBuilder WithCriteria(string id,
-        string display,
-        string? system = null)
-    {
-        base.WithCriteria(id, display, system);
-        return this;
-    }
-
-    /// <summary>
-    ///     Override base class methods to maintain fluent interface
-    /// </summary>
-    public new FactExtractionDocumentReferenceBuilder AddDerivedFrom(ResourceReference reference)
-    {
-        base.AddDerivedFrom(reference);
-        return this;
-    }
-
-    /// <summary>
-    ///     Override base class methods to maintain fluent interface
-    /// </summary>
-    public new FactExtractionDocumentReferenceBuilder AddDerivedFrom(string reference,
-        string? display = null)
-    {
-        base.AddDerivedFrom(reference, display);
-        return this;
-    }
-
-    /// <summary>
-    ///     Sets the patient reference for this document
-    /// </summary>
-    /// <param name="patient">The patient resource reference</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public FactExtractionDocumentReferenceBuilder WithPatient(ResourceReference patient)
-    {
-        _patientReference = patient ?? throw new ArgumentNullException(nameof(patient));
-        return this;
-    }
-
-    /// <summary>
-    ///     Sets the patient reference for this document
-    /// </summary>
-    /// <param name="patientId">The patient ID</param>
-    /// <param name="display">Optional display text</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public FactExtractionDocumentReferenceBuilder WithPatient(string patientId,
-        string? display = null)
-    {
-        if (string.IsNullOrWhiteSpace(patientId))
-            throw new ArgumentException("Patient ID cannot be null or empty", nameof(patientId));
-
-        _patientReference = new ResourceReference
-        {
-            Reference = patientId.StartsWith("Patient/") ? patientId : $"Patient/{patientId}",
-            Display = display
-        };
-        return this;
-    }
-
-    /// <summary>
     ///     Sets the fact extraction device reference that processed the document
     /// </summary>
     /// <param name="device">The extraction device resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
     public FactExtractionDocumentReferenceBuilder WithExtractionDevice(ResourceReference device)
     {
-        _deviceReference = device ?? throw new ArgumentNullException(nameof(device));
-        return this;
+        return WithDevice(device);
     }
 
     /// <summary>
@@ -122,15 +49,7 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
     public FactExtractionDocumentReferenceBuilder WithExtractionDevice(string deviceId,
         string? display = null)
     {
-        if (string.IsNullOrWhiteSpace(deviceId))
-            throw new ArgumentException("Device ID cannot be null or empty", nameof(deviceId));
-
-        _deviceReference = new ResourceReference
-        {
-            Reference = deviceId.StartsWith("Device/") ? deviceId : $"Device/{deviceId}",
-            Display = display
-        };
-        return this;
+        return WithDevice(deviceId, display);
     }
 
     /// <summary>
@@ -311,11 +230,11 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
     /// </summary>
     protected override void ValidateRequiredFields()
     {
-        if (_patientReference == null)
+        if (PatientReference == null)
             throw new InvalidOperationException(
                 "Patient reference is required. Call WithPatient() before Build().");
 
-        if (_deviceReference == null)
+        if (DeviceReference == null)
             throw new InvalidOperationException(
                 "Extraction device reference is required. Call WithExtractionDevice() before Build().");
 
@@ -350,7 +269,7 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
             },
 
             // Subject (Patient)
-            Subject = _patientReference,
+            Subject = PatientReference,
 
             // Date of creation
             Date = DateTimeOffset.Now,
@@ -379,8 +298,8 @@ public class FactExtractionDocumentReferenceBuilder : AiResourceBuilderBase<Docu
         if (relatesTo.Any()) documentReference.RelatesTo = relatesTo;
 
         // Add author (extraction device)
-        if (_deviceReference != null)
-            documentReference.Author = new List<ResourceReference> { _deviceReference };
+        if (DeviceReference != null)
+            documentReference.Author = new List<ResourceReference> { DeviceReference };
 
         return documentReference;
     }

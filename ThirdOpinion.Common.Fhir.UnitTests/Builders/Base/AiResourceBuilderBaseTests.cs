@@ -22,17 +22,17 @@ public class AiResourceBuilderBaseTests
     }
 
     [Fact]
-    public void WithInferenceId_SetsInferenceId()
+    public void WithFhirResourceId_SetsFhirResourceId()
     {
         // Arrange
         var builder = new TestObservationBuilder(_configuration);
 
         // Act
-        builder.WithInferenceId("custom-inference-id");
+        builder.WithFhirResourceId("custom-inference-id");
         Observation observation = builder.WithCode("test").Build();
 
-        // Assert
-        observation.Id.ShouldBe("custom-inference-id");
+        // Assert - ID should have 'to.ai-' prefix
+        observation.Id.ShouldBe("to.ai-custom-inference-id");
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public class AiResourceBuilderBaseTests
         var builder = new TestObservationBuilder(_configuration);
 
         // Act
-        AiResourceBuilderBase<Observation> result
+        TestObservationBuilder result
             = builder.WithCriteria("criteria-123", "Test Criteria", "http://custom.system");
 
         // Assert
@@ -193,7 +193,7 @@ public class AiResourceBuilderBaseTests
     {
         // Arrange & Act
         var builder = new TestObservationBuilder(_configuration);
-        builder.WithInferenceId("test-id")
+        builder.WithFhirResourceId("test-id")
             .WithCriteria("criteria-1", "Criteria Display")
             .AddDerivedFrom("Patient/123")
             .AddDerivedFrom("DocumentReference/456", "Document");
@@ -204,7 +204,7 @@ public class AiResourceBuilderBaseTests
             .Build();
 
         // Assert
-        observation.Id.ShouldBe("test-id");
+        observation.Id.ShouldBe("to.ai-test-id");
         observation.DerivedFrom.Count.ShouldBe(2);
         observation.Code.Coding[0].Code.ShouldBe("test-code");
     }
@@ -241,12 +241,12 @@ public class AiResourceBuilderBaseTests
         var observation = new Observation { Id = "existing-id" };
 
         // We need to modify our test to handle this scenario
-        // Since BuildCore creates a new observation, we'll test with inference ID
-        builder.WithInferenceId("my-inference-id");
+        // Since BuildCore creates a new observation, we'll test with FHIR resource ID
+        builder.WithFhirResourceId("my-inference-id");
         Observation result = builder.WithCode("test").Build();
 
-        // Assert
-        result.Id.ShouldBe("my-inference-id");
+        // Assert - ID should have 'to.ai-' prefix
+        result.Id.ShouldBe("to.ai-my-inference-id");
     }
 
     [Fact]
@@ -266,7 +266,7 @@ public class AiResourceBuilderBaseTests
     }
 
     // Test implementation of the abstract class
-    private class TestObservationBuilder : AiResourceBuilderBase<Observation>
+    private class TestObservationBuilder : AiResourceBuilderBase<Observation, TestObservationBuilder>
     {
         private string? _code;
         private string? _value;

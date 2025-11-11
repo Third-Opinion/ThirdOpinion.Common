@@ -1,3 +1,4 @@
+using System.Linq;
 using Amazon;
 using Amazon.HealthLake;
 using Amazon.Runtime;
@@ -30,8 +31,27 @@ public static class ServiceCollectionExtensions
         // Register configuration
         services.Configure<HealthLakeConfig>(configuration.GetSection("AWS:HealthLake"));
 
-        // Register AWS credentials (uses default credential chain: env vars, profile, IAM role, etc.)
-        services.AddSingleton<AWSCredentials>(_ => FallbackCredentialsFactory.GetCredentials());
+        // Register AWS credentials - only if not already registered
+        // Uses default credential chain: env vars, profile, IAM role, etc.
+        if (!services.Any(x => x.ServiceType == typeof(AWSCredentials)))
+        {
+            services.AddSingleton<AWSCredentials>(sp =>
+            {
+                // Try to get credentials from environment variables first
+                string? accessKey = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID");
+                string? secretKey = Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
+
+                if (!string.IsNullOrEmpty(accessKey) && !string.IsNullOrEmpty(secretKey))
+                {
+                    return new EnvironmentVariablesAWSCredentials();
+                }
+
+                // If no environment variables, throw clear error with instructions
+                throw new InvalidOperationException(
+                    "AWS credentials not found. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables. " +
+                    "For production environments, use IAM roles (EC2, ECS, Lambda, etc.).");
+            });
+        }
 
         // Register AWS signature service
         services.AddSingleton<IAwsSignatureService, AwsSignatureService>();

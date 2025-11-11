@@ -8,7 +8,7 @@ namespace ThirdOpinion.Common.Fhir.Builders.Devices;
 /// <summary>
 ///     Builder for creating FHIR Device resources representing AI inference engines
 /// </summary>
-public class AiDeviceBuilder : AiResourceBuilderBase<Device>
+public class AiDeviceBuilder : AiResourceBuilderBase<Device, AiDeviceBuilder>
 {
     private readonly List<Device.PropertyComponent> _properties;
     private readonly List<string> _versions;
@@ -128,42 +128,6 @@ public class AiDeviceBuilder : AiResourceBuilderBase<Device>
     }
 
     /// <summary>
-    ///     Overrides methods from base class to maintain fluent interface
-    /// </summary>
-    public new AiDeviceBuilder WithInferenceId(string id)
-    {
-        base.WithInferenceId(id);
-        return this;
-    }
-
-    /// <summary>
-    ///     Overrides methods from base class to maintain fluent interface
-    /// </summary>
-    public new AiDeviceBuilder WithCriteria(string id, string display, string? system = null)
-    {
-        base.WithCriteria(id, display, system);
-        return this;
-    }
-
-    /// <summary>
-    ///     Overrides methods from base class to maintain fluent interface
-    /// </summary>
-    public new AiDeviceBuilder AddDerivedFrom(ResourceReference reference)
-    {
-        base.AddDerivedFrom(reference);
-        return this;
-    }
-
-    /// <summary>
-    ///     Overrides methods from base class to maintain fluent interface
-    /// </summary>
-    public new AiDeviceBuilder AddDerivedFrom(string reference, string? display = null)
-    {
-        base.AddDerivedFrom(reference, display);
-        return this;
-    }
-
-    /// <summary>
     ///     Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
@@ -230,12 +194,12 @@ public class AiDeviceBuilder : AiResourceBuilderBase<Device>
                 Value = Configuration.DefaultModelVersion
             });
 
-        // Add inference ID as identifier if available
-        if (!string.IsNullOrWhiteSpace(InferenceId))
+        // Add FHIR resource ID as identifier if available
+        if (!string.IsNullOrWhiteSpace(FhirResourceId))
             identifiers.Add(new Identifier
             {
                 System = Configuration.InferenceSystem,
-                Value = InferenceId
+                Value = FhirResourceId
             });
 
         if (identifiers.Any()) device.Identifier = identifiers;

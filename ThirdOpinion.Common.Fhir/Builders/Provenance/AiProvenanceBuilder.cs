@@ -9,7 +9,7 @@ namespace ThirdOpinion.Common.Fhir.Builders.Provenance;
 ///     Builder for creating FHIR Provenance resources specifically for AI inference operations.
 ///     Provides fluent API for configuring provenance tracking of AI-generated clinical data.
 /// </summary>
-public class AiProvenanceBuilder : AiResourceBuilderBase<Hl7.Fhir.Model.Provenance>
+public class AiProvenanceBuilder : AiResourceBuilderBase<Hl7.Fhir.Model.Provenance, AiProvenanceBuilder>
 {
     private readonly List<Hl7.Fhir.Model.Provenance.AgentComponent> _agents = new();
     private readonly List<Hl7.Fhir.Model.Provenance.EntityComponent> _entities = new();
@@ -46,7 +46,9 @@ public class AiProvenanceBuilder : AiResourceBuilderBase<Hl7.Fhir.Model.Provenan
         if (string.IsNullOrWhiteSpace(provenanceId))
             throw new ArgumentException("Provenance ID cannot be null, empty, or whitespace",
                 nameof(provenanceId));
-        _provenanceId = provenanceId;
+        // Use the base class method to ensure 'to.ai-' prefix is applied
+        WithFhirResourceId(provenanceId);
+        _provenanceId = FhirResourceId;
         return this;
     }
 

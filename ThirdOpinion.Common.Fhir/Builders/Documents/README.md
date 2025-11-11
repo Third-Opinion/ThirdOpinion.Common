@@ -48,7 +48,7 @@ var config = AiInferenceConfiguration.CreateDefault();
 
 // Build OCR Document Reference
 var ocrDocument = new OcrDocumentReferenceBuilder(config)
-    .WithInferenceId("ocr-process-001")
+    .WithFhirResourceId("ocr-process-001")
     .WithPatient("Patient/patient-123", "John Smith")
     .WithDevice("Device/ocr-engine-v2", "Advanced OCR Engine v2.1")
     .WithSourceDocument("DocumentReference/scan-001", "Original Pathology Report Scan")
@@ -78,7 +78,7 @@ These methods **must** be called before `Build()`:
 
 #### Optional Methods
 
-- `WithInferenceId(string)` - Custom inference ID (auto-generated if not provided)
+- `WithFhirResourceId(string)` - Custom FHIR resource ID (auto-generated if not provided)
 - `WithContentUrl(string)` - URL to stored text file (S3, etc.)
 - `WithSize(long)` - Size of extracted content in bytes
 - `WithProcessingDate(DateTime)` - When OCR processing occurred
@@ -139,7 +139,7 @@ var extractedFacts = new[]
 
 // Build Fact Extraction Document Reference
 var factDocument = new FactExtractionDocumentReferenceBuilder(config)
-    .WithInferenceId("fact-extraction-001")
+    .WithFhirResourceId("fact-extraction-001")
     .WithPatient("Patient/patient-123", "John Smith")
     .WithDevice("Device/fact-extractor-ai", "Clinical Fact Extractor AI v3.0")
     .WithSourceDocument("DocumentReference/ocr-text-001", "OCR Extracted Text")
@@ -166,7 +166,7 @@ These methods **must** be called before `Build()`:
 
 #### Optional Methods
 
-- `WithInferenceId(string)` - Custom inference ID (auto-generated if not provided)
+- `WithFhirResourceId(string)` - Custom FHIR resource ID (auto-generated if not provided)
 - `WithFactsUrl(string)` - URL to stored facts file (JSON format)
 - `WithSize(long)` - Size of facts data in bytes
 - `WithProcessingDate(DateTime)` - When fact extraction occurred

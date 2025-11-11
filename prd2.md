@@ -61,7 +61,7 @@ Provides common functionality for all AI resource builders.
 **Requirements:**
 
 - Generic type parameter `T` constrained to `Resource`
-- Auto-generates inference IDs if not explicitly provided
+- Auto-generates FHIR resource IDs if not explicitly provided
 - Applies AIAST security label automatically
 - Thread-safe ID generation
 - Validation before Build() returns resource
@@ -78,7 +78,7 @@ protected List<ResourceReference> DerivedFromReferences { get; set; }
 **Methods:**
 
 ```csharp
-public TBuilder WithInferenceId(string id)  // Optional - auto-generates if not called
+public TBuilder WithFhirResourceId(string id)  // Optional - auto-generates if not called
 public TBuilder WithCriteria(string criteriaId, string display)  // Method coding
 protected string EnsureInferenceId()  // Internal - generates ID if not set
 public abstract T Build()
@@ -86,7 +86,7 @@ public abstract T Build()
 
 **Auto-generation behavior:**
 
-- If `WithInferenceId()` is not called, the builder automatically generates an ID using
+- If `WithFhirResourceId()` is not called, the builder automatically generates an ID using
   `FhirIdGenerator.GenerateInferenceId()`
 - Format: `to.ai-inference-{GUID}` (e.g., `to.ai-inference-a1b2c3d4-e5f6-7890-abcd-ef1234567890`)
 - For documents: `to.ai-inference-doc-{GUID}` or `to.ai-inference-facts-{GUID}`
@@ -97,7 +97,7 @@ public abstract T Build()
 
 ```csharp
 var obs = new AdtStatusObservationBuilder()
-    .WithInferenceId("to.ai-inference-1")  // Explicit ID
+    .WithFhirResourceId("to.ai-inference-1")  // Explicit ID
     .WithPatient(patientRef)
     .Build();
 ```
@@ -106,7 +106,7 @@ var obs = new AdtStatusObservationBuilder()
 
 ```csharp
 var obs = new AdtStatusObservationBuilder()
-    // WithInferenceId() omitted - will auto-generate
+    // WithFhirResourceId() omitted - will auto-generate
     .WithPatient(patientRef)
     .Build();
 // Results in ID like: to.ai-inference-a1b2c3d4-e5f6-7890-abcd-ef1234567890
@@ -232,12 +232,12 @@ Constructs Observation resources for ADT therapy status detection.
 - Support for active/inactive status values
 - Multiple evidence references via derivedFrom
 - Criteria-based method coding
-- Auto-generates inference ID if not provided
+- Auto-generates FHIR resource ID if not provided
 
 **Key methods:**
 
 ```csharp
-public AdtStatusObservationBuilder WithInferenceId(string id)  // OPTIONAL - auto-generates if omitted
+public AdtStatusObservationBuilder WithFhirResourceId(string id)  // OPTIONAL - auto-generates if omitted
 public AdtStatusObservationBuilder WithPatient(ResourceReference patientRef)
 public AdtStatusObservationBuilder WithDevice(ResourceReference deviceRef)
 public AdtStatusObservationBuilder WithCriteria(string criteriaId, string display, string description)
@@ -294,7 +294,7 @@ reference information.
 
 ```csharp
 var observation = new AdtStatusObservationBuilder()
-    .WithInferenceId("to.ai-inference-1")
+    .WithFhirResourceId("to.ai-inference-1")
     .WithPatient(new ResourceReference("Patient/example"))
     .WithDevice(new ResourceReference("Device/to.io-trial-eligibility-ai-v1"))
     .WithCriteria("adt-therapy-1234455-v1.0", 
@@ -311,7 +311,7 @@ var observation = new AdtStatusObservationBuilder()
 
 ```csharp
 var observation = new AdtStatusObservationBuilder()
-    // WithInferenceId() omitted - auto-generates to.ai-inference-{GUID}
+    // WithFhirResourceId() omitted - auto-generates to.ai-inference-{GUID}
     .WithPatient(new ResourceReference("Patient/example"))
     .WithDevice(new ResourceReference("Device/to.io-trial-eligibility-ai-v1"))
     .WithCriteria("adt-therapy-1234455-v1.0", 
@@ -346,7 +346,7 @@ field, NOT a new Condition resource.
 **Key methods:**
 
 ```csharp
-public CspcAssessmentObservationBuilder WithInferenceId(string id)
+public CspcAssessmentObservationBuilder WithFhirResourceId(string id)
 public CspcAssessmentObservationBuilder WithPatient(ResourceReference patientRef)
 public CspcAssessmentObservationBuilder WithDevice(ResourceReference deviceRef)
 public CspcAssessmentObservationBuilder WithFocus(ResourceReference existingConditionRef)  // REQUIRED
@@ -362,7 +362,7 @@ public CspcAssessmentObservationBuilder AddNote(string noteText)
 
 ```csharp
 var assessment = new CspcAssessmentObservationBuilder()
-    .WithInferenceId("to.ai-inference-1")
+    .WithFhirResourceId("to.ai-inference-1")
     .WithPatient(new ResourceReference("Patient/example"))
     .WithDevice(new ResourceReference("Device/to.io-trial-eligibility-ai-v2"))
     .WithFocus(new ResourceReference("Condition/prostate-cancer-primary-001", "Primary prostate cancer diagnosis"))
@@ -402,7 +402,7 @@ Constructs Observation resources for PSA progression using either ThirdOpinion.i
 **Key methods:**
 
 ```csharp
-public PsaProgressionObservationBuilder WithInferenceId(string id)
+public PsaProgressionObservationBuilder WithFhirResourceId(string id)
 public PsaProgressionObservationBuilder WithPatient(ResourceReference patientRef)
 public PsaProgressionObservationBuilder WithDevice(ResourceReference deviceRef)
 public PsaProgressionObservationBuilder WithFocus(ResourceReference conditionRef)
@@ -419,7 +419,7 @@ public PsaProgressionObservationBuilder AddNote(string noteText)
 
 ```csharp
 var progression = new PsaProgressionObservationBuilder()
-    .WithInferenceId("to.ai-inference-1")
+    .WithFhirResourceId("to.ai-inference-1")
     .WithPatient(new ResourceReference("Patient/example"))
     .WithDevice(new ResourceReference("Device/to.io-trial-eligibility-ai-v2"))
     .WithFocus(new ResourceReference("Condition/to.io-prostate-cancer-cspc-001"))
@@ -458,7 +458,7 @@ Constructs Observation resources for radiographic progression per RECIST 1.1.
 **Key methods:**
 
 ```csharp
-public RecistProgressionObservationBuilder WithInferenceId(string id)
+public RecistProgressionObservationBuilder WithFhirResourceId(string id)
 public RecistProgressionObservationBuilder WithPatient(ResourceReference patientRef)
 public RecistProgressionObservationBuilder WithDevice(ResourceReference deviceRef)
 public RecistProgressionObservationBuilder WithFocus(ResourceReference conditionRef)
@@ -477,7 +477,7 @@ public RecistProgressionObservationBuilder AddNote(string noteText)
 
 ```csharp
 var recist = new RecistProgressionObservationBuilder()
-    .WithInferenceId("to.ai-inference-1")
+    .WithFhirResourceId("to.ai-inference-1")
     .WithPatient(new ResourceReference("Patient/example"))
     .WithDevice(new ResourceReference("Device/to.io-trial-eligibility-ai-v2"))
     .WithFocus(new ResourceReference("Condition/to.io-prostate-cancer-cspc-001"))
@@ -570,7 +570,7 @@ for AWS Textract integration.
 **Key methods:**
 
 ```csharp
-public OcrDocumentReferenceBuilder WithInferenceId(string id)
+public OcrDocumentReferenceBuilder WithFhirResourceId(string id)
 public OcrDocumentReferenceBuilder WithOriginalDocument(ResourceReference originalDocRef)
 public OcrDocumentReferenceBuilder WithPatient(ResourceReference patientRef)
 public OcrDocumentReferenceBuilder WithOcrDevice(ResourceReference deviceRef)
@@ -585,7 +585,7 @@ public OcrDocumentReferenceBuilder WithDescription(string description)
 
 ```csharp
 var ocrDoc = new OcrDocumentReferenceBuilder()
-    .WithInferenceId("to.ai-inference-doc-1")
+    .WithFhirResourceId("to.ai-inference-doc-1")
     .WithOriginalDocument(new ResourceReference("DocumentReference/scan-001"))
     .WithPatient(new ResourceReference("Patient/example"))
     .WithOcrDevice(new ResourceReference("Device/to.io-ocr-engine-v3"))
@@ -598,7 +598,7 @@ var ocrDoc = new OcrDocumentReferenceBuilder()
 
 ```csharp
 var ocrDoc = new OcrDocumentReferenceBuilder()
-    .WithInferenceId("to.ai-inference-doc-1")
+    .WithFhirResourceId("to.ai-inference-doc-1")
     .WithOriginalDocument(new ResourceReference("DocumentReference/scan-001"))
     .WithPatient(new ResourceReference("Patient/example"))
     .WithOcrDevice(new ResourceReference("Device/to.io-ocr-engine-v3"))
@@ -631,7 +631,7 @@ large fact sets.
 **Key methods:**
 
 ```csharp
-public FactExtractionDocumentReferenceBuilder WithInferenceId(string id)
+public FactExtractionDocumentReferenceBuilder WithFhirResourceId(string id)
 public FactExtractionDocumentReferenceBuilder WithOriginalDocument(ResourceReference originalDocRef)
 public FactExtractionDocumentReferenceBuilder WithOcrDocument(ResourceReference ocrDocRef)
 public FactExtractionDocumentReferenceBuilder WithPatient(ResourceReference patientRef)
@@ -655,7 +655,7 @@ var factsObject = new
 };
 
 var factsDoc = new FactExtractionDocumentReferenceBuilder()
-    .WithInferenceId("to.ai-inference-facts-1")
+    .WithFhirResourceId("to.ai-inference-facts-1")
     .WithOriginalDocument(new ResourceReference("DocumentReference/scan-001"))
     .WithOcrDocument(new ResourceReference("DocumentReference/ocr-001"))
     .WithPatient(new ResourceReference("Patient/example"))
@@ -669,7 +669,7 @@ var factsDoc = new FactExtractionDocumentReferenceBuilder()
 
 ```csharp
 var factsDoc = new FactExtractionDocumentReferenceBuilder()
-    .WithInferenceId("to.ai-inference-facts-1")
+    .WithFhirResourceId("to.ai-inference-facts-1")
     .WithOriginalDocument(new ResourceReference("DocumentReference/scan-001"))
     .WithOcrDocument(new ResourceReference("DocumentReference/ocr-001"))
     .WithPatient(new ResourceReference("Patient/example"))
@@ -1122,7 +1122,7 @@ var device = new AiDeviceBuilder()
 
 ```csharp
 var observation = new AdtStatusObservationBuilder()
-    .WithInferenceId("to.ai-inference-1")
+    .WithFhirResourceId("to.ai-inference-1")
     .WithPatient(new ResourceReference("Patient/example"))
     .WithDevice(new ResourceReference("Device/to.io-trial-eligibility-ai-v1"))
     .WithCriteria("adt-therapy-1234455-v1.0", 
@@ -1259,7 +1259,7 @@ var observation = new AdtStatusObservationBuilder()
 
 ```csharp
 var assessment = new CspcAssessmentObservationBuilder()
-    .WithInferenceId("to.ai-inference-1")
+    .WithFhirResourceId("to.ai-inference-1")
     .WithPatient(new ResourceReference("Patient/example"))
     .WithDevice(new ResourceReference("Device/to.io-trial-eligibility-ai-v2"))
     .WithFocus(new ResourceReference("Condition/prostate-cancer-primary-001", "Primary prostate cancer diagnosis (not AI-generated)"))
@@ -1405,7 +1405,7 @@ var assessment = new CspcAssessmentObservationBuilder()
 
 ```csharp
 var progression = new PsaProgressionObservationBuilder()
-    .WithInferenceId("to.ai-inference-1")
+    .WithFhirResourceId("to.ai-inference-1")
     .WithPatient(new ResourceReference("Patient/example"))
     .WithDevice(new ResourceReference("Device/to.io-trial-eligibility-ai-v2"))
     .WithFocus(new ResourceReference("Condition/to.io-prostate-cancer-cspc-001"))
@@ -1643,7 +1643,7 @@ The rest of the resource structure follows Example 4.
 
 ```csharp
 var recist = new RecistProgressionObservationBuilder()
-    .WithInferenceId("to.ai-inference-1")
+    .WithFhirResourceId("to.ai-inference-1")
     .WithPatient(new ResourceReference("Patient/example"))
     .WithDevice(new ResourceReference("Device/to.io-trial-eligibility-ai-v2"))
     .WithFocus(new ResourceReference("Condition/to.io-prostate-cancer-cspc-001"))
@@ -2126,7 +2126,7 @@ The S3 log file typically contains:
 
 ```csharp
 var ocrDoc = new OcrDocumentReferenceBuilder()
-    .WithInferenceId("to.ai-inference-doc-1")
+    .WithFhirResourceId("to.ai-inference-doc-1")
     .WithOriginalDocument(new ResourceReference("DocumentReference/to.io-radiology-report-scan-001"))
     .WithPatient(new ResourceReference("Patient/example"))
     .WithOcrDevice(new ResourceReference("Device/to.io-ocr-engine-v3", "ThirdOpinion.io OCR Processing Engine v3.1"))
@@ -2139,7 +2139,7 @@ var ocrDoc = new OcrDocumentReferenceBuilder()
 
 ```csharp
 var ocrDoc = new OcrDocumentReferenceBuilder()
-    .WithInferenceId("to.ai-inference-doc-2")
+    .WithFhirResourceId("to.ai-inference-doc-2")
     .WithOriginalDocument(new ResourceReference("DocumentReference/to.io-radiology-report-scan-001"))
     .WithPatient(new ResourceReference("Patient/example"))
     .WithOcrDevice(new ResourceReference("Device/to.io-textract-engine-v1", "AWS Textract OCR Engine"))
@@ -2374,7 +2374,7 @@ var factsObject = new
 };
 
 var factsDoc = new FactExtractionDocumentReferenceBuilder()
-    .WithInferenceId("to.ai-inference-facts-1")
+    .WithFhirResourceId("to.ai-inference-facts-1")
     .WithOriginalDocument(new ResourceReference("DocumentReference/to.io-radiology-report-scan-001"))
     .WithOcrDocument(new ResourceReference("DocumentReference/to.io-radiology-report-ocr-001"))
     .WithPatient(new ResourceReference("Patient/example"))
@@ -2388,7 +2388,7 @@ var factsDoc = new FactExtractionDocumentReferenceBuilder()
 
 ```csharp
 var factsDoc = new FactExtractionDocumentReferenceBuilder()
-    .WithInferenceId("to.ai-inference-facts-2")
+    .WithFhirResourceId("to.ai-inference-facts-2")
     .WithOriginalDocument(new ResourceReference("DocumentReference/to.io-radiology-report-scan-001"))
     .WithOcrDocument(new ResourceReference("DocumentReference/to.io-radiology-report-ocr-002"))
     .WithPatient(new ResourceReference("Patient/example"))

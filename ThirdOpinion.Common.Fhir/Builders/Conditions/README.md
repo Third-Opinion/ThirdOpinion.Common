@@ -61,7 +61,7 @@ var facts = new[]
 var builder = new HsdmAssessmentConditionBuilder(config);
 
 var condition = builder
-    .WithInferenceId("hsdm-assessment-001")
+    .WithFhirResourceId("hsdm-assessment-001")
     .WithPatient("Patient/prostate-patient-123", "John Smith")
     .WithDevice("Device/ai-hsdm-classifier-v2", "HSDM AI Classifier v2.1")
     .WithFocus("Condition/prostate-cancer-primary", "Primary Prostate Adenocarcinoma")
@@ -313,7 +313,7 @@ These methods **must** be called before `Build()`:
 
 ### Optional Methods
 
-- `WithInferenceId(string)` - Custom inference ID (auto-generated if not provided)
+- `WithFhirResourceId(string)` - Custom FHIR resource ID (auto-generated if not provided)
 - `WithCriteria(string, string, string)` - Assessment criteria details
 - `AddEvidence(ResourceReference)` - Additional evidence references
 - `WithConfidence(float)` - AI confidence score (0.0-1.0)

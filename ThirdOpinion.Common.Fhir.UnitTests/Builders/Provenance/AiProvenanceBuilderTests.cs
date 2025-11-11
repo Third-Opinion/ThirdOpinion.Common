@@ -25,7 +25,7 @@ public class AiProvenanceBuilderTests
         Hl7.Fhir.Model.Provenance provenance = builder.Build();
 
         provenance.ShouldNotBeNull();
-        provenance.Id.ShouldBe("prov-123");
+        provenance.Id.ShouldBe("to.ai-prov-123");
         provenance.Target.Count.ShouldBe(1);
         provenance.Target[0].Reference.ShouldBe("DocumentReference/test-doc-123");
         provenance.Agent.Count.ShouldBe(2);
@@ -305,7 +305,7 @@ public class AiProvenanceBuilderTests
 
         json.ShouldNotBeNull();
         json.ShouldContain("\"resourceType\":\"Provenance\"");
-        json.ShouldContain("\"id\":\"prov-123\"");
+        json.ShouldContain("\"id\":\"to.ai-prov-123\"");
         json.ShouldContain("TestAI");
         json.ShouldContain("ThirdOpinion");
     }

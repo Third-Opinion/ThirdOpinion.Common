@@ -8,7 +8,10 @@ namespace ThirdOpinion.Common.Fhir.Builders.Base;
 ///     Abstract base class for building FHIR resources with AI inference metadata
 /// </summary>
 /// <typeparam name="T">The type of FHIR resource to build</typeparam>
-public abstract class AiResourceBuilderBase<T> where T : Resource
+/// <typeparam name="TBuilder">The derived builder type (for fluent interface)</typeparam>
+public abstract class AiResourceBuilderBase<T, TBuilder>
+    where T : Resource
+    where TBuilder : AiResourceBuilderBase<T, TBuilder>
 {
     private static readonly object _idGenerationLock = new();
 
@@ -20,12 +23,15 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
     {
         Configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         DerivedFromReferences = new List<ResourceReference>();
+        Notes = new List<string>();
+        FocusReferences = new List<ResourceReference>();
+        EvidenceReferences = new List<ResourceReference>();
     }
 
     /// <summary>
-    ///     The inference ID for this resource
+    ///     The FHIR resource ID for this resource
     /// </summary>
-    protected string? InferenceId { get; set; }
+    protected string? FhirResourceId { get; set; }
 
     /// <summary>
     ///     The criteria ID used for this inference
@@ -48,19 +54,53 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
     protected List<ResourceReference> DerivedFromReferences { get; }
 
     /// <summary>
+    ///     The patient reference for this resource
+    /// </summary>
+    protected ResourceReference? PatientReference { get; set; }
+
+    /// <summary>
+    ///     The device reference for this resource
+    /// </summary>
+    protected ResourceReference? DeviceReference { get; set; }
+
+    /// <summary>
+    ///     The AI confidence score for this resource
+    /// </summary>
+    protected float? Confidence { get; set; }
+
+    /// <summary>
+    ///     List of notes for this resource
+    /// </summary>
+    protected List<string> Notes { get; }
+
+    /// <summary>
+    ///     List of focus references for this resource (conditions/tumors/lesions being assessed)
+    /// </summary>
+    protected List<ResourceReference> FocusReferences { get; }
+
+    /// <summary>
+    ///     List of evidence references supporting this resource
+    /// </summary>
+    protected List<ResourceReference> EvidenceReferences { get; }
+
+    /// <summary>
     ///     Configuration for AI inference operations
     /// </summary>
     protected AiInferenceConfiguration Configuration { get; }
 
     /// <summary>
-    ///     Sets the inference ID for this resource
+    ///     Sets the FHIR resource ID for this resource
     /// </summary>
-    /// <param name="id">The inference ID</param>
+    /// <param name="id">The FHIR resource ID (will be prefixed with 'to.ai-' if not already present)</param>
     /// <returns>This builder instance for method chaining</returns>
-    public AiResourceBuilderBase<T> WithInferenceId(string id)
+    public TBuilder WithFhirResourceId(string id)
     {
-        InferenceId = id;
-        return this;
+        if (string.IsNullOrWhiteSpace(id))
+            throw new ArgumentException("FHIR resource ID cannot be null or empty", nameof(id));
+
+        // Ensure the ID starts with 'to.ai-'
+        FhirResourceId = id.StartsWith("to.ai-") ? id : $"to.ai-{id}";
+        return (TBuilder)this;
     }
 
     /// <summary>
@@ -70,12 +110,12 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
     /// <param name="display">The display text for the criteria</param>
     /// <param name="system">The criteria system URI (optional, uses configuration default if not provided)</param>
     /// <returns>This builder instance for method chaining</returns>
-    public AiResourceBuilderBase<T> WithCriteria(string id, string display, string? system = null)
+    public TBuilder WithCriteria(string id, string display, string? system = null)
     {
         CriteriaId = id;
         CriteriaDisplay = display;
         CriteriaSystem = system ?? Configuration.CriteriaSystem;
-        return this;
+        return (TBuilder)this;
     }
 
     /// <summary>
@@ -83,10 +123,10 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
     /// </summary>
     /// <param name="reference">The resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
-    public AiResourceBuilderBase<T> AddDerivedFrom(ResourceReference reference)
+    public TBuilder AddDerivedFrom(ResourceReference reference)
     {
         if (reference != null) DerivedFromReferences.Add(reference);
-        return this;
+        return (TBuilder)this;
     }
 
     /// <summary>
@@ -95,7 +135,7 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
     /// <param name="reference">The reference string (e.g., "Patient/123")</param>
     /// <param name="display">Optional display text for the reference</param>
     /// <returns>This builder instance for method chaining</returns>
-    public AiResourceBuilderBase<T> AddDerivedFrom(string reference, string? display = null)
+    public TBuilder AddDerivedFrom(string reference, string? display = null)
     {
         if (!string.IsNullOrWhiteSpace(reference))
         {
@@ -107,20 +147,164 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
             DerivedFromReferences.Add(resourceRef);
         }
 
-        return this;
+        return (TBuilder)this;
     }
 
     /// <summary>
-    ///     Ensures an inference ID is set, generating one if necessary
+    ///     Sets the patient reference for this resource
     /// </summary>
-    protected void EnsureInferenceId()
+    /// <param name="patient">The patient resource reference</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public TBuilder WithPatient(ResourceReference patient)
     {
-        if (string.IsNullOrWhiteSpace(InferenceId))
+        PatientReference = patient ?? throw new ArgumentNullException(nameof(patient));
+        return (TBuilder)this;
+    }
+
+    /// <summary>
+    ///     Sets the patient reference for this resource
+    /// </summary>
+    /// <param name="patientId">The patient ID</param>
+    /// <param name="display">Optional display text</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public TBuilder WithPatient(string patientId, string? display = null)
+    {
+        if (string.IsNullOrWhiteSpace(patientId))
+            throw new ArgumentException("Patient ID cannot be null or empty", nameof(patientId));
+
+        PatientReference = new ResourceReference
+        {
+            Reference = patientId.StartsWith("Patient/") ? patientId : $"Patient/{patientId}",
+            Display = display
+        };
+        return (TBuilder)this;
+    }
+
+    /// <summary>
+    ///     Sets the device reference for this resource
+    /// </summary>
+    /// <param name="device">The device resource reference</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public TBuilder WithDevice(ResourceReference device)
+    {
+        DeviceReference = device ?? throw new ArgumentNullException(nameof(device));
+        return (TBuilder)this;
+    }
+
+    /// <summary>
+    ///     Sets the device reference for this resource
+    /// </summary>
+    /// <param name="deviceId">The device ID</param>
+    /// <param name="display">Optional display text</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public TBuilder WithDevice(string deviceId, string? display = null)
+    {
+        if (string.IsNullOrWhiteSpace(deviceId))
+            throw new ArgumentException("Device ID cannot be null or empty", nameof(deviceId));
+
+        DeviceReference = new ResourceReference
+        {
+            Reference = deviceId.StartsWith("Device/") ? deviceId : $"Device/{deviceId}",
+            Display = display
+        };
+        return (TBuilder)this;
+    }
+
+    /// <summary>
+    ///     Sets the AI confidence score for this resource
+    /// </summary>
+    /// <param name="confidence">The confidence score (0.0 to 1.0)</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public TBuilder WithConfidence(float confidence)
+    {
+        if (confidence < 0.0f || confidence > 1.0f)
+            throw new ArgumentOutOfRangeException(nameof(confidence),
+                "Confidence must be between 0.0 and 1.0");
+
+        Confidence = confidence;
+        return (TBuilder)this;
+    }
+
+    /// <summary>
+    ///     Adds a note to this resource
+    /// </summary>
+    /// <param name="noteText">The note text</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public TBuilder AddNote(string noteText)
+    {
+        if (!string.IsNullOrWhiteSpace(noteText)) Notes.Add(noteText);
+        return (TBuilder)this;
+    }
+
+    /// <summary>
+    ///     Sets the focus references for this resource (conditions/tumors/lesions being assessed)
+    /// </summary>
+    /// <param name="focuses">The focus resource references</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public TBuilder WithFocus(params ResourceReference[] focuses)
+    {
+        if (focuses == null || focuses.Length == 0)
+            throw new ArgumentException("At least one focus reference is required", nameof(focuses));
+
+        FocusReferences.Clear();
+        FocusReferences.AddRange(focuses.Where(f => f != null));
+        return (TBuilder)this;
+    }
+
+    /// <summary>
+    ///     Adds evidence supporting this resource
+    /// </summary>
+    /// <param name="reference">The evidence resource reference</param>
+    /// <param name="display">Optional display text for the evidence</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public TBuilder AddEvidence(ResourceReference reference, string? display = null)
+    {
+        if (reference != null)
+        {
+            if (!string.IsNullOrWhiteSpace(display) && string.IsNullOrWhiteSpace(reference.Display))
+                reference.Display = display;
+            EvidenceReferences.Add(reference);
+        }
+
+        return (TBuilder)this;
+    }
+
+    /// <summary>
+    ///     Adds evidence supporting this resource
+    /// </summary>
+    /// <param name="referenceString">The evidence reference string (e.g., "DocumentReference/123")</param>
+    /// <param name="display">Optional display text for the evidence</param>
+    /// <returns>This builder instance for method chaining</returns>
+    public TBuilder AddEvidence(string referenceString, string? display = null)
+    {
+        if (!string.IsNullOrWhiteSpace(referenceString))
+        {
+            var reference = new ResourceReference
+            {
+                Reference = referenceString,
+                Display = display
+            };
+            EvidenceReferences.Add(reference);
+        }
+
+        return (TBuilder)this;
+    }
+
+    /// <summary>
+    ///     Ensures a FHIR resource ID is set, generating one if necessary
+    /// </summary>
+    protected void EnsureFhirResourceId()
+    {
+        if (string.IsNullOrWhiteSpace(FhirResourceId))
             lock (_idGenerationLock)
             {
                 // Double-check after acquiring lock
-                if (string.IsNullOrWhiteSpace(InferenceId))
-                    InferenceId = FhirIdGenerator.GenerateInferenceId();
+                if (string.IsNullOrWhiteSpace(FhirResourceId))
+                {
+                    var generatedId = FhirIdGenerator.GenerateInferenceId();
+                    // Ensure the generated ID starts with 'to.ai-'
+                    FhirResourceId = generatedId.StartsWith("to.ai-") ? generatedId : $"to.ai-{generatedId}";
+                }
             }
     }
 
@@ -158,7 +342,18 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
     /// <exception cref="InvalidOperationException">Thrown when required fields are missing</exception>
     protected virtual void ValidateRequiredFields()
     {
-        // Base implementation - derived classes can override to add specific validations
+        // Validate core required fields (PatientReference and DeviceReference are always required)
+        if (PatientReference == null)
+            throw new InvalidOperationException(
+                "Patient reference is required. Call WithPatient() before Build().");
+
+        if (DeviceReference == null)
+            throw new InvalidOperationException(
+                "Device reference is required. Call WithDevice() before Build().");
+
+        // Notes is NOT required (as per user request)
+        // Other fields (FhirResourceId, DerivedFromReferences, CriteriaId, Confidence, FocusReferences, EvidenceReferences)
+        // can be validated by derived classes if they require them
     }
 
     /// <summary>
@@ -176,8 +371,8 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
         // Validate required fields
         ValidateRequiredFields();
 
-        // Ensure we have an inference ID
-        EnsureInferenceId();
+        // Ensure we have a FHIR resource ID
+        EnsureFhirResourceId();
 
         // Call derived class build logic
         T resource = BuildCore();
@@ -186,7 +381,7 @@ public abstract class AiResourceBuilderBase<T> where T : Resource
         ApplyAiastSecurityLabel(resource);
 
         // Set the resource ID if it's not already set
-        if (string.IsNullOrWhiteSpace(resource.Id)) resource.Id = InferenceId;
+        if (string.IsNullOrWhiteSpace(resource.Id)) resource.Id = FhirResourceId;
 
         return resource;
     }

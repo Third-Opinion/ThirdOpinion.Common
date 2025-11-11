@@ -145,14 +145,14 @@ public class AdtStatusObservationBuilderTests
 
         // Act
         Observation observation = builder
-            .WithInferenceId(customId)
+            .WithFhirResourceId(customId)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithStatus(true)
             .Build();
 
-        // Assert
-        observation.Id.ShouldBe(customId);
+        // Assert - ID should have 'to.ai-' prefix
+        observation.Id.ShouldBe($"to.ai-{customId}");
     }
 
     [Fact]
@@ -249,7 +249,7 @@ public class AdtStatusObservationBuilderTests
     {
         // Arrange & Act
         Observation observation = new AdtStatusObservationBuilder(_configuration)
-            .WithInferenceId("test-inference-001")
+            .WithFhirResourceId("test-inference-001")
             .WithPatient("Patient/p123", "Jane Doe")
             .WithDevice("Device/d456", "AI System")
             .WithStatus(true)
@@ -262,7 +262,7 @@ public class AdtStatusObservationBuilderTests
             .Build();
 
         // Assert
-        observation.Id.ShouldBe("test-inference-001");
+        observation.Id.ShouldBe("to.ai-test-inference-001");
         observation.Subject.Reference.ShouldBe("Patient/p123");
         observation.Device.Reference.ShouldBe("Device/d456");
         observation.DerivedFrom.Count.ShouldBe(3); // 2 evidence + 1 derivedFrom
@@ -483,7 +483,7 @@ public class AdtStatusObservationBuilderTests
     {
         // Arrange & Act
         Observation observation = new AdtStatusObservationBuilder(_configuration)
-            .WithInferenceId("test-inference-001")
+            .WithFhirResourceId("test-inference-001")
             .WithPatient("Patient/p123", "Jane Doe")
             .WithDevice("Device/d456", "AI System")
             .WithStatus(true)
@@ -496,7 +496,7 @@ public class AdtStatusObservationBuilderTests
             .Build();
 
         // Assert
-        observation.Id.ShouldBe("test-inference-001");
+        observation.Id.ShouldBe("to.ai-test-inference-001");
         observation.Subject.Reference.ShouldBe("Patient/p123");
         observation.Device.Reference.ShouldBe("Device/d456");
         observation.Component.ShouldNotBeNull();

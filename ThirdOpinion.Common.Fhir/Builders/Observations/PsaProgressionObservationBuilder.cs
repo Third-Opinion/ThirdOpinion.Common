@@ -8,7 +8,7 @@ namespace ThirdOpinion.Common.Fhir.Builders.Observations;
 /// <summary>
 ///     Builder for creating FHIR Observations for PSA progression assessment supporting ThirdOpinion.io and PCWG3 criteria
 /// </summary>
-public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observation>
+public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observation, PsaProgressionObservationBuilder>
 {
     /// <summary>
     ///     Criteria types for PSA progression assessment
@@ -27,8 +27,6 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     private readonly List<Observation.ComponentComponent> _components;
-    private readonly List<ResourceReference> _focusReferences;
-    private readonly List<string> _notes;
 
     private readonly List<(ResourceReference reference, string role, decimal? value, string? unit)>
         _psaEvidence;
@@ -37,15 +35,12 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
 
     // Calculated values from PSA evidence
     private decimal? _baselinePsa;
-    private float? _confidence;
     private CriteriaType? _criteriaType;
     private string? _criteriaVersion;
     private decimal? _currentPsa;
-    private ResourceReference? _deviceReference;
     private FhirDateTime? _effectiveDate;
     private decimal? _nadirPsa;
 
-    private ResourceReference? _patientReference;
     private decimal? _percentageChange;
     private string? _progressionStatus;
 
@@ -56,124 +51,8 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     public PsaProgressionObservationBuilder(AiInferenceConfiguration configuration)
         : base(configuration)
     {
-        _focusReferences = new List<ResourceReference>();
         _psaEvidence = new List<(ResourceReference, string, decimal?, string?)>();
         _components = new List<Observation.ComponentComponent>();
-        _notes = new List<string>();
-    }
-
-    /// <summary>
-    ///     Override base class methods to maintain fluent interface
-    /// </summary>
-    public new PsaProgressionObservationBuilder WithInferenceId(string id)
-    {
-        base.WithInferenceId(id);
-        return this;
-    }
-
-    /// <summary>
-    ///     Override base class methods to maintain fluent interface
-    /// </summary>
-    public new PsaProgressionObservationBuilder WithCriteria(string id,
-        string display,
-        string? system = null)
-    {
-        base.WithCriteria(id, display, system);
-        return this;
-    }
-
-    /// <summary>
-    ///     Override base class methods to maintain fluent interface
-    /// </summary>
-    public new PsaProgressionObservationBuilder AddDerivedFrom(ResourceReference reference)
-    {
-        base.AddDerivedFrom(reference);
-        return this;
-    }
-
-    /// <summary>
-    ///     Override base class methods to maintain fluent interface
-    /// </summary>
-    public new PsaProgressionObservationBuilder AddDerivedFrom(string reference,
-        string? display = null)
-    {
-        base.AddDerivedFrom(reference, display);
-        return this;
-    }
-
-    /// <summary>
-    ///     Sets the patient reference for this observation
-    /// </summary>
-    /// <param name="patient">The patient resource reference</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public PsaProgressionObservationBuilder WithPatient(ResourceReference patient)
-    {
-        _patientReference = patient ?? throw new ArgumentNullException(nameof(patient));
-        return this;
-    }
-
-    /// <summary>
-    ///     Sets the patient reference for this observation
-    /// </summary>
-    /// <param name="patientId">The patient ID</param>
-    /// <param name="display">Optional display text</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public PsaProgressionObservationBuilder WithPatient(string patientId, string? display = null)
-    {
-        if (string.IsNullOrWhiteSpace(patientId))
-            throw new ArgumentException("Patient ID cannot be null or empty", nameof(patientId));
-
-        _patientReference = new ResourceReference
-        {
-            Reference = patientId.StartsWith("Patient/") ? patientId : $"Patient/{patientId}",
-            Display = display
-        };
-        return this;
-    }
-
-    /// <summary>
-    ///     Sets the device reference that performed the assessment
-    /// </summary>
-    /// <param name="device">The device resource reference</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public PsaProgressionObservationBuilder WithDevice(ResourceReference device)
-    {
-        _deviceReference = device ?? throw new ArgumentNullException(nameof(device));
-        return this;
-    }
-
-    /// <summary>
-    ///     Sets the device reference that performed the assessment
-    /// </summary>
-    /// <param name="deviceId">The device ID</param>
-    /// <param name="display">Optional display text</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public PsaProgressionObservationBuilder WithDevice(string deviceId, string? display = null)
-    {
-        if (string.IsNullOrWhiteSpace(deviceId))
-            throw new ArgumentException("Device ID cannot be null or empty", nameof(deviceId));
-
-        _deviceReference = new ResourceReference
-        {
-            Reference = deviceId.StartsWith("Device/") ? deviceId : $"Device/{deviceId}",
-            Display = display
-        };
-        return this;
-    }
-
-    /// <summary>
-    ///     Sets the focus references for this observation
-    /// </summary>
-    /// <param name="focus">The focus resource references</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public PsaProgressionObservationBuilder WithFocus(params ResourceReference[] focus)
-    {
-        if (focus == null || focus.Length == 0)
-            throw new ArgumentException("At least one focus reference is required", nameof(focus));
-
-        _focusReferences.Clear();
-        _focusReferences.AddRange(focus.Where(f => f != null));
-        return this;
     }
 
     /// <summary>
@@ -419,41 +298,15 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
     }
 
     /// <summary>
-    ///     Adds a note to this observation
-    /// </summary>
-    /// <param name="noteText">The note text</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public PsaProgressionObservationBuilder AddNote(string noteText)
-    {
-        if (!string.IsNullOrWhiteSpace(noteText)) _notes.Add(noteText);
-        return this;
-    }
-
-    /// <summary>
-    ///     Sets the AI confidence score for this observation
-    /// </summary>
-    /// <param name="confidence">The confidence score (0.0 to 1.0)</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public PsaProgressionObservationBuilder WithConfidence(float confidence)
-    {
-        if (confidence < 0.0f || confidence > 1.0f)
-            throw new ArgumentOutOfRangeException(nameof(confidence),
-                "Confidence must be between 0.0 and 1.0");
-
-        _confidence = confidence;
-        return this;
-    }
-
-    /// <summary>
     ///     Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
     {
-        if (_patientReference == null)
+        if (PatientReference == null)
             throw new InvalidOperationException(
                 "Patient reference is required. Call WithPatient() before Build().");
 
-        if (_deviceReference == null)
+        if (DeviceReference == null)
             throw new InvalidOperationException(
                 "Device reference is required. Call WithDevice() before Build().");
 
@@ -512,13 +365,13 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
             },
 
             // Focus
-            Focus = _focusReferences.Any() ? _focusReferences : null,
+            Focus = FocusReferences.Any() ? FocusReferences : null,
 
             // Subject (Patient)
-            Subject = _patientReference,
+            Subject = PatientReference,
 
             // Device
-            Device = _deviceReference,
+            Device = DeviceReference,
 
             // Effective date/time
             Effective = _effectiveDate ?? new FhirDateTime(DateTimeOffset.Now),
@@ -589,10 +442,10 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
         if (_components.Any()) observation.Component = _components;
 
         // Add notes
-        if (_notes.Any())
+        if (Notes.Any())
         {
             observation.Note.Clear();
-            observation.Note.AddRange(_notes.Select(noteText => new Annotation
+            observation.Note.AddRange(Notes.Select(noteText => new Annotation
             {
                 Time = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:sszzz"),
                 Text = new Markdown(noteText)
@@ -648,13 +501,13 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
         if (_criteriaType == CriteriaType.PCWG3)
         {
             code
-                = $"psa-progression-pcwg3-{InferenceId ?? Guid.NewGuid().ToString()}-v{_criteriaVersion}";
+                = $"psa-progression-pcwg3-{FhirResourceId ?? Guid.NewGuid().ToString()}-v{_criteriaVersion}";
             display = $"PSA Progression PCWG3 Criteria v{_criteriaVersion}";
         }
         else
         {
             code
-                = $"psa-progression-{InferenceId ?? Guid.NewGuid().ToString()}-v{_criteriaVersion}";
+                = $"psa-progression-{FhirResourceId ?? Guid.NewGuid().ToString()}-v{_criteriaVersion}";
             display = $"PSA Progression ThirdOpinion.io Criteria v{_criteriaVersion}";
         }
 
@@ -735,7 +588,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
         }
 
         // Add confidence component if specified
-        if (_confidence.HasValue)
+        if (Confidence.HasValue)
             _components.Add(new Observation.ComponentComponent
             {
                 Code = new CodeableConcept
@@ -753,7 +606,7 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
                 },
                 Value = new Quantity
                 {
-                    Value = (decimal)_confidence.Value,
+                    Value = (decimal)Confidence.Value,
                     Unit = "probability",
                     System = "http://unitsofmeasure.org",
                     Code = "1"
@@ -824,14 +677,14 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
             Code = CreatePsaProgressionConditionCode(),
 
             // Subject (Patient)
-            Subject = _patientReference,
+            Subject = PatientReference,
 
             // Recorded date
             RecordedDate = _effectiveDate?.ToString() ??
                            DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:sszzz"),
 
             // Recorder (Device)
-            Recorder = _deviceReference
+            Recorder = DeviceReference
         };
 
         // Add observation as evidence
@@ -854,10 +707,10 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
         condition.Extension = new List<Extension>();
 
         // Add confidence as an extension if specified
-        if (_confidence.HasValue)
+        if (Confidence.HasValue)
             condition.Extension.Add(new Extension(
                 "http://thirdopinion.ai/fhir/StructureDefinition/confidence",
-                new FhirDecimal((decimal)_confidence.Value)));
+                new FhirDecimal((decimal)Confidence.Value)));
 
         // Add criteria extension if specified
         if (!string.IsNullOrWhiteSpace(CriteriaId))
@@ -878,8 +731,8 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
             new FhirBoolean(true)));
 
         // Add notes if any
-        if (_notes.Any())
-            condition.Note = _notes.Select(noteText => new Annotation
+        if (Notes.Any())
+            condition.Note = Notes.Select(noteText => new Annotation
             {
                 Time = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:sszzz"),
                 Text = new Markdown(noteText)

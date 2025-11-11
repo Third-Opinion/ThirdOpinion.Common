@@ -9,14 +9,12 @@ namespace ThirdOpinion.Common.Fhir.Builders.Documents;
 /// <summary>
 ///     Builder for creating FHIR DocumentReference resources for OCR-extracted text documents
 /// </summary>
-public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReference>
+public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReference, OcrDocumentReferenceBuilder>
 {
     private readonly List<DocumentReference.ContentComponent> _contents;
-    private ResourceReference? _deviceReference;
     private bool _hasInlineContent;
     private bool _hasUrlContent;
     private ResourceReference? _originalDocumentReference;
-    private ResourceReference? _patientReference;
 
     /// <summary>
     ///     Creates a new OCR DocumentReference builder
@@ -31,82 +29,13 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
     }
 
     /// <summary>
-    ///     Override base class methods to maintain fluent interface
-    /// </summary>
-    public new OcrDocumentReferenceBuilder WithInferenceId(string id)
-    {
-        base.WithInferenceId(id);
-        return this;
-    }
-
-    /// <summary>
-    ///     Override base class methods to maintain fluent interface
-    /// </summary>
-    public new OcrDocumentReferenceBuilder WithCriteria(string id,
-        string display,
-        string? system = null)
-    {
-        base.WithCriteria(id, display, system);
-        return this;
-    }
-
-    /// <summary>
-    ///     Override base class methods to maintain fluent interface
-    /// </summary>
-    public new OcrDocumentReferenceBuilder AddDerivedFrom(ResourceReference reference)
-    {
-        base.AddDerivedFrom(reference);
-        return this;
-    }
-
-    /// <summary>
-    ///     Override base class methods to maintain fluent interface
-    /// </summary>
-    public new OcrDocumentReferenceBuilder AddDerivedFrom(string reference, string? display = null)
-    {
-        base.AddDerivedFrom(reference, display);
-        return this;
-    }
-
-    /// <summary>
-    ///     Sets the patient reference for this document
-    /// </summary>
-    /// <param name="patient">The patient resource reference</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public OcrDocumentReferenceBuilder WithPatient(ResourceReference patient)
-    {
-        _patientReference = patient ?? throw new ArgumentNullException(nameof(patient));
-        return this;
-    }
-
-    /// <summary>
-    ///     Sets the patient reference for this document
-    /// </summary>
-    /// <param name="patientId">The patient ID</param>
-    /// <param name="display">Optional display text</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public OcrDocumentReferenceBuilder WithPatient(string patientId, string? display = null)
-    {
-        if (string.IsNullOrWhiteSpace(patientId))
-            throw new ArgumentException("Patient ID cannot be null or empty", nameof(patientId));
-
-        _patientReference = new ResourceReference
-        {
-            Reference = patientId.StartsWith("Patient/") ? patientId : $"Patient/{patientId}",
-            Display = display
-        };
-        return this;
-    }
-
-    /// <summary>
     ///     Sets the OCR device reference that processed the document
     /// </summary>
     /// <param name="device">The OCR device resource reference</param>
     /// <returns>This builder instance for method chaining</returns>
     public OcrDocumentReferenceBuilder WithOcrDevice(ResourceReference device)
     {
-        _deviceReference = device ?? throw new ArgumentNullException(nameof(device));
-        return this;
+        return WithDevice(device);
     }
 
     /// <summary>
@@ -117,15 +46,7 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
     /// <returns>This builder instance for method chaining</returns>
     public OcrDocumentReferenceBuilder WithOcrDevice(string deviceId, string? display = null)
     {
-        if (string.IsNullOrWhiteSpace(deviceId))
-            throw new ArgumentException("Device ID cannot be null or empty", nameof(deviceId));
-
-        _deviceReference = new ResourceReference
-        {
-            Reference = deviceId.StartsWith("Device/") ? deviceId : $"Device/{deviceId}",
-            Display = display
-        };
-        return this;
+        return WithDevice(deviceId, display);
     }
 
     /// <summary>
@@ -294,11 +215,11 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
     /// </summary>
     protected override void ValidateRequiredFields()
     {
-        if (_patientReference == null)
+        if (PatientReference == null)
             throw new InvalidOperationException(
                 "Patient reference is required. Call WithPatient() before Build().");
 
-        if (_deviceReference == null)
+        if (DeviceReference == null)
             throw new InvalidOperationException(
                 "OCR device reference is required. Call WithOcrDevice() before Build().");
 
@@ -337,7 +258,7 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
             },
 
             // Subject (Patient)
-            Subject = _patientReference,
+            Subject = PatientReference,
 
             // Date of creation
             Date = DateTimeOffset.Now,
@@ -358,8 +279,8 @@ public class OcrDocumentReferenceBuilder : AiResourceBuilderBase<DocumentReferen
             };
 
         // Add author (OCR device)
-        if (_deviceReference != null)
-            documentReference.Author = new List<ResourceReference> { _deviceReference };
+        if (DeviceReference != null)
+            documentReference.Author = new List<ResourceReference> { DeviceReference };
 
         return documentReference;
     }

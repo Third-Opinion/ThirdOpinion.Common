@@ -474,7 +474,7 @@ public class PsaProgressionObservationBuilderTests
     {
         // Arrange & Act
         Observation observation = new PsaProgressionObservationBuilder(_configuration)
-            .WithInferenceId("psa-prog-001")
+            .WithFhirResourceId("psa-prog-001")
             .WithPatient("Patient/p123", "Jane Smith")
             .WithDevice("Device/d456", "PSA Analyzer")
             .WithFocus(_conditionReference)
@@ -491,7 +491,7 @@ public class PsaProgressionObservationBuilderTests
             .Build();
 
         // Assert
-        observation.Id.ShouldBe("psa-prog-001");
+        observation.Id.ShouldBe("to.ai-psa-prog-001");
         observation.Subject.Reference.ShouldBe("Patient/p123");
         observation.Device.Reference.ShouldBe("Device/d456");
         observation.Focus[0].ShouldBe(_conditionReference);

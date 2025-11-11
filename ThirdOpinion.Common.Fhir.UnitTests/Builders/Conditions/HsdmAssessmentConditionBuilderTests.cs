@@ -4,6 +4,7 @@ using ThirdOpinion.Common.Fhir.Configuration;
 using ThirdOpinion.Common.Fhir.Extensions;
 using ThirdOpinion.Common.Fhir.Helpers;
 using ThirdOpinion.Common.Fhir.Models;
+using Xunit.Abstractions;
 
 namespace ThirdOpinion.Common.Fhir.UnitTests.Builders.Conditions;
 
@@ -14,9 +15,11 @@ public class HsdmAssessmentConditionBuilderTests
     private readonly ResourceReference _deviceReference;
     private readonly ResourceReference _patientReference;
     private readonly Fact[] _sampleFacts;
+    private readonly ITestOutputHelper _output;
 
-    public HsdmAssessmentConditionBuilderTests()
+    public HsdmAssessmentConditionBuilderTests(ITestOutputHelper output)
     {
+        _output = output;
         _configuration = AiInferenceConfiguration.CreateDefault();
         _conditionReference
             = new ResourceReference("Condition/prostate-cancer-001", "Prostate Cancer");
@@ -52,7 +55,7 @@ public class HsdmAssessmentConditionBuilderTests
             .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults
                 .NonMetastaticBiochemicalRelapse)
             .AddFactEvidence(_sampleFacts)
-            .WithSummary("Patient shows biochemical relapse with rising PSA following treatment")
+            .AddNote("Patient shows biochemical relapse with rising PSA following treatment")
             .WithEffectiveDate(new DateTime(2024, 1, 15, 10, 30, 0))
             .Build();
 
@@ -134,7 +137,7 @@ public class HsdmAssessmentConditionBuilderTests
             .WithHSDMResult(
                 HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
             .AddFactEvidence(_sampleFacts)
-            .WithSummary("Patient has metastatic castration-sensitive prostate cancer")
+            .AddNote("Patient has metastatic castration-sensitive prostate cancer")
             .Build();
 
         // Assert
@@ -174,7 +177,7 @@ public class HsdmAssessmentConditionBuilderTests
             .WithHSDMResult(
                 HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationResistant)
             .AddFactEvidence(_sampleFacts)
-            .WithSummary("Patient has progressed to castration-resistant disease")
+            .AddNote("Patient has progressed to castration-resistant disease")
             .Build();
 
         // Assert
@@ -212,7 +215,7 @@ public class HsdmAssessmentConditionBuilderTests
             .WithHSDMResult(
                 HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
             .AddFactEvidence(_sampleFacts)
-            .WithSummary("Assessment with high confidence")
+            .AddNote("Assessment with high confidence")
             .WithConfidence(0.95f)
             .Build();
 
@@ -241,7 +244,7 @@ public class HsdmAssessmentConditionBuilderTests
             .WithHSDMResult(
                 HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
             .AddFactEvidence(_sampleFacts)
-            .WithSummary("Assessment using specific criteria")
+            .AddNote("Assessment using specific criteria")
             .Build();
 
         // Assert
@@ -299,7 +302,7 @@ public class HsdmAssessmentConditionBuilderTests
             .WithHSDMResult(
                 HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
             .AddFactEvidence(multipleFacts)
-            .WithSummary("Assessment based on multiple facts")
+            .AddNote("Assessment based on multiple facts")
             .Build();
 
         // Assert
@@ -347,7 +350,7 @@ public class HsdmAssessmentConditionBuilderTests
                 .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults
                     .MetastaticCastrationSensitive)
                 .AddFactEvidence(_sampleFacts)
-                .WithSummary("Test summary")
+                .AddNote("Test summary")
                 .Build());
 
         exception.Message.ShouldContain("Patient reference is required");
@@ -367,7 +370,7 @@ public class HsdmAssessmentConditionBuilderTests
                 .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults
                     .MetastaticCastrationSensitive)
                 .AddFactEvidence(_sampleFacts)
-                .WithSummary("Test summary")
+                .AddNote("Test summary")
                 .Build());
 
         exception.Message.ShouldContain("Device reference is required");
@@ -387,7 +390,7 @@ public class HsdmAssessmentConditionBuilderTests
                 .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults
                     .MetastaticCastrationSensitive)
                 .AddFactEvidence(_sampleFacts)
-                .WithSummary("Test summary")
+                .AddNote("Test summary")
                 .Build());
 
         exception.Message.ShouldContain("Focus reference is required");
@@ -406,7 +409,7 @@ public class HsdmAssessmentConditionBuilderTests
                 .WithPatient(_patientReference)
                 .WithDevice(_deviceReference)
                 .AddFactEvidence(_sampleFacts)
-                .WithSummary("Test summary")
+                .AddNote("Test summary")
                 .Build());
 
         exception.Message.ShouldContain("HSDM result is required");
@@ -426,30 +429,10 @@ public class HsdmAssessmentConditionBuilderTests
                 .WithDevice(_deviceReference)
                 .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults
                     .MetastaticCastrationSensitive)
-                .WithSummary("Test summary")
+                .AddNote("Test summary")
                 .Build());
 
         exception.Message.ShouldContain("Fact evidence is required");
-    }
-
-    [Fact]
-    public void Build_MissingSummary_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var builder = new HsdmAssessmentConditionBuilder(_configuration);
-
-        // Act & Assert
-        var exception = Should.Throw<InvalidOperationException>(() =>
-            builder
-                .WithFocus(_conditionReference)
-                .WithPatient(_patientReference)
-                .WithDevice(_deviceReference)
-                .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults
-                    .MetastaticCastrationSensitive)
-                .AddFactEvidence(_sampleFacts)
-                .Build());
-
-        exception.Message.ShouldContain("Summary note is required");
     }
 
     [Fact]
@@ -471,17 +454,6 @@ public class HsdmAssessmentConditionBuilderTests
 
         // Act & Assert
         Should.Throw<ArgumentException>(() => builder.AddFactEvidence());
-    }
-
-    [Fact]
-    public void WithSummary_EmptyString_ThrowsArgumentException()
-    {
-        // Arrange
-        var builder = new HsdmAssessmentConditionBuilder(_configuration);
-
-        // Act & Assert
-        Should.Throw<ArgumentException>(() => builder.WithSummary(""));
-        Should.Throw<ArgumentException>(() => builder.WithSummary("   "));
     }
 
     [Fact]
@@ -605,14 +577,14 @@ public class HsdmAssessmentConditionBuilderTests
 
         // Act
         Condition condition = builder
-            .WithInferenceId(factGuid)
+            .WithFhirResourceId(factGuid)
             .WithFocus("Condition/prostate-cancer-primary", "Carcinoma of prostate")
             .WithPatient("Patient/patient-93yo-male", "93-year-old male patient")
             .WithDevice("Device/ai-hsdm-classifier", "HSDM AI Classifier")
             .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
             .WithConfidence(confidence)
             .AddFactEvidence(supportingFacts)
-            .WithSummary(summary)
+            .AddNote(summary)
             .WithEffectiveDate(new DateTime(2025, 5, 12, 10, 0, 0))
             .AddDerivedFrom($"DocumentReference/{documentId}", "Source clinical documentation")
             .Build();
@@ -762,24 +734,25 @@ public class HsdmAssessmentConditionBuilderTests
 
         // Act
         Condition condition = builder
-            .WithInferenceId("inference-mcspc-001")
+            .WithFhirResourceId("inference-mcspc-001")
             .WithFocus("Condition/prostate-cancer-primary", "Prostate Cancer")
             .WithPatient("Patient/example-patient-1", "93-year-old male")
             .WithDevice("Device/ai-hsdm-classifier", "HSDM AI Classifier")
             .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
             .WithConfidence(0.85f)
             .AddFactEvidence(supportingFacts)
-            .WithSummary(summary)
+            .AddNote(summary)
             .WithEffectiveDate(new DateTime(2025, 5, 12))
             .Build();
 
-        // Serialize to JSON
-        var json = new Hl7.Fhir.Serialization.FhirJsonSerializer().SerializeToString(condition);
+        // Serialize to JSON (formatted)
+        var serializer = new Hl7.Fhir.Serialization.FhirJsonSerializer(new Hl7.Fhir.Serialization.SerializerSettings { Pretty = true });
+        var json = serializer.SerializeToString(condition);
 
-        // Output to console
-        Console.WriteLine("=== mCSPC (Metastatic Castration-Sensitive Prostate Cancer) Example ===");
-        Console.WriteLine(json);
-        Console.WriteLine();
+        // Output to test output
+        _output.WriteLine("=== mCSPC (Metastatic Castration-Sensitive Prostate Cancer) Example ===");
+        _output.WriteLine(json);
+        _output.WriteLine("");
 
         // Assert
         condition.ShouldNotBeNull();
@@ -855,24 +828,25 @@ public class HsdmAssessmentConditionBuilderTests
 
         // Act
         Condition condition = builder
-            .WithInferenceId("inference-mcrpc-001")
+            .WithFhirResourceId("inference-mcrpc-001")
             .WithFocus("Condition/prostate-cancer-metastatic", "Widely Metastatic Prostate Cancer")
             .WithPatient("Patient/example-patient-2", "Patient with progressive disease")
             .WithDevice("Device/ai-hsdm-classifier", "HSDM AI Classifier")
             .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationResistant)
             .WithConfidence(0.95f)
             .AddFactEvidence(supportingFacts.Concat(conflictingFacts).ToArray())
-            .WithSummary(summary)
+            .AddNote(summary)
             .WithEffectiveDate(new DateTime(2025, 7, 3))
             .Build();
 
-        // Serialize to JSON
-        var json = new Hl7.Fhir.Serialization.FhirJsonSerializer().SerializeToString(condition);
+        // Serialize to JSON (formatted)
+        var serializer = new Hl7.Fhir.Serialization.FhirJsonSerializer(new Hl7.Fhir.Serialization.SerializerSettings { Pretty = true });
+        var json = serializer.SerializeToString(condition);
 
-        // Output to console
-        Console.WriteLine("=== mCRPC (Metastatic Castration-Resistant Prostate Cancer) Example ===");
-        Console.WriteLine(json);
-        Console.WriteLine();
+        // Output to test output
+        _output.WriteLine("=== mCRPC (Metastatic Castration-Resistant Prostate Cancer) Example ===");
+        _output.WriteLine(json);
+        _output.WriteLine("");
 
         // Assert
         condition.ShouldNotBeNull();
@@ -954,24 +928,25 @@ public class HsdmAssessmentConditionBuilderTests
 
         // Act
         Condition condition = builder
-            .WithInferenceId("inference-nmcspc-001")
+            .WithFhirResourceId("inference-nmcspc-001")
             .WithFocus("Condition/prostate-cancer-localized", "Localized Prostate Cancer")
             .WithPatient("Patient/example-patient-3", "Patient with biochemical relapse")
             .WithDevice("Device/ai-hsdm-classifier", "HSDM AI Classifier")
             .WithHSDMResult(HsdmAssessmentConditionBuilder.HsdmResults.NonMetastaticBiochemicalRelapse)
             .WithConfidence(0.85f)
             .AddFactEvidence(supportingFacts)
-            .WithSummary(summary)
+            .AddNote(summary)
             .WithEffectiveDate(new DateTime(2024, 12, 16))
             .Build();
 
-        // Serialize to JSON
-        var json = new Hl7.Fhir.Serialization.FhirJsonSerializer().SerializeToString(condition);
+        // Serialize to JSON (formatted)
+        var serializer = new Hl7.Fhir.Serialization.FhirJsonSerializer(new Hl7.Fhir.Serialization.SerializerSettings { Pretty = true });
+        var json = serializer.SerializeToString(condition);
 
-        // Output to console
-        Console.WriteLine("=== nmCSPC with Biochemical Relapse (Non-Metastatic Castration-Sensitive) Example ===");
-        Console.WriteLine(json);
-        Console.WriteLine();
+        // Output to test output
+        _output.WriteLine("=== nmCSPC with Biochemical Relapse (Non-Metastatic Castration-Sensitive) Example ===");
+        _output.WriteLine(json);
+        _output.WriteLine("");
 
         // Assert
         condition.ShouldNotBeNull();

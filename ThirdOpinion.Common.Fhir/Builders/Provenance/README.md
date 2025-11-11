@@ -37,7 +37,7 @@ var config = AiInferenceConfiguration.CreateDefault();
 
 // Build AI Provenance for an HSDM Assessment
 var provenance = new AiProvenanceBuilder(config)
-    .WithInferenceId("provenance-001")
+    .WithFhirResourceId("provenance-001")
     .WithTarget("Condition/hsdm-assessment-123", "HSDM Assessment Condition")
     .WithActivity(AiProvenanceBuilder.Activities.AiInference, "AI-based clinical inference")
     .WithAgent("Device/ai-hsdm-classifier-v2", "HSDM AI Classifier v2.1",
@@ -263,7 +263,7 @@ These methods **must** be called before `Build()`:
 
 #### Basic Information
 
-- `WithInferenceId(string)` - Custom provenance ID (auto-generated if not provided)
+- `WithFhirResourceId(string)` - Custom provenance ID (auto-generated if not provided)
 - `WithRecordedTime(DateTime)` - When provenance was recorded (defaults to now)
 - `WithLocation(ResourceReference)` - Where the activity occurred
 - `WithReason(string)` - Why the activity was performed

@@ -331,7 +331,7 @@ public class FactExtractionDocumentReferenceBuilderTests
         // Arrange & Act
         var facts = new { condition = "diabetes", medication = "insulin" };
         DocumentReference document = new FactExtractionDocumentReferenceBuilder(_configuration)
-            .WithInferenceId("fact-001")
+            .WithFhirResourceId("fact-001")
             .WithPatient("Patient/p123", "Jane Smith")
             .WithExtractionDevice("Device/d456", "AI Fact Extractor")
             .WithOriginalDocument("DocumentReference/orig789", "Original Report")
@@ -341,7 +341,7 @@ public class FactExtractionDocumentReferenceBuilderTests
             .Build();
 
         // Assert
-        document.Id.ShouldBe("fact-001");
+        document.Id.ShouldBe("to.ai-fact-001");
         document.Subject.Reference.ShouldBe("Patient/p123");
         document.Author[0].Reference.ShouldBe("Device/d456");
         document.RelatesTo.Count.ShouldBe(2);
