@@ -256,7 +256,7 @@ SOLUTION_PATH: './ThirdOpinion.Common.sln'
 ```yaml
 AWS__UseLocalStack: true
 AWS__LocalStackEndpoint: http://localhost:4566
-AWS__Region: us-east-1
+AWS__Region: us-east-2
 AWS__AccessKey: test
 AWS__SecretKey: test
 TestSettings__TestResourcePrefix: gh-actions

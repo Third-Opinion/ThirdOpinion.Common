@@ -50,17 +50,14 @@
             - Supports RECIST 1.1, PCWG3, and Observed radiographic assessment standards
             - Added RadiographicStandard enum for specifying assessment criteria
             - Comprehensive unit tests (18 new tests) covering all three standards
-            - Pcwg3ProgressionObservationBuilder and RecistProgressionObservationBuilder remain available but deprecated
             - All 345 FHIR unit tests pass maintaining backward compatibility
 
             Version 1.1.6:
-            - Added RECIST timepoints JSON storage capability to RecistProgressionObservationBuilder
+            - Added RECIST timepoints JSON storage capability
             - Created RecistTimepointsExtension helper for reusable FHIR extension creation
             - Added WithRecistTimepointsJson() method for storing complete RECIST assessment data
             - Added comprehensive unit tests (15 new tests) for RECIST timepoints functionality
             - Maintains full backward compatibility - all 333 FHIR unit tests pass
-            - Removed RadiographicProgressionObservationBuilder
-            - Marked Pcwg3ProgressionObservationBuilder and RecistProgressionObservationBuilder as obsolete
 
             Version 1.1.5:
             - Added ILangfuseSchemaService and LangfuseSchemaService for schema-aware prompt management

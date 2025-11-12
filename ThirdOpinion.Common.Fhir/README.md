@@ -27,7 +27,7 @@ returns the builder instance for chaining, similar to LINQ's fluent API.
 
 ```csharp
 var observation = new AdtStatusObservationBuilder(config)
-    .WithInferenceId("abc12345-6789-4def-0123-456789abcdef")
+    .WithFhirResourceId("abc12345-6789-4def-0123-456789abcdef")
     .WithPatient(patientReference)
     .WithDevice(aiDeviceReference)
     .WithStatus(true, confidenceScore: 0.95f)

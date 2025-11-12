@@ -38,8 +38,8 @@ using ThirdOpinion.Common.Aws.Cognito;
 // Configure in Startup.cs/Program.cs
 services.AddCognitoAuthentication(options =>
 {
-    options.UserPoolId = "us-east-1_XXXXXXXXX";
-    options.Region = "us-east-1";
+    options.UserPoolId = "us-east-2_XXXXXXXXX";
+    options.Region = "us-east-2";
     options.ClientId = "your-client-id";
 });
 
@@ -125,7 +125,7 @@ using ThirdOpinion.Common.Aws.S3;
 services.AddS3Service(options =>
 {
     options.BucketName = "my-healthcare-bucket";
-    options.Region = "us-east-1";
+    options.Region = "us-east-2";
 });
 
 // Use service
@@ -172,7 +172,7 @@ using ThirdOpinion.Common.Aws.SQS;
 // Configure
 services.AddSqsService(options =>
 {
-    options.QueueUrl = "https://sqs.us-east-1.amazonaws.com/123456789/my-queue";
+    options.QueueUrl = "https://sqs.us-east-2.amazonaws.com/123456789/my-queue";
 });
 
 // Use service
@@ -216,8 +216,8 @@ using ThirdOpinion.Common.Aws.HealthLake;
 // Configure
 services.AddHealthLakeService(options =>
 {
-    options.DatastoreId = "your-datastore-id";
-    options.Region = "us-east-1";
+    options.DatastoreId = "836e877666cebf177ce6370ec1478a92";
+    options.Region = "us-east-2";
 });
 
 // Use service
@@ -262,7 +262,7 @@ using ThirdOpinion.Common.Aws.Bedrock;
 // Configure
 services.AddBedrockService(options =>
 {
-    options.Region = "us-east-1";
+    options.Region = "us-east-2";
     options.DefaultModel = "anthropic.claude-3-sonnet-20240229-v1:0";
 });
 
@@ -565,7 +565,7 @@ All AWS services require proper credentials configuration. Use any of the standa
 ```json
 {
   "AWS": {
-    "Region": "us-east-1",
+    "Region": "us-east-2",
     "Profile": "default"
   }
 }
@@ -576,7 +576,7 @@ Or environment variables:
 ```bash
 export AWS_ACCESS_KEY_ID=your-access-key
 export AWS_SECRET_ACCESS_KEY=your-secret-key
-export AWS_DEFAULT_REGION=us-east-1
+export AWS_DEFAULT_REGION=us-east-2
 ```
 
 ### Complete Configuration Example
@@ -590,27 +590,27 @@ export AWS_DEFAULT_REGION=us-east-1
     }
   },
   "AWS": {
-    "Region": "us-east-1"
+    "Region": "us-east-2"
   },
   "Cognito": {
-    "UserPoolId": "us-east-1_XXXXXXXXX",
+    "UserPoolId": "us-east-2_XXXXXXXXX",
     "ClientId": "your-client-id",
-    "Region": "us-east-1"
+    "Region": "us-east-2"
   },
   "HealthLake": {
     "DatastoreId": "your-datastore-id",
-    "Region": "us-east-1",
+    "Region": "us-east-2",
     "RequestTimeoutSeconds": 30
   },
   "S3": {
     "BucketName": "your-bucket-name",
-    "Region": "us-east-1"
+    "Region": "us-east-2"
   },
   "SQS": {
-    "QueueUrl": "https://sqs.us-east-1.amazonaws.com/123456789/your-queue"
+    "QueueUrl": "https://sqs.us-east-2.amazonaws.com/123456789/your-queue"
   },
   "Bedrock": {
-    "Region": "us-east-1",
+    "Region": "us-east-2",
     "DefaultModel": "anthropic.claude-3-sonnet-20240229-v1:0"
   },
   "Athena": {

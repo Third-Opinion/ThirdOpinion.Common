@@ -32,7 +32,7 @@ public static class TestCollectionSetupHelper
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        string region = configuration.GetValue<string>("AWS:Region") ?? "us-east-1";
+        string region = configuration.GetValue<string>("AWS:Region") ?? "us-east-2";
         RegionEndpoint? regionEndpoint = RegionEndpoint.GetBySystemName(region);
 
         // Require AWS Profile - no fallback to access keys

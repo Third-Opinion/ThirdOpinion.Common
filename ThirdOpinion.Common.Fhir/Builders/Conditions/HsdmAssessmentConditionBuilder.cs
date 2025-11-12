@@ -11,18 +11,11 @@ namespace ThirdOpinion.Common.Fhir.Builders.Conditions;
 ///     Builder for creating FHIR Condition resources for HSDM (Hormone Sensitivity Diagnosis Modifier)
 ///     Castration-Sensitive Prostate Cancer (CSPC) Assessment
 /// </summary>
-public class HsdmAssessmentConditionBuilder : AiResourceBuilderBase<Condition>
+public class HsdmAssessmentConditionBuilder : AiResourceBuilderBase<Condition, HsdmAssessmentConditionBuilder>
 {
-    private readonly List<ResourceReference> _evidenceReferences;
     private readonly List<Fact> _facts;
-    private readonly List<ResourceReference> _focusReferences;
-    private readonly List<string> _notes;
-    private float? _confidence;
-    private string? _criteriaDescription;
-    private ResourceReference? _deviceReference;
     private FhirDateTime? _effectiveDate;
     private string? _hsdmResult;
-    private ResourceReference? _patientReference;
 
     /// <summary>
     ///     Creates a new HSDM Assessment Condition builder
@@ -31,121 +24,7 @@ public class HsdmAssessmentConditionBuilder : AiResourceBuilderBase<Condition>
     public HsdmAssessmentConditionBuilder(AiInferenceConfiguration configuration)
         : base(configuration)
     {
-        _focusReferences = new List<ResourceReference>();
-        _evidenceReferences = new List<ResourceReference>();
         _facts = new List<Fact>();
-        _notes = new List<string>();
-    }
-
-    /// <summary>
-    ///     Sets the inference ID for this resource
-    /// </summary>
-    /// <param name="id">The inference ID</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public new HsdmAssessmentConditionBuilder WithInferenceId(string id)
-    {
-        base.WithInferenceId(id);
-        return this;
-    }
-
-    /// <summary>
-    ///     Sets the criteria information for this inference
-    /// </summary>
-    /// <param name="id">The criteria ID</param>
-    /// <param name="display">The display text for the criteria</param>
-    /// <param name="description">The criteria description</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public new HsdmAssessmentConditionBuilder WithCriteria(string id,
-        string display,
-        string description)
-    {
-        base.WithCriteria(id, display);
-        _criteriaDescription = description;
-        return this;
-    }
-
-    /// <summary>
-    ///     Adds a resource reference that this assessment was derived from
-    /// </summary>
-    /// <param name="reference">The resource reference</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public new HsdmAssessmentConditionBuilder AddDerivedFrom(ResourceReference reference)
-    {
-        base.AddDerivedFrom(reference);
-        return this;
-    }
-
-    /// <summary>
-    ///     Adds a resource reference that this assessment was derived from
-    /// </summary>
-    /// <param name="reference">The reference string</param>
-    /// <param name="display">Optional display text</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public new HsdmAssessmentConditionBuilder AddDerivedFrom(string reference,
-        string? display = null)
-    {
-        base.AddDerivedFrom(reference, display);
-        return this;
-    }
-
-    /// <summary>
-    ///     Sets the patient reference for this condition
-    /// </summary>
-    /// <param name="patient">The patient resource reference</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public HsdmAssessmentConditionBuilder WithPatient(ResourceReference patient)
-    {
-        _patientReference = patient ?? throw new ArgumentNullException(nameof(patient));
-        return this;
-    }
-
-    /// <summary>
-    ///     Sets the patient reference for this condition
-    /// </summary>
-    /// <param name="patientId">The patient ID</param>
-    /// <param name="display">Optional display text</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public HsdmAssessmentConditionBuilder WithPatient(string patientId, string? display = null)
-    {
-        if (string.IsNullOrWhiteSpace(patientId))
-            throw new ArgumentException("Patient ID cannot be null or empty", nameof(patientId));
-
-        _patientReference = new ResourceReference
-        {
-            Reference = patientId.StartsWith("Patient/") ? patientId : $"Patient/{patientId}",
-            Display = display
-        };
-        return this;
-    }
-
-    /// <summary>
-    ///     Sets the device reference that performed the assessment
-    /// </summary>
-    /// <param name="device">The device resource reference</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public HsdmAssessmentConditionBuilder WithDevice(ResourceReference device)
-    {
-        _deviceReference = device ?? throw new ArgumentNullException(nameof(device));
-        return this;
-    }
-
-    /// <summary>
-    ///     Sets the device reference that performed the assessment
-    /// </summary>
-    /// <param name="deviceId">The device ID</param>
-    /// <param name="display">Optional display text</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public HsdmAssessmentConditionBuilder WithDevice(string deviceId, string? display = null)
-    {
-        if (string.IsNullOrWhiteSpace(deviceId))
-            throw new ArgumentException("Device ID cannot be null or empty", nameof(deviceId));
-
-        _deviceReference = new ResourceReference
-        {
-            Reference = deviceId.StartsWith("Device/") ? deviceId : $"Device/{deviceId}",
-            Display = display
-        };
-        return this;
     }
 
     /// <summary>
@@ -167,9 +46,8 @@ public class HsdmAssessmentConditionBuilder : AiResourceBuilderBase<Condition>
                 "Focus must reference a Condition resource. Reference must start with 'Condition/'",
                 nameof(existingConditionRef));
 
-        _focusReferences.Clear();
-        _focusReferences.Add(existingConditionRef);
-        return this;
+        // Call base class method with validated reference
+        return WithFocus(new[] { existingConditionRef });
     }
 
     /// <summary>
@@ -202,7 +80,7 @@ public class HsdmAssessmentConditionBuilder : AiResourceBuilderBase<Condition>
     /// <returns>This builder instance for method chaining</returns>
     public HsdmAssessmentConditionBuilder AddFocus(ResourceReference reference)
     {
-        if (reference != null) _focusReferences.Add(reference);
+        if (reference != null) FocusReferences.Add(reference);
         return this;
     }
 
@@ -225,47 +103,6 @@ public class HsdmAssessmentConditionBuilder : AiResourceBuilderBase<Condition>
                 nameof(result));
 
         _hsdmResult = result;
-        return this;
-    }
-
-    /// <summary>
-    ///     Adds evidence supporting this condition
-    /// </summary>
-    /// <param name="reference">The evidence resource reference</param>
-    /// <param name="displayText">Optional display text</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public HsdmAssessmentConditionBuilder AddEvidence(ResourceReference reference,
-        string? displayText = null)
-    {
-        if (reference != null)
-        {
-            if (!string.IsNullOrWhiteSpace(displayText) &&
-                string.IsNullOrWhiteSpace(reference.Display)) reference.Display = displayText;
-            _evidenceReferences.Add(reference);
-        }
-
-        return this;
-    }
-
-    /// <summary>
-    ///     Adds evidence supporting this condition
-    /// </summary>
-    /// <param name="referenceString">The evidence reference string</param>
-    /// <param name="displayText">Optional display text</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public HsdmAssessmentConditionBuilder AddEvidence(string referenceString,
-        string? displayText = null)
-    {
-        if (!string.IsNullOrWhiteSpace(referenceString))
-        {
-            var reference = new ResourceReference
-            {
-                Reference = referenceString,
-                Display = displayText
-            };
-            _evidenceReferences.Add(reference);
-        }
-
         return this;
     }
 
@@ -311,51 +148,21 @@ public class HsdmAssessmentConditionBuilder : AiResourceBuilderBase<Condition>
         return this;
     }
 
-    /// <summary>
-    ///     Sets the AI confidence score for this assessment
-    /// </summary>
-    /// <param name="confidence">The confidence score (0.0 to 1.0)</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public HsdmAssessmentConditionBuilder WithConfidence(float confidence)
-    {
-        if (confidence < 0.0f || confidence > 1.0f)
-            throw new ArgumentOutOfRangeException(nameof(confidence),
-                "Confidence must be between 0.0 and 1.0");
-
-        _confidence = confidence;
-        return this;
-    }
-
-    /// <summary>
-    ///     Adds a summary note to this condition (REQUIRED)
-    /// </summary>
-    /// <param name="noteText">The summary note text</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public HsdmAssessmentConditionBuilder WithSummary(string noteText)
-    {
-        if (string.IsNullOrWhiteSpace(noteText))
-            throw new ArgumentException("Summary note text cannot be null or empty",
-                nameof(noteText));
-
-        _notes.Clear(); // Only keep the most recent summary
-        _notes.Add(noteText);
-        return this;
-    }
 
     /// <summary>
     ///     Validates that required fields are set before building
     /// </summary>
     protected override void ValidateRequiredFields()
     {
-        if (_patientReference == null)
+        if (PatientReference == null)
             throw new InvalidOperationException(
                 "Patient reference is required. Call WithPatient() before Build().");
 
-        if (_deviceReference == null)
+        if (DeviceReference == null)
             throw new InvalidOperationException(
                 "Device reference is required. Call WithDevice() before Build().");
 
-        if (_focusReferences.Count == 0)
+        if (FocusReferences.Count == 0)
             throw new InvalidOperationException(
                 "Focus reference is required. Call WithFocus() before Build().");
 
@@ -366,10 +173,6 @@ public class HsdmAssessmentConditionBuilder : AiResourceBuilderBase<Condition>
         if (_facts.Count == 0)
             throw new InvalidOperationException(
                 "Fact evidence is required. Call AddFactEvidence() before Build().");
-
-        if (_notes.Count == 0)
-            throw new InvalidOperationException(
-                "Summary note is required. Call WithSummary() before Build().");
     }
 
     /// <summary>
@@ -429,27 +232,27 @@ public class HsdmAssessmentConditionBuilder : AiResourceBuilderBase<Condition>
             Code = CreateHsdmResultCode(),
 
             // Subject (Patient)
-            Subject = _patientReference,
+            Subject = PatientReference,
 
             // Recorded date
             RecordedDate = _effectiveDate?.ToString() ??
                            DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:sszzz"),
 
             // Recorder (Device)
-            Recorder = _deviceReference
+            Recorder = DeviceReference
         };
 
         // Add evidence references
-        if (_evidenceReferences.Any())
-            condition.Evidence = _evidenceReferences.Select(evidence =>
+        if (EvidenceReferences.Any())
+            condition.Evidence = EvidenceReferences.Select(evidence =>
                 new Condition.EvidenceComponent
                 {
                     Detail = new List<ResourceReference> { evidence }
                 }).ToList();
 
         // Add notes
-        if (_notes.Any())
-            condition.Note = _notes.Select(noteText => new Annotation
+        if (Notes.Any())
+            condition.Note = Notes.Select(noteText => new Annotation
             {
                 Time = DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:sszzz"),
                 Text = new Markdown(noteText)
@@ -463,31 +266,12 @@ public class HsdmAssessmentConditionBuilder : AiResourceBuilderBase<Condition>
         }
 
         // Add confidence as an extension if specified
-        if (_confidence.HasValue)
+        if (Confidence.HasValue)
         {
             condition.Extension = condition.Extension ?? new List<Extension>();
             condition.Extension.Add(new Extension(
                 "http://thirdopinion.ai/fhir/StructureDefinition/confidence",
-                new FhirDecimal((decimal)_confidence.Value)));
-        }
-
-        // Add criteria extension if specified
-        if (!string.IsNullOrWhiteSpace(CriteriaId))
-        {
-            condition.Extension = condition.Extension ?? new List<Extension>();
-            var criteriaExtension = new Extension
-            {
-                Url = "http://thirdopinion.ai/fhir/StructureDefinition/assessment-criteria"
-            };
-            criteriaExtension.Extension.Add(new Extension("id", new FhirString(CriteriaId)));
-            criteriaExtension.Extension.Add(new Extension("display",
-                new FhirString(CriteriaDisplay ?? "")));
-
-            if (!string.IsNullOrWhiteSpace(_criteriaDescription))
-                criteriaExtension.Extension.Add(new Extension("description",
-                    new FhirString(_criteriaDescription)));
-
-            condition.Extension.Add(criteriaExtension);
+                new FhirDecimal((decimal)Confidence.Value)));
         }
 
         return condition;

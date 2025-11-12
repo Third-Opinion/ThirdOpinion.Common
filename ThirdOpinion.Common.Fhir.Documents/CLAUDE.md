@@ -117,7 +117,7 @@ Automatically extracts and stores as S3 tags:
 ```csharp
 services.AddHealthLakeServices(config =>
 {
-    config.Region = "us-east-1";
+    config.Region = "us-east-2";
     config.DatastoreId = "your-datastore-id";
 });
 

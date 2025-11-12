@@ -32,7 +32,7 @@ clinical data.
 var config = AiInferenceConfiguration.CreateDefault();
 
 var adtObservation = new AdtStatusObservationBuilder(config)
-    .WithInferenceId("adt-assessment-001")
+    .WithFhirResourceId("adt-assessment-001")
     .WithPatient("Patient/prostate-patient-123", "John Smith")
     .WithDevice("Device/adt-detection-ai-v2", "ADT Detection AI v2.1")
     .WithStatus(true, confidenceScore: 0.94f) // Patient is on ADT with 94% confidence
@@ -102,7 +102,7 @@ var adtObservation = new AdtStatusObservationBuilder(config)
 #### API Reference
 
 ```csharp
-public AdtStatusObservationBuilder WithInferenceId(string id)
+public AdtStatusObservationBuilder WithFhirResourceId(string id)
 public AdtStatusObservationBuilder WithPatient(ResourceReference patientRef)
 public AdtStatusObservationBuilder WithPatient(string patientId, string? display = null)
 public AdtStatusObservationBuilder WithDevice(ResourceReference deviceRef)
@@ -156,7 +156,7 @@ public enum CriteriaType
 
 ```csharp
 var psaObservation = new PsaProgressionObservationBuilder(config)
-    .WithInferenceId("psa-progression-001")
+    .WithFhirResourceId("psa-progression-001")
     .WithPatient("Patient/patient-456", "Robert Johnson")
     .WithDevice("Device/psa-analysis-ai", "PSA Analysis AI v3.0")
     .WithCriteria(CriteriaType.PCWG3, "3.0")
@@ -202,7 +202,7 @@ The builder automatically calculates:
 #### API Reference
 
 ```csharp
-public PsaProgressionObservationBuilder WithInferenceId(string id)
+public PsaProgressionObservationBuilder WithFhirResourceId(string id)
 public PsaProgressionObservationBuilder WithPatient(ResourceReference patientRef)
 public PsaProgressionObservationBuilder WithDevice(ResourceReference deviceRef)
 public PsaProgressionObservationBuilder WithFocus(params ResourceReference[] focus)
@@ -232,8 +232,6 @@ public PsaProgressionObservationBuilder AddNote(string noteText)
 **Unified builder for creating FHIR Observations for radiographic progression assessment**
 
 Creates observations for radiographic progression analysis supporting multiple assessment standards: RECIST 1.1, PCWG3, and Observed.
-
-> **Note**: This builder replaces the deprecated `RecistProgressionObservationBuilder` and `Pcwg3ProgressionObservationBuilder` classes, providing a unified interface for all radiographic assessment standards.
 
 #### Purpose
 
@@ -293,7 +291,7 @@ Each standard generates appropriate FHIR codes:
 
 ```csharp
 var recistObservation = new RadiographicObservationBuilder(config, RadiographicStandard.RECIST_1_1)
-    .WithInferenceId("recist-assessment-001")
+    .WithFhirResourceId("recist-assessment-001")
     .WithPatient("Patient/patient-321", "Michael Davis")
     .WithDevice("Device/recist-ai-classifier", "RECIST AI Classifier v1.5")
     .WithFocus(new ResourceReference("Condition/metastatic-prostate-cancer"))
@@ -315,11 +313,11 @@ var recistObservation = new RadiographicObservationBuilder(config, RadiographicS
 
 ```csharp
 var pcwg3Observation = new RadiographicObservationBuilder(config, RadiographicStandard.PCWG3)
-    .WithInferenceId("pcwg3-assessment-001")
+    .WithFhirResourceId("pcwg3-assessment-001")
     .WithPatient("Patient/patient-789", "David Wilson")
     .WithDevice("Device/pcwg3-bone-scan-ai", "PCWG3 Bone Scan AI v2.0")
     .WithFocus(new ResourceReference("Condition/prostate-cancer-with-bone-mets"))
-    .WithDetermination("True") // Progression identified
+    .WithDetermination("PD") // Progressive Disease
     .WithInitialLesions("New lesion at L5 vertebra")
     .WithConfirmationDate(new DateTime(2025, 2, 15))
     .WithTimeBetweenScans("8 weeks")
@@ -337,11 +335,11 @@ var pcwg3Observation = new RadiographicObservationBuilder(config, RadiographicSt
 
 ```csharp
 var observedProgression = new RadiographicObservationBuilder(config, RadiographicStandard.Observed)
-    .WithInferenceId("observed-assessment-001")
+    .WithFhirResourceId("observed-assessment-001")
     .WithPatient("Patient/patient-456", "Sarah Johnson")
     .WithDevice("Device/radiologist-review", "Radiologist Review")
     .WithFocus(new ResourceReference("Condition/lung-cancer"))
-    .WithDetermination("True") // Progression observed
+    .WithDetermination("PD") // Progressive Disease observed
     .AddImagingStudy(new ResourceReference("ImagingStudy/pet-ct-001", "PET-CT"))
     .AddRadiologyReport(new ResourceReference("DiagnosticReport/pet-report-001"))
     .WithSummary("Increased FDG uptake in mediastinal lymph nodes suggesting progression")
@@ -357,7 +355,7 @@ When RECIST criteria are inconclusive but progression is observed:
 
 ```csharp
 var inconclusiveWithProgression = new RadiographicObservationBuilder(config, RadiographicStandard.Observed)
-    .WithInferenceId("observed-assessment-002")
+    .WithFhirResourceId("observed-assessment-002")
     .WithPatient("Patient/patient-789", "John Smith")
     .WithDevice("Device/radiologist-review", "Radiologist Review")
     .WithFocus(new ResourceReference("Condition/prostate-cancer"))
@@ -375,7 +373,7 @@ These methods work with all three assessment standards:
 
 ```csharp
 // Core setup
-.WithInferenceId(string id)
+.WithFhirResourceId(string id)
 .WithPatient(ResourceReference patient)
 .WithPatient(string patientId, string? display = null)
 .WithDevice(ResourceReference device)
@@ -383,7 +381,7 @@ These methods work with all three assessment standards:
 .WithFocus(params ResourceReference[] focuses)
 
 // Assessment details
-.WithDetermination(string determination)  // "True", "False", or "Inconclusive"
+.WithDetermination(string determination)  // "CR", "PR", "SD", "PD", "Baseline", or "Inconclusive"
 .WithConfidence(float confidence)         // 0.0 to 1.0
 .WithConfidenceRationale(string? rationale)
 .WithConfirmationDate(DateTime? date)
@@ -425,7 +423,7 @@ Additional methods available when using `RadiographicStandard.PCWG3`:
 var pcwg3Obs = new RadiographicObservationBuilder(config, RadiographicStandard.PCWG3)
     .WithPatient("Patient/patient-001")
     .WithDevice("Device/bone-scan-ai")
-    .WithDetermination("True")
+    .WithDetermination("PD")
     .WithInitialLesions("2 new bone lesions at L3 and T10")
     .WithConfirmationDate(DateTime.Parse("2025-02-01"))
     .WithTimeBetweenScans("8 weeks")
@@ -590,7 +588,7 @@ public RadiographicObservationBuilder(
 
 ##### Common Methods (All Standards)
 ```csharp
-public RadiographicObservationBuilder WithInferenceId(string id)
+public RadiographicObservationBuilder WithFhirResourceId(string id)
 public RadiographicObservationBuilder WithPatient(ResourceReference patient)
 public RadiographicObservationBuilder WithPatient(string patientId, string? display = null)
 public RadiographicObservationBuilder WithDevice(ResourceReference device)
@@ -648,48 +646,8 @@ All standards require:
 
 Standard-specific requirements:
 - **RECIST 1.1**: At least one component or RECIST response recommended
-- **PCWG3**: Determination ("True"/"False"/"Inconclusive") or supporting facts recommended
+- **PCWG3**: Determination (CR/PR/SD/PD/Baseline/Inconclusive) or supporting facts recommended
 - **Observed**: Summary or notes recommended to document findings
-
-#### Migration Guide
-
-Migrating from deprecated builders is straightforward:
-
-**From RecistProgressionObservationBuilder:**
-```csharp
-// Old code
-var observation = new RecistProgressionObservationBuilder(config)
-    .WithPatient(...)
-    .WithRecistResponse(...)
-    .Build();
-
-// New code - Add standard parameter to constructor
-var observation = new RadiographicObservationBuilder(config, RadiographicStandard.RECIST_1_1)
-    .WithPatient(...)
-    .WithRecistResponse(...)
-    .Build();
-```
-
-**From Pcwg3ProgressionObservationBuilder:**
-```csharp
-// Old code
-var observation = new Pcwg3ProgressionObservationBuilder(config)
-    .WithPatient(...)
-    .WithIdentified(true)
-    .Build();
-
-// New code - Add standard parameter, use WithDetermination instead of WithIdentified
-var observation = new RadiographicObservationBuilder(config, RadiographicStandard.PCWG3)
-    .WithPatient(...)
-    .WithDetermination("True")  // Replaces WithIdentified(true)
-    .Build();
-```
-
-**Key Changes:**
-- Add `RadiographicStandard` enum parameter to constructor
-- `WithIdentified(bool)` is now `WithDetermination("True"/"False"/"Inconclusive")`
-- `AddImagingStudy()` and `AddRadiologyReport()` now available for **all** standards
-- All other method names remain the same
 
 ## Common Patterns
 

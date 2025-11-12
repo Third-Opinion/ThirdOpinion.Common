@@ -17,7 +17,7 @@ public class ServiceCollectionExtensionsTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "SQS:ServiceUrl", "http://localhost:4566" },
-                { "SQS:Region", "us-east-1" }
+                { "SQS:Region", "us-east-2" }
             })
             .Build();
 
@@ -66,7 +66,7 @@ public class ServiceCollectionExtensionsTests
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 { "SQS:ServiceUrl", "http://localhost:4566" },
-                { "SQS:Region", "us-east-1" }
+                { "SQS:Region", "us-east-2" }
             })
             .Build();
 

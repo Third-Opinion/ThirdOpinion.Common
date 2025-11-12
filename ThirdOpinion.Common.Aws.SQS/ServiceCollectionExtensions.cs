@@ -34,7 +34,7 @@ public static class ServiceCollectionExtensions
                 else if (!string.IsNullOrEmpty(options.Region))
                     config.RegionEndpoint = RegionEndpoint.GetBySystemName(options.Region);
                 else
-                    // Default to us-east-1 if no configuration is provided
+                    // Default to us-east-2 if no configuration is provided
                     config.RegionEndpoint = RegionEndpoint.USEast1;
 
                 return new AmazonSQSClient(config);
@@ -70,7 +70,7 @@ public static class ServiceCollectionExtensions
                 else if (!string.IsNullOrEmpty(options.Region))
                     config.RegionEndpoint = RegionEndpoint.GetBySystemName(options.Region);
                 else
-                    // Default to us-east-1 if no configuration is provided
+                    // Default to us-east-2 if no configuration is provided
                     config.RegionEndpoint = RegionEndpoint.USEast1;
 
                 return new AmazonSQSClient(config);

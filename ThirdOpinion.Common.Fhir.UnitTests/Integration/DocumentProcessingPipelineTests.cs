@@ -38,7 +38,7 @@ public class DocumentProcessingPipelineTests
         // 1. Create OCR DocumentReference
         DocumentReference ocrDoc
             = new OcrDocumentReferenceBuilder(AiInferenceConfiguration.CreateDefault())
-                .WithInferenceId(ocrDocId)
+                .WithFhirResourceId(ocrDocId)
                 .WithPatient(patientRef)
                 .WithOcrDevice(deviceRef)
                 .WithExtractedTextUrl("s3://bucket/extracted/text-output.txt")
@@ -50,7 +50,7 @@ public class DocumentProcessingPipelineTests
         // 2. Create Fact Extraction DocumentReference
         DocumentReference factDoc
             = new FactExtractionDocumentReferenceBuilder(AiInferenceConfiguration.CreateDefault())
-                .WithInferenceId(factDocId)
+                .WithFhirResourceId(factDocId)
                 .WithPatient(patientRef)
                 .WithExtractionDevice(deviceRef)
                 .WithFactsJson(extractedFacts)
@@ -60,8 +60,8 @@ public class DocumentProcessingPipelineTests
 
         // 3. Create RECIST Progression Observation
         Observation recistObs
-            = new RecistProgressionObservationBuilder(AiInferenceConfiguration.CreateDefault())
-                .WithInferenceId(observationId)
+            = new RadiographicObservationBuilder(AiInferenceConfiguration.CreateDefault(), RadiographicStandard.RECIST_1_1)
+                .WithFhirResourceId(observationId)
                 .WithPatient(patientRef)
                 .WithDevice(deviceRef)
                 .WithFocus(new ResourceReference($"DocumentReference/{factDocId}"))
@@ -69,8 +69,8 @@ public class DocumentProcessingPipelineTests
                 .AddComponent("New lesions present", true)
                 .AddComponent("Overall assessment",
                     new CodeableConcept { Text = "Progressive Disease" })
-                .WithRecistResponse("Progressive Disease", "Progressive Disease")
-                .WithBodySite("liver", "Liver")
+                .WithRecistResponse("C35571", "Progressive Disease")
+                .WithBodySite("10200004", "Liver structure")
                 .Build();
 
         // 4. Create Provenance tracking
@@ -89,22 +89,22 @@ public class DocumentProcessingPipelineTests
 
         // Verify all resources are created correctly
         ocrDoc.ShouldNotBeNull();
-        ocrDoc.Id.ShouldBe(ocrDocId);
+        ocrDoc.Id.ShouldBe($"to.ai-{ocrDocId}");
         ocrDoc.Content.Count.ShouldBe(3);
         ocrDoc.RelatesTo.Count.ShouldBe(1);
 
         factDoc.ShouldNotBeNull();
-        factDoc.Id.ShouldBe(factDocId);
+        factDoc.Id.ShouldBe($"to.ai-{factDocId}");
         factDoc.RelatesTo.Count.ShouldBe(2);
 
         recistObs.ShouldNotBeNull();
-        recistObs.Id.ShouldBe(observationId);
+        recistObs.Id.ShouldBe($"to.ai-{observationId}");
         recistObs.Component.Count.ShouldBe(3);
         recistObs.Focus.Count.ShouldBe(1);
         recistObs.Focus[0].Reference.ShouldBe($"DocumentReference/{factDocId}");
 
         provenance.ShouldNotBeNull();
-        provenance.Id.ShouldBe(provenanceId);
+        provenance.Id.ShouldBe($"to.ai-{provenanceId}");
         provenance.Target.Count.ShouldBe(3);
         provenance.Agent.Count.ShouldBe(2);
         provenance.Entity.Count.ShouldBe(1);
@@ -160,7 +160,7 @@ public class DocumentProcessingPipelineTests
         var psaFacts = new { psa_value = 15.2, psa_date = "2024-10-01", psa_units = "ng/mL" };
         DocumentReference factDoc
             = new FactExtractionDocumentReferenceBuilder(AiInferenceConfiguration.CreateDefault())
-                .WithInferenceId(factDocId)
+                .WithFhirResourceId(factDocId)
                 .WithPatient(patientRef)
                 .WithExtractionDevice(deviceRef)
                 .WithFactsJson(psaFacts)
@@ -169,7 +169,7 @@ public class DocumentProcessingPipelineTests
         // Create multiple observations from the same fact document
         Observation psaObs
             = new PsaProgressionObservationBuilder(AiInferenceConfiguration.CreateDefault())
-                .WithInferenceId("psa-obs-456")
+                .WithFhirResourceId("psa-obs-456")
                 .WithPatient(patientRef)
                 .WithDevice(deviceRef)
                 .WithFocus(new ResourceReference($"DocumentReference/{factDocId}"))
@@ -178,12 +178,12 @@ public class DocumentProcessingPipelineTests
                 .Build();
 
         Observation recistObs
-            = new RecistProgressionObservationBuilder(AiInferenceConfiguration.CreateDefault())
-                .WithInferenceId("recist-obs-456")
+            = new RadiographicObservationBuilder(AiInferenceConfiguration.CreateDefault(), RadiographicStandard.RECIST_1_1)
+                .WithFhirResourceId("recist-obs-456")
                 .WithPatient(patientRef)
                 .WithDevice(deviceRef)
                 .WithFocus(new ResourceReference($"DocumentReference/{factDocId}"))
-                .WithRecistResponse("Stable Disease", "Stable Disease")
+                .WithRecistResponse("C85553", "Stable Disease")
                 .Build();
 
         // Create provenance tracking both observations
@@ -217,7 +217,7 @@ public class DocumentProcessingPipelineTests
         // Create OCR document with S3 URLs only
         DocumentReference ocrDoc
             = new OcrDocumentReferenceBuilder(AiInferenceConfiguration.CreateDefault())
-                .WithInferenceId("ocr-doc-789")
+                .WithFhirResourceId("ocr-doc-789")
                 .WithPatient(patientRef)
                 .WithOcrDevice(deviceRef)
                 .WithOriginalDocument("original-doc-789")
@@ -229,7 +229,7 @@ public class DocumentProcessingPipelineTests
         // Create fact extraction with S3 URL
         DocumentReference factDoc
             = new FactExtractionDocumentReferenceBuilder(AiInferenceConfiguration.CreateDefault())
-                .WithInferenceId("fact-doc-789")
+                .WithFhirResourceId("fact-doc-789")
                 .WithPatient(patientRef)
                 .WithExtractionDevice(deviceRef)
                 .WithFactsJsonUrl("s3://bucket/facts/facts-789.json")
@@ -266,7 +266,7 @@ public class DocumentProcessingPipelineTests
 
         DocumentReference ocrDoc
             = new OcrDocumentReferenceBuilder(AiInferenceConfiguration.CreateDefault())
-                .WithInferenceId($"ocr-{idSuffix}")
+                .WithFhirResourceId($"ocr-{idSuffix}")
                 .WithPatient(patientRef)
                 .WithOcrDevice(deviceRef)
                 .WithOriginalDocument($"original-doc-{idSuffix}")
@@ -275,7 +275,7 @@ public class DocumentProcessingPipelineTests
 
         DocumentReference factDoc
             = new FactExtractionDocumentReferenceBuilder(AiInferenceConfiguration.CreateDefault())
-                .WithInferenceId($"fact-{idSuffix}")
+                .WithFhirResourceId($"fact-{idSuffix}")
                 .WithPatient(patientRef)
                 .WithExtractionDevice(deviceRef)
                 .WithFactsJson(new { test = "data" })
@@ -283,12 +283,12 @@ public class DocumentProcessingPipelineTests
                 .Build();
 
         Observation observation
-            = new RecistProgressionObservationBuilder(AiInferenceConfiguration.CreateDefault())
-                .WithInferenceId($"obs-{idSuffix}")
+            = new RadiographicObservationBuilder(AiInferenceConfiguration.CreateDefault(), RadiographicStandard.RECIST_1_1)
+                .WithFhirResourceId($"obs-{idSuffix}")
                 .WithPatient(patientRef)
                 .WithDevice(deviceRef)
                 .WithFocus(new ResourceReference($"DocumentReference/fact-{idSuffix}"))
-                .WithRecistResponse("Stable Disease", "Stable Disease")
+                .WithRecistResponse("C85553", "Stable Disease")
                 .Build();
 
         Provenance provenance = new AiProvenanceBuilder()

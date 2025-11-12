@@ -145,14 +145,14 @@ public class AdtStatusObservationBuilderTests
 
         // Act
         Observation observation = builder
-            .WithInferenceId(customId)
+            .WithFhirResourceId(customId)
             .WithPatient(_patientReference)
             .WithDevice(_deviceReference)
             .WithStatus(true)
             .Build();
 
-        // Assert
-        observation.Id.ShouldBe(customId);
+        // Assert - ID should have 'to.ai-' prefix
+        observation.Id.ShouldBe($"to.ai-{customId}");
     }
 
     [Fact]
@@ -171,29 +171,6 @@ public class AdtStatusObservationBuilderTests
         // Assert
         observation.Id.ShouldNotBeNullOrEmpty();
         observation.Id.ShouldStartWith("to.ai-inference-");
-    }
-
-    [Fact]
-    public void Build_WithCriteria_SetsMethodCodeableConcept()
-    {
-        // Arrange
-        var builder = new AdtStatusObservationBuilder(_configuration);
-
-        // Act
-        Observation observation = builder
-            .WithPatient(_patientReference)
-            .WithDevice(_deviceReference)
-            .WithStatus(true)
-            .WithCriteria("adt-detect-v1", "ADT Detection Algorithm v1.0",
-                "http://example.org/criteria")
-            .Build();
-
-        // Assert
-        observation.Method.ShouldNotBeNull();
-        observation.Method.Coding[0].System.ShouldBe("http://example.org/criteria");
-        observation.Method.Coding[0].Code.ShouldBe("adt-detect-v1");
-        observation.Method.Coding[0].Display.ShouldBe("ADT Detection Algorithm v1.0");
-        observation.Method.Text.ShouldBe("ADT Detection Algorithm v1.0");
     }
 
     [Fact]
@@ -249,11 +226,10 @@ public class AdtStatusObservationBuilderTests
     {
         // Arrange & Act
         Observation observation = new AdtStatusObservationBuilder(_configuration)
-            .WithInferenceId("test-inference-001")
+            .WithFhirResourceId("test-inference-001")
             .WithPatient("Patient/p123", "Jane Doe")
             .WithDevice("Device/d456", "AI System")
             .WithStatus(true)
-            .WithCriteria("criteria-001", "Test Criteria")
             .AddEvidence("DocumentReference/doc1", "Note 1")
             .AddEvidence("Observation/obs1", "Lab 1")
             .WithEffectiveDate(new DateTime(2024, 2, 1))
@@ -262,12 +238,11 @@ public class AdtStatusObservationBuilderTests
             .Build();
 
         // Assert
-        observation.Id.ShouldBe("test-inference-001");
+        observation.Id.ShouldBe("to.ai-test-inference-001");
         observation.Subject.Reference.ShouldBe("Patient/p123");
         observation.Device.Reference.ShouldBe("Device/d456");
         observation.DerivedFrom.Count.ShouldBe(3); // 2 evidence + 1 derivedFrom
         observation.Note.Count.ShouldBe(1);
-        observation.Method.ShouldNotBeNull();
     }
 
     [Fact]
@@ -483,11 +458,10 @@ public class AdtStatusObservationBuilderTests
     {
         // Arrange & Act
         Observation observation = new AdtStatusObservationBuilder(_configuration)
-            .WithInferenceId("test-inference-001")
+            .WithFhirResourceId("test-inference-001")
             .WithPatient("Patient/p123", "Jane Doe")
             .WithDevice("Device/d456", "AI System")
             .WithStatus(true)
-            .WithCriteria("criteria-001", "Test Criteria")
             .AddEvidence("DocumentReference/doc1", "Note 1")
             .WithEffectiveDate(new DateTime(2024, 2, 1))
             .WithTreatmentStartDate(new DateTime(2025, 1, 1), "MedicationReference/med-ref-1",
@@ -496,7 +470,7 @@ public class AdtStatusObservationBuilderTests
             .Build();
 
         // Assert
-        observation.Id.ShouldBe("test-inference-001");
+        observation.Id.ShouldBe("to.ai-test-inference-001");
         observation.Subject.Reference.ShouldBe("Patient/p123");
         observation.Device.Reference.ShouldBe("Device/d456");
         observation.Component.ShouldNotBeNull();
@@ -505,7 +479,6 @@ public class AdtStatusObservationBuilderTests
                 c.Code.Coding.Any(cd => cd.Code == "treatmentStartDate_v1"));
         treatmentComponent.ShouldNotBeNull();
         observation.Note.Count.ShouldBe(1);
-        observation.Method.ShouldNotBeNull();
     }
 
     [Fact]

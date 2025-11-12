@@ -309,7 +309,7 @@ public class OcrDocumentReferenceBuilderTests
     {
         // Arrange & Act
         DocumentReference document = new OcrDocumentReferenceBuilder(_configuration)
-            .WithInferenceId("ocr-001")
+            .WithFhirResourceId("ocr-001")
             .WithPatient("Patient/p123", "John Doe")
             .WithOcrDevice("Device/d456", "OCR AI Device")
             .WithOriginalDocument("DocumentReference/doc789", "Original PDF")
@@ -317,8 +317,8 @@ public class OcrDocumentReferenceBuilderTests
             .AddDerivedFrom("Procedure/proc123", "OCR Process")
             .Build();
 
-        // Assert
-        document.Id.ShouldBe("ocr-001");
+        // Assert - ID should have 'to.ai-' prefix
+        document.Id.ShouldBe("to.ai-ocr-001");
         document.Subject.Reference.ShouldBe("Patient/p123");
         document.Author[0].Reference.ShouldBe("Device/d456");
         document.RelatesTo[0].Target.Reference.ShouldBe("DocumentReference/doc789");

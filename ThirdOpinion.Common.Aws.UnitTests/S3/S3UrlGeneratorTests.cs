@@ -20,7 +20,7 @@ public class S3UrlGeneratorTests
     public async Task GeneratePreSignedUrl_ValidArn_ReturnsPresignedUrl()
     {
         // Arrange
-        var s3Arn = "arn:aws:s3:us-east-1:123456789012:test-bucket/test-file.txt";
+        var s3Arn = "arn:aws:s3:us-east-2:123456789012:test-bucket/test-file.txt";
         TimeSpan expiration = TimeSpan.FromHours(1);
         var expectedUrl
             = "https://test-bucket.s3.amazonaws.com/test-file.txt?AWSAccessKeyId=AKIAIOSFODNN7EXAMPLE&Expires=1234567890&Signature=abcdef123456";
@@ -125,7 +125,7 @@ public class S3UrlGeneratorTests
     public async Task GeneratePreSignedUrl_ArnWithoutObjectKey_ThrowsArgumentException()
     {
         // Arrange
-        var arnWithoutKey = "arn:aws:s3:us-east-1:123456789012:test-bucket";
+        var arnWithoutKey = "arn:aws:s3:us-east-2:123456789012:test-bucket";
         TimeSpan expiration = TimeSpan.FromHours(1);
 
         // Act & Assert
@@ -161,7 +161,7 @@ public class S3UrlGeneratorTests
     public async Task GeneratePreSignedUrl_S3ClientThrowsException_RethrowsException()
     {
         // Arrange
-        var s3Arn = "arn:aws:s3:us-east-1:123456789012:test-bucket/test-file.txt";
+        var s3Arn = "arn:aws:s3:us-east-2:123456789012:test-bucket/test-file.txt";
         TimeSpan expiration = TimeSpan.FromHours(1);
         var expectedException = new AmazonS3Exception("S3 service error");
 
@@ -179,7 +179,7 @@ public class S3UrlGeneratorTests
     public async Task GeneratePreSignedUrl_ZeroExpiration_HandlesCorrectly()
     {
         // Arrange
-        var s3Arn = "arn:aws:s3:us-east-1:123456789012:test-bucket/test-file.txt";
+        var s3Arn = "arn:aws:s3:us-east-2:123456789012:test-bucket/test-file.txt";
         TimeSpan expiration = TimeSpan.Zero;
         var expectedUrl = "https://test-bucket.s3.amazonaws.com/test-file.txt?expires=now";
 
@@ -197,7 +197,7 @@ public class S3UrlGeneratorTests
     public async Task GeneratePreSignedUrl_NegativeExpiration_HandlesCorrectly()
     {
         // Arrange
-        var s3Arn = "arn:aws:s3:us-east-1:123456789012:test-bucket/test-file.txt";
+        var s3Arn = "arn:aws:s3:us-east-2:123456789012:test-bucket/test-file.txt";
         TimeSpan expiration = TimeSpan.FromHours(-1);
         var expectedUrl = "https://test-bucket.s3.amazonaws.com/test-file.txt?expires=past";
         DateTime utcNow = DateTime.UtcNow;

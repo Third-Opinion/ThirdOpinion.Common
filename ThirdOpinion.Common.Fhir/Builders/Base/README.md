@@ -9,7 +9,7 @@ Abstract base class providing common functionality for all AI resource builders.
 
 ### Purpose
 
-- Standardizes AI metadata application (AIAST security labels, inference IDs)
+- Standardizes AI metadata application (AIAST security labels, FHIR resource IDs)
 - Provides fluent interface patterns
 - Handles common validation logic
 - Manages derivedFrom relationships
@@ -31,13 +31,13 @@ protected AiInferenceConfiguration Configuration { get; }
 
 ### Common Methods
 
-#### WithInferenceId(string id)
+#### WithFhirResourceId(string id)
 
-Sets the inference ID for this resource. If not provided, a unique ID is auto-generated.
+Sets the FHIR resource ID for this resource. If not provided, a unique ID is auto-generated.
 
 ```csharp
 var builder = new SomeBuilder(config)
-    .WithInferenceId("custom-inference-123")
+    .WithFhirResourceId("custom-inference-123")
     .Build();
 ```
 
@@ -83,9 +83,9 @@ All resources automatically receive the AI Assisted security label:
 }
 ```
 
-#### Inference ID Generation
+#### FHIR resource ID Generation
 
-If no inference ID is provided, one is automatically generated using the pattern:
+If no FHIR resource ID is provided, one is automatically generated using the pattern:
 
 ```
 to.io-{GUID}
@@ -95,7 +95,7 @@ to.io-{GUID}
 
 The base class provides:
 
-- **EnsureInferenceId()** - Ensures an inference ID exists
+- **EnsureInferenceId()** - Ensures an FHIR resource ID exists
 - **ValidateRequiredFields()** - Virtual method for derived class validation
 - **ApplyAiastSecurityLabel()** - Applies AI security metadata
 
@@ -116,9 +116,9 @@ public class MyCustomBuilder : AiResourceBuilderBase<Observation>
 2. **Override fluent methods:**
 
 ```csharp
-public new MyCustomBuilder WithInferenceId(string id)
+public new MyCustomBuilder WithFhirResourceId(string id)
 {
-    base.WithInferenceId(id);
+    base.WithFhirResourceId(id);
     return this;
 }
 
@@ -175,9 +175,9 @@ public class ExampleObservationBuilder : AiResourceBuilderBase<Observation>
     public ExampleObservationBuilder(AiInferenceConfiguration configuration)
         : base(configuration) { }
 
-    public new ExampleObservationBuilder WithInferenceId(string id)
+    public new ExampleObservationBuilder WithFhirResourceId(string id)
     {
-        base.WithInferenceId(id);
+        base.WithFhirResourceId(id);
         return this;
     }
 
@@ -218,7 +218,7 @@ public class ExampleObservationBuilder : AiResourceBuilderBase<Observation>
 
 // Usage
 var observation = new ExampleObservationBuilder(config)
-    .WithInferenceId("example-001")
+    .WithFhirResourceId("example-001")
     .WithPatient("patient-123")
     .WithValue("positive")
     .WithCriteria("EXAMPLE-v1.0", "Example Criteria")
@@ -234,7 +234,7 @@ Provides standardized ID generation for FHIR resources.
 
 #### Methods
 
-- `GenerateInferenceId()` - Creates unique inference IDs
+- `GenerateInferenceId()` - Creates unique FHIR resource IDs
 - `GenerateResourceId(string prefix)` - Creates prefixed resource IDs
 - `IsValidFhirId(string id)` - Validates FHIR ID format
 

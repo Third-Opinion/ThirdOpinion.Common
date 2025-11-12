@@ -219,14 +219,14 @@ public class AiDeviceBuilderTests
 
         // Act
         Device device = builder
-            .WithInferenceId(inferenceId)
+            .WithFhirResourceId(inferenceId)
             .Build();
 
-        // Assert
-        device.Id.ShouldBe(inferenceId);
+        // Assert - ID should have 'to.ai-' prefix
+        device.Id.ShouldBe($"to.ai-{inferenceId}");
         device.Identifier.ShouldNotBeNull();
         device.Identifier.Any(i =>
-            i.Value == inferenceId &&
+            i.Value == $"to.ai-{inferenceId}" &&
             i.System == _configuration.InferenceSystem).ShouldBeTrue();
     }
 
@@ -250,19 +250,18 @@ public class AiDeviceBuilderTests
     {
         // Arrange & Act
         Device device = new AiDeviceBuilder(_configuration)
-            .WithInferenceId("inf-001")
+            .WithFhirResourceId("inf-001")
             .WithModelName("Test AI Model", "model")
             .WithManufacturer("Test Corp")
             .WithVersion("2.0.0")
             .WithVersion("2.0.1")
             .AddProperty("Confidence", 0.99m, "1")
             .AddProperty("Latency", 50m, "ms")
-            .WithCriteria("criteria-001", "Test Criteria")
             .AddDerivedFrom("Patient/123")
             .Build();
 
         // Assert
-        device.Id.ShouldBe("inf-001");
+        device.Id.ShouldBe("to.ai-inf-001");
         device.DeviceName[0].Name.ShouldBe("Test AI Model");
         device.Manufacturer.ShouldBe("Test Corp");
         device.Version.Count.ShouldBe(2);

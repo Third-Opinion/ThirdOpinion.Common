@@ -38,7 +38,7 @@ public static class CloudWatchLoggingExtensions
         string region = cloudWatchConfig.GetValue<string>("Region")
                         ?? Environment.GetEnvironmentVariable("AWS_REGION")
                         ?? Environment.GetEnvironmentVariable("AWS_DEFAULT_REGION")
-                        ?? "us-east-1";
+                        ?? "us-east-2";
 
         int retentionDays = cloudWatchConfig.GetValue("RetentionDays", 30);
         LogEventLevel minimumLevel

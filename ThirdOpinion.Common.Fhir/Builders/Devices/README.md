@@ -36,7 +36,7 @@ var config = AiInferenceConfiguration.CreateDefault();
 
 // Build AI Device
 var aiDevice = new AiDeviceBuilder(config)
-    .WithInferenceId("ai-device-001")
+    .WithFhirResourceId("ai-device-001")
     .WithName("Prostate Cancer AI Classifier")
     .WithVersion("2.1.0")
     .WithManufacturer("ThirdOpinion.io", "https://thirdopinion.io")
@@ -219,7 +219,7 @@ These methods **must** be called before `Build()`:
 
 #### Basic Information
 
-- `WithInferenceId(string)` - Custom device ID (auto-generated if not provided)
+- `WithFhirResourceId(string)` - Custom device ID (auto-generated if not provided)
 - `WithDescription(string)` - Detailed description of the AI system
 - `WithModelType(string)` - Type of ML model (neural-network, ensemble, rule-based, etc.)
 - `WithAlgorithmName(string)` - Specific algorithm or architecture name
