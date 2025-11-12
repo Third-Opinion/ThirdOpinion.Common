@@ -359,6 +359,9 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
+!ThirdOpinion.Common.DataFlow/Artifacts/
+!ThirdOpinion.Common.DataFlow/Artifacts/**
+
 # VS Code files for those working on multiple tools
 .vscode/*
 !.vscode/settings.json
