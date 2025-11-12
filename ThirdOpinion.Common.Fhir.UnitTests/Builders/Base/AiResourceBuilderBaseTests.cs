@@ -36,21 +36,6 @@ public class AiResourceBuilderBaseTests
     }
 
     [Fact]
-    public void WithCriteria_SetsCriteriaFields()
-    {
-        // Arrange
-        var builder = new TestObservationBuilder(_configuration);
-
-        // Act
-        TestObservationBuilder result
-            = builder.WithCriteria("criteria-123", "Test Criteria", "http://custom.system");
-
-        // Assert
-        result.ShouldBe(builder); // Fluent interface returns same instance
-        // Note: Criteria fields are protected, so we test indirectly through build
-    }
-
-    [Fact]
     public void AddDerivedFrom_WithReference_AddsToList()
     {
         // Arrange
@@ -194,7 +179,6 @@ public class AiResourceBuilderBaseTests
         // Arrange & Act
         var builder = new TestObservationBuilder(_configuration);
         builder.WithFhirResourceId("test-id")
-            .WithCriteria("criteria-1", "Criteria Display")
             .AddDerivedFrom("Patient/123")
             .AddDerivedFrom("DocumentReference/456", "Document");
 

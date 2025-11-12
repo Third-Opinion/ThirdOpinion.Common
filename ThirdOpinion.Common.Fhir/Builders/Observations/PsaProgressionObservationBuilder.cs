@@ -712,19 +712,6 @@ public class PsaProgressionObservationBuilder : AiResourceBuilderBase<Observatio
                 "http://thirdopinion.ai/fhir/StructureDefinition/confidence",
                 new FhirDecimal((decimal)Confidence.Value)));
 
-        // Add criteria extension if specified
-        if (!string.IsNullOrWhiteSpace(CriteriaId))
-        {
-            var criteriaExtension = new Extension
-            {
-                Url = "http://thirdopinion.ai/fhir/StructureDefinition/assessment-criteria"
-            };
-            criteriaExtension.Extension.Add(new Extension("id", new FhirString(CriteriaId)));
-            criteriaExtension.Extension.Add(new Extension("display",
-                new FhirString(CriteriaDisplay ?? "")));
-            condition.Extension.Add(criteriaExtension);
-        }
-
         // Add AI inference marker extension
         condition.Extension.Add(new Extension(
             "http://thirdopinion.ai/fhir/StructureDefinition/ai-inferred",

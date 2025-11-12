@@ -34,21 +34,6 @@ public abstract class AiResourceBuilderBase<T, TBuilder>
     protected string? FhirResourceId { get; set; }
 
     /// <summary>
-    ///     The criteria ID used for this inference
-    /// </summary>
-    protected string? CriteriaId { get; set; }
-
-    /// <summary>
-    ///     The display text for the criteria
-    /// </summary>
-    protected string? CriteriaDisplay { get; set; }
-
-    /// <summary>
-    ///     The criteria system URI
-    /// </summary>
-    protected string? CriteriaSystem { get; set; }
-
-    /// <summary>
     ///     List of resources this inference was derived from
     /// </summary>
     protected List<ResourceReference> DerivedFromReferences { get; }
@@ -100,21 +85,6 @@ public abstract class AiResourceBuilderBase<T, TBuilder>
 
         // Ensure the ID starts with 'to.ai-'
         FhirResourceId = id.StartsWith("to.ai-") ? id : $"to.ai-{id}";
-        return (TBuilder)this;
-    }
-
-    /// <summary>
-    ///     Sets the criteria information for this inference
-    /// </summary>
-    /// <param name="id">The criteria ID</param>
-    /// <param name="display">The display text for the criteria</param>
-    /// <param name="system">The criteria system URI (optional, uses configuration default if not provided)</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public TBuilder WithCriteria(string id, string display, string? system = null)
-    {
-        CriteriaId = id;
-        CriteriaDisplay = display;
-        CriteriaSystem = system ?? Configuration.CriteriaSystem;
         return (TBuilder)this;
     }
 
@@ -291,7 +261,7 @@ public abstract class AiResourceBuilderBase<T, TBuilder>
     }
 
     /// <summary>
-    ///     Ensures a FHIR resource ID is set, generating one if necessary
+    ///     Ensures a FHIR resource ID is set and starts with 'to.ai-', generating one if necessary
     /// </summary>
     protected void EnsureFhirResourceId()
     {
@@ -306,6 +276,11 @@ public abstract class AiResourceBuilderBase<T, TBuilder>
                     FhirResourceId = generatedId.StartsWith("to.ai-") ? generatedId : $"to.ai-{generatedId}";
                 }
             }
+
+        // Validate that the ID starts with 'to.ai-' even if already set
+        if (!FhirResourceId!.StartsWith("to.ai-"))
+            throw new InvalidOperationException(
+                $"FHIR resource ID must start with 'to.ai-'. Current ID: {FhirResourceId}");
     }
 
     /// <summary>
@@ -352,7 +327,7 @@ public abstract class AiResourceBuilderBase<T, TBuilder>
                 "Device reference is required. Call WithDevice() before Build().");
 
         // Notes is NOT required (as per user request)
-        // Other fields (FhirResourceId, DerivedFromReferences, CriteriaId, Confidence, FocusReferences, EvidenceReferences)
+        // Other fields (FhirResourceId, DerivedFromReferences, Confidence, FocusReferences, EvidenceReferences)
         // can be validated by derived classes if they require them
     }
 

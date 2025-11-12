@@ -148,22 +148,6 @@ public class AdtStatusObservationBuilder : AiResourceBuilderBase<Observation, Ad
             Value = CreateStatusValue()
         };
 
-        // Add method if criteria was set
-        if (!string.IsNullOrWhiteSpace(CriteriaId))
-            observation.Method = new CodeableConcept
-            {
-                Coding = new List<Coding>
-                {
-                    new()
-                    {
-                        System = CriteriaSystem ?? Configuration.CriteriaSystem,
-                        Code = CriteriaId,
-                        Display = CriteriaDisplay
-                    }
-                },
-                Text = CriteriaDisplay
-            };
-
         // Add evidence to derivedFrom
         // Note: FHIR Observation initializes DerivedFrom as an empty list, not null
         // We only populate it if we have items to add

@@ -229,47 +229,6 @@ public class HsdmAssessmentConditionBuilderTests
     }
 
     [Fact]
-    public void Build_WithCriteria_AddsCriteriaExtension()
-    {
-        // Arrange
-        var builder = new HsdmAssessmentConditionBuilder(_configuration);
-
-        // Act
-        Condition condition = builder
-            .WithFocus(_conditionReference)
-            .WithPatient(_patientReference)
-            .WithDevice(_deviceReference)
-            .WithCriteria("HSDM-001", "HSDM Assessment Criteria",
-                "Detailed criteria for HSDM classification")
-            .WithHSDMResult(
-                HsdmAssessmentConditionBuilder.HsdmResults.MetastaticCastrationSensitive)
-            .AddFactEvidence(_sampleFacts)
-            .AddNote("Assessment using specific criteria")
-            .Build();
-
-        // Assert
-        condition.Extension.ShouldNotBeNull();
-        Extension? criteriaExtension = condition.Extension.FirstOrDefault(e =>
-            e.Url == "http://thirdopinion.ai/fhir/StructureDefinition/assessment-criteria");
-        criteriaExtension.ShouldNotBeNull();
-
-        Extension? idExtension = criteriaExtension.Extension.FirstOrDefault(e => e.Url == "id");
-        idExtension.ShouldNotBeNull();
-        ((FhirString)idExtension.Value).Value.ShouldBe("HSDM-001");
-
-        Extension? displayExtension
-            = criteriaExtension.Extension.FirstOrDefault(e => e.Url == "display");
-        displayExtension.ShouldNotBeNull();
-        ((FhirString)displayExtension.Value).Value.ShouldBe("HSDM Assessment Criteria");
-
-        Extension? descriptionExtension
-            = criteriaExtension.Extension.FirstOrDefault(e => e.Url == "description");
-        descriptionExtension.ShouldNotBeNull();
-        ((FhirString)descriptionExtension.Value).Value.ShouldBe(
-            "Detailed criteria for HSDM classification");
-    }
-
-    [Fact]
     public void Build_WithMultipleFacts_CreatesMultipleFactExtensions()
     {
         // Arrange

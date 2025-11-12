@@ -257,7 +257,6 @@ public class AiDeviceBuilderTests
             .WithVersion("2.0.1")
             .AddProperty("Confidence", 0.99m, "1")
             .AddProperty("Latency", 50m, "ms")
-            .WithCriteria("criteria-001", "Test Criteria")
             .AddDerivedFrom("Patient/123")
             .Build();
 

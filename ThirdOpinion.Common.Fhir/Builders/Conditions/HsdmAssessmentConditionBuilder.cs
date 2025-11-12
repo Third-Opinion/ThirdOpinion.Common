@@ -14,7 +14,6 @@ namespace ThirdOpinion.Common.Fhir.Builders.Conditions;
 public class HsdmAssessmentConditionBuilder : AiResourceBuilderBase<Condition, HsdmAssessmentConditionBuilder>
 {
     private readonly List<Fact> _facts;
-    private string? _criteriaDescription;
     private FhirDateTime? _effectiveDate;
     private string? _hsdmResult;
 
@@ -26,22 +25,6 @@ public class HsdmAssessmentConditionBuilder : AiResourceBuilderBase<Condition, H
         : base(configuration)
     {
         _facts = new List<Fact>();
-    }
-
-    /// <summary>
-    ///     Sets the criteria information for this inference
-    /// </summary>
-    /// <param name="id">The criteria ID</param>
-    /// <param name="display">The display text for the criteria</param>
-    /// <param name="description">The criteria description</param>
-    /// <returns>This builder instance for method chaining</returns>
-    public HsdmAssessmentConditionBuilder WithCriteria(string id,
-        string display,
-        string description)
-    {
-        base.WithCriteria(id, display);
-        _criteriaDescription = description;
-        return this;
     }
 
     /// <summary>
@@ -289,25 +272,6 @@ public class HsdmAssessmentConditionBuilder : AiResourceBuilderBase<Condition, H
             condition.Extension.Add(new Extension(
                 "http://thirdopinion.ai/fhir/StructureDefinition/confidence",
                 new FhirDecimal((decimal)Confidence.Value)));
-        }
-
-        // Add criteria extension if specified
-        if (!string.IsNullOrWhiteSpace(CriteriaId))
-        {
-            condition.Extension = condition.Extension ?? new List<Extension>();
-            var criteriaExtension = new Extension
-            {
-                Url = "http://thirdopinion.ai/fhir/StructureDefinition/assessment-criteria"
-            };
-            criteriaExtension.Extension.Add(new Extension("id", new FhirString(CriteriaId)));
-            criteriaExtension.Extension.Add(new Extension("display",
-                new FhirString(CriteriaDisplay ?? "")));
-
-            if (!string.IsNullOrWhiteSpace(_criteriaDescription))
-                criteriaExtension.Extension.Add(new Extension("description",
-                    new FhirString(_criteriaDescription)));
-
-            condition.Extension.Add(criteriaExtension);
         }
 
         return condition;

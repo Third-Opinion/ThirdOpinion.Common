@@ -14,8 +14,11 @@
     <s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=047c4a49_002D6ceb_002D457a_002Da236_002D574b7ad92700/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="All tests from &amp;lt;aws&amp;gt;\&amp;lt;ThirdOpinion.Common.Textract.UnitTests&amp;gt;" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Textract.UnitTests" Presentation="&amp;lt;aws&amp;gt;\&amp;lt;ThirdOpinion.Common.Textract.UnitTests&amp;gt;" /&gt;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=5528da15_002Dc719_002D4ee2_002D9af5_002D5234b4d5ca5d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Build_RECISTStableDiseaseExample_SerializesToJson" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
-  &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Fhir.UnitTests" Presentation="&amp;lt;ThirdOpinion.Common.Fhir.UnitTests&amp;gt;" /&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=5528da15_002Dc719_002D4ee2_002D9af5_002D5234b4d5ca5d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Build_RECISTStableDiseaseExample_SerializesToJson" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+  &lt;Or&gt;
+    &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Fhir.UnitTests" Presentation="&amp;lt;ThirdOpinion.Common.Fhir.UnitTests&amp;gt;" /&gt;
+    &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.FunctionalTests" Presentation="&amp;lt;ThirdOpinion.Common.FunctionalTests&amp;gt;" /&gt;
+  &lt;/Or&gt;
 &lt;/SessionState&gt;</s:String>
     <s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=56639ba8_002D76bd_002D4343_002D8fad_002Def0bfc77a7db/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="All tests from &amp;lt;ThirdOpinion.Common.UnitTests&amp;gt;" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.UnitTests" Presentation="&amp;lt;ThirdOpinion.Common.UnitTests&amp;gt;" /&gt;
@@ -58,7 +61,7 @@
     &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.FunctionalTests" Presentation="&amp;lt;ThirdOpinion.Common.FunctionalTests&amp;gt;" /&gt;
   &lt;/Or&gt;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=ba1d02a9_002D5367_002D4643_002Db7a6_002Dd169e1c1a85f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="HealthLakeFhirService_GetResourceAsync_ShouldRetrieveResource_WhenConfigured" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=ba1d02a9_002D5367_002D4643_002Db7a6_002Dd169e1c1a85f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="HealthLakeFhirService_GetResourceAsync_ShouldRetrieveResource_WhenConfigured" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;Or&gt;
     &lt;ProjectFile&gt;B9A4B802-FC87-46B4-8DFD-80CA41BA89E0/d:Tests/f:HealthLakeFunctionalTests.cs&lt;/ProjectFile&gt;
     &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.Fhir.UnitTests" Presentation="&amp;lt;ThirdOpinion.Common.Fhir.UnitTests&amp;gt;" /&gt;

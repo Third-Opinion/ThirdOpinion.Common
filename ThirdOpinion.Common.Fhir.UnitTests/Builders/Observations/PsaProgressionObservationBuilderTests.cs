@@ -763,42 +763,6 @@ public class PsaProgressionObservationBuilderTests
     }
 
     [Fact]
-    public void BuildCondition_WithCriteriaExtension_IncludesCriteriaInCondition()
-    {
-        // Arrange
-        var builder = new PsaProgressionObservationBuilder(_configuration);
-        Observation observation = builder
-            .WithPatient(_patientReference)
-            .WithDevice(_deviceReference)
-            .WithCriteria("test-criteria-id", "Test Criteria Display")
-            .AddPsaEvidence(new ResourceReference("Observation/psa"), "current", 5.0m)
-            .WithProgression("true")
-            .Build();
-
-        // Act
-        Condition? condition = builder.BuildCondition(observation);
-
-        // Assert
-        condition.ShouldNotBeNull();
-        condition.Extension.ShouldNotBeNull();
-
-        Extension? criteriaExtension = condition.Extension.FirstOrDefault(e =>
-            e.Url == "http://thirdopinion.ai/fhir/StructureDefinition/assessment-criteria");
-        criteriaExtension.ShouldNotBeNull();
-
-        Extension? idExtension = criteriaExtension.Extension.FirstOrDefault(e => e.Url == "id");
-        idExtension.ShouldNotBeNull();
-        var idValue = idExtension.Value as FhirString;
-        idValue.Value.ShouldBe("test-criteria-id");
-
-        Extension? displayExtension
-            = criteriaExtension.Extension.FirstOrDefault(e => e.Url == "display");
-        displayExtension.ShouldNotBeNull();
-        var displayValue = displayExtension.Value as FhirString;
-        displayValue.Value.ShouldBe("Test Criteria Display");
-    }
-
-    [Fact]
     public void WithProgression_Unknown_CreatesCorrectObservation()
     {
         // Arrange
