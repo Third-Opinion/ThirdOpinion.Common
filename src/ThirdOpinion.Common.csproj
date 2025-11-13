@@ -120,6 +120,7 @@
         <ProjectReference Include="..\ThirdOpinion.Common.Fhir\ThirdOpinion.Common.Fhir.csproj" PrivateAssets="all"/>
         <ProjectReference Include="..\ThirdOpinion.Common.Fhir.Documents\ThirdOpinion.Common.Fhir.Documents.csproj" PrivateAssets="all"/>
         <ProjectReference Include="..\ThirdOpinion.Common.Langfuse\ThirdOpinion.Common.Langfuse.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\ThirdOpinion.Common.DataFlow\ThirdOpinion.Common.DataFlow.csproj" PrivateAssets="all"/>
     </ItemGroup>
 
     <!-- Custom target to include project reference DLLs and PDBs in the NuGet package -->
