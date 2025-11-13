@@ -1,5 +1,6 @@
 using System.Linq;
 using Amazon;
+using Amazon.Extensions.NETCore.Setup;
 using Amazon.HealthLake;
 using Amazon.Runtime;
 using Microsoft.Extensions.Configuration;
@@ -31,25 +32,26 @@ public static class ServiceCollectionExtensions
         // Register configuration
         services.Configure<HealthLakeConfig>(configuration.GetSection("AWS:HealthLake"));
 
-        // Register AWS credentials - only if not already registered
-        // Uses default credential chain: env vars, profile, IAM role, etc.
+        // Register AWS credentials if not already registered
+        // This uses the AWS SDK's default credential chain which includes:
+        // 1. Environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+        // 2. Shared credentials file (~/.aws/credentials)
+        // 3. AWS profiles
+        // 4. IAM role for EC2 instances
+        // 5. ECS task credentials
+        // 6. Web identity token credentials
+        //
+        // NOTE: When using AddAWSService<T>(), credentials are automatically resolved
+        // by the AWS SDK, so we only need to register them for services that directly
+        // require AWSCredentials in their constructors
         if (!services.Any(x => x.ServiceType == typeof(AWSCredentials)))
         {
             services.AddSingleton<AWSCredentials>(sp =>
             {
-                // Try to get credentials from environment variables first
-                string? accessKey = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID");
-                string? secretKey = Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
-
-                if (!string.IsNullOrEmpty(accessKey) && !string.IsNullOrEmpty(secretKey))
-                {
-                    return new EnvironmentVariablesAWSCredentials();
-                }
-
-                // If no environment variables, throw clear error with instructions
-                throw new InvalidOperationException(
-                    "AWS credentials not found. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables. " +
-                    "For production environments, use IAM roles (EC2, ECS, Lambda, etc.).");
+#pragma warning disable CS0618 // Type or member is obsolete
+                // FallbackCredentialsFactory implements the full AWS credential chain
+                return FallbackCredentialsFactory.GetCredentials();
+#pragma warning restore CS0618
             });
         }
 
