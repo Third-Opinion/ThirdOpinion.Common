@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using ThirdOpinion.Common.IA.Pipelines.Artifacts;
 using ThirdOpinion.Common.IA.Pipelines.EntityFramework;
 using ThirdOpinion.Common.IA.Pipelines.Progress;
-using ThirdOpinion.Common.IA.Pipelines.Services.Artifacts;
 using ThirdOpinion.Common.IA.Pipelines.Services.EfCore;
 using ThirdOpinion.Common.IA.Pipelines.Services.Progress;
 
