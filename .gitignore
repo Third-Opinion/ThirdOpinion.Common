@@ -362,6 +362,10 @@ FodyWeavers.xsd
 !ThirdOpinion.Common.DataFlow/Artifacts/
 !ThirdOpinion.Common.DataFlow/Artifacts/**
 
+!ThirdOpinion.Common.IA.Pipelines/Artifacts/
+!ThirdOpinion.Common.IA.Pipelines/Artifacts/**
+
+
 # VS Code files for those working on multiple tools
 .vscode/*
 !.vscode/settings.json
