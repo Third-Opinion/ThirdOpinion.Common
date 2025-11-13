@@ -1,6 +1,5 @@
 using System.Threading.Tasks.Dataflow;
 using ThirdOpinion.Common.DataFlow.Blocks;
-using ThirdOpinion.Common.DataFlow.Results;
 
 namespace ThirdOpinion.Common.DataFlow.Core;
 
@@ -12,16 +11,24 @@ public class DataFlowPipeline<TData>
 {
     private readonly IPipelineContext _context;
     private readonly Func<TData, string> _resourceIdSelector;
+    private PipelineSource<TData>? _sourceDefinition;
     private ISourceBlock<TData>? _sourceBlock;
 
     private DataFlowPipeline(IPipelineContext context, Func<TData, string> resourceIdSelector)
     {
-        _context = context;
-        _resourceIdSelector = resourceIdSelector;
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _resourceIdSelector = resourceIdSelector ?? throw new ArgumentNullException(nameof(resourceIdSelector));
+    }
+
+    private DataFlowPipeline(IPipelineContext context, PipelineSource<TData> source, Func<TData, string> resourceIdSelector)
+        : this(context, resourceIdSelector)
+    {
+        _sourceDefinition = source ?? throw new ArgumentNullException(nameof(source));
     }
 
     /// <summary>
-    /// Create a new pipeline
+    /// Create a new pipeline without assigning a source yet.
+    /// Call <see cref="WithSource"/> (or an equivalent helper) before adding steps.
     /// </summary>
     public static DataFlowPipeline<TData> Create(
         IPipelineContext context,
@@ -31,30 +38,72 @@ public class DataFlowPipeline<TData>
     }
 
     /// <summary>
-    /// Set the source from an async enumerable
+    /// Create a new pipeline with the provided source definition.
     /// </summary>
-    public DataFlowPipeline<TData> FromAsyncSource(IAsyncEnumerable<TData> source)
+    public static DataFlowPipeline<TData> Create(
+        IPipelineContext context,
+        PipelineSource<TData> source,
+        Func<TData, string> resourceIdSelector)
     {
-        _sourceBlock = DataFlowBlockFactory.CreateAsyncEnumerableSource(source, _context.CancellationToken);
+        return new DataFlowPipeline<TData>(context, source, resourceIdSelector);
+    }
+
+    /// <summary>
+    /// Assign the data source for this pipeline.
+    /// </summary>
+    public DataFlowPipeline<TData> WithSource(PipelineSource<TData> source)
+    {
+        _sourceDefinition = source ?? throw new ArgumentNullException(nameof(source));
+        _sourceBlock = null;
         return this;
     }
 
     /// <summary>
-    /// Set the source from a source block
-    /// </summary>
-    public DataFlowPipeline<TData> FromSource(ISourceBlock<TData> sourceBlock)
-    {
-        _sourceBlock = sourceBlock;
-        return this;
-    }
-
-    /// <summary>
-    /// Set the source from a synchronous enumerable
+    /// Set the source from a synchronous enumerable.
     /// </summary>
     public DataFlowPipeline<TData> FromEnumerable(IEnumerable<TData> source)
     {
-        _sourceBlock = DataFlowBlockFactory.CreateEnumerableSource(source, _context.CancellationToken);
-        return this;
+        return WithSource(PipelineSource<TData>.FromEnumerable(source));
+    }
+
+    /// <summary>
+    /// Set the source from a synchronous enumerable factory.
+    /// </summary>
+    public DataFlowPipeline<TData> FromEnumerable(Func<IEnumerable<TData>> sourceFactory)
+    {
+        return WithSource(PipelineSource<TData>.FromEnumerable(sourceFactory));
+    }
+
+    /// <summary>
+    /// Set the source from an async enumerable.
+    /// </summary>
+    public DataFlowPipeline<TData> FromAsyncSource(IAsyncEnumerable<TData> source)
+    {
+        return WithSource(PipelineSource<TData>.FromAsyncEnumerable(source));
+    }
+
+    /// <summary>
+    /// Set the source from an async enumerable factory.
+    /// </summary>
+    public DataFlowPipeline<TData> FromAsyncSource(Func<CancellationToken, IAsyncEnumerable<TData>> sourceFactory)
+    {
+        return WithSource(PipelineSource<TData>.FromAsyncEnumerable(sourceFactory));
+    }
+
+    /// <summary>
+    /// Set the source from an async enumerable factory that considers pipeline context.
+    /// </summary>
+    public DataFlowPipeline<TData> FromContextualAsyncSource(Func<IPipelineContext, CancellationToken, IAsyncEnumerable<TData>> sourceFactory)
+    {
+        return WithSource(PipelineSource<TData>.FromAsyncEnumerable(sourceFactory));
+    }
+
+    /// <summary>
+    /// Set the source directly from an existing dataflow block factory.
+    /// </summary>
+    public DataFlowPipeline<TData> FromSource(Func<IPipelineContext, CancellationToken, ISourceBlock<TData>> sourceFactory)
+    {
+        return WithSource(PipelineSource<TData>.FromBlock(sourceFactory));
     }
 
     /// <summary>
@@ -76,8 +125,7 @@ public class DataFlowPipeline<TData>
         string stepName,
         PipelineStepOptions? options = null)
     {
-        if (_sourceBlock == null)
-            throw new InvalidOperationException("Source must be set before adding transformation steps");
+        var sourceBlock = EnsureSourceBlock();
 
         var execOptions = CreateExecutionOptions(options);
         var transformBlock = TrackedBlockFactory.CreateInitialTrackedBlock(
@@ -87,11 +135,11 @@ public class DataFlowPipeline<TData>
             _context,
             execOptions);
 
-        _sourceBlock.LinkTo(transformBlock, new DataflowLinkOptions { PropagateCompletion = true });
+        sourceBlock.LinkTo(transformBlock, new DataflowLinkOptions { PropagateCompletion = true });
 
         return new PipelineStepBuilder<TData, TOutput>(
             _context,
-            _sourceBlock,
+            sourceBlock,
             transformBlock,
             stepName);
     }
@@ -107,8 +155,7 @@ public class DataFlowPipeline<TData>
         PipelineStepOptions? options = null)
         where TKey : notnull
     {
-        if (_sourceBlock == null)
-            throw new InvalidOperationException("Source must be set before adding transformation steps");
+        var sourceBlock = EnsureSourceBlock();
 
         var execOptions = CreateExecutionOptions(options);
 
@@ -127,12 +174,12 @@ public class DataFlowPipeline<TData>
             _context,
             execOptions);
 
-        _sourceBlock.LinkTo(initialBlock, new DataflowLinkOptions { PropagateCompletion = true });
+        sourceBlock.LinkTo(initialBlock, new DataflowLinkOptions { PropagateCompletion = true });
         initialBlock.LinkTo(groupingBlock, new DataflowLinkOptions { PropagateCompletion = true });
 
         return new PipelineStepBuilder<TData, TGroup>(
             _context,
-            _sourceBlock,
+            sourceBlock,
             groupingBlock,
             stepName);
     }
@@ -146,12 +193,10 @@ public class DataFlowPipeline<TData>
         string stepName,
         PipelineStepOptions? options = null)
     {
-        if (_sourceBlock == null)
-            throw new InvalidOperationException("Source must be set before adding transformation steps");
+        var sourceBlock = EnsureSourceBlock();
 
         var execOptions = CreateExecutionOptions(options);
 
-        // Create initial transform to PipelineResult
         var initialBlock = TrackedBlockFactory.CreateInitialTrackedBlock<TData, TData>(
             data => Task.FromResult(data), // Pass-through
             _resourceIdSelector,
@@ -167,12 +212,12 @@ public class DataFlowPipeline<TData>
             _context,
             execOptions);
 
-        _sourceBlock.LinkTo(initialBlock, new DataflowLinkOptions { PropagateCompletion = true });
+        sourceBlock.LinkTo(initialBlock, new DataflowLinkOptions { PropagateCompletion = true });
         initialBlock.LinkTo(transformManyBlock, new DataflowLinkOptions { PropagateCompletion = true });
 
         return new PipelineStepBuilder<TData, TOutput>(
             _context,
-            _sourceBlock,
+            sourceBlock,
             transformManyBlock,
             stepName);
     }
@@ -186,6 +231,22 @@ public class DataFlowPipeline<TData>
             BoundedCapacity = stepOpts.BoundedCapacity,
             CancellationToken = _context.CancellationToken
         };
+    }
+
+    private ISourceBlock<TData> EnsureSourceBlock()
+    {
+        if (_sourceBlock != null)
+        {
+            return _sourceBlock;
+        }
+
+        if (_sourceDefinition == null)
+        {
+            throw new InvalidOperationException("Pipeline source has not been configured. Call WithSource (or an equivalent helper) before adding steps.");
+        }
+
+        _sourceBlock = _sourceDefinition.Create(_context);
+        return _sourceBlock;
     }
 }
 

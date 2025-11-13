@@ -1,7 +1,5 @@
-using System;
 using ThirdOpinion.Common.DataFlow.Artifacts;
 using ThirdOpinion.Common.DataFlow.Progress.Models;
-using ThirdOpinion.Common.DataFlow.Artifacts.Models;
 
 namespace ThirdOpinion.Common.DataFlow.Services.InMemory;
 

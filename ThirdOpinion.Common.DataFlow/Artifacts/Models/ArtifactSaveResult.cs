@@ -1,4 +1,4 @@
-namespace ThirdOpinion.Common.DataFlow.Artifacts.Models;
+namespace ThirdOpinion.DataFlow.Artifacts.Models;
 
 /// <summary>
 /// Result of saving an artifact
@@ -19,5 +19,10 @@ public class ArtifactSaveResult
     /// Error message if save failed
     /// </summary>
     public string? ErrorMessage { get; set; }
+
+    /// <summary>
+    /// Optional metadata captured during storage (size, key, etc.)
+    /// </summary>
+    public IReadOnlyDictionary<string, object?>? Metadata { get; set; }
 }
 

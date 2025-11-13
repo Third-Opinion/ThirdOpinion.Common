@@ -1,6 +1,6 @@
 using ThirdOpinion.Common.DataFlow.Models;
 
-namespace ThirdOpinion.Common.DataFlow.Artifacts.Models;
+namespace ThirdOpinion.DataFlow.Artifacts.Models;
 
 /// <summary>
 /// Request to save an artifact

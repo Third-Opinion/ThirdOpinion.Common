@@ -1,7 +1,4 @@
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Microsoft.Extensions.Logging;
 using ThirdOpinion.Common.DataFlow.Core;
@@ -152,23 +149,16 @@ public static class TrackedBlockFactory
 
             try
             {
-                // Record step start for parent resource
-                context.ProgressTracker?.RecordStepStart([result.ResourceId], stepName);
-
                 // Execute transformation
                 var outputs = await transformManyAsync(result.Value!);
                 sw.Stop();
 
-                // Record success for parent
                 context.ProgressTracker?.RecordStepComplete([result.ResourceId], stepName, (int)sw.ElapsedMilliseconds);
 
-                // Convert outputs to PipelineResults and record child resources
                 var results = new List<PipelineResult<TOutput>>();
                 foreach (var output in outputs)
                 {
-                    var childResourceId = getResourceIdFromOutput(output);
-                    context.ProgressTracker?.RecordResourceStart(childResourceId, context.ResourceTypeName);
-                    results.Add(PipelineResult<TOutput>.Success(output, childResourceId));
+                    results.Add(PipelineResult<TOutput>.Success(output, result.ResourceId));
                 }
 
                 return results;
@@ -228,7 +218,6 @@ public static class TrackedBlockFactory
         async Task EmitGroupAsync(TKey key, IReadOnlyList<TInput> items)
         {
             var resourceId = getResourceIdFromKey(key);
-            context.ProgressTracker?.RecordResourceStart(resourceId, context.ResourceTypeName);
             context.ProgressTracker?.RecordStepStart([resourceId], stepName);
 
             var sw = Stopwatch.StartNew();

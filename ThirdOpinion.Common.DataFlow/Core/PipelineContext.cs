@@ -1,11 +1,8 @@
-using System;
+using System.Threading.Tasks.Dataflow;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using ThirdOpinion.Common.DataFlow.Progress.Models;
-using System.Threading.Tasks.Dataflow;
-using System.Linq;
-using System.Threading.Tasks;
 using ThirdOpinion.Common.DataFlow.Artifacts;
+using ThirdOpinion.Common.DataFlow.Models;
 using ThirdOpinion.Common.DataFlow.Progress;
 
 namespace ThirdOpinion.Common.DataFlow.Core;
@@ -25,6 +22,8 @@ public class PipelineContext : IPipelineContext, IAsyncDisposable
     public IArtifactBatcher? ArtifactBatcher { get; }
     public IResourceRunCache? ResourceRunCache { get; }
     public ILogger Logger { get; }
+    public PipelineRunType RunType { get; }
+    public Guid? ParentRunId { get; }
     private readonly PipelineStepOptions _defaultStepOptions;
     public PipelineStepOptions DefaultStepOptions => _defaultStepOptions.Clone();
     
@@ -60,7 +59,9 @@ public class PipelineContext : IPipelineContext, IAsyncDisposable
         IResourceRunCache? resourceRunCache = null,
         PipelineStepOptions? defaultStepOptions = null,
         string? category = null,
-        string? name = null)
+        string? name = null,
+        PipelineRunType runType = PipelineRunType.Fresh,
+        Guid? parentRunId = null)
     {
         if (runId == Guid.Empty)
             throw new ArgumentException("RunId cannot be empty", nameof(runId));
@@ -74,6 +75,8 @@ public class PipelineContext : IPipelineContext, IAsyncDisposable
         ProgressTracker = progressTracker;
         ArtifactBatcher = artifactBatcher;
         ResourceRunCache = resourceRunCache;
+        RunType = runType;
+        ParentRunId = parentRunId;
         _defaultStepOptions = (defaultStepOptions ?? new PipelineStepOptions()).Clone();
     }
 

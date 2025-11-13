@@ -1,3 +1,5 @@
+using ThirdOpinion.Common.DataFlow.Models;
+
 namespace ThirdOpinion.Common.DataFlow.Progress.Models;
 
 /// <summary>
@@ -20,6 +22,16 @@ public class PipelineRunMetadata
     /// Provides granular context within the category.
     /// </summary>
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Run type indicates whether this is a fresh execution, retry, continuation, etc.
+    /// </summary>
+    public PipelineRunType RunType { get; set; } = PipelineRunType.Fresh;
+
+    /// <summary>
+    /// Optional parent run identifier when performing retries or continuations.
+    /// </summary>
+    public Guid? ParentRunId { get; set; }
 
     /// <summary>
     /// Get the effective RunId, generating a new one if not provided

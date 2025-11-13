@@ -2,9 +2,9 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ThirdOpinion.Common.DataFlow.Artifacts;
-using ThirdOpinion.Common.DataFlow.Artifacts.Models;
 using ThirdOpinion.Common.DataFlow.EntityFramework.Entities;
 using ThirdOpinion.Common.DataFlow.Models;
+using ThirdOpinion.DataFlow.Artifacts.Models;
 
 namespace ThirdOpinion.Common.DataFlow.Services.EfCore;
 
@@ -55,7 +55,14 @@ public class EfArtifactStorageService : IArtifactStorageService
                 results.Add(new ArtifactSaveResult
                 {
                     Success = true,
-                    StoragePath = $"db://{request.ResourceRunId}/{request.StepName}/{request.ArtifactName}"
+                    StoragePath = $"db://{request.ResourceRunId}/{request.StepName}/{request.ArtifactName}",
+                    Metadata = new Dictionary<string, object?>
+                    {
+                        ["storageType"] = storageType.ToString(),
+                        ["resourceRunId"] = request.ResourceRunId,
+                        ["stepName"] = request.StepName,
+                        ["artifactName"] = request.ArtifactName
+                    }
                 });
             }
 
@@ -67,10 +74,17 @@ public class EfArtifactStorageService : IArtifactStorageService
         catch (DbUpdateException ex)
         {
             _logger.LogError(ex, "Failed to persist artifact batch of size {Count}", requests.Count);
-            return requests.Select(_ => new ArtifactSaveResult
+            return requests.Select(request => new ArtifactSaveResult
             {
                 Success = false,
-                ErrorMessage = "Failed to persist artifact batch."
+                ErrorMessage = "Failed to persist artifact batch.",
+                Metadata = new Dictionary<string, object?>
+                {
+                    ["storageType"] = ArtifactStorageType.Database.ToString(),
+                    ["resourceRunId"] = request.ResourceRunId,
+                    ["stepName"] = request.StepName,
+                    ["artifactName"] = request.ArtifactName
+                }
             }).ToList();
         }
         finally

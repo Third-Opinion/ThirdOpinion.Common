@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
 using Microsoft.Extensions.Logging;
 using ThirdOpinion.Common.DataFlow.Blocks;
@@ -108,7 +107,7 @@ public class PipelineStepBuilder<TIn, TOut>
                 }
 
                 await _context.ArtifactBatcher.QueueArtifactSaveAsync(
-                    new Artifacts.Models.ArtifactSaveRequest
+                    new ThirdOpinion.DataFlow.Artifacts.Models.ArtifactSaveRequest
                     {
                         ResourceRunId = resourceRunId,
                         StepName = _currentStepName,

@@ -2,7 +2,6 @@ using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging.Abstractions;
 using ThirdOpinion.Common.DataFlow.Core;
 using ThirdOpinion.Common.DataFlow.Services.InMemory;
-using Xunit;
 using static ThirdOpinion.Common.DataFlow.Tests.TestTimings;
 
 namespace ThirdOpinion.Common.DataFlow.Tests;
@@ -36,8 +35,7 @@ public class ErrorHandlingTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform(data =>
             {
                 if (data.Value < 0)
@@ -73,8 +71,7 @@ public class ErrorHandlingTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform<ProcessedData>(data =>
                 Task.FromException<ProcessedData>(new InvalidOperationException("Step 1 error")), "Step1")
             .Transform(data =>
@@ -106,8 +103,7 @@ public class ErrorHandlingTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform(data =>
             {
                 if (data.Value % 3 == 0)
@@ -141,8 +137,7 @@ public class ErrorHandlingTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform(data =>
             {
                 processedSuccessfully = true;
@@ -178,8 +173,7 @@ public class ErrorHandlingTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
         {
             await DataFlowPipeline<TestData>
-                .Create(context, d => d.Id)
-                .FromEnumerable(input)
+                .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
                 .Transform(async data =>
                 {
                     processedCount++;

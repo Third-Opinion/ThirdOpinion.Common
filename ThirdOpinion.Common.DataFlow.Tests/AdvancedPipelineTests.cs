@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Text;
 using Microsoft.Extensions.Logging.Abstractions;
 using ThirdOpinion.Common.DataFlow.Core;
 using ThirdOpinion.Common.DataFlow.Models;
@@ -27,6 +28,12 @@ public class AdvancedPipelineTests
     private record EnrichedItem(string Id, int ProcessedValue, string Category, string Enrichment, DateTime ProcessedAt);
     private record PatientRecord(string ObservationId, string PatientId, int Value);
     private record PatientGroup(string PatientId, IReadOnlyList<PatientRecord> Observations);
+    private record TestDocument(string DocumentId, string PatientId, string Content);
+    private record DecodedDocument(TestDocument Document, string Html);
+    private record MarkdownDocument(TestDocument Document, string Markdown);
+    private record NumberedDocument(TestDocument Document, string Content);
+    private record DocumentChunk(string DocumentId, string PatientId, string ChunkId, string Content, int ChunkIndex, int TotalChunks);
+    private record ExtractedFact(string DocumentId, string PatientId, IReadOnlyList<string> Facts, int ChunkIndex, int TotalChunks);
 
     #region Bounded Capacity Tests
 
@@ -55,8 +62,7 @@ public class AdvancedPipelineTests
 
         // Act
         await DataFlowPipeline<DataItem>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<DataItem>.FromEnumerable(input), d => d.Id)
             .Transform(async data =>
             {
                 // Slow processing for some items
@@ -107,8 +113,7 @@ public class AdvancedPipelineTests
         // Act
         var startTime = DateTime.UtcNow;
         await DataFlowPipeline<DataItem>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<DataItem>.FromEnumerable(input), d => d.Id)
             .Transform(async data =>
             {
                 await Task.Delay(SlowDelayMs); // Simulate work
@@ -170,8 +175,7 @@ public class AdvancedPipelineTests
 
         // Act - Complex pipeline with artifacts, multiple steps, and batching
         await DataFlowPipeline<DataItem>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<DataItem>.FromEnumerable(input), d => d.Id)
             // Step 1: Process with high parallelism
             .Transform(async data =>
             {
@@ -264,8 +268,7 @@ public class AdvancedPipelineTests
 
         // Act
         await DataFlowPipeline<DataItem>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<DataItem>.FromEnumerable(input), d => d.Id)
             // Fast step - quick processing, high throughput
             .Transform(async data =>
             {
@@ -326,8 +329,7 @@ public class AdvancedPipelineTests
 
         // Act
         await DataFlowPipeline<PatientRecord>
-            .Create(context, record => record.PatientId)
-            .FromEnumerable(orderedRecords)
+            .Create(context, PipelineSource<PatientRecord>.FromEnumerable(orderedRecords), record => record.PatientId)
             .GroupSequential(
                 record => record.PatientId,
                 (patientId, records) => new PatientGroup(patientId, records.ToList()),
@@ -442,8 +444,7 @@ public class AdvancedPipelineTests
 
         // Act
         await DataFlowPipeline<DataItem>
-            .Create(context, item => item.Id)
-            .FromEnumerable(dataItems)
+            .Create(context, PipelineSource<DataItem>.FromEnumerable(dataItems), item => item.Id)
             .Transform(item => new PatientRecord($"{item.Id}-obs", item.Category, item.Value), "ToPatientRecord")
             .GroupSequential(
                 record => record.PatientId,
@@ -464,6 +465,166 @@ public class AdvancedPipelineTests
         Assert.Contains(("patient-1", 2, 30), summarySnapshot);
         Assert.Contains(("patient-2", 2, 70), summarySnapshot);
         Assert.Contains(("patient-3", 2, 110), summarySnapshot);
+    }
+
+    [Fact]
+    public async Task TestingDataflowPipeline_MirrorsPreprocessorResourceTracking()
+    {
+        // Arrange
+        const int documentCount = 100;
+        var documents = Enumerable.Range(1, documentCount)
+            .Select(i => new TestDocument(
+                DocumentId: $"test-doc-{i:D5}",
+                PatientId: $"patient-{i:D5}",
+                Content: $"Document {i} content"))
+            .ToList();
+
+        var context = InMemoryServiceFactory.CreateContextWithProgress<TestDocument>(
+            category: "TestingDataflow",
+            name: "PipelineMirror",
+            cancellationToken: CancellationToken.None);
+
+        var tracker = (InMemoryProgressTracker)context.ProgressTracker!;
+        var aggregatedFacts = new ConcurrentDictionary<string, List<string>>(StringComparer.Ordinal);
+        var chunkAggregation = new ConcurrentDictionary<string, ChunkAggregationState>(StringComparer.Ordinal);
+
+        Task<IEnumerable<ExtractedFact>> AggregateChunkAsync(ExtractedFact fact)
+        {
+            var key = fact.DocumentId;
+            var state = chunkAggregation.GetOrAdd(key, _ => new ChunkAggregationState());
+            List<ExtractedFact>? snapshot = null;
+
+            lock (state.Lock)
+            {
+                state.Chunks.Add(fact);
+
+                if (fact.TotalChunks > 0)
+                {
+                    state.ExpectedChunks = fact.TotalChunks;
+                }
+
+                if (!state.ExpectedChunks.HasValue)
+                {
+                    snapshot = state.Chunks.ToList();
+                    chunkAggregation.TryRemove(key, out _);
+                }
+                else if (state.Chunks.Count >= state.ExpectedChunks.Value)
+                {
+                    snapshot = state.Chunks.ToList();
+                    chunkAggregation.TryRemove(key, out _);
+                }
+            }
+
+            if (snapshot == null)
+            {
+                return Task.FromResult<IEnumerable<ExtractedFact>>(Array.Empty<ExtractedFact>());
+            }
+
+            var mergedFacts = snapshot.SelectMany(s => s.Facts).ToList();
+            var aggregated = new ExtractedFact(
+                fact.DocumentId,
+                fact.PatientId,
+                mergedFacts,
+                mergedFacts.Count - 1,
+                mergedFacts.Count);
+
+            return Task.FromResult<IEnumerable<ExtractedFact>>(new[] { aggregated });
+        }
+
+        // Act
+        await DataFlowPipeline<TestDocument>
+            .Create(context, PipelineSource<TestDocument>.FromEnumerable(documents), doc => doc.PatientId)
+            .Transform(async doc =>
+            {
+                await Task.Delay(MinimalDelayMs);
+                return new DecodedDocument(doc, $"<p>{doc.Content}</p>");
+            }, "DecodeHTML")
+            .Transform(async decoded =>
+            {
+                await Task.Delay(MinimalDelayMs);
+                return new MarkdownDocument(decoded.Document, $"# {decoded.Document.DocumentId}\n\n{decoded.Html}");
+            }, "HTMLtoMarkdown")
+            .Transform(async markdown =>
+            {
+                await Task.Delay(MinimalDelayMs);
+                return new NumberedDocument(markdown.Document, AddLineNumbers(markdown.Markdown));
+            }, "AddLineNumbers")
+            .TransformMany(async numbered =>
+            {
+                await Task.Delay(MinimalDelayMs);
+                return CreateChunks(numbered.Document, numbered.Content);
+            }, chunk => chunk.ChunkId, "ChunkDocument")
+            .Transform(async chunk =>
+            {
+                await Task.Delay(MinimalDelayMs);
+                var facts = new[] { $"fact-{chunk.ChunkId}-1", $"fact-{chunk.ChunkId}-2" };
+                return new ExtractedFact(chunk.DocumentId, chunk.PatientId, facts, chunk.ChunkIndex, chunk.TotalChunks);
+            }, "ExtractFacts")
+            .TransformMany(fact => AggregateChunkAsync(fact), aggregated => aggregated.PatientId, "AggregateChunks")
+            .Action(aggregated =>
+            {
+                var list = aggregatedFacts.GetOrAdd(aggregated.PatientId, _ => new List<string>());
+                lock (list)
+                {
+                    list.AddRange(aggregated.Facts);
+                }
+                return Task.CompletedTask;
+            }, "PersistAggregatedFacts")
+            .Complete(aggregated => aggregated.PatientId);
+
+        // Assert
+        var states = tracker.GetAllResourceStates();
+        Assert.Equal(documentCount, states.Count);
+        Assert.All(states.Values, state => Assert.Equal(PipelineResourceStatus.Completed, state.Status));
+
+        Assert.Equal(documentCount, aggregatedFacts.Count);
+        Assert.All(aggregatedFacts, kvp => Assert.True(kvp.Value.Count > 0));
+    }
+
+    private static string AddLineNumbers(string markdown)
+    {
+        var lines = markdown.Split('\n');
+        var builder = new StringBuilder();
+        for (var index = 0; index < lines.Length; index++)
+        {
+            builder.AppendFormat("{0:D4}: {1}", index + 1, lines[index]);
+            if (index < lines.Length - 1)
+            {
+                builder.AppendLine();
+            }
+        }
+
+        return builder.ToString();
+    }
+
+    private static IEnumerable<DocumentChunk> CreateChunks(TestDocument document, string numberedContent)
+    {
+        var lines = numberedContent.Split('\n');
+        var chunkCount = Math.Clamp(lines.Length / 4, 2, 5);
+        var linesPerChunk = Math.Max(1, lines.Length / chunkCount);
+
+        for (int chunkIndex = 0; chunkIndex < chunkCount; chunkIndex++)
+        {
+            var slice = lines
+                .Skip(chunkIndex * linesPerChunk)
+                .Take(linesPerChunk)
+                .ToArray();
+
+            yield return new DocumentChunk(
+                document.DocumentId,
+                document.PatientId,
+                $"{document.DocumentId}_chunk_{chunkIndex:D2}",
+                string.Join('\n', slice),
+                chunkIndex,
+                chunkCount);
+        }
+    }
+
+    private sealed class ChunkAggregationState
+    {
+        public List<ExtractedFact> Chunks { get; } = new();
+        public int? ExpectedChunks { get; set; }
+        public object Lock { get; } = new();
     }
 
     #endregion
@@ -489,8 +650,7 @@ public class AdvancedPipelineTests
 
         // Act
         await DataFlowPipeline<DataItem>
-            .Create(context, d => d.Id)
-            .FromEnumerable(parentItems)
+            .Create(context, PipelineSource<DataItem>.FromEnumerable(parentItems), d => d.Id)
             // Expand each parent into multiple children
             .TransformMany<ProcessedItem>(
                 async parent =>
@@ -576,8 +736,7 @@ public class AdvancedPipelineTests
 
         // Act
         await DataFlowPipeline<DataItem>
-            .Create(context, d => d.Id)
-            .FromEnumerable(parentItems)
+            .Create(context, PipelineSource<DataItem>.FromEnumerable(parentItems), d => d.Id)
             // Capture parent artifact before expansion
             .Transform(async data =>
             {
@@ -666,8 +825,7 @@ public class AdvancedPipelineTests
         // Act
         var startTime = DateTime.UtcNow;
         await DataFlowPipeline<DataItem>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<DataItem>.FromEnumerable(input), d => d.Id)
             .Transform(async data =>
             {
                 await Task.Delay(MinimalDelayMs); // Minimal delay
@@ -743,8 +901,7 @@ public class AdvancedPipelineTests
         // Act - Full-featured pipeline
         var startTime = DateTime.UtcNow;
         await DataFlowPipeline<DataItem>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<DataItem>.FromEnumerable(input), d => d.Id)
             .Transform(async data =>
             {
                 await Task.Delay(FastDelayMs);

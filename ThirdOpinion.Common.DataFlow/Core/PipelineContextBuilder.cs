@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ThirdOpinion.Common.DataFlow.Artifacts;
+using ThirdOpinion.Common.DataFlow.Models;
 using ThirdOpinion.Common.DataFlow.Progress;
 using ThirdOpinion.Common.DataFlow.Progress.Models;
 
@@ -75,6 +76,24 @@ public class PipelineContextBuilder
     }
 
     /// <summary>
+    /// Set the run type (Fresh, Retry, Continuation, etc.)
+    /// </summary>
+    public PipelineContextBuilder WithRunType(PipelineRunType runType)
+    {
+        _metadata.RunType = runType;
+        return this;
+    }
+
+    /// <summary>
+    /// Set the parent run identifier (used for retry/continuation scenarios)
+    /// </summary>
+    public PipelineContextBuilder WithParentRunId(Guid? parentRunId)
+    {
+        _metadata.ParentRunId = parentRunId;
+        return this;
+    }
+
+    /// <summary>
     /// Add a cancellation token
     /// </summary>
     public PipelineContextBuilder WithCancellationToken(CancellationToken cancellationToken)
@@ -134,7 +153,9 @@ public class PipelineContextBuilder
             {
                 RunId = effectiveRunId,
                 Category = _metadata.Category,
-                Name = _metadata.Name
+                Name = _metadata.Name,
+                RunType = _metadata.RunType,
+                ParentRunId = _metadata.ParentRunId
             };
 
             artifactBatcher = _artifactBatcherFactory.Create(metadataForFactory, _cancellationToken);
@@ -150,7 +171,9 @@ public class PipelineContextBuilder
             _resourceRunCache,
             _defaultStepOptions,
             _metadata.Category,
-            _metadata.Name);
+            _metadata.Name,
+            _metadata.RunType,
+            _metadata.ParentRunId);
 
         return context;
     }

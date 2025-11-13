@@ -11,6 +11,7 @@ using var host = await BuildHostAsync(args);
 
 await EnsureDatabaseMigratedAsync(host.Services);
 await RunSamplePipelineAsync(host.Services, CancellationToken.None);
+await RunLargeRetryScenarioAsync(host.Services, CancellationToken.None);
 
 static async Task<IHost> BuildHostAsync(string[] args)
 {
@@ -44,6 +45,7 @@ static async Task<IHost> BuildHostAsync(string[] args)
         .WithEntityFrameworkServices();
 
     builder.Services.AddTransient<SamplePipelineRunner>();
+    builder.Services.AddTransient<LargeRetryPipelineRunner>();
 
     return await Task.FromResult(builder.Build());
 }
@@ -59,5 +61,12 @@ static async Task RunSamplePipelineAsync(IServiceProvider services, Cancellation
 {
     using var scope = services.CreateScope();
     var runner = scope.ServiceProvider.GetRequiredService<SamplePipelineRunner>();
+    await runner.ExecuteAsync(cancellationToken);
+}
+
+static async Task RunLargeRetryScenarioAsync(IServiceProvider services, CancellationToken cancellationToken)
+{
+    using var scope = services.CreateScope();
+    var runner = scope.ServiceProvider.GetRequiredService<LargeRetryPipelineRunner>();
     await runner.ExecuteAsync(cancellationToken);
 }

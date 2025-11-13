@@ -3,8 +3,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using ThirdOpinion.Common.DataFlow.Artifacts;
 using ThirdOpinion.Common.DataFlow.Core;
 using ThirdOpinion.Common.DataFlow.Progress;
-using ThirdOpinion.Common.DataFlow.EntityFramework;
-using ThirdOpinion.Common.DataFlow.Services.EfCore;
+using ThirdOpinion.Common.DataFlow.Services.InMemory;
+using ThirdOpinion.Common.DataFlow.Services.S3;
 
 namespace ThirdOpinion.Common.DataFlow.DependencyInjection;
 
@@ -121,6 +121,40 @@ public static class DataFlowServiceCollectionExtensions
     }
 
     /// <summary>
+    /// Registers the Amazon S3 artifact storage implementation and optional configuration.
+    /// </summary>
+    /// <param name="builder">The DataFlow builder.</param>
+    /// <param name="configureOptions">Optional delegate used to configure <see cref="S3ArtifactStorageOptions"/>.</param>
+    /// <param name="lifetime">Service lifetime (default: Scoped).</param>
+    /// <returns>The builder for chaining.</returns>
+    public static IDataFlowBuilder WithS3ArtifactStorage(
+        this IDataFlowBuilder builder,
+        Action<S3ArtifactStorageOptions>? configureOptions = null,
+        ServiceLifetime lifetime = ServiceLifetime.Scoped)
+    {
+        if (builder == null)
+            throw new ArgumentNullException(nameof(builder));
+
+        builder.Services.AddOptions<S3ArtifactStorageOptions>();
+        if (configureOptions != null)
+        {
+            builder.Services.Configure(configureOptions);
+        }
+
+        builder.Services.Add(new ServiceDescriptor(
+            typeof(S3ArtifactStorageService),
+            typeof(S3ArtifactStorageService),
+            lifetime));
+
+        builder.Services.Add(new ServiceDescriptor(
+            typeof(IArtifactStorageService),
+            sp => sp.GetRequiredService<S3ArtifactStorageService>(),
+            lifetime));
+
+        return builder;
+    }
+
+    /// <summary>
     /// Registers a custom IResourceRunCache implementation
     /// </summary>
     /// <typeparam name="TCache">The cache implementation type</typeparam>
@@ -149,10 +183,10 @@ public static class DataFlowServiceCollectionExtensions
     {
         // Register in-memory implementations for testing/development
         // Note: IPipelineProgressService must be provided by the application
-        builder.Services.TryAddScoped<IPipelineProgressTrackerFactory, Services.InMemory.InMemoryProgressTrackerFactory>();
-        builder.Services.TryAddScoped<IArtifactStorageService, Services.InMemory.InMemoryArtifactStorageService>();
-        builder.Services.TryAddScoped<IArtifactBatcherFactory, Services.InMemory.InMemoryArtifactBatcherFactory>();
-        builder.Services.TryAddScoped<IResourceRunCache, Services.InMemory.InMemoryResourceRunCache>();
+        builder.Services.TryAddScoped<IPipelineProgressTrackerFactory, InMemoryProgressTrackerFactory>();
+        builder.Services.TryAddScoped<IArtifactStorageService, InMemoryArtifactStorageService>();
+        builder.Services.TryAddScoped<IArtifactBatcherFactory, InMemoryArtifactBatcherFactory>();
+        builder.Services.TryAddScoped<IResourceRunCache, InMemoryResourceRunCache>();
         
         return builder;
     }

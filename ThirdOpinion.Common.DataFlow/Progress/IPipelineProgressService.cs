@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using ThirdOpinion.Common.DataFlow.Models;
 using ThirdOpinion.Common.DataFlow.Progress.Models;
 
@@ -23,6 +22,12 @@ public interface IPipelineProgressService
     /// Get IDs of resources that haven't completed from a previous run
     /// </summary>
     Task<List<string>> GetIncompleteResourceIdsAsync(Guid parentRunId, CancellationToken ct);
+
+    /// <summary>
+    /// Try to get the resource run id for a given pipeline run/resource combination.
+    /// Returns null when the resource run has not been registered yet.
+    /// </summary>
+    Task<Guid?> GetResourceRunIdAsync(Guid runId, string resourceId, CancellationToken ct);
 
     /// <summary>
     /// Create resource runs in batch

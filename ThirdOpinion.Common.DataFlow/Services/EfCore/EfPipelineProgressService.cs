@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using ThirdOpinion.Common.DataFlow.EntityFramework;
@@ -40,7 +38,7 @@ public class EfPipelineProgressService : IPipelineProgressService
                 Category = request.Category,
                 Name = request.Name,
                 RunType = request.RunType,
-                Status = PipelineRunStatus.Running,
+                Status = PipelineRunStatus.Pending,
                 ParentRunId = request.ParentRunId,
                 Configuration = request.Config is null ? null : System.Text.Json.JsonSerializer.Serialize(request.Config),
                 StartTime = DateTime.UtcNow
@@ -126,6 +124,26 @@ public class EfPipelineProgressService : IPipelineProgressService
                 .Select(r => r.ResourceId)
                 .ToListAsync(ct)
                 .ConfigureAwait(false);
+        }
+        finally
+        {
+            _contextPool.Return(dbContext);
+        }
+    }
+
+    public async Task<Guid?> GetResourceRunIdAsync(Guid runId, string resourceId, CancellationToken ct)
+    {
+        var dbContext = await _contextPool.RentAsync(ct).ConfigureAwait(false);
+        try
+        {
+            var entity = await dbContext.ResourceRuns
+                .AsNoTracking()
+                .Where(r => r.PipelineRunId == runId && r.ResourceId == resourceId)
+                .Select(r => r.ResourceRunId)
+                .SingleOrDefaultAsync(ct)
+                .ConfigureAwait(false);
+
+            return entity == Guid.Empty ? null : entity;
         }
         finally
         {

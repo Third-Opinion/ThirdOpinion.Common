@@ -3,7 +3,9 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using ThirdOpinion.Common.DataFlow.Artifacts;
 using ThirdOpinion.Common.DataFlow.EntityFramework;
 using ThirdOpinion.Common.DataFlow.Progress;
+using ThirdOpinion.Common.DataFlow.Services.Artifacts;
 using ThirdOpinion.Common.DataFlow.Services.EfCore;
+using ThirdOpinion.Common.DataFlow.Services.Progress;
 
 namespace ThirdOpinion.Common.DataFlow.DependencyInjection;
 
@@ -81,12 +83,12 @@ internal sealed class DataFlowEntityFrameworkBuilder : IDataFlowEntityFrameworkB
             return (IDataFlowDbContext)context;
         });
         _services.TryAddScoped<IPipelineProgressService, EfPipelineProgressService>();
-        _services.TryAddScoped<IResourceRunCache, EfResourceRunCache>();
-        _services.TryAddTransient<EfPipelineProgressTracker>();
-        _services.TryAddScoped<IPipelineProgressTrackerFactory, EfPipelineProgressTrackerFactory>();
+        _services.TryAddScoped<IResourceRunCache, PipelineResourceRunCache>();
+        _services.TryAddTransient<PipelineProgressTracker>();
+        _services.TryAddScoped<IPipelineProgressTrackerFactory, PipelineProgressTrackerFactory>();
         _services.TryAddScoped<IArtifactStorageService, EfArtifactStorageService>();
-        _services.TryAddTransient<EfArtifactBatcher>();
-        _services.TryAddScoped<IArtifactBatcherFactory, EfArtifactBatcherFactory>();
+        _services.TryAddTransient<PipelineArtifactBatcher>();
+        _services.TryAddScoped<IArtifactBatcherFactory, PipelineArtifactBatcherFactory>();
 
         return this;
     }

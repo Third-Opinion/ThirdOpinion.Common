@@ -1,5 +1,4 @@
 using System.Threading.Tasks.Dataflow;
-using Microsoft.Extensions.DependencyInjection;
 using ThirdOpinion.Common.DataFlow.Core;
 using ThirdOpinion.Common.DataFlow.Services.InMemory;
 using static ThirdOpinion.Common.DataFlow.Tests.TestTimings;

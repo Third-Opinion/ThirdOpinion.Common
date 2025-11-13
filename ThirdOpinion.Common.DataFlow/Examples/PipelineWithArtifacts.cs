@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging.Abstractions;
 using ThirdOpinion.Common.DataFlow.Core;
 using ThirdOpinion.Common.DataFlow.Models;
 using ThirdOpinion.Common.DataFlow.Services.InMemory;

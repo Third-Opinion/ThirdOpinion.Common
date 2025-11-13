@@ -1,8 +1,6 @@
-using Microsoft.Extensions.Logging.Abstractions;
 using ThirdOpinion.Common.DataFlow.Core;
 using ThirdOpinion.Common.DataFlow.Models;
 using ThirdOpinion.Common.DataFlow.Services.InMemory;
-using Xunit;
 
 namespace ThirdOpinion.Common.DataFlow.Tests;
 
@@ -31,8 +29,7 @@ public class ProgressTrackingTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform(data => Task.FromResult(new ProcessedData(data.Id, data.Value * 2)), "Process")
             .Action(_ => Task.CompletedTask, "DoNothing")
             .Complete();
@@ -59,8 +56,7 @@ public class ProgressTrackingTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform(data => Task.FromResult(new ProcessedData(data.Id, data.Value * 2)), "Process")
             .Action(_ => Task.CompletedTask, "DoNothing")
             .Complete();
@@ -91,8 +87,7 @@ public class ProgressTrackingTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform<ProcessedData>(data =>
                 Task.FromException<ProcessedData>(new InvalidOperationException("Test error")), "Process")
             .Action(_ => Task.CompletedTask, "DoNothing")
@@ -126,8 +121,7 @@ public class ProgressTrackingTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform(data =>
             {
                 if (data.Value % 2 == 0)

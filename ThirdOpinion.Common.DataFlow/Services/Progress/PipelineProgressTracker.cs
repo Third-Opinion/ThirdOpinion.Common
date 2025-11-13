@@ -5,12 +5,12 @@ using ThirdOpinion.Common.DataFlow.Models;
 using ThirdOpinion.Common.DataFlow.Progress;
 using ThirdOpinion.Common.DataFlow.Progress.Models;
 
-namespace ThirdOpinion.Common.DataFlow.Services.EfCore;
+namespace ThirdOpinion.Common.DataFlow.Services.Progress;
 
 /// <summary>
-/// Entity Framework backed implementation of the pipeline progress tracker.
+/// Storage-agnostic implementation of the pipeline progress tracker.
 /// </summary>
-public class EfPipelineProgressTracker : IPipelineProgressTracker, IDisposable
+public class PipelineProgressTracker : IPipelineProgressTracker, IDisposable
 {
     private const int ResourceBatchSize = 50;
     private const int StepBatchSize = 100;
@@ -21,9 +21,10 @@ public class EfPipelineProgressTracker : IPipelineProgressTracker, IDisposable
 
     private readonly IPipelineProgressService _progressService;
     private readonly IResourceRunCache _resourceRunCache;
-    private readonly ILogger<EfPipelineProgressTracker> _logger;
+    private readonly ILogger<PipelineProgressTracker> _logger;
 
     private readonly ConcurrentDictionary<string, ResourceProgressState> _resourceStates = new();
+    private readonly ConcurrentDictionary<string, Guid> _resourceRunIds = new();
 
     private Channel<ResourceProgressUpdate>? _resourceStartChannel;
     private Channel<StepProgressUpdate>? _stepProgressChannel;
@@ -37,23 +38,31 @@ public class EfPipelineProgressTracker : IPipelineProgressTracker, IDisposable
     private CancellationToken _cancellationToken;
     private string _category = string.Empty;
     private string _name = string.Empty;
+    private PipelineRunType _runType = PipelineRunType.Fresh;
+    private Guid? _parentRunId;
     private bool _initialized;
     private bool _disposed;
+    private bool _runCreated;
 
-    public EfPipelineProgressTracker(
+    public PipelineProgressTracker(
         IPipelineProgressService progressService,
         IResourceRunCache resourceRunCache,
-        ILogger<EfPipelineProgressTracker> logger)
+        ILogger<PipelineProgressTracker> logger)
     {
         _progressService = progressService ?? throw new ArgumentNullException(nameof(progressService));
         _resourceRunCache = resourceRunCache ?? throw new ArgumentNullException(nameof(resourceRunCache));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    internal void ConfigureMetadata(string category, string name)
+    internal void ConfigureMetadata(PipelineRunMetadata metadata)
     {
-        _category = category;
-        _name = name;
+        if (metadata == null)
+            throw new ArgumentNullException(nameof(metadata));
+
+        _category = metadata.Category;
+        _name = metadata.Name;
+        _runType = metadata.RunType;
+        _parentRunId = metadata.ParentRunId;
     }
 
     public void Initialize(Guid runId, CancellationToken ct)
@@ -65,6 +74,8 @@ public class EfPipelineProgressTracker : IPipelineProgressTracker, IDisposable
 
         _runId = runId;
         _cancellationToken = ct;
+
+        EnsureRunRecordExists(runId, ct);
         _resourceStartChannel = Channel.CreateUnbounded<ResourceProgressUpdate>();
         _stepProgressChannel = Channel.CreateUnbounded<StepProgressUpdate>();
         _completionChannel = Channel.CreateUnbounded<ResourceCompletionUpdate>();
@@ -86,7 +97,7 @@ public class EfPipelineProgressTracker : IPipelineProgressTracker, IDisposable
             .GetAwaiter()
             .GetResult();
 
-        var isNewRegistration = TryCacheResourceRunId(resourceId, resourceRunId);
+        var isNewRegistration = _resourceRunIds.TryAdd(resourceId, resourceRunId);
         var state = _resourceStates.GetOrAdd(resourceId, _ => new ResourceProgressState
         {
             ResourceId = resourceId,
@@ -297,20 +308,8 @@ public class EfPipelineProgressTracker : IPipelineProgressTracker, IDisposable
 
     private Guid? GetResourceRunId(string resourceId)
     {
-        if (_resourceRunIds.TryGetValue(resourceId, out var id))
-        {
-            return id;
-        }
-
-        return null;
+        return _resourceRunIds.TryGetValue(resourceId, out var id) ? id : null;
     }
-
-    private bool TryCacheResourceRunId(string resourceId, Guid runId)
-    {
-        return _resourceRunIds.TryAdd(resourceId, runId);
-    }
-
-    private readonly ConcurrentDictionary<string, Guid> _resourceRunIds = new();
 
     private void UpdateResourceStateStep(string resourceId, string stepName, PipelineStepStatus status, int? durationMs = null, string? errorMessage = null)
     {
@@ -490,7 +489,6 @@ public class EfPipelineProgressTracker : IPipelineProgressTracker, IDisposable
             {
                 _logger.LogDebug("Requeueing {Count} step progress updates for run {RunId} because resource runs were not yet available.", deferred.Count, _runId);
 
-                // Allow a brief delay to give resource run writes a chance to complete.
                 await Task.Delay(TimeSpan.FromMilliseconds(50), _cancellationToken).ConfigureAwait(false);
 
                 foreach (var update in deferred)
@@ -582,6 +580,31 @@ public class EfPipelineProgressTracker : IPipelineProgressTracker, IDisposable
         }
     }
 
+    private void EnsureRunRecordExists(Guid runId, CancellationToken ct)
+    {
+        if (_runCreated)
+        {
+            return;
+        }
+
+        var request = new CreatePipelineRunRequest
+        {
+            RunId = runId,
+            Category = string.IsNullOrWhiteSpace(_category) ? "Pipeline" : _category,
+            Name = string.IsNullOrWhiteSpace(_name) ? runId.ToString("N") : _name,
+            RunType = _runType,
+            ParentRunId = _parentRunId,
+            Config = new PipelineRunConfiguration
+            {
+                RunType = _runType,
+                ParentRunId = _parentRunId
+            }
+        };
+
+        _progressService.CreateRunAsync(request, ct).GetAwaiter().GetResult();
+        _runCreated = true;
+    }
+
     private void EnsureInitialized()
     {
         if (!_initialized)
@@ -590,5 +613,4 @@ public class EfPipelineProgressTracker : IPipelineProgressTracker, IDisposable
         }
     }
 }
-
 

@@ -1,8 +1,8 @@
 using System.Threading.Tasks.Dataflow;
 using Microsoft.Extensions.Logging;
-using ThirdOpinion.Common.DataFlow.Artifacts.Models;
 using ThirdOpinion.Common.DataFlow.Core;
 using ThirdOpinion.Common.DataFlow.Results;
+using ThirdOpinion.DataFlow.Artifacts.Models;
 
 namespace ThirdOpinion.Common.DataFlow.Blocks;
 

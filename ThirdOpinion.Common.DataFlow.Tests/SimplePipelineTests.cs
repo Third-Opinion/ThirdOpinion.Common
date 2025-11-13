@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging.Abstractions;
 using ThirdOpinion.Common.DataFlow.Core;
-using Xunit;
 using static ThirdOpinion.Common.DataFlow.Tests.TestTimings;
 
 namespace ThirdOpinion.Common.DataFlow.Tests;
@@ -33,8 +32,7 @@ public class SimplePipelineTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform(async data =>
             {
                 await Task.Delay(SlowDelayMs);
@@ -71,8 +69,7 @@ public class SimplePipelineTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform(data => Task.FromResult(new ProcessedData(data.Id, data.Value * 2)), "Double")
             .Transform(processed =>
             {
@@ -107,8 +104,7 @@ public class SimplePipelineTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromAsyncSource(GenerateDataAsync())
+            .Create(context, PipelineSource<TestData>.FromAsyncEnumerable(GenerateDataAsync()), d => d.Id)
             .Transform(data => Task.FromResult(new ProcessedData(data.Id, data.Value * 2)), "Process")
             .Action(result =>
             {
@@ -137,8 +133,7 @@ public class SimplePipelineTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(Array.Empty<TestData>())
+            .Create(context, PipelineSource<TestData>.FromEnumerable(Array.Empty<TestData>()), d => d.Id)
             .Transform(data => Task.FromResult(new ProcessedData(data.Id, data.Value * 2)), "Process")
             .Action(result =>
             {
@@ -159,5 +154,6 @@ public class SimplePipelineTests
             yield return new TestData($"async-{i}", i);
         }
     }
+
 }
 

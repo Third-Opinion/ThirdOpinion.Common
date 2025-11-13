@@ -23,7 +23,7 @@
     <s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=56639ba8_002D76bd_002D4343_002D8fad_002Def0bfc77a7db/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="All tests from &amp;lt;ThirdOpinion.Common.UnitTests&amp;gt;" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;Project Location="/Users/ken/code/ThirdOpinion/ThirdOpinion.Common/ThirdOpinion.Common.UnitTests" Presentation="&amp;lt;ThirdOpinion.Common.UnitTests&amp;gt;" /&gt;
 &lt;/SessionState&gt;</s:String>
-    <s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=58c56b00_002Df81e_002D48fd_002Da74f_002Dc8e84271fcf4/@EntryIndexedValue">&lt;SessionState ContinuousTestingIsOn="True" ContinuousTestingMode="3" IsActive="True" Name="Continuous Testing" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+    <s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=58c56b00_002Df81e_002D48fd_002Da74f_002Dc8e84271fcf4/@EntryIndexedValue">&lt;SessionState ContinuousTestingIsOn="True" ContinuousTestingMode="3" Name="Continuous Testing" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::3F6E4900-2F30-4DC8-B1AB-B289DBB8ED53::net8.0::ThirdOpinion.Common.Aws.Tests.DynamoDb.DynamoDbRepositoryTests&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::3F6E4900-2F30-4DC8-B1AB-B289DBB8ED53::net8.0::ThirdOpinion.Common.Aws.Tests.Cognito.AuthorizePersonGuidAttributeTests&lt;/TestId&gt;
@@ -78,7 +78,7 @@
     &lt;TestId&gt;xUnit::3F6E4900-2F30-4DC8-B1AB-B289DBB8ED53::net8.0::ThirdOpinion.Common.Aws.Tests.SQS.ServiceCollectionExtensionsTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=c6fd6d42_002D7d15_002D4c75_002D9c1d_002D6892968e0738/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Build_RECISTStandard_CreatesCorrectObservation" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=c6fd6d42_002D7d15_002D4c75_002D9c1d_002D6892968e0738/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Build_RECISTStandard_CreatesCorrectObservation" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::4EB69A2E-7E3C-47DE-BFD0-971706FCBE02::net8.0::ThirdOpinion.Common.Fhir.UnitTests.Builders.Observations.RadiographicObservationBuilderTests.Build_RECISTStandard_CreatesCorrectObservation&lt;/TestId&gt;
   &lt;/TestAncestor&gt;

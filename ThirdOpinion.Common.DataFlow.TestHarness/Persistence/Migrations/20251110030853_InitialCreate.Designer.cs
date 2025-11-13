@@ -25,7 +25,7 @@ namespace ThirdOpinion.DataFlow.TestHarness.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("ThirdOpinion.Common.IA.Pipelines.EntityFramework.Entities.ArtifactEntity", b =>
+            modelBuilder.Entity("ThirdOpinion.DataFlow.EntityFramework.Entities.ArtifactEntity", b =>
                 {
                     b.Property<Guid>("ArtifactId")
                         .ValueGeneratedOnAdd()
@@ -71,7 +71,7 @@ namespace ThirdOpinion.DataFlow.TestHarness.Persistence.Migrations
                     b.ToTable("artifacts", (string)null);
                 });
 
-            modelBuilder.Entity("ThirdOpinion.Common.IA.Pipelines.EntityFramework.Entities.PipelineRunEntity", b =>
+            modelBuilder.Entity("ThirdOpinion.DataFlow.EntityFramework.Entities.PipelineRunEntity", b =>
                 {
                     b.Property<Guid>("RunId")
                         .ValueGeneratedOnAdd()
@@ -133,7 +133,7 @@ namespace ThirdOpinion.DataFlow.TestHarness.Persistence.Migrations
                     b.ToTable("pipeline_runs", (string)null);
                 });
 
-            modelBuilder.Entity("ThirdOpinion.Common.IA.Pipelines.EntityFramework.Entities.ResourceRunEntity", b =>
+            modelBuilder.Entity("ThirdOpinion.DataFlow.EntityFramework.Entities.ResourceRunEntity", b =>
                 {
                     b.Property<Guid>("ResourceRunId")
                         .ValueGeneratedOnAdd()
@@ -185,7 +185,7 @@ namespace ThirdOpinion.DataFlow.TestHarness.Persistence.Migrations
                     b.ToTable("resource_runs", (string)null);
                 });
 
-            modelBuilder.Entity("ThirdOpinion.Common.IA.Pipelines.EntityFramework.Entities.StepProgressEntity", b =>
+            modelBuilder.Entity("ThirdOpinion.DataFlow.EntityFramework.Entities.StepProgressEntity", b =>
                 {
                     b.Property<Guid>("StepProgressId")
                         .ValueGeneratedOnAdd()
@@ -231,9 +231,9 @@ namespace ThirdOpinion.DataFlow.TestHarness.Persistence.Migrations
                     b.ToTable("step_progress", (string)null);
                 });
 
-            modelBuilder.Entity("ThirdOpinion.Common.IA.Pipelines.EntityFramework.Entities.ArtifactEntity", b =>
+            modelBuilder.Entity("ThirdOpinion.DataFlow.EntityFramework.Entities.ArtifactEntity", b =>
                 {
-                    b.HasOne("ThirdOpinion.Common.IA.Pipelines.EntityFramework.Entities.ResourceRunEntity", "ResourceRun")
+                    b.HasOne("ThirdOpinion.DataFlow.EntityFramework.Entities.ResourceRunEntity", "ResourceRun")
                         .WithMany("Artifacts")
                         .HasForeignKey("ResourceRunId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -242,18 +242,18 @@ namespace ThirdOpinion.DataFlow.TestHarness.Persistence.Migrations
                     b.Navigation("ResourceRun");
                 });
 
-            modelBuilder.Entity("ThirdOpinion.Common.IA.Pipelines.EntityFramework.Entities.PipelineRunEntity", b =>
+            modelBuilder.Entity("ThirdOpinion.DataFlow.EntityFramework.Entities.PipelineRunEntity", b =>
                 {
-                    b.HasOne("ThirdOpinion.Common.IA.Pipelines.EntityFramework.Entities.PipelineRunEntity", "ParentRun")
+                    b.HasOne("ThirdOpinion.DataFlow.EntityFramework.Entities.PipelineRunEntity", "ParentRun")
                         .WithMany("ChildRuns")
                         .HasForeignKey("ParentRunId");
 
                     b.Navigation("ParentRun");
                 });
 
-            modelBuilder.Entity("ThirdOpinion.Common.IA.Pipelines.EntityFramework.Entities.ResourceRunEntity", b =>
+            modelBuilder.Entity("ThirdOpinion.DataFlow.EntityFramework.Entities.ResourceRunEntity", b =>
                 {
-                    b.HasOne("ThirdOpinion.Common.IA.Pipelines.EntityFramework.Entities.PipelineRunEntity", "PipelineRun")
+                    b.HasOne("ThirdOpinion.DataFlow.EntityFramework.Entities.PipelineRunEntity", "PipelineRun")
                         .WithMany("ResourceRuns")
                         .HasForeignKey("PipelineRunId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -262,9 +262,9 @@ namespace ThirdOpinion.DataFlow.TestHarness.Persistence.Migrations
                     b.Navigation("PipelineRun");
                 });
 
-            modelBuilder.Entity("ThirdOpinion.Common.IA.Pipelines.EntityFramework.Entities.StepProgressEntity", b =>
+            modelBuilder.Entity("ThirdOpinion.DataFlow.EntityFramework.Entities.StepProgressEntity", b =>
                 {
-                    b.HasOne("ThirdOpinion.Common.IA.Pipelines.EntityFramework.Entities.ResourceRunEntity", "ResourceRun")
+                    b.HasOne("ThirdOpinion.DataFlow.EntityFramework.Entities.ResourceRunEntity", "ResourceRun")
                         .WithMany("StepProgresses")
                         .HasForeignKey("ResourceRunId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -273,14 +273,14 @@ namespace ThirdOpinion.DataFlow.TestHarness.Persistence.Migrations
                     b.Navigation("ResourceRun");
                 });
 
-            modelBuilder.Entity("ThirdOpinion.Common.IA.Pipelines.EntityFramework.Entities.PipelineRunEntity", b =>
+            modelBuilder.Entity("ThirdOpinion.DataFlow.EntityFramework.Entities.PipelineRunEntity", b =>
                 {
                     b.Navigation("ChildRuns");
 
                     b.Navigation("ResourceRuns");
                 });
 
-            modelBuilder.Entity("ThirdOpinion.Common.IA.Pipelines.EntityFramework.Entities.ResourceRunEntity", b =>
+            modelBuilder.Entity("ThirdOpinion.DataFlow.EntityFramework.Entities.ResourceRunEntity", b =>
                 {
                     b.Navigation("Artifacts");
 

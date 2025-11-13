@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging.Abstractions;
 using ThirdOpinion.Common.DataFlow.Core;
+using ThirdOpinion.Common.DataFlow.Models;
 using ThirdOpinion.Common.DataFlow.Services.InMemory;
-using Xunit;
 using static ThirdOpinion.Common.DataFlow.Tests.TestTimings;
 
 namespace ThirdOpinion.Common.DataFlow.Tests;
@@ -15,6 +15,7 @@ public class TransformManyTests
     private record ParentData(string Id, string[] Children);
     private record ChildData(string ParentId, string ChildId, int Value);
     private record ProcessedChild(string ParentId, string ChildId, int ProcessedValue);
+    private record AggregatedParent(string ParentId, IReadOnlyList<ChildData> Children);
 
     [Fact]
     public async Task TransformMany_ExpandsCorrectly()
@@ -36,8 +37,7 @@ public class TransformManyTests
 
         // Act
         await DataFlowPipeline<ParentData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<ParentData>.FromEnumerable(input), d => d.Id)
             .TransformMany(
                 parent => Task.FromResult<IEnumerable<ChildData>>(
                     parent.Children.Select((child, idx) =>
@@ -73,8 +73,7 @@ public class TransformManyTests
 
         // Act
         await DataFlowPipeline<ParentData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<ParentData>.FromEnumerable(input), d => d.Id)
             .TransformMany(
                 parent => Task.FromResult<IEnumerable<ChildData>>(
                     parent.Children.Select(child =>
@@ -86,10 +85,9 @@ public class TransformManyTests
 
         // Assert
         var states = tracker.GetAllResourceStates();
-        Assert.Equal(3, states.Count); // Parent + 2 children
-        Assert.Contains("parent-1", states.Keys);
-        Assert.Contains("child-1", states.Keys);
-        Assert.Contains("child-2", states.Keys);
+        var state = Assert.Single(states);
+        Assert.Equal("parent-1", state.Key);
+        Assert.NotEmpty(state.Value.StepProgresses);
     }
 
     [Fact]
@@ -111,8 +109,7 @@ public class TransformManyTests
 
         // Act
         await DataFlowPipeline<ParentData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<ParentData>.FromEnumerable(input), d => d.Id)
             .TransformMany(
                 parent => Task.FromResult<IEnumerable<ChildData>>(
                     parent.Children.Select((child, idx) =>
@@ -154,8 +151,7 @@ public class TransformManyTests
 
         // Act
         await DataFlowPipeline<ParentData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<ParentData>.FromEnumerable(input), d => d.Id)
             .TransformMany(
                 parent => Task.FromResult<IEnumerable<ChildData>>(
                     parent.Children.Select(child =>
@@ -171,6 +167,91 @@ public class TransformManyTests
 
         // Assert
         Assert.Empty(results);
+    }
+
+    [Fact]
+    public async Task TransformMany_DoesNotDoubleCountResources()
+    {
+        // Arrange
+        const int resourceCount = 100;
+        var input = Enumerable.Range(1, resourceCount)
+            .Select(i => new ParentData($"parent-{i:D3}", new[] { $"child-{i:D3}-1", $"child-{i:D3}-2" }))
+            .ToArray();
+
+        var context = InMemoryServiceFactory.CreateContextWithProgress<ParentData>(
+            category: "Test",
+            name: "TransformManyDoubleCount",
+            cancellationToken: CancellationToken.None);
+
+        var tracker = (InMemoryProgressTracker)context.ProgressTracker!;
+
+        // Act
+        await DataFlowPipeline<ParentData>
+            .Create(context, PipelineSource<ParentData>.FromEnumerable(input), d => d.Id)
+            .TransformMany(
+                parent => Task.FromResult<IEnumerable<ChildData>>(
+                    parent.Children.Select(child => new ChildData(parent.Id, child, 1)).ToList()),
+                child => child.ChildId,
+                "ExpandChildren")
+            .Transform(child => Task.FromResult(child), "Identity")
+            .Action(_ => Task.CompletedTask, "Collect")
+            .Complete();
+
+        // Assert
+        // We expect each parent resource to appear once in the tracker
+        var states = tracker.GetAllResourceStates();
+        Assert.Equal(resourceCount, states.Count);
+
+        foreach (var parent in input)
+        {
+            Assert.True(states.ContainsKey(parent.Id));
+        }
+    }
+
+    [Fact]
+    public async Task TransformMany_WithGrouping_DoesNotDoubleCountResources()
+    {
+        // Arrange
+        const int resourceCount = 100;
+        var input = Enumerable.Range(1, resourceCount)
+            .Select(i => new ParentData($"parent-{i:D3}", new[] { $"child-{i:D3}-1", $"child-{i:D3}-2" }))
+            .ToArray();
+
+        var context = InMemoryServiceFactory.CreateContextWithProgress<ParentData>(
+            category: "Test",
+            name: "TransformManyGrouping",
+            cancellationToken: CancellationToken.None);
+
+        var tracker = (InMemoryProgressTracker)context.ProgressTracker!;
+
+        var aggregated = new ConcurrentBag<AggregatedParent>();
+
+        // Act
+        await DataFlowPipeline<ParentData>
+            .Create(context, PipelineSource<ParentData>.FromEnumerable(input), d => d.Id)
+            .TransformMany(
+                parent => Task.FromResult<IEnumerable<ChildData>>(
+                    parent.Children.Select(child => new ChildData(parent.Id, child, 1)).ToList()),
+                child => child.ChildId,
+                "ExpandChildren")
+            .GroupSequential(
+                child => child.ParentId,
+                (parentId, children) => new AggregatedParent(parentId, children.ToList()),
+                parentId => parentId,
+                "GroupByParent")
+            .Action(result =>
+            {
+                aggregated.Add(result);
+                return Task.CompletedTask;
+            }, "PersistAggregated")
+            .Complete(result => new[] { result.ParentId });
+
+        // Assert
+        Assert.Equal(resourceCount, aggregated.Count);
+
+        var states = tracker.GetAllResourceStates();
+        Assert.Equal(resourceCount, states.Count);
+        Assert.All(states.Values, state => Assert.Equal(PipelineResourceStatus.Completed, state.Status));
     }
 
     [Fact]
@@ -195,8 +276,7 @@ public class TransformManyTests
 
         // Act
         await DataFlowPipeline<ParentData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<ParentData>.FromEnumerable(input), d => d.Id)
             .TransformMany(
                 parent => Task.FromResult<IEnumerable<ChildData>>(
                     parent.Children.Select(child =>
@@ -233,8 +313,7 @@ public class TransformManyTests
 
         // Act
         await DataFlowPipeline<ParentData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<ParentData>.FromEnumerable(input), d => d.Id)
             .TransformMany(
                 parent => Task.FromResult<IEnumerable<ChildData>>(
                     parent.Children.Select(child =>

@@ -1,4 +1,4 @@
-using ThirdOpinion.Common.DataFlow.Artifacts.Models;
+using ThirdOpinion.DataFlow.Artifacts.Models;
 
 namespace ThirdOpinion.Common.DataFlow.Artifacts;
 

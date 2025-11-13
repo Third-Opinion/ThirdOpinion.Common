@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using ThirdOpinion.Common.DataFlow.Artifacts;
+using ThirdOpinion.Common.DataFlow.Models;
 using ThirdOpinion.Common.DataFlow.Progress;
 
 namespace ThirdOpinion.Common.DataFlow.Core;
@@ -48,6 +49,16 @@ public interface IPipelineContext
     /// Optional artifact batcher for queuing artifact saves
     /// </summary>
     IArtifactBatcher? ArtifactBatcher { get; }
+
+    /// <summary>
+    /// Run type for this pipeline (Fresh, Retry, Continuation, etc.)
+    /// </summary>
+    PipelineRunType RunType { get; }
+
+    /// <summary>
+    /// Optional parent run identifier associated with this pipeline execution.
+    /// </summary>
+    Guid? ParentRunId { get; }
 
     /// <summary>
     /// Optional resource run cache for avoiding duplicate lookups

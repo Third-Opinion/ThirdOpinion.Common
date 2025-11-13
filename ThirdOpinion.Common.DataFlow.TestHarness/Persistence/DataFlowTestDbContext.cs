@@ -4,7 +4,6 @@ using ThirdOpinion.Common.DataFlow.EntityFramework.Entities;
 
 namespace ThirdOpinion.DataFlow.TestHarness.Persistence;
 
-
 public class DataFlowTestDbContext(DbContextOptions<DataFlowTestDbContext> options)
     : DbContext(options), IDataFlowDbContext
 {

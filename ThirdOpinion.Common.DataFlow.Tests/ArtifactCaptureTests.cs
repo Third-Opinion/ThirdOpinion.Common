@@ -1,10 +1,8 @@
 using ThirdOpinion.Common.DataFlow.Artifacts;
-using ThirdOpinion.Common.DataFlow.Artifacts.Models;
 using ThirdOpinion.Common.DataFlow.Core;
 using ThirdOpinion.Common.DataFlow.Models;
 using ThirdOpinion.Common.DataFlow.Services.InMemory;
-
-using Xunit;
+using ThirdOpinion.DataFlow.Artifacts.Models;
 using static ThirdOpinion.Common.DataFlow.Tests.TestTimings;
 
 namespace ThirdOpinion.Common.DataFlow.Tests;

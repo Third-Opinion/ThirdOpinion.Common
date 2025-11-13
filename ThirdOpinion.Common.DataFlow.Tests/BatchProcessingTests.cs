@@ -1,8 +1,6 @@
 using System.Collections.Concurrent;
-using System.Threading;
 using Microsoft.Extensions.Logging.Abstractions;
 using ThirdOpinion.Common.DataFlow.Core;
-using Xunit;
 
 namespace ThirdOpinion.Common.DataFlow.Tests;
 
@@ -32,8 +30,7 @@ public class BatchProcessingTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform(data => Task.FromResult(new ProcessedData(data.Id, data.Value * 2)), "Process")
             .Batch(10)
             .Action(batch =>
@@ -70,8 +67,7 @@ public class BatchProcessingTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform(data => Task.FromResult(new ProcessedData(data.Id, data.Value * 2)), "Process")
             .Batch(7)
             .Action(batch =>
@@ -103,8 +99,7 @@ public class BatchProcessingTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform(data =>
             {
                 if (data.Value % 2 == 0)
@@ -144,8 +139,7 @@ public class BatchProcessingTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform(data => Task.FromResult(new ProcessedData(data.Id, data.Value * 2)), "Process")
             .Batch(10)
             .Action(batch =>
@@ -176,8 +170,7 @@ public class BatchProcessingTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform<ProcessedData>(data =>
                 Task.FromException<ProcessedData>(new InvalidOperationException("Always fails")), "Process")
             .Batch(10)
@@ -212,8 +205,7 @@ public class BatchProcessingTests
 
         // Act
         await DataFlowPipeline<TestData>
-            .Create(context, d => d.Id)
-            .FromEnumerable(input)
+            .Create(context, PipelineSource<TestData>.FromEnumerable(input), d => d.Id)
             .Transform(data => Task.FromResult(new ProcessedData(data.Id, data.Value * 2)), "Process")
             .Batch(100) // Larger than input
             .Action(batch =>

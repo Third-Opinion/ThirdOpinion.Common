@@ -43,7 +43,7 @@ public sealed class SamplePipelineRunner
 
             await DataFlowPipeline<RawPatientRecord>
                 .Create(context, record => record.Id)
-                .FromEnumerable(CreateSampleData())
+                .WithSource(PipelineSource<RawPatientRecord>.FromEnumerable(CreateSampleData()))
                 .Transform(NormalizeAsync, "NormalizeInputs")
                 .Transform(ScorePatient, "Score")
                 .Action(result => PersistResultAsync(processed, result), "Persist")

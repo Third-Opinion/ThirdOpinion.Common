@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Threading.Channels;
 using ThirdOpinion.Common.DataFlow.Artifacts;
-using ThirdOpinion.Common.DataFlow.Artifacts.Models;
+using ThirdOpinion.DataFlow.Artifacts.Models;
 
 namespace ThirdOpinion.Common.DataFlow.Services.InMemory;
 

@@ -1,7 +1,8 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
 using ThirdOpinion.Common.DataFlow.Artifacts;
-using ThirdOpinion.Common.DataFlow.Artifacts.Models;
+using ThirdOpinion.Common.DataFlow.Models;
+using ThirdOpinion.DataFlow.Artifacts.Models;
 
 namespace ThirdOpinion.Common.DataFlow.Services.InMemory;
 
@@ -38,7 +39,13 @@ public class InMemoryArtifactStorageService : IArtifactStorageService
                 results.Add(new ArtifactSaveResult
                 {
                     Success = true,
-                    StoragePath = $"memory://{key}"
+                    StoragePath = $"memory://{key}",
+                    Metadata = new Dictionary<string, object?>
+                    {
+                        ["storageType"] = ArtifactStorageType.Memory.ToString(),
+                        ["key"] = key,
+                        ["contentLength"] = json.Length
+                    }
                 });
             }
             catch (Exception ex)
@@ -46,7 +53,12 @@ public class InMemoryArtifactStorageService : IArtifactStorageService
                 results.Add(new ArtifactSaveResult
                 {
                     Success = false,
-                    ErrorMessage = ex.Message
+                    ErrorMessage = ex.Message,
+                    Metadata = new Dictionary<string, object?>
+                    {
+                        ["storageType"] = ArtifactStorageType.Memory.ToString(),
+                        ["error"] = ex.GetType().Name
+                    }
                 });
             }
         }
