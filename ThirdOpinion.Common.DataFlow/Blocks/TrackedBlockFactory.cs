@@ -178,8 +178,27 @@ public static class TrackedBlockFactory
     }
 
     /// <summary>
-    /// Create a downstream block that groups ordered inputs by key and emits one output per group
+    /// Create a downstream block that groups ordered inputs by key and emits one output per group.
+    /// 
+    /// <para><strong>IMPORTANT: This block requires ORDERED input sources only.</strong></para>
+    /// 
+    /// <para>The block accumulates items with the same key and waits until the key changes 
+    /// before emitting a complete group. Items must arrive in order by the grouping key, 
+    /// otherwise groups will be incomplete or incorrect.</para>
+    /// 
+    /// <para>Processing is single-threaded (MaxDegreeOfParallelism = 1) with EnsureOrdered = true 
+    /// to maintain the input sequence.</para>
     /// </summary>
+    /// <typeparam name="TInput">Type of input items</typeparam>
+    /// <typeparam name="TOutput">Type of grouped output</typeparam>
+    /// <typeparam name="TKey">Type of the grouping key (must be non-nullable)</typeparam>
+    /// <param name="keySelector">Function to extract the grouping key from each input item</param>
+    /// <param name="projector">Function to create the output group from the key and accumulated items</param>
+    /// <param name="getResourceIdFromKey">Function to extract the resource ID from the grouping key</param>
+    /// <param name="stepName">Name of this step for progress tracking</param>
+    /// <param name="context">Pipeline context for progress tracking and logging</param>
+    /// <param name="options">Optional execution options (MaxDegreeOfParallelism is forced to 1)</param>
+    /// <returns>A propagator block that groups sequential items by key</returns>
     public static IPropagatorBlock<PipelineResult<TInput>, PipelineResult<TOutput>> CreateSequentialGroupingBlock<TInput, TOutput, TKey>(
         Func<TInput, TKey> keySelector,
         Func<TKey, IReadOnlyList<TInput>, TOutput> projector,

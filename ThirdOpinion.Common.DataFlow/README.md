@@ -54,9 +54,11 @@ public class MyService
             .Build();
 
         // Build and execute pipeline (context disposed automatically)
+        var source = PipelineSource<PatientData>.FromAsyncEnumerable(dataStream);
+        
         await DataFlowPipeline<PatientData>
             .Create(context, p => p.Id)
-            .FromAsyncSource(dataStream)
+            .WithSource(source)
             .Transform(async data => await ProcessAsync(data), "Process")
                 .WithArtifact(nameFactory: d => $"output_{d.Id}.json")
             .TransformMany(async data => await ExpandAsync(data), d => d.Id, "Expand")
@@ -171,6 +173,47 @@ public interface IArtifactStorageService
 
 ## Pipeline Operations
 
+### Source Creation
+
+#### FromEnumerable / FromAsyncSource / FromSource
+
+Create a pipeline source from enumerable data:
+
+```csharp
+.FromEnumerable(dataList)
+.FromAsyncSource(asyncEnumerable)
+.FromSource(sourceBlock)
+```
+
+#### FromRunType
+
+Automatically select data source based on run type (Fresh vs Retry/Continuation). This is a static method on `PipelineSource<T>` that must be used with `.WithSource()`:
+
+```csharp
+// Create the source separately using PipelineSource<T>.FromRunType()
+// For fresh runs: uses freshSourceFactory
+// For retry/continuation runs: queries incomplete resources and uses loadIncompleteAsync
+var source = PipelineSource<Data>.FromRunType(
+    freshSourceFactory: () => GetAllData(),
+    loadIncompleteAsync: async (incompleteIds, ct) => await LoadByIdsAsync(incompleteIds, ct));
+
+// Then use it with the pipeline via WithSource()
+await DataFlowPipeline<Data>
+    .Create(context, d => d.Id)
+    .WithSource(source)  // Use the pre-created source
+    .Transform(...)
+    .Complete();
+```
+
+**Note**: 
+- `FromRunType` is a static method on `PipelineSource<T>`, not on `DataFlowPipeline<T>`
+- The progress service must be registered in DI and will be automatically injected into the pipeline context
+- Supports multiple overloads for sync/async combinations:
+  - `IEnumerable` fresh + `IAsyncEnumerable` incomplete
+  - `IAsyncEnumerable` fresh + `IAsyncEnumerable` incomplete  
+  - `IEnumerable` fresh + `IEnumerable` incomplete
+  - `IAsyncEnumerable` fresh + `IEnumerable` incomplete
+
 ### Transform
 
 Transform one item to another:
@@ -189,6 +232,26 @@ Expand one item into multiple:
     item => item.ChildId,
     "ExpandStep")
 ```
+
+### GroupSequential
+
+Group ordered inputs into sequential batches by key. **IMPORTANT: Requires ordered input sources only.**
+
+The method accumulates items with the same key and waits until the key changes before emitting a complete group. Items must arrive in order by the grouping key.
+
+```csharp
+// Input must be pre-sorted by the grouping key (e.g., from database ORDER BY)
+.GroupSequential(
+    keySelector: data => data.CategoryId,
+    projector: (key, items) => new CategoryGroup(key, items),
+    getResourceIdFromKey: key => $"category-{key}",
+    "GroupByCategory")
+```
+
+**Requirements:**
+- Input items MUST arrive in order by the grouping key
+- Processing is single-threaded (MaxDegreeOfParallelism = 1) to maintain order
+- Use with pre-sorted sources (e.g., database queries with ORDER BY)
 
 ### WithArtifact
 

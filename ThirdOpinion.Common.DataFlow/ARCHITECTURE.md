@@ -23,9 +23,11 @@ Uses `PipelineResult<T>` pattern instead of throwing exceptions in the pipeline,
 Clean, readable pipeline definitions that make the data flow obvious:
 
 ```csharp
+var source = PipelineSource<T>.FromAsyncEnumerable(source);
+
 DataFlowPipeline
     .Create<T>(context, id => id)
-    .FromAsyncSource(source)
+    .WithSource(source)
     .Transform(...)
     .WithArtifact(...)
     .Batch(100)
@@ -84,7 +86,20 @@ DataFlowPipeline
 
 ### Core
 - `IPipelineContext` / `PipelineContext` - Execution context
+  - Contains run metadata (RunId, RunType, ParentRunId)
+  - Provides optional services (ProgressTracker, ArtifactBatcher, ProgressService)
+  - ProgressService is automatically injected via DI for retry/continuation scenarios
 - `DataFlowPipeline<T>` - Pipeline entry point
+  - `WithSource(PipelineSource<T>)` - Assign a pre-created source (recommended approach)
+  - Convenience methods: `FromEnumerable()`, `FromAsyncSource()`, `FromSource()` (wraps `PipelineSource` internally, for simpler cases)
+- `PipelineSource<T>` - Data source abstraction (static factory methods, recommended)
+  - `FromEnumerable` - Synchronous enumerable source
+  - `FromAsyncEnumerable` - Asynchronous enumerable source
+  - `FromBlock` - Custom dataflow block factory
+  - `FromRunType` - Automatically selects source based on run type (Fresh vs Retry/Continuation)
+    - Must be used with `DataFlowPipeline.WithSource()` (not a method on the pipeline itself)
+    - Supports multiple overloads for sync/async combinations
+    - Progress service is automatically retrieved from pipeline context
 - `PipelineStepBuilder<TIn, TOut>` - Step builder
 - `PipelineBatchBuilder<T>` - Batch operation builder
 - `PipelineContextBuilder` - Context builder
@@ -96,8 +111,14 @@ DataFlowPipeline
 
 ### Blocks
 - `TrackedBlockFactory` - Blocks with progress tracking
+  - `CreateInitialTrackedBlock` - First step in pipeline
+  - `CreateDownstreamTrackedBlock` - Subsequent transformation steps
+  - `CreateDownstreamTrackedTransformMany` - One-to-many expansion
+  - `CreateSequentialGroupingBlock` - Ordered grouping by key (requires ordered input)
 - `ArtifactBlockFactory` - Blocks with artifact capture
 - `DataFlowBlockFactory` - Common block patterns
+  - `CreateEnumerableSource` - Synchronous enumerable source
+  - `CreateAsyncEnumerableSource` - Asynchronous enumerable source
 
 ### Progress
 - `IPipelineProgressTracker` - In-memory tracking interface
@@ -124,10 +145,15 @@ DataFlowPipeline
 
 2. Create Pipeline
    └─► DataFlowPipeline.Create<T>(context, idSelector)
-       └─► FromAsyncSource() / FromSource() / FromEnumerable()
+       └─► Create PipelineSource<T> separately, then use WithSource()
+           ├─► PipelineSource<T>.FromEnumerable() → .WithSource(source)
+           ├─► PipelineSource<T>.FromAsyncEnumerable() → .WithSource(source)
+           ├─► PipelineSource<T>.FromBlock() → .WithSource(source)
+           └─► PipelineSource<T>.FromRunType() → .WithSource(source)
+               └─► Automatically handles retry/continuation runs by querying incomplete resources
 
 3. Add Steps
-   └─► Transform() / TransformMany()
+   └─► Transform() / TransformMany() / GroupSequential()
        ├─► Creates TrackedBlock (wraps with progress tracking)
        ├─► Links to previous block
        └─► Returns PipelineStepBuilder<TIn, TNext>
@@ -408,9 +434,11 @@ var context = PipelineContextBuilder
     .WithProgressTracker(new InMemoryProgressTracker())
     .Build();
 
+var source = PipelineSource<Data>.FromEnumerable(testData);
+
 await DataFlowPipeline
     .Create<Data>(context, d => d.Id)
-    .FromEnumerable(testData)
+    .WithSource(source)
     .Transform(async d => await Process(d), "Process")
     .ExecuteAsync(async d => results.Add(d), "Collect");
 
@@ -429,4 +457,7 @@ Assert.Equal(expectedCount, results.Count);
 8. **Test with in-memory services** - fast, reliable tests
 9. **Monitor progress** - use progress tracking to identify bottlenecks
 10. **Capture artifacts strategically** - balance observability and storage costs
+11. **Use FromRunType for retry scenarios** - automatically handles fresh vs retry/continuation runs
+12. **Ensure ordered input for GroupSequential** - method requires pre-sorted data by grouping key
+13. **Register progress service in DI** - required for FromRunType retry/continuation functionality
 

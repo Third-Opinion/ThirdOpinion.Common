@@ -24,6 +24,7 @@ public class PipelineContext : IPipelineContext, IAsyncDisposable
     public ILogger Logger { get; }
     public PipelineRunType RunType { get; }
     public Guid? ParentRunId { get; }
+    public IPipelineProgressService? ProgressService { get; }
     private readonly PipelineStepOptions _defaultStepOptions;
     public PipelineStepOptions DefaultStepOptions => _defaultStepOptions.Clone();
     
@@ -61,7 +62,8 @@ public class PipelineContext : IPipelineContext, IAsyncDisposable
         string? category = null,
         string? name = null,
         PipelineRunType runType = PipelineRunType.Fresh,
-        Guid? parentRunId = null)
+        Guid? parentRunId = null,
+        IPipelineProgressService? progressService = null)
     {
         if (runId == Guid.Empty)
             throw new ArgumentException("RunId cannot be empty", nameof(runId));
@@ -77,6 +79,7 @@ public class PipelineContext : IPipelineContext, IAsyncDisposable
         ResourceRunCache = resourceRunCache;
         RunType = runType;
         ParentRunId = parentRunId;
+        ProgressService = progressService;
         _defaultStepOptions = (defaultStepOptions ?? new PipelineStepOptions()).Clone();
     }
 

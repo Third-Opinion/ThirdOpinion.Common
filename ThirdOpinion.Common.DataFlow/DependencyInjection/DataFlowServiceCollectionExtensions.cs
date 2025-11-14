@@ -24,7 +24,22 @@ public static class DataFlowServiceCollectionExtensions
             throw new ArgumentNullException(nameof(services));
 
         // Register the pipeline context factory as scoped (one per pipeline run typically)
-        services.TryAddScoped<IPipelineContextFactory, PipelineContextFactory>();
+        // Use a factory delegate to automatically inject IPipelineProgressService if available
+        services.TryAddScoped<IPipelineContextFactory>(sp =>
+        {
+            var logger = sp.GetService<Microsoft.Extensions.Logging.ILogger<PipelineContextFactory>>();
+            var progressTrackerFactory = sp.GetService<IPipelineProgressTrackerFactory>();
+            var artifactBatcherFactory = sp.GetService<IArtifactBatcherFactory>();
+            var resourceRunCache = sp.GetService<IResourceRunCache>();
+            var progressService = sp.GetService<IPipelineProgressService>();
+            
+            return new PipelineContextFactory(
+                logger,
+                progressTrackerFactory,
+                artifactBatcherFactory,
+                resourceRunCache,
+                progressService);
+        });
 
         return new DataFlowBuilder(services);
     }

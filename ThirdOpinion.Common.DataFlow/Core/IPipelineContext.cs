@@ -74,5 +74,10 @@ public interface IPipelineContext
     /// Default step options to apply when a step doesn't specify its own
     /// </summary>
     PipelineStepOptions DefaultStepOptions { get; }
+
+    /// <summary>
+    /// Optional progress service for querying incomplete resources (used by FromRunType)
+    /// </summary>
+    IPipelineProgressService? ProgressService { get; }
 }
 

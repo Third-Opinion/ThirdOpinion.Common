@@ -16,6 +16,7 @@ public class PipelineContextBuilder
     private readonly IPipelineProgressTrackerFactory? _progressTrackerFactory;
     private readonly IArtifactBatcherFactory? _artifactBatcherFactory;
     private readonly IResourceRunCache? _resourceRunCache;
+    private readonly IPipelineProgressService? _progressService;
     private readonly ILogger _logger;
     
     private PipelineRunMetadata _metadata = new();
@@ -30,12 +31,14 @@ public class PipelineContextBuilder
         IPipelineProgressTrackerFactory? progressTrackerFactory = null,
         IArtifactBatcherFactory? artifactBatcherFactory = null,
         IResourceRunCache? resourceRunCache = null,
+        IPipelineProgressService? progressService = null,
         ILogger? logger = null)
     {
         _resourceType = resourceType ?? throw new ArgumentNullException(nameof(resourceType));
         _progressTrackerFactory = progressTrackerFactory;
         _artifactBatcherFactory = artifactBatcherFactory;
         _resourceRunCache = resourceRunCache;
+        _progressService = progressService;
         _logger = logger ?? NullLogger.Instance;
     }
 
@@ -173,7 +176,8 @@ public class PipelineContextBuilder
             _metadata.Category,
             _metadata.Name,
             _metadata.RunType,
-            _metadata.ParentRunId);
+            _metadata.ParentRunId,
+            _progressService);
 
         return context;
     }

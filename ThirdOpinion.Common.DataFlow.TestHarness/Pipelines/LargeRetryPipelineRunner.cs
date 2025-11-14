@@ -82,7 +82,6 @@ public sealed class LargeRetryPipelineRunner
             cancellationToken);
 
         var retrySource = PipelineSource<RawRecord>.FromRunType(
-            _progressService,
             freshSourceFactory: () => dataSet,
             loadIncompleteAsync: (ids, ct) => LoadRetryRecordsAsync(ids, resourceMap, ct));
 

@@ -115,33 +115,159 @@ public sealed class PipelineSource<T>
 
     /// <summary>
     /// Helper to create a source that automatically selects data based on run type.
+    /// The progress service is automatically retrieved from the pipeline context.
     /// </summary>
-    /// <param name="progressService">Progress service used to query incomplete resources.</param>
     /// <param name="freshSourceFactory">Factory for fresh runs.</param>
     /// <param name="loadIncompleteAsync">Factory invoked for retry/continuation runs. Receives incomplete resource IDs.</param>
     public static PipelineSource<T> FromRunType(
-        IPipelineProgressService progressService,
         Func<IEnumerable<T>> freshSourceFactory,
         Func<IEnumerable<string>, CancellationToken, IAsyncEnumerable<T>> loadIncompleteAsync)
     {
-        if (progressService == null)
-            throw new ArgumentNullException(nameof(progressService));
         if (freshSourceFactory == null)
             throw new ArgumentNullException(nameof(freshSourceFactory));
         if (loadIncompleteAsync == null)
             throw new ArgumentNullException(nameof(loadIncompleteAsync));
 
+        return CreateFromRunType(
+            (_, ct) =>
+            {
+                var data = freshSourceFactory();
+                if (data == null)
+                    throw new InvalidOperationException("Fresh source factory returned null enumerable.");
+                return DataFlowBlockFactory.CreateEnumerableSource(data, ct);
+            },
+            (incompleteIds, ct) =>
+            {
+                var data = loadIncompleteAsync(incompleteIds, ct);
+                if (data == null)
+                    throw new InvalidOperationException("Retry loader returned null async enumerable.");
+                return DataFlowBlockFactory.CreateAsyncEnumerableSource(data, ct);
+            });
+    }
+
+    /// <summary>
+    /// Helper to create a source that automatically selects data based on run type.
+    /// Overload with async enumerable for fresh source factory.
+    /// The progress service is automatically retrieved from the pipeline context.
+    /// </summary>
+    /// <param name="freshSourceFactory">Factory for fresh runs that returns an async enumerable.</param>
+    /// <param name="loadIncompleteAsync">Factory invoked for retry/continuation runs. Receives incomplete resource IDs.</param>
+    public static PipelineSource<T> FromRunType(
+        Func<CancellationToken, IAsyncEnumerable<T>> freshSourceFactory,
+        Func<IEnumerable<string>, CancellationToken, IAsyncEnumerable<T>> loadIncompleteAsync)
+    {
+        if (freshSourceFactory == null)
+            throw new ArgumentNullException(nameof(freshSourceFactory));
+        if (loadIncompleteAsync == null)
+            throw new ArgumentNullException(nameof(loadIncompleteAsync));
+
+        return CreateFromRunType(
+            (_, ct) =>
+            {
+                var data = freshSourceFactory(ct);
+                if (data == null)
+                    throw new InvalidOperationException("Fresh source factory returned null async enumerable.");
+                return DataFlowBlockFactory.CreateAsyncEnumerableSource(data, ct);
+            },
+            (incompleteIds, ct) =>
+            {
+                var data = loadIncompleteAsync(incompleteIds, ct);
+                if (data == null)
+                    throw new InvalidOperationException("Retry loader returned null async enumerable.");
+                return DataFlowBlockFactory.CreateAsyncEnumerableSource(data, ct);
+            });
+    }
+
+    /// <summary>
+    /// Helper to create a source that automatically selects data based on run type.
+    /// Overload with synchronous enumerable for incomplete loader.
+    /// The progress service is automatically retrieved from the pipeline context.
+    /// </summary>
+    /// <param name="freshSourceFactory">Factory for fresh runs.</param>
+    /// <param name="loadIncomplete">Factory invoked for retry/continuation runs. Receives incomplete resource IDs and returns a synchronous enumerable.</param>
+    public static PipelineSource<T> FromRunType(
+        Func<IEnumerable<T>> freshSourceFactory,
+        Func<IEnumerable<string>, CancellationToken, IEnumerable<T>> loadIncomplete)
+    {
+        if (freshSourceFactory == null)
+            throw new ArgumentNullException(nameof(freshSourceFactory));
+        if (loadIncomplete == null)
+            throw new ArgumentNullException(nameof(loadIncomplete));
+
+        return CreateFromRunType(
+            (_, ct) =>
+            {
+                var data = freshSourceFactory();
+                if (data == null)
+                    throw new InvalidOperationException("Fresh source factory returned null enumerable.");
+                return DataFlowBlockFactory.CreateEnumerableSource(data, ct);
+            },
+            (incompleteIds, ct) =>
+            {
+                var data = loadIncomplete(incompleteIds, ct);
+                if (data == null)
+                    throw new InvalidOperationException("Retry loader returned null enumerable.");
+                return DataFlowBlockFactory.CreateEnumerableSource(data, ct);
+            });
+    }
+
+    /// <summary>
+    /// Helper to create a source that automatically selects data based on run type.
+    /// Overload with async enumerable for fresh source factory and synchronous enumerable for incomplete loader.
+    /// The progress service is automatically retrieved from the pipeline context.
+    /// </summary>
+    /// <param name="freshSourceFactory">Factory for fresh runs that returns an async enumerable.</param>
+    /// <param name="loadIncomplete">Factory invoked for retry/continuation runs. Receives incomplete resource IDs and returns a synchronous enumerable.</param>
+    public static PipelineSource<T> FromRunType(
+        Func<CancellationToken, IAsyncEnumerable<T>> freshSourceFactory,
+        Func<IEnumerable<string>, CancellationToken, IEnumerable<T>> loadIncomplete)
+    {
+        if (freshSourceFactory == null)
+            throw new ArgumentNullException(nameof(freshSourceFactory));
+        if (loadIncomplete == null)
+            throw new ArgumentNullException(nameof(loadIncomplete));
+
+        return CreateFromRunType(
+            (_, ct) =>
+            {
+                var data = freshSourceFactory(ct);
+                if (data == null)
+                    throw new InvalidOperationException("Fresh source factory returned null async enumerable.");
+                return DataFlowBlockFactory.CreateAsyncEnumerableSource(data, ct);
+            },
+            (incompleteIds, ct) =>
+            {
+                var data = loadIncomplete(incompleteIds, ct);
+                if (data == null)
+                    throw new InvalidOperationException("Retry loader returned null enumerable.");
+                return DataFlowBlockFactory.CreateEnumerableSource(data, ct);
+            });
+    }
+
+    /// <summary>
+    /// Internal helper that implements the common run type selection logic.
+    /// </summary>
+    /// <param name="createFreshSource">Function that creates the source block for fresh runs.</param>
+    /// <param name="createIncompleteSource">Function that creates the source block for incomplete runs, given incomplete resource IDs.</param>
+    private static PipelineSource<T> CreateFromRunType(
+        Func<IPipelineContext, CancellationToken, ISourceBlock<T>> createFreshSource,
+        Func<IEnumerable<string>, CancellationToken, ISourceBlock<T>> createIncompleteSource)
+    {
         return new PipelineSource<T>((context, ct) =>
         {
             var runType = context.RunType;
 
             if (runType == PipelineRunType.Fresh)
             {
-                var freshData = freshSourceFactory();
-                if (freshData == null)
-                    throw new InvalidOperationException("Fresh source factory returned null enumerable.");
+                return createFreshSource(context, ct);
+            }
 
-                return DataFlowBlockFactory.CreateEnumerableSource(freshData, ct);
+            var progressService = context.ProgressService;
+            if (progressService == null)
+            {
+                throw new InvalidOperationException(
+                    "IPipelineProgressService is required for retry/continuation runs but was not found in the pipeline context. " +
+                    "Ensure the progress service is registered in dependency injection and provided to the PipelineContextFactory.");
             }
 
             var referenceRunId = context.ParentRunId ?? context.RunId;
@@ -150,11 +276,7 @@ public sealed class PipelineSource<T>
                 .GetAwaiter()
                 .GetResult();
 
-            var retryData = loadIncompleteAsync(incompleteIds, ct);
-            if (retryData == null)
-                throw new InvalidOperationException("Retry loader returned null async enumerable.");
-
-            return DataFlowBlockFactory.CreateAsyncEnumerableSource(retryData, ct);
+            return createIncompleteSource(incompleteIds, ct);
         });
     }
 }

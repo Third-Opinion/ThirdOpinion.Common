@@ -13,18 +13,21 @@ public class PipelineContextFactory : IPipelineContextFactory
     private readonly IPipelineProgressTrackerFactory? _progressTrackerFactory;
     private readonly IArtifactBatcherFactory? _artifactBatcherFactory;
     private readonly IResourceRunCache? _resourceRunCache;
+    private readonly IPipelineProgressService? _progressService;
     private readonly ILogger<PipelineContextFactory> _logger;
 
     public PipelineContextFactory(
         ILogger<PipelineContextFactory>? logger = null,
         IPipelineProgressTrackerFactory? progressTrackerFactory = null,
         IArtifactBatcherFactory? artifactBatcherFactory = null,
-        IResourceRunCache? resourceRunCache = null)
+        IResourceRunCache? resourceRunCache = null,
+        IPipelineProgressService? progressService = null)
     {
         _logger = logger ?? NullLogger<PipelineContextFactory>.Instance;
         _progressTrackerFactory = progressTrackerFactory;
         _artifactBatcherFactory = artifactBatcherFactory;
         _resourceRunCache = resourceRunCache;
+        _progressService = progressService;
     }
 
     public PipelineContextBuilder CreateBuilder<TResource>()
@@ -39,6 +42,7 @@ public class PipelineContextFactory : IPipelineContextFactory
             _progressTrackerFactory,
             _artifactBatcherFactory,
             _resourceRunCache,
+            _progressService,
             _logger);
     }
 }

@@ -88,12 +88,11 @@ public class PipelineSourceTests
     {
         var fresh = new[] { new Poco("fresh-1"), new Poco("fresh-2") };
         var progressService = new StubProgressService(Array.Empty<string>());
-        var context = CreateContext<Poco>(PipelineRunType.Fresh);
+        var context = CreateContext<Poco>(PipelineRunType.Fresh, progressService: progressService);
 
         var results = new List<string>();
 
         var source = PipelineSource<Poco>.FromRunType(
-            progressService,
             freshSourceFactory: () => fresh,
             loadIncompleteAsync: (ids, ct) => FetchByIds(ids, fresh.ToDictionary(p => p.Id), ct));
 
@@ -119,11 +118,10 @@ public class PipelineSourceTests
         var retryMap = fresh.ToDictionary(p => p.Id);
         var progressService = new StubProgressService(new[] { "item-2", "item-3" });
         var parentRunId = Guid.NewGuid();
-        var context = CreateContext<Poco>(PipelineRunType.Retry, parentRunId);
+        var context = CreateContext<Poco>(PipelineRunType.Retry, parentRunId, progressService);
         var results = new List<string>();
 
         var source = PipelineSource<Poco>.FromRunType(
-            progressService,
             freshSourceFactory: () => fresh,
             loadIncompleteAsync: (ids, ct) => FetchByIds(ids, retryMap, ct));
 
@@ -142,7 +140,178 @@ public class PipelineSourceTests
         Assert.Equal(parentRunId, progressService.LastParentRunId);
     }
 
-    private static PipelineContext CreateContext<T>(PipelineRunType runType, Guid? parentRunId = null)
+    [Fact]
+    public async Task FromRunType_WithAsyncFreshSource_Fresh_UsesAsyncFreshSourceFactory()
+    {
+        var fresh = new[] { new Poco("async-fresh-1"), new Poco("async-fresh-2") };
+        var progressService = new StubProgressService(Array.Empty<string>());
+        var context = CreateContext<Poco>(PipelineRunType.Fresh, progressService: progressService);
+
+        var results = new List<string>();
+
+        var source = PipelineSource<Poco>.FromRunType(
+            freshSourceFactory: (ct) => GeneratePocosAsync(ct, fresh),
+            loadIncompleteAsync: (ids, ct) => FetchByIds(ids, fresh.ToDictionary(p => p.Id), ct));
+
+        await DataFlowPipeline<Poco>
+            .Create(context, source, p => p.Id)
+            .Transform(p => Task.FromResult(p.Id), "PassThrough")
+            .Action(id =>
+            {
+                results.Add(id);
+                return Task.CompletedTask;
+            }, "Collect")
+            .Complete();
+
+        Assert.Equal(new[] { "async-fresh-1", "async-fresh-2" }, results.OrderBy(id => id));
+        Assert.Equal(0, progressService.GetIncompleteCalls);
+        Assert.Null(progressService.LastParentRunId);
+    }
+
+    [Fact]
+    public async Task FromRunType_WithAsyncFreshSource_Retry_UsesIncompleteResources()
+    {
+        var fresh = new[] { new Poco("item-1"), new Poco("item-2"), new Poco("item-3") };
+        var retryMap = fresh.ToDictionary(p => p.Id);
+        var progressService = new StubProgressService(new[] { "item-2", "item-3" });
+        var parentRunId = Guid.NewGuid();
+        var context = CreateContext<Poco>(PipelineRunType.Retry, parentRunId, progressService);
+        var results = new List<string>();
+
+        var source = PipelineSource<Poco>.FromRunType(
+            freshSourceFactory: (ct) => GeneratePocosAsync(ct, fresh),
+            loadIncompleteAsync: (ids, ct) => FetchByIds(ids, retryMap, ct));
+
+        await DataFlowPipeline<Poco>
+            .Create(context, source, p => p.Id)
+            .Transform(p => Task.FromResult(p.Id), "PassThrough")
+            .Action(id =>
+            {
+                results.Add(id);
+                return Task.CompletedTask;
+            }, "Collect")
+            .Complete();
+
+        Assert.Equal(new[] { "item-2", "item-3" }, results.OrderBy(id => id));
+        Assert.Equal(1, progressService.GetIncompleteCalls);
+        Assert.Equal(parentRunId, progressService.LastParentRunId);
+    }
+
+    [Fact]
+    public async Task FromRunType_WithSyncIncompleteLoader_Fresh_UsesFreshSourceFactory()
+    {
+        var fresh = new[] { new Poco("fresh-1"), new Poco("fresh-2") };
+        var progressService = new StubProgressService(Array.Empty<string>());
+        var context = CreateContext<Poco>(PipelineRunType.Fresh, progressService: progressService);
+
+        var results = new List<string>();
+
+        var source = PipelineSource<Poco>.FromRunType(
+            freshSourceFactory: () => fresh,
+            loadIncomplete: (ids, ct) => FetchByIdsSync(ids, fresh.ToDictionary(p => p.Id)));
+
+        await DataFlowPipeline<Poco>
+            .Create(context, source, p => p.Id)
+            .Transform(p => Task.FromResult(p.Id), "PassThrough")
+            .Action(id =>
+            {
+                results.Add(id);
+                return Task.CompletedTask;
+            }, "Collect")
+            .Complete();
+
+        Assert.Equal(new[] { "fresh-1", "fresh-2" }, results.OrderBy(id => id));
+        Assert.Equal(0, progressService.GetIncompleteCalls);
+        Assert.Null(progressService.LastParentRunId);
+    }
+
+    [Fact]
+    public async Task FromRunType_WithSyncIncompleteLoader_Retry_UsesIncompleteResources()
+    {
+        var fresh = new[] { new Poco("item-1"), new Poco("item-2"), new Poco("item-3") };
+        var retryMap = fresh.ToDictionary(p => p.Id);
+        var progressService = new StubProgressService(new[] { "item-2", "item-3" });
+        var parentRunId = Guid.NewGuid();
+        var context = CreateContext<Poco>(PipelineRunType.Retry, parentRunId, progressService);
+        var results = new List<string>();
+
+        var source = PipelineSource<Poco>.FromRunType(
+            freshSourceFactory: () => fresh,
+            loadIncomplete: (ids, ct) => FetchByIdsSync(ids, retryMap));
+
+        await DataFlowPipeline<Poco>
+            .Create(context, source, p => p.Id)
+            .Transform(p => Task.FromResult(p.Id), "PassThrough")
+            .Action(id =>
+            {
+                results.Add(id);
+                return Task.CompletedTask;
+            }, "Collect")
+            .Complete();
+
+        Assert.Equal(new[] { "item-2", "item-3" }, results.OrderBy(id => id));
+        Assert.Equal(1, progressService.GetIncompleteCalls);
+        Assert.Equal(parentRunId, progressService.LastParentRunId);
+    }
+
+    [Fact]
+    public async Task FromRunType_WithAsyncFreshAndSyncIncomplete_Fresh_UsesAsyncFreshSourceFactory()
+    {
+        var fresh = new[] { new Poco("async-fresh-1"), new Poco("async-fresh-2") };
+        var progressService = new StubProgressService(Array.Empty<string>());
+        var context = CreateContext<Poco>(PipelineRunType.Fresh, progressService: progressService);
+
+        var results = new List<string>();
+
+        var source = PipelineSource<Poco>.FromRunType(
+            freshSourceFactory: (ct) => GeneratePocosAsync(ct, fresh),
+            loadIncomplete: (ids, ct) => FetchByIdsSync(ids, fresh.ToDictionary(p => p.Id)));
+
+        await DataFlowPipeline<Poco>
+            .Create(context, source, p => p.Id)
+            .Transform(p => Task.FromResult(p.Id), "PassThrough")
+            .Action(id =>
+            {
+                results.Add(id);
+                return Task.CompletedTask;
+            }, "Collect")
+            .Complete();
+
+        Assert.Equal(new[] { "async-fresh-1", "async-fresh-2" }, results.OrderBy(id => id));
+        Assert.Equal(0, progressService.GetIncompleteCalls);
+        Assert.Null(progressService.LastParentRunId);
+    }
+
+    [Fact]
+    public async Task FromRunType_WithAsyncFreshAndSyncIncomplete_Retry_UsesSyncIncompleteResources()
+    {
+        var fresh = new[] { new Poco("item-1"), new Poco("item-2"), new Poco("item-3") };
+        var retryMap = fresh.ToDictionary(p => p.Id);
+        var progressService = new StubProgressService(new[] { "item-2", "item-3" });
+        var parentRunId = Guid.NewGuid();
+        var context = CreateContext<Poco>(PipelineRunType.Retry, parentRunId, progressService);
+        var results = new List<string>();
+
+        var source = PipelineSource<Poco>.FromRunType(
+            freshSourceFactory: (ct) => GeneratePocosAsync(ct, fresh),
+            loadIncomplete: (ids, ct) => FetchByIdsSync(ids, retryMap));
+
+        await DataFlowPipeline<Poco>
+            .Create(context, source, p => p.Id)
+            .Transform(p => Task.FromResult(p.Id), "PassThrough")
+            .Action(id =>
+            {
+                results.Add(id);
+                return Task.CompletedTask;
+            }, "Collect")
+            .Complete();
+
+        Assert.Equal(new[] { "item-2", "item-3" }, results.OrderBy(id => id));
+        Assert.Equal(1, progressService.GetIncompleteCalls);
+        Assert.Equal(parentRunId, progressService.LastParentRunId);
+    }
+
+    private static PipelineContext CreateContext<T>(PipelineRunType runType, Guid? parentRunId = null, IPipelineProgressService? progressService = null)
     {
         return new PipelineContext(
             runId: Guid.NewGuid(),
@@ -156,7 +325,8 @@ public class PipelineSourceTests
             category: "Tests",
             name: "PipelineSource",
             runType: runType,
-            parentRunId: parentRunId);
+            parentRunId: parentRunId,
+            progressService: progressService);
     }
 
     private static IEnumerable<Poco> CreatePocos(int count)
@@ -190,6 +360,31 @@ public class PipelineSourceTests
                 yield return value;
             }
 
+            await Task.Yield();
+        }
+    }
+
+    private static IEnumerable<Poco> FetchByIdsSync(
+        IEnumerable<string> ids,
+        IReadOnlyDictionary<string, Poco> source)
+    {
+        foreach (var id in ids)
+        {
+            if (source.TryGetValue(id, out var value))
+            {
+                yield return value;
+            }
+        }
+    }
+
+    private static async IAsyncEnumerable<Poco> GeneratePocosAsync(
+        [EnumeratorCancellation] CancellationToken ct,
+        IEnumerable<Poco> pocos)
+    {
+        foreach (var poco in pocos)
+        {
+            ct.ThrowIfCancellationRequested();
+            yield return poco;
             await Task.Yield();
         }
     }

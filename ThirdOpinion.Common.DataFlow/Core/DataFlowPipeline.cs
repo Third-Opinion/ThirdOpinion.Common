@@ -145,8 +145,31 @@ public class DataFlowPipeline<TData>
     }
 
     /// <summary>
-    /// Group ordered inputs into sequential batches using the provided key selector
+    /// Group ordered inputs into sequential batches using the provided key selector.
+    /// 
+    /// <para><strong>IMPORTANT: This method requires ORDERED input sources only.</strong></para>
+    /// 
+    /// <para>The method accumulates items with the same key and waits until the key changes 
+    /// before emitting a complete group. This means:</para>
+    /// <list type="bullet">
+    /// <item><description>Input items MUST arrive in order by the grouping key</description></item>
+    /// <item><description>The method will wait for a key change before emitting the previous group</description></item>
+    /// <item><description>If items with the same key arrive out of order, they will NOT be grouped together correctly</description></item>
+    /// <item><description>Processing is single-threaded (MaxDegreeOfParallelism = 1) to maintain order</description></item>
+    /// </list>
+    /// 
+    /// <para>Use this method when you have a pre-sorted source (e.g., from a database query with ORDER BY) 
+    /// and need to group consecutive items with the same key into batches.</para>
     /// </summary>
+    /// <param name="keySelector">Function to extract the grouping key from each input item</param>
+    /// <param name="projector">Function to create the output group from the key and accumulated items</param>
+    /// <param name="getResourceIdFromKey">Function to extract the resource ID from the grouping key for progress tracking</param>
+    /// <param name="stepName">Name of this step for progress tracking</param>
+    /// <param name="options">Optional step configuration options</param>
+    /// <typeparam name="TGroup">Type of the grouped output</typeparam>
+    /// <typeparam name="TKey">Type of the grouping key (must be non-nullable)</typeparam>
+    /// <returns>A builder for the next pipeline step</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the input source is not ordered by the grouping key</exception>
     public PipelineStepBuilder<TData, TGroup> GroupSequential<TGroup, TKey>(
         Func<TData, TKey> keySelector,
         Func<TKey, IReadOnlyList<TData>, TGroup> projector,

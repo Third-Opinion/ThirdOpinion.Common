@@ -31,6 +31,7 @@ public static class InMemoryServiceFactory
             factory,
             artifactBatcherFactory,
             resourceCache,
+            progressService: null,
             logger ?? NullLogger.Instance);
 
         return builder
@@ -70,6 +71,7 @@ public static class InMemoryServiceFactory
             progressTrackerFactory: null,
             artifactBatcherFactory: null,
             resourceRunCache: null,
+            progressService: null,
             logger ?? NullLogger.Instance);
 
         return builder
@@ -111,6 +113,7 @@ public static class InMemoryServiceFactory
             factory,
             artifactBatcherFactory: null,
             resourceRunCache: null,
+            progressService: null,
             logger ?? NullLogger.Instance);
 
         return builder
@@ -153,6 +156,7 @@ public static class InMemoryServiceFactory
             progressTrackerFactory: null,
             artifactBatcherFactory,
             resourceRunCache: null,
+            progressService: null,
             logger ?? NullLogger.Instance);
 
         return builder
